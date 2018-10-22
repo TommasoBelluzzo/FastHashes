@@ -20,14 +20,14 @@ namespace FastHashes.Tests
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern Boolean QueryPerformanceFrequency([Out] out Int64 frequency);
 
-        [DllImport("Kernel32.dll", CallingConvention=CallingConvention.StdCall, CharSet=CharSet.Unicode, ExactSpelling=true, SetLastError=true)]
-        private static extern UInt32 GetCurrentThreadId();
-
         [DllImport("MSVCRT.dll", CallingConvention=CallingConvention.Cdecl, ExactSpelling=true)]
         private static extern Int32 memcmp([In] IntPtr pointer1, [In] IntPtr pointer2, [In] UIntPtr count);
 
         [DllImport("MSVCRT.dll", CallingConvention=CallingConvention.Cdecl, ExactSpelling=true)]
         public static extern IntPtr memset([In] IntPtr pointer, [In] Int32 character, [In] UIntPtr count);
+
+        [DllImport("Kernel32.dll", CallingConvention=CallingConvention.StdCall, CharSet=CharSet.Unicode, ExactSpelling=true, SetLastError=true)]
+        private static extern UInt32 GetCurrentThreadId();
         #endregion
 
         #region Methods
