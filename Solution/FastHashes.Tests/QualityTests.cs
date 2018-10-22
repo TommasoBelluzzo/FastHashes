@@ -14,7 +14,7 @@ namespace FastHashes.Tests
         #endregion
 
         #region Members
-        private static readonly dynamic[] AT_PARAMETERS =
+        private static readonly dynamic[] s_ParametersAT =
         {
             new { KeysBytes = 0, Repetitions = 300000 },
             new { KeysBytes = 4, Repetitions = 300000 },
@@ -25,7 +25,7 @@ namespace FastHashes.Tests
             new { KeysBytes = 128, Repetitions = 300000 }
         };
 
-        private static readonly dynamic[] DT_PARAMETERS =
+        private static readonly dynamic[] s_ParametersDT =
         {
             new { Bits = 5, KeysBytes = 8, Repetitions = 1000 },
             new { Bits = 4,KeysBytes = 16, Repetitions = 1000 },
@@ -119,9 +119,9 @@ namespace FastHashes.Tests
 
             Boolean resultOverall = true;
 
-            for (Int32 i = 0; i < AT_PARAMETERS.Length; ++i)
+            for (Int32 i = 0; i < s_ParametersAT.Length; ++i)
             {
-                dynamic p = AT_PARAMETERS[i];
+                dynamic p = s_ParametersAT[i];
 
                 Int32 keyBytes = p.KeysBytes;
                 Int32 keyBits = keyBytes * 8;
@@ -278,9 +278,9 @@ namespace FastHashes.Tests
 
             Boolean resultOverall = true;
 
-            for (Int32 i = 0; i < DT_PARAMETERS.Length; ++i)
+            for (Int32 i = 0; i < s_ParametersDT.Length; ++i)
             {
-                dynamic p = DT_PARAMETERS[i];
+                dynamic p = s_ParametersDT[i];
 
                 Int32 keysBytes = p.KeysBytes;
                 Int32 keysBits = keysBytes * 8;

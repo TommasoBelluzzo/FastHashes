@@ -16,9 +16,9 @@ namespace FastHashes.Tests
         #endregion
 
         #region Members
-        private static readonly Double FREQUENCY = NativeMethods.GetFrequency();
+        private static readonly Double s_Frequency = NativeMethods.GetFrequency();
 
-        private static readonly dynamic[] CST_PARAMETERS =
+        private static readonly dynamic[] s_ParametersCST =
         {
             new { Increment = new Func<Int32, Int32>((i) => i + 1), KeysSize = 32, Repetitions = 200000 },
             new { Increment = new Func<Int32, Int32>((i) => i + 2), KeysSize = 64, Repetitions = 100000 },
@@ -27,7 +27,7 @@ namespace FastHashes.Tests
             new { Increment = new Func<Int32, Int32>((i) => i * 2), KeysSize = 65536, Repetitions = 12500 }
         };
 
-        private static readonly String[] SIZE_SUFFIXES = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+        private static readonly String[] s_SizeSuffixes = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
         #endregion
 
         #region Methods
@@ -56,7 +56,7 @@ namespace FastHashes.Tests
                         hash.ComputeHash(key, offset, length);
                         Double end = NativeMethods.GetTime();
 
-                        Double ms = ((end - start + 1.0d) * 1000.0d) / FREQUENCY;
+                        Double ms = ((end - start + 1.0d) * 1000.0d) / s_Frequency;
                         Double bps = (length * 1000.0d) / ms;
 
                         if (bps >= 0.0d)
@@ -109,13 +109,13 @@ namespace FastHashes.Tests
                 adjustedSpeed /= 1024.0d;
             }
 
-            return $"{adjustedSpeed:N2} {SIZE_SUFFIXES[magnitude]}/s";
+            return $"{adjustedSpeed:N2} {s_SizeSuffixes[magnitude]}/s";
         }
 
         public static void BulkSpeedTest(HashInfo hashInfo)
         {
             Console.WriteLine("[BULK SPEED TEST]");
-            Console.WriteLine($"Frequency: {FREQUENCY / 1e6d:F2} MHz");
+            Console.WriteLine($"Frequency: {s_Frequency / 1e6d:F2} MHz");
             Console.WriteLine($"Keys Length: {BST_SIZE} Bytes");
             Console.WriteLine($"Repetitions: {BST_TRIALS}");
 
@@ -139,7 +139,7 @@ namespace FastHashes.Tests
         public static void ChunksSpeedTest(HashInfo hashInfo)
         {
             Console.WriteLine("[CHUNKS SPEED TEST]");
-            Console.WriteLine($"Frequency: {FREQUENCY / 1e6d:F2} MHz");
+            Console.WriteLine($"Frequency: {s_Frequency / 1e6d:F2} MHz");
             Console.WriteLine("Keys Length Span: 0-65535 Bytes");
 
             using (SpeedTestOptimizer())
@@ -151,9 +151,9 @@ namespace FastHashes.Tests
                 Int32 totalCount = 0;
                 Int32 offset = 0;
 
-                for (Int32 i = 0; i < CST_PARAMETERS.Length; ++i)
+                for (Int32 i = 0; i < s_ParametersCST.Length; ++i)
                 {
-                    dynamic p = CST_PARAMETERS[i];
+                    dynamic p = s_ParametersCST[i];
 
                     Double speed = 0.0d;
                     Int32 count = 0;
