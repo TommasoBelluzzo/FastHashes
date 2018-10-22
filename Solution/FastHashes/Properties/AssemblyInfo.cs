@@ -15,7 +15,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
 
-[assembly: AssemblyCopyright("Copyright ©2018 Tommaso Belluzzo")]
+[assembly: AssemblyCopyright("Copyright ©2017 Tommaso Belluzzo")]
 [assembly: AssemblyCulture("")]
 [assembly: AssemblyProduct("FastHashes")]
 [assembly: AssemblyTitle("FastHashes")]
@@ -25,12 +25,12 @@ using System.Runtime.InteropServices;
 #region Settings
 [assembly: CLSCompliant(false)]
 [assembly: ComVisible(false)]
-[assembly: Guid("80642F96-FB82-423A-80A4-DFCD601E47E4")]
+[assembly: Guid("1699E6F9-98A8-4938-8069-602635E21896")]
 [assembly: NeutralResourcesLanguage("en")]
 #endregion
 
 #region Version
-[assembly: AssemblyFileVersion("1.0.0.0")]
-[assembly: AssemblyInformationalVersion("1.0.0.0")]
-[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.6.0.0")]
+[assembly: AssemblyInformationalVersion("1.6.0.0")]
+[assembly: AssemblyVersion("1.6.0.0")]
 #endregion
