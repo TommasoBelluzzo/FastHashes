@@ -581,17 +581,16 @@ namespace FastHashes.Tests
         {
             RandomXS r = new RandomXS(0x000000A8u);
             Hash hash = hashInfo.Initializer(r.NextValue());
-            Int32 hashBytes = hashInfo.Length;
+            Int32 hashBits = hashInfo.Length;
+            Int32 hashBytes = hashBits / 8;
 
-            Int32 keysLength = hashBytes * WKT_KEYSMULTIPLIER;
+            Int32 keysLength = hashBits * WKT_KEYSMULTIPLIER;
             Int32 keysCount = 1 << WKT_WINDOWBITS;
 
-            Int32 iterations = keysLength * 8;
             Int32 steps = keysCount / 10;
 
             Console.WriteLine("[[ WINDOWED KEYS TEST ]]");
-            Console.WriteLine($"Iterations: {iterations}");
-            Console.WriteLine($"Keys Length: {keysLength} Bytes ({WKT_KEYSMULTIPLIER}x)");
+            Console.WriteLine($"Keys Length: {keysLength} Bytes ({WKT_KEYSMULTIPLIER} x Hash Bits)");
             Console.WriteLine($"Keys Count: {keysCount}");
             Console.WriteLine($"Window Bits: {WKT_WINDOWBITS}");
 
