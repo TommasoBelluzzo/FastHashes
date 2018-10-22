@@ -179,10 +179,13 @@ namespace FastHashes.Tests
                 break;
             }
 
-            if (assemblyVersion == null)
-                assemblyVersion = assembly.GetName().Version;
+            String title;
 
-            String title = $"# FASTHASHES v{assemblyVersion.Major}.{assemblyVersion.Minor} #";
+            if (assemblyVersion == null)
+                title = "# FASTHASHES v? #";
+            else
+                title = $"# FASTHASHES v{assemblyVersion.Major}.{assemblyVersion.Minor} #";
+
             String frame = new String('#', title.Length);
 
             Console.WriteLine(frame);
