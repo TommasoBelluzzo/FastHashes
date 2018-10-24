@@ -31,7 +31,7 @@ namespace FastHashes.Tests
         #endregion
 
         #region Methods
-        internal static Boolean EqualSequences(Byte[] array1, Byte[] array2)
+        public static Boolean EqualSequences(Byte[] array1, Byte[] array2)
         {
             if (ReferenceEquals(array1, array2))
                 return true;
@@ -51,7 +51,7 @@ namespace FastHashes.Tests
             }
         }
 
-        internal static Double GetFrequency()
+        public static Double GetFrequency()
         {
             Boolean result = QueryPerformanceFrequency(out Int64 frequency);
 
@@ -61,7 +61,7 @@ namespace FastHashes.Tests
             return frequency;
         }
 
-        internal static Double GetTime()
+        public static Double GetTime()
         {
             Boolean result = QueryPerformanceCounter(out Int64 time);
 
@@ -71,7 +71,7 @@ namespace FastHashes.Tests
             return time;
         }
 
-        internal static Int32 CompareSequences(Byte[] array1, Byte[] array2)
+        public static Int32 CompareSequences(Byte[] array1, Byte[] array2)
         {
             if (ReferenceEquals(array1, array2))
                 return 0;
@@ -97,7 +97,7 @@ namespace FastHashes.Tests
             }
         }
 
-        internal static ProcessThread GetCurrentThread()
+        public static ProcessThread GetCurrentThread()
         {
             Int32 threadId = (Int32)GetCurrentThreadId();
 
@@ -118,7 +118,7 @@ namespace FastHashes.Tests
             return thread;
         }
 
-        internal static void FillArray(Byte[] array, Byte value)
+        public static void FillArray(Byte[] array, Byte value)
         {
             if (array == null)
                 throw new ArgumentNullException(nameof(array));
