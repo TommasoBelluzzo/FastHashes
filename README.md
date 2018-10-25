@@ -1,2 +1,2 @@
 # FastHashes
-A .NET implementation of different non-cryptographic hashes.
+A .NET implementation of various non-cryptographic hashes.
