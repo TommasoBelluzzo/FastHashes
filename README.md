@@ -106,6 +106,6 @@ The application is platform-agnostic, therefore it can be used on both x86 and x
 FashHashes.Tests is a console application that needs to be executed through command line instructions.
 
  - `FashHashes.Tests -help` displays the help section.
- - `FashHashes.Tests -tests [ALL | T1 ... Tn] -hashes [ALL | H1 ... Hn]` runs the specified tests on the specified hashes.
+ - `FashHashes.Tests -tests [ALL | T1 ... Tn] -hashes [ALL | H1 ... Hn]` runs the specified tests on the specified hashes; all the command line parameters must be included because the code doesn't handle default implicit values.
 
 
