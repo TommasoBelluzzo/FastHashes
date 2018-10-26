@@ -95,11 +95,32 @@ The tests above have been conducted with the following machine setup:
 
 ## The Test Suite
 
-FashHashes.Tests is a testing framework for the FastHashes library. It implements a lot of different tests, most of which are taken from [SMHasher](https://github.com/aappleby/smhasher) and its most famous forks:
+FashHashes.Tests is a testing framework for the FastHashes library. It implements a lot of different tests, most of which are taken from [SMHasher](https://github.com/aappleby/smhasher) and its most notable forks:
 
  - [https://github.com/demerphq/smhasher/](https://github.com/demerphq/smhasher/)
  - [https://github.com/rurban/smhasher](https://github.com/rurban/smhasher)
+ 
+Here is an exhaustive list of the implemented tests:
 
+ - **Quality Tests**
+   - Avalanche Test
+   - Bit Independence Criterion Test
+   - Differential Test
+ - **Speed Tests**
+   - Bulk Speed Test
+   - Chunks Speed Test
+ - **Validation Tests**
+   - Combinations Test
+   - Cyclic Keys Test
+   - Flipped Keys Test
+   - Key Sets Test
+   - Padded Keys Test
+   - Sparse Keys Test
+   - Two Bytes Test
+   - Uniform Keys Test
+   - Windowed Keys Test
+   - Words Test (the `Words.txt` file used by this test is taken from the [/usr/share/dict/words Gist](https://gist.github.com/wchargin/8927565))
+   
 ### Requirements
  
 The application is platform-agnostic, therefore it can be used on both x86 and x64 environments. The solution model targets Visual Studio 2017 and the project is compiled under .NET Framework 4.7.1, therefore it can be used on every machine equipped with Windows 7 or greater. Most of the tests are very CPU intensive and/or utilize a lot of virtual memory.
