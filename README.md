@@ -119,7 +119,7 @@ Here is an exhaustive list of the implemented tests:
    - Two Bytes Test
    - Uniform Keys Test
    - Windowed Keys Test
-   - Words Test (the `Words.txt` file used by this test is taken from the [/usr/share/dict/words Gist](https://gist.github.com/wchargin/8927565))
+   - Words Test (the `Words.txt` file used by this test is taken from [this Gist](https://gist.github.com/wchargin/8927565))
    
 ### Requirements
  
