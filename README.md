@@ -50,7 +50,7 @@ The key characteristics of the FashHashes library are:
  
 ### Requirements
  
-The library is platform-agnostic, therefore it can be used on both x86 and x64 environments. The solution model targets Visual Studio 2017 and the projects are compiled under .NET Framework 4.7.1, therefore it can be used on every machine equipped with Windows 7 or greater.
+The library is platform-agnostic, therefore it can be used on both x86 and x64 environments. The solution model targets Visual Studio 2017 and the project is compiled under .NET Framework 4.7.1, therefore it can be used on every machine equipped with Windows 7 or greater.
 
 ### Performance Benchmarks
 
@@ -93,4 +93,10 @@ The tests above have been conducted with the following machine setup:
  - `RAM`: 16 GB x DDR4 SO-DIMM @1200MHz
  - `OS`: Microsoft Windows 10 64-Bit
 
-## The Testing Suite
+## The Test Suite
+
+FashHashes.Tests is a testing framework for the FastHashes library.
+
+### Requirements
+ 
+The application is platform-agnostic, therefore it can be used on both x86 and x64 environments. The solution model targets Visual Studio 2017 and the project is compiled under .NET Framework 4.7.1, therefore it can be used on every machine equipped with Windows 7 or greater. Most of the tests are very CPU intensive and/or utilize a lot of virtual memory.
