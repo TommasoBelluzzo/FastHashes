@@ -2,7 +2,13 @@
 
 FashHashes is a pure C# porting of the following non-cryptographic hashes:
 
-
+ - *__FarmHash__*
+   - 32/64/128 Bits Output
+   - Fingerprint Versions
+   - Reference Implementation: [https://github.com/google/farmhash](https://github.com/google/farmhash)
+ - *__FastHash__*
+   - 32/64 Bits Output
+   - Reference Implementation: [https://github.com/ZilongTan/fast-hash](https://github.com/ZilongTan/fast-hash)
  - *__FastPositiveHash / TH1A__*
    - 64 Bits Output
    - 0/1/2 Variants
