@@ -9,10 +9,13 @@ FashHashes is a pure C# porting of the following non-cryptographic hashes:
    - 64 Bits Output
    - 0/1/2 Variants
    - Reference Implementation: [https://github.com/leo-yuriev/t1ha](https://github.com/leo-yuriev/t1ha)
+ - *__MetroHash (v1)__*
+   - 64/128 Bits Output
+   - Reference Implementation: [https://github.com/jandrewrogers/MetroHash](https://github.com/jandrewrogers/MetroHash)
  - *__MumHash__*
    - 64 Bits Output
    - Reference Implementation: [https://github.com/vnmakarov/mum-hash](https://github.com/vnmakarov/mum-hash)
- - *__MurmurHash3__*
+ - *__MurmurHash (v3)__*
    - 32/64/128 Bits Output
    - x86/x64 Variants
    - Reference Implementation: [https://github.com/aappleby/smhasher](https://github.com/aappleby/smhasher)
