@@ -19,7 +19,7 @@ FashHashes is a pure C# porting of the following non-cryptographic hashes:
  - *__HighwayHash__*
    - 64/128/256 Bits Output
    - Reference Implementation: [https://github.com/google/highwayhash](https://github.com/google/highwayhash)
- - *__MetroHash (v1)__*
+ - *__MetroHash__*
    - 64/128 Bits Output
    - Reference Implementation: [https://github.com/jandrewrogers/MetroHash](https://github.com/jandrewrogers/MetroHash)
  - *__MumHash__*
