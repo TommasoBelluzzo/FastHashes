@@ -100,3 +100,12 @@ FashHashes.Tests is a testing framework for the FastHashes library.
 ### Requirements
  
 The application is platform-agnostic, therefore it can be used on both x86 and x64 environments. The solution model targets Visual Studio 2017 and the project is compiled under .NET Framework 4.7.1, therefore it can be used on every machine equipped with Windows 7 or greater. Most of the tests are very CPU intensive and/or utilize a lot of virtual memory.
+
+### Usage
+
+FashHashes.Tests is a console application that needs to be executed through command line instructions.
+
+ - `FashHashes.Tests -help` displays the help section.
+ - `FashHashes.Tests -tests [ALL | T1 ... Tn] -hashes [ALL | H1 ... Hn]` runs the specified tests on the specified hashes.
+
+
