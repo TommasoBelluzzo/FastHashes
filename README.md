@@ -1,4 +1,4 @@
-# FastHashes
+# FastHashes Framework
 
 ## The Library
 
