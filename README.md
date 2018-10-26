@@ -57,34 +57,34 @@ The library is platform-agnostic, therefore it can be used on both x86 and x64 e
 | Hash Name             | Bulk Speed Test Average ↓ | Chunks Speed Test Average |
 | :---:                 | :---:                     | :---:                     |
 | DummyHash (Reference) | 609.34 GB/s               | 2.06 GB/s                 |
-| FarmHash32            | 4.27 GB/s                 | 394.83 MB/s               |
 | FarmHash64            | 11.47 GB/s                | 626.60 MB/s               |
-| FarmHash128           | 11.17 GB/s                | 638.03 MB/s               |
-| FastHash32            | 5.34 GB/s                 | 444.45 MB/s               |
-| FastHash64            | 5.26 GB/s                 | 440.91 MB/s               |
-| FastPositiveHash_0    | 2.29 GB/s                 | 320.69 MB/s               |
+| FarmHash128           | 11.27 GB/s                | 641.03 MB/s               |
+| MetroHash128_1        | 11.11 GB/s                | 636.52 MB/s               |
+| MetroHash64_1         | 11.10 GB/s                | 628.81 MB/s               |
+| MetroHash128_2        | 11.06 GB/s                | 635.34 MB/s               |
+| MetroHash64_2         | 11.05 GB/s                | 620.92 MB/s               |
+| xxHash64              | 10.03 GB/s                | 596.90 MB/s               |
+| MurmurHash128_X64     | 6.70 GB/s                 | 485.59 MB/s               |
+| MurmurHash64_X64      | 6.56 GB/s                 | 467.14 MB/s               |
+| xxHash32              | 6.43 GB/s                 | 482.92 MB/s               |
+| FastHash64            | 5.34 GB/s                 | 444.45 MB/s               |
+| FastHash32            | 5.26 GB/s                 | 440.91 MB/s               |
+| FarmHash32            | 4.27 GB/s                 | 394.83 MB/s               |
 | FastPositiveHash_1    | 4.10 GB/s                 | 386.51 MB/s               |
+| MurmurHash128_X86     | 4.05 GB/s                 | 383.60 MB/s               |
+| MurmurHash64_X86      | 4.01 GB/s                 | 374.73 MB/s               | 
 | FastPositiveHash_2    | 3.99 GB/s                 | 386.33 MB/s               |
-| HalfSipHash           | 364.78 MB/s               | 119.96 MB/s               |
+| MurmurHash32          | 2.82 GB/s                 | 332.35 MB/s               |
+| MumHash               | 2.44 GB/s                 | 312.24 MB/s               |
+| FastPositiveHash_0    | 2.29 GB/s                 | 320.69 MB/s               |
+| SipHash_13            | 1.28 GB/s                 | 230.67 MB/s               |
+| HighwayHash256        | 914.16 MB/s               | 125.78 MB/s               |
 | HighwayHash64         | 899.65 MB/s               | 151.54 MB/s               |
 | HighwayHash128        | 883.51 MB/s               | 143.84 MB/s               |
-| HighwayHash256        | 914.16 MB/s               | 125.78 MB/s               |
-| MetroHash64_1         | 11.09 GB/s                | 636.52 MB/s               |
-| MetroHash64_2         | 11.37 GB/s                | 635.34 MB/s               |
-| MetroHash128_1        | 11.09 GB/s                | 628.81 MB/s               |
-| MetroHash128_2        | 11.04 GB/s                | 620.92 MB/s               |
-| MurmurHash32          | 2.82 GB/s                 | 332.35 MB/s               |
-| MurmurHash64_X86      | 4.01 GB/s                 | 374.73 MB/s               | 
-| MurmurHash64_X64      | 6.56 GB/s                 | 467.14 MB/s               |
-| MurmurHash128_X86     | 4.05 GB/s                 | 383.60 MB/s               |
-| MurmurHash128_X64     | 6.70 GB/s                 | 485.59 MB/s               |
-| MumHash               | 2.44 GB/s                 | 312.24 MB/s               |
-| SipHash_13            | git status                | git status                |
-| SipHash_24            | git status                | git status                |
-| SpookyHash32          | git status                | git status                |
-| SpookyHash64          | git status                | git status                |
-| SpookyHash128         | git status                | git status                |
-| xxHash32              | 6.43 GB/s                 | 482.92 MB/s               |
-| xxHash64              | 10.03 GB/s                | 596.90 MB/s               |
+| SpookyHash32          | 752.43 MB/s               | 156.79 MB/s               |
+| SpookyHash64          | 734.84 MB/s               | 149.36 MB/s               |
+| SipHash_24            | 734.74 MB/s               | 168.43 MB/s               |
+| SpookyHash128         | 723.91 MB/s               | 155.67 MB/s               |
+| HalfSipHash           | 364.78 MB/s               | 119.96 MB/s               |
 
 ## The Testing Suite
