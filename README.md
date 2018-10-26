@@ -91,6 +91,6 @@ The tests above have been conducted with the following machine setup:
 
  - `CPU`: Intel Core i7-7700HQ @2.80GHz (4 Cores, 8 Threads, 256KB L1 Cache)
  - `RAM`: 16 GB x DDR4 SO-DIMM @1200MHz
- - `OS`: Windows 10 x64
+ - `OS`: Windows 10 64-Bit
 
 ## The Testing Suite
