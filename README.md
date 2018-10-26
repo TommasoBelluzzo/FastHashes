@@ -54,39 +54,39 @@ The library is platform-agnostic, therefore it can be used on both x86 and x64 e
 
 ### Performance Benchmarks
 
-| Hash Name          | Bulk Speed Test Average ↓ | Chunks Speed Test Average |
-| :---:              | :---:                     | :---:                     |
-| DummyHash (All)    | git status                | git status                |
-| FarmHash32         | git diff                  | git diff                  |
-| FarmHash64         | git status                | git status                |
-| FarmHash128        | git diff                  | git diff                  |
-| FastHash32         | git status                | git status                |
-| FastHash64         | git diff                  | git diff                  |
-| FastPositiveHash_0 | git status                | git status                |
-| FastPositiveHash_1 | git diff                  | git diff                  |
-| FastPositiveHash_2 | git status                | git status                |
-| HalfSipHash        | git diff                  | git diff                  |
-| HighwayHash64      | git diff                  | git diff                  |
-| HighwayHash128     | git status                | git status                |
-| HighwayHash256     | git diff                  | git diff                  |
-| MetroHash64_1      | git status                | git status                |
-| MetroHash64_2      | git diff                  | git diff                  |
-| MetroHash128_1     | git status                | git status                |
-| MetroHash128_2     | git diff                  | git diff                  |
-| MurmurHash32       | git status                | git status                |
-| MurmurHash64_X86   | git diff                  | git diff                  | 
-| MurmurHash64_X64   | git diff                  | git diff                  |
-| MurmurHash128_X86  | git status                | git status                |
-| MurmurHash128_X64  | git diff                  | git diff                  |
-| MetroHash128_1     | git status                | git status                |
-| MetroHash128_2     | git diff                  | git diff                  |
-| MumHash            | git status                | git status                |
-| SipHash_13         | git status                | git status                |
-| SipHash_24         | git status                | git status                |
-| SpookyHash32       | git status                | git status                |
-| SpookyHash64       | git status                | git status                |
-| SpookyHash128      | git status                | git status                |
-| xxHash32           | git status                | git status                |
-| xxHash64           | git status                | git status                |
+| Hash Name             | Bulk Speed Test Average ↓ | Chunks Speed Test Average |
+| :---:                 | :---:                     | :---:                     |
+| DummyHash (Reference) | 609.34 GB/s               | 2.06 GB/s                 |
+| FarmHash32            | 4.27 GB/s                 | 394.83 MB/s               |
+| FarmHash64            | 11.47 GB/s                | 626.60 MB/s               |
+| FarmHash128           | 11.17 GB/s                | 638.03 MB/s               |
+| FastHash32            | 5.34 GB/s                 | 444.45 MB/s               |
+| FastHash64            | 5.26 GB/s                 | 440.91 MB/s               |
+| FastPositiveHash_0    | 2.29 GB/s                 | 320.69 MB/s               |
+| FastPositiveHash_1    | 4.10 GB/s                 | 386.51 MB/s               |
+| FastPositiveHash_2    | 3.99 GB/s                 | 386.33 MB/s               |
+| HalfSipHash           | X                         | X                         |
+| HighwayHash64         | 899.65 MB/s               | 151.54 MB/s               |
+| HighwayHash128        | 883.51 MB/s               | 143.84 MB/s               |
+| HighwayHash256        | 914.16 MB/s               | 125.78 MB/s               |
+| MetroHash64_1         | 11.09 GB/s                | 636.52 MB/s               |
+| MetroHash64_2         | git diff                  | git diff                  |
+| MetroHash128_1        | git status                | git status                |
+| MetroHash128_2        | git diff                  | git diff                  |
+| MurmurHash32          | git status                | git status                |
+| MurmurHash64_X86      | git diff                  | git diff                  | 
+| MurmurHash64_X64      | git diff                  | git diff                  |
+| MurmurHash128_X86     | git status                | git status                |
+| MurmurHash128_X64     | git diff                  | git diff                  |
+| MetroHash128_1        | git status                | git status                |
+| MetroHash128_2        | git diff                  | git diff                  |
+| MumHash               | git status                | git status                |
+| SipHash_13            | git status                | git status                |
+| SipHash_24            | git status                | git status                |
+| SpookyHash32          | git status                | git status                |
+| SpookyHash64          | git status                | git status                |
+| SpookyHash128         | git status                | git status                |
+| xxHash32              | git status                | git status                |
+| xxHash64              | git status                | git status                |
 
 ## The Testing Suite
