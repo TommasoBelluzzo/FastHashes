@@ -65,28 +65,26 @@ The library is platform-agnostic, therefore it can be used on both x86 and x64 e
 | FastPositiveHash_0    | 2.29 GB/s                 | 320.69 MB/s               |
 | FastPositiveHash_1    | 4.10 GB/s                 | 386.51 MB/s               |
 | FastPositiveHash_2    | 3.99 GB/s                 | 386.33 MB/s               |
-| HalfSipHash           | X                         | X                         |
+| HalfSipHash           | 364.78 MB/s               | 119.96 MB/s               |
 | HighwayHash64         | 899.65 MB/s               | 151.54 MB/s               |
 | HighwayHash128        | 883.51 MB/s               | 143.84 MB/s               |
 | HighwayHash256        | 914.16 MB/s               | 125.78 MB/s               |
 | MetroHash64_1         | 11.09 GB/s                | 636.52 MB/s               |
-| MetroHash64_2         | git diff                  | git diff                  |
-| MetroHash128_1        | git status                | git status                |
-| MetroHash128_2        | git diff                  | git diff                  |
-| MurmurHash32          | git status                | git status                |
-| MurmurHash64_X86      | git diff                  | git diff                  | 
-| MurmurHash64_X64      | git diff                  | git diff                  |
-| MurmurHash128_X86     | git status                | git status                |
-| MurmurHash128_X64     | git diff                  | git diff                  |
-| MetroHash128_1        | git status                | git status                |
-| MetroHash128_2        | git diff                  | git diff                  |
-| MumHash               | git status                | git status                |
+| MetroHash64_2         | 11.37 GB/s                | 635.34 MB/s               |
+| MetroHash128_1        | 11.09 GB/s                | 628.81 MB/s               |
+| MetroHash128_2        | 11.04 GB/s                | 620.92 MB/s               |
+| MurmurHash32          | 2.82 GB/s                 | 332.35 MB/s               |
+| MurmurHash64_X86      | 4.01 GB/s                 | 374.73 MB/s               | 
+| MurmurHash64_X64      | 6.56 GB/s                 | 467.14 MB/s               |
+| MurmurHash128_X86     | 4.05 GB/s                 | 383.60 MB/s               |
+| MurmurHash128_X64     | 6.70 GB/s                 | 485.59 MB/s               |
+| MumHash               | 2.44 GB/s                 | 312.24 MB/s               |
 | SipHash_13            | git status                | git status                |
 | SipHash_24            | git status                | git status                |
 | SpookyHash32          | git status                | git status                |
 | SpookyHash64          | git status                | git status                |
 | SpookyHash128         | git status                | git status                |
-| xxHash32              | git status                | git status                |
-| xxHash64              | git status                | git status                |
+| xxHash32              | 6.43 GB/s                 | 482.92 MB/s               |
+| xxHash64              | 10.03 GB/s                | 596.90 MB/s               |
 
 ## The Testing Suite
