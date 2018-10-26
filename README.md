@@ -87,4 +87,9 @@ The library is platform-agnostic, therefore it can be used on both x86 and x64 e
 | 28        | SpookyHash128           | 723.91 MB/s                 | 155.67 MB/s               |
 | 29        | HalfSipHash             | 364.78 MB/s                 | 119.96 MB/s               |
 
+The tests above have been conducted with the following machine setup:
+
+ - `CPU`: Intel Core i7-7700HQ @2.80GHz (4 Cores, 8 Threads, 256KB L1 Cache)
+ - `RAM`: 16 GB x DDR4 SO-DIMM @1200MHz
+
 ## The Testing Suite
