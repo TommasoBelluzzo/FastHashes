@@ -95,7 +95,10 @@ The tests above have been conducted with the following machine setup:
 
 ## The Test Suite
 
-FashHashes.Tests is a testing framework for the FastHashes library.
+FashHashes.Tests is a testing framework for the FastHashes library. It implements a lot of different tests, most of which are taken from [SMHasher](https://github.com/aappleby/smhasher) and its most famous forks:
+
+ - [https://github.com/demerphq/smhasher/](https://github.com/demerphq/smhasher/)
+ - [https://github.com/rurban/smhasher](https://github.com/rurban/smhasher)
 
 ### Requirements
  
@@ -115,6 +118,3 @@ FashHashes.Tests is a console application that needs to be executed through comm
 *[EXAMPLE 2]* Run all the tests on FastHash64 and MurmurHash64 (x64 variant) and display the results in the console output:
 
     FashHashes.Tests -tests ALL -hashes FastHash64 MurmurHash64_x64
-
-### Tests
-
