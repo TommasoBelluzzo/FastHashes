@@ -39,3 +39,8 @@ FashHashes is a pure C# porting of the following non-cryptographic hashes:
  - *__xxHash__*
    - 32/64 Bits Output
    - Reference Implementation: [https://github.com/Cyan4973/xxHash](https://github.com/Cyan4973/xxHash)
+
+The key characteristics of the FashHashes library are:
+ - Endian-Agnostic Code (it attemps to provide consistent results regardless of the machine byte order, while only moderately affecting the computations performance);
+ - Native/Unmanaged Access (where possible, it uses unsafe memory pointers and Windows API calls to speed up computations);
+ - Zero-Allocation Algorithms (computations are performed without allocating objects).
