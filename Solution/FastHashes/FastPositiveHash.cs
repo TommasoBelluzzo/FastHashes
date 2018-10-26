@@ -49,7 +49,7 @@ namespace FastHashes
 
         public override String ToString()
         {
-            return String.Concat(GetType().Name, m_Engine.Name);
+            return String.Concat(GetType().Name, "_", m_Engine.Name);
         }
         #endregion
 

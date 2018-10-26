@@ -254,9 +254,9 @@ namespace FastHashes
         public override String ToString()
         {
             if (m_Variant == SipHashVariant.V13)
-                return String.Concat(GetType().Name, "13");
+                return String.Concat(GetType().Name, "_13");
 
-            return String.Concat(GetType().Name, "24");
+            return String.Concat(GetType().Name, "_24");
         }
         #endregion
 

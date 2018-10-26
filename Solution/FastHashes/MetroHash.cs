@@ -365,6 +365,11 @@ namespace FastHashes
         {
             return m_Engine.ComputeHash(data, offset, length);
         }
+
+        public override String ToString()
+        {
+            return String.Concat(GetType().Name, "_", m_Engine.Name);
+        }
         #endregion
 
         #region Nesting

@@ -82,7 +82,7 @@ namespace FastHashes
             #endregion
 
             #region Properties
-            public override String Name => "X64";
+            public override String Name => "x64";
             #endregion
 
             #region Constructors
@@ -240,7 +240,7 @@ namespace FastHashes
             #endregion
 
             #region Properties
-            public override String Name => "X86";
+            public override String Name => "x86";
             #endregion
 
             #region Constructors
