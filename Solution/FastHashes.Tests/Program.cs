@@ -22,6 +22,9 @@ namespace FastHashes.Tests
             new HashInfo((x) => new FarmHash128(x), 0xA93EBF71u),
             new HashInfo((x) => new FastHash32(x), 0xE9481AFCu),
             new HashInfo((x) => new FastHash64(x), 0xA16231A7u),
+            new HashInfo((x) => new FastPositiveHash(FastPositiveHashVariant.V0, x), 0x7F7D7B29u),
+            new HashInfo((x) => new FastPositiveHash(FastPositiveHashVariant.V1, x), 0xD6836381u),
+            new HashInfo((x) => new FastPositiveHash(FastPositiveHashVariant.V2, x), 0x8F16C948u),
             new HashInfo((x) => new HighwayHash64(x), 0xCD809D2Du),
             new HashInfo((x) => new HighwayHash128(x), 0x7C86214Cu),
             new HashInfo((x) => new HighwayHash256(x), 0xF48F6052u),
@@ -41,9 +44,6 @@ namespace FastHashes.Tests
             new HashInfo((x) => new SpookyHash32(x), 0x3F798BBBu),
             new HashInfo((x) => new SpookyHash64(x), 0xA7F955F1u),
             new HashInfo((x) => new SpookyHash128(x), 0x8D263080u),
-            new HashInfo((x) => new T1HA(T1HAVariant.V0, x), 0x7F7D7B29u),
-            new HashInfo((x) => new T1HA(T1HAVariant.V1, x), 0xD6836381u),
-            new HashInfo((x) => new T1HA(T1HAVariant.V2, x), 0x8F16C948u),
             new HashInfo((x) => new xxHash32(x), 0xBA88B743u),
             new HashInfo((x) => new xxHash64(x), 0x024B7CF4u)
         };
