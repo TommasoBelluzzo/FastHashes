@@ -1,5 +1,14 @@
 ﻿namespace FastHashes
 {
+    public enum FastPositiveHashVariant
+    {
+        #region Values
+        V0,
+        V1,
+        V2
+        #endregion
+    }
+
     public enum MurmurHashEngine
     {
         #region Values
@@ -22,15 +31,6 @@
         #region Values
         V13,
         V24
-        #endregion
-    }
-
-    public enum T1HAVariant
-    {
-        #region Values
-        V0,
-        V1,
-        V2
         #endregion
     }
 }

@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>FastHashes</RootNamespace>
     <AssemblyName>FastHashes</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <IsWebBootstrapper>false</IsWebBootstrapper>
@@ -126,7 +126,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SipHash.cs" />
     <Compile Include="SpookyHash.cs" />
-    <Compile Include="T1HA.cs" />
+    <Compile Include="FastPositiveHash.cs" />
     <Compile Include="xxHash.cs" />
   </ItemGroup>
   <ItemGroup>
