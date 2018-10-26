@@ -81,8 +81,8 @@ The library is platform-agnostic, therefore it can be used on both x86 and x64 e
 | MetroHash128_1     | git status                | git status                |
 | MetroHash128_2     | git diff                  | git diff                  |
 | MumHash            | git status                | git status                |
-| SipHash13          | git status                | git status                |
-| SipHash24          | git status                | git status                |
+| SipHash_13         | git status                | git status                |
+| SipHash_24         | git status                | git status                |
 | SpookyHash32       | git status                | git status                |
 | SpookyHash64       | git status                | git status                |
 | SpookyHash128      | git status                | git status                |
