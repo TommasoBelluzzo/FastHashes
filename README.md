@@ -112,7 +112,7 @@ FashHashes.Tests is a console application that needs to be executed through comm
 
     FashHashes.Tests -tests V Q -hashes ALL >> Results.txt
     
-*[EXAMPLE 2]* Run all the available tests on FastHash64 and MurmurHash64 (x64 variant) and display the results in the console output:
+*[EXAMPLE 2]* Run all the tests on FastHash64 and MurmurHash64 (x64 variant) and display the results in the console output:
 
     FashHashes.Tests -tests ALL -hashes FastHash64 MurmurHash64_x64
 
