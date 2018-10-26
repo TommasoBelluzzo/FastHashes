@@ -108,6 +108,13 @@ FashHashes.Tests is a console application that needs to be executed through comm
  - `FashHashes.Tests -help` displays the help section.
  - `FashHashes.Tests -tests [ALL | T1 ... Tn] -hashes [ALL | H1 ... Hn]` runs the specified tests on the specified hashes; all the command line parameters must be included because the code doesn't handle default implicit values.
 
-[EXAMPLE 1] Run validation and quality tests on all the available hashes and save the result on a text file:
+*[EXAMPLE 1]* Run validation and quality tests on all the available hashes and save the result on a text file:
 
     `FashHashes.Tests -tests V Q -hashes ALL >> Results.txt`
+    
+*[EXAMPLE 2]* Run all the available tests on FastHash64 and MurmurHash64 (x64 variant) and display the result in the console output:
+
+    `FashHashes.Tests -tests ALL -hashes FastHash64 MurmurHash64_x64`
+
+
+
