@@ -2,13 +2,17 @@
 
 FashHashes is a pure C# porting of the following non-cryptographic hashes:
 
- - *__HalfSipHash__*
-   - 32 Bits Output
-   - Reference Implementation: [https://github.com/veorq/SipHash](https://github.com/veorq/SipHash)
+
  - *__FastPositiveHash / TH1A__*
    - 64 Bits Output
    - 0/1/2 Variants
    - Reference Implementation: [https://github.com/leo-yuriev/t1ha](https://github.com/leo-yuriev/t1ha)
+ - *__HalfSipHash__*
+   - 32 Bits Output
+   - Reference Implementation: [https://github.com/veorq/SipHash](https://github.com/veorq/SipHash)
+ - *__HighwayHash__*
+   - 64/128/256 Bits Output
+   - Reference Implementation: [https://github.com/google/highwayhash](https://github.com/google/highwayhash)
  - *__MetroHash (v1)__*
    - 64/128 Bits Output
    - Reference Implementation: [https://github.com/jandrewrogers/MetroHash](https://github.com/jandrewrogers/MetroHash)
