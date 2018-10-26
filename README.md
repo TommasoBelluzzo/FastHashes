@@ -56,7 +56,7 @@ The library is platform-agnostic, therefore it can be used on both x86 and x64 e
  
  
  
-| Hash               | Bulk Speed Test ↓ | Chunks Speed Test |
+| Hash Name          | Bulk Speed Test Average ↓ | Chunks Speed Test Average |
 | :---:              | :---:      | :---: |
 | DummyHash          | git status     | git status    |
 | FarmHash32         | git diff       | git diff      |
