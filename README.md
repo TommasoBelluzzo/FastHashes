@@ -110,11 +110,11 @@ FashHashes.Tests is a console application that needs to be executed through comm
 
 *[EXAMPLE 1]* Run validation and quality tests on all the available hashes and save the result on a text file:
 
-    `FashHashes.Tests -tests V Q -hashes ALL >> Results.txt`
+    FashHashes.Tests -tests V Q -hashes ALL >> Results.txt
     
-*[EXAMPLE 2]* Run all the available tests on FastHash64 and MurmurHash64 (x64 variant) and display the result in the console output:
+*[EXAMPLE 2]* Run all the available tests on FastHash64 and MurmurHash64 (x64 variant) and display the results in the console output:
 
-    `FashHashes.Tests -tests ALL -hashes FastHash64 MurmurHash64_x64`
+    FashHashes.Tests -tests ALL -hashes FastHash64 MurmurHash64_x64
 
-
+### Tests
 
