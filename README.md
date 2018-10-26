@@ -52,43 +52,41 @@ The key characteristics of the FashHashes library are:
  
 The library is platform-agnostic, therefore it can be used on both x86 and x64 environments. The solution model targets Visual Studio 2017 and the projects are compiled under .NET Framework 4.7.1, therefore it can be used on every machine equipped with Windows 7 or greater.
 
-### Benchmarks
- 
- 
- 
+### Performance Benchmarks
+
 | Hash Name          | Bulk Speed Test Average ↓ | Chunks Speed Test Average |
-| :---:              | :---:      | :---: |
-| DummyHash          | git status     | git status    |
-| FarmHash32         | git diff       | git diff      |
-| FarmHash64         | git status     | git status    |
-| FarmHash128        | git diff       | git diff      |
-| FastHash32         | git status     | git status    |
-| FastHash64         | git diff       | git diff      |
-| FastPositiveHash_0 | git status     | git status    |
-| FastPositiveHash_1 | git diff       | git diff      |
-| FastPositiveHash_2 | git status     | git status    |
-| HalfSipHash        | git diff       | git diff      |
-| HighwayHash64      | git diff       | git diff      |
-| HighwayHash128     | git status     | git status    |
-| HighwayHash256     | git diff       | git diff      |
-| MetroHash64_1      | git status     | git status    |
-| MetroHash64_2      | git diff       | git diff      |
-| MetroHash128_1     | git status     | git status    |
-| MetroHash128_2     | git diff       | git diff      |
-| MurmurHash32       | git status     | git status    |
-| MurmurHash64_X86   | git diff       | git diff      | 
-| MurmurHash64_X64   | git diff       | git diff      |
-| MurmurHash128_X86  | git status     | git status    |
-| MurmurHash128_X64  | git diff       | git diff      |
-| MetroHash128_1     | git status     | git status    |
-| MetroHash128_2     | git diff       | git diff      |
-| MumHash            | git status     | git status    |
-| SipHash13          | git status     | git status    |
-| SipHash24          | git status     | git status    |
-| SpookyHash32       | git status     | git status    |
-| SpookyHash64       | git status     | git status    |
-| SpookyHash128      | git status     | git status    |
-| xxHash32           | git status     | git status    |
-| xxHash64           | git status     | git status    |
+| :---:              | :---:                     | :---:                     |
+| DummyHash          | git status                | git status                |
+| FarmHash32         | git diff                  | git diff                  |
+| FarmHash64         | git status                | git status                |
+| FarmHash128        | git diff                  | git diff                  |
+| FastHash32         | git status                | git status                |
+| FastHash64         | git diff                  | git diff                  |
+| FastPositiveHash_0 | git status                | git status                |
+| FastPositiveHash_1 | git diff                  | git diff                  |
+| FastPositiveHash_2 | git status                | git status                |
+| HalfSipHash        | git diff                  | git diff                  |
+| HighwayHash64      | git diff                  | git diff                  |
+| HighwayHash128     | git status                | git status                |
+| HighwayHash256     | git diff                  | git diff                  |
+| MetroHash64_1      | git status                | git status                |
+| MetroHash64_2      | git diff                  | git diff                  |
+| MetroHash128_1     | git status                | git status                |
+| MetroHash128_2     | git diff                  | git diff                  |
+| MurmurHash32       | git status                | git status                |
+| MurmurHash64_X86   | git diff                  | git diff                  | 
+| MurmurHash64_X64   | git diff                  | git diff                  |
+| MurmurHash128_X86  | git status                | git status                |
+| MurmurHash128_X64  | git diff                  | git diff                  |
+| MetroHash128_1     | git status                | git status                |
+| MetroHash128_2     | git diff                  | git diff                  |
+| MumHash            | git status                | git status                |
+| SipHash13          | git status                | git status                |
+| SipHash24          | git status                | git status                |
+| SpookyHash32       | git status                | git status                |
+| SpookyHash64       | git status                | git status                |
+| SpookyHash128      | git status                | git status                |
+| xxHash32           | git status                | git status                |
+| xxHash64           | git status                | git status                |
 
 ## The Testing Suite
