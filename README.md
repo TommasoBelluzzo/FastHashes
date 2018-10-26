@@ -42,7 +42,7 @@ FashHashes is a pure C# porting of the following non-cryptographic hashes:
 
 The key characteristics of the FashHashes library are:
  - `Endian-Agnostic Code` (it attemps to provide consistent results regardless of the machine byte order, while only moderately affecting the computations performance);
- - `Native/Unmanaged Access` (where possible, it uses unsafe memory pointers and native Windows API calls to speed up computations);
+ - `Native/Unmanaged Memory Access` (where possible, it uses unsafe memory pointers and native Windows API calls to speed up computations);
  - `Zero-Allocation Algorithms` (all the computations are performed without allocating objects, only primitive types and/or arrays of primitive types are used).
  
  ## Requirements
