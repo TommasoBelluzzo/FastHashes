@@ -1,6 +1,5 @@
 ﻿#region Using Directives
 using System;
-using System.Linq;
 using System.Runtime.CompilerServices;
 #endregion
 
@@ -42,7 +41,7 @@ namespace FastHashes
                 Byte* pointerSource = pinSource;
                 Byte* pointerDestination = pinDestination;
                 
-                SMALLTABLE:
+                LengthSwitch:
 
                 switch (length)
                 {
@@ -253,7 +252,7 @@ namespace FastHashes
                 pointerSource = (Byte*)pointerSourceLong;
                 pointerDestination = (Byte*)pointerDestinationLong;
 
-                goto SMALLTABLE;
+                goto LengthSwitch;
             }
         }
         #endregion
