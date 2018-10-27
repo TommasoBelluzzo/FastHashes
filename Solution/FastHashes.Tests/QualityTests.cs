@@ -80,7 +80,7 @@ namespace FastHashes.Tests
                 BitsUtilities.FlipBit(k2, 0, keysBytes, i);
 
                 Byte[] h = hash.ComputeHash(k2);
-                Buffer.BlockCopy(h, 0, h2, 0, hashBytes);
+                UnsafeBuffer.BlockCopy(h, 0, h2, 0, hashBytes);
 
                 if (NativeMethods.EqualSequences(h1, h2))
                 {
@@ -310,7 +310,7 @@ namespace FastHashes.Tests
                         Console.Write((skipped > 0) ? "!" : ".");
 
                     r.NextBytes(key1);
-                    Buffer.BlockCopy(key1, 0, key2, 0, keysBytes);
+                    UnsafeBuffer.BlockCopy(key1, 0, key2, 0, keysBytes);
 
                     Hash hash = hashInfo.Initializer(r.NextValue());
                     Byte[] h1 = hash.ComputeHash(key1);

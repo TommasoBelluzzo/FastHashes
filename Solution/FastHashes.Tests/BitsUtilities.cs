@@ -11,6 +11,9 @@ namespace FastHashes.Tests
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Byte GetBit(Byte[] array, Int32 offset, Int32 length, Int32 bit)
         {
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
+
             Int32 byteIndex = bit >> 3;
             Int32 arrayIndex = byteIndex + offset;
 
@@ -22,8 +25,12 @@ namespace FastHashes.Tests
             return 0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UInt32 Window(Byte[] array, Int32 offset, Int32 length)
         {
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
+
             if (length == 0)
                 return 0;
 
@@ -78,6 +85,9 @@ namespace FastHashes.Tests
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FlipBit(Byte[] array, Int32 offset, Int32 length, Int32 bit)
         {
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
+
             Int32 byteIndex = bit >> 3;
             Int32 arrayIndex = byteIndex + offset;
 
@@ -87,8 +97,12 @@ namespace FastHashes.Tests
                 array[arrayIndex] ^= (Byte)(1 << bit);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RotateLeft(Byte[] array, Int32 length, Int32 bit)
         {
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
+
             if (bit == 0)
                 return;
 

@@ -107,8 +107,24 @@ namespace FastHashes.Tests
             {
                 key[length] = blocks[i];
 
-                Byte[] keyBytes = new Byte[key.Length * 4];
-                Buffer.BlockCopy(key, 0, keyBytes, 0, key.Length * 4);
+                Int32 keyBytesLength = key.Length * 4;
+                Byte[] keyBytes = new Byte[keyBytesLength];
+
+                unsafe
+                {
+                    fixed (UInt32* pinKey = key)
+                    {
+                        Byte* pointerKey = (Byte*)pinKey;
+
+                        fixed (Byte* pinKeyBytes = keyBytes)
+                        {
+                            Byte* pointerKeyBytes = pinKeyBytes;
+
+                            for (Int32 j = 0; j < keyBytesLength; ++j)
+                                *(pointerKeyBytes + j) = *(pointerKey + j);
+                        }
+                    }
+                }
 
                 hashes.Add(hash.ComputeHash(keyBytes, 0, (length + 1) * 4));
 
@@ -204,7 +220,7 @@ namespace FastHashes.Tests
                     r.NextBytes(cycle, cycleBytes);
 
                     for (Int32 y = 0; y < keysBytes; y += cycleBytes)
-                        Buffer.BlockCopy(cycle, 0, key, y, cycleBytes);
+                        UnsafeBuffer.BlockCopy(cycle, 0, key, y, cycleBytes);
 
                     hashes.Add(hash.ComputeHash(key));
                 }
@@ -253,7 +269,7 @@ namespace FastHashes.Tests
 
                         r.NextBytes(key1);
                         r.NextBytes(key2);
-                        Buffer.BlockCopy(key1, FKT_PADDING, key2, index, length);
+                        UnsafeBuffer.BlockCopy(key1, FKT_PADDING, key2, index, length);
 
                         Byte[] h = hash.ComputeHash(key1, FKT_PADDING, length);
 
@@ -310,8 +326,8 @@ namespace FastHashes.Tests
 
                 Int32 keysCount = (Int32)Math.Pow(charactersLength, coreBytes);
                 Byte[] key = new Byte[prefixBytes + coreBytes + suffixBytes];
-                Buffer.BlockCopy(prefix, 0, key, 0, prefixBytes);
-                Buffer.BlockCopy(suffix, 0, key, prefixBytes + coreBytes, suffixBytes);
+                UnsafeBuffer.BlockCopy(prefix, 0, key, 0, prefixBytes);
+                UnsafeBuffer.BlockCopy(suffix, 0, key, prefixBytes + coreBytes, suffixBytes);
 
                 Hash hash = hashInfo.Initializer(r.NextValue());
 
@@ -387,7 +403,7 @@ namespace FastHashes.Tests
                             ++count;
                         }
 
-                        Buffer.BlockCopy(hi, 0, h0, 0, hashBytes);
+                        UnsafeBuffer.BlockCopy(hi, 0, h0, 0, hashBytes);
                     }
                 }
 
@@ -564,7 +580,7 @@ namespace FastHashes.Tests
                 Hash hash = hashInfo.Initializer((UInt32)(VT_ITERATIONS - i));
                 Byte[] hi = hash.ComputeHash(buffer, 0, i);
 
-                Buffer.BlockCopy(hi, 0, bufferVerification, i * hashBytes, hashBytes);
+                UnsafeBuffer.BlockCopy(hi, 0, bufferVerification, i * hashBytes, hashBytes);
             }
 
             Hash hashVerification = hashInfo.Initializer(0u);
@@ -694,7 +710,7 @@ namespace FastHashes.Tests
 
                 Byte[] buffer = new Byte[lineBytes.Length + WT_VARIANTS];
                 NativeMethods.FillArray(buffer, filler);
-                Buffer.BlockCopy(lineBytes, 0, buffer, 0, lineBytes.Length);
+                UnsafeBuffer.BlockCopy(lineBytes, 0, buffer, 0, lineBytes.Length);
 
                 for (Int32 j = 0; j <= WT_VARIANTS; ++j)
                     hashes.Add(hash.ComputeHash(buffer, 0, lineBytesLength + j));
