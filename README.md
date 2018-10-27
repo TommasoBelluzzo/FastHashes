@@ -89,9 +89,9 @@ The library is platform-agnostic, therefore it can be used on both x86 and x64 e
 
 The tests above have been conducted with the following machine setup:
 
- - `CPU`: Intel Core i7-7700HQ @2.80GHz (4 Cores, 8 Threads, 256KB L1 Cache)
- - `RAM`: 16 GB x DDR4 SO-DIMM @1200MHz
- - `OS`: Microsoft Windows 10 64-Bit
+ - `CPU:` Intel Core i7-7700HQ @2.80GHz (4 Cores, 8 Threads, 256KB L1 Cache)
+ - `RAM:` 16 GB x DDR4 SO-DIMM @1200MHz
+ - `OS:` Microsoft Windows 10 64-Bit
 
 ## The Test Suite
 
