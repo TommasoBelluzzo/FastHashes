@@ -48,8 +48,8 @@ namespace FastHashes
             Int32 finalLength = (blocks + 1) * 96;
             Byte[] dataFinal = new Byte[finalLength];
 
-            Buffer.BlockCopy(data, index, dataFinal, 0, blocksBytes);
-            Buffer.BlockCopy(data, blocksBytes, dataFinal, blocksBytes, length - blocksBytes);
+            UnsafeBuffer.BlockCopy(data, index, dataFinal, 0, blocksBytes);
+            UnsafeBuffer.BlockCopy(data, blocksBytes, dataFinal, blocksBytes, length - blocksBytes);
             dataFinal[finalLength - 1] = (Byte)(length % 96);
 
             UInt64[] hash = new UInt64[12];

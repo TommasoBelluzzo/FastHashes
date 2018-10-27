@@ -127,6 +127,7 @@
     <Compile Include="SipHash.cs" />
     <Compile Include="SpookyHash.cs" />
     <Compile Include="FastPositiveHash.cs" />
+    <Compile Include="UnsafeBuffer.cs" />
     <Compile Include="xxHash.cs" />
   </ItemGroup>
   <ItemGroup>

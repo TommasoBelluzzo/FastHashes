@@ -34,13 +34,15 @@ namespace FastHashes
             if (data == null)
                 throw new ArgumentNullException(nameof(data));
 
-            if ((offset < 0) || (offset > data.Length))
+            Int32 dataLength = data.Length;
+
+            if ((offset < 0) || (offset >= dataLength))
                 throw new ArgumentOutOfRangeException(nameof(offset), "The offset parameter must be within the bounds of the data array.");
 
-            if ((length < 0) || (length > data.Length))
-                throw new ArgumentOutOfRangeException(nameof(length), "The length parameter must be between zero and the number of elements in the data array.");
+            if (length < 0)
+                throw new ArgumentOutOfRangeException(nameof(length), "The length parameter must be greater than or equal to 0.");
 
-            if (length > (data.Length - offset))
+            if ((offset + length) > dataLength)
                 throw new InvalidOperationException("The block defined by offset and length parameters must be within the bounds of the data array.");
 
             return ComputeHashInternal(data, offset, length);

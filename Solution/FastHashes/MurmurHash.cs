@@ -530,7 +530,7 @@ namespace FastHashes
         protected override Byte[] GetHash(Byte[] hash)
         {
             Byte[] result = new Byte[8];
-            Buffer.BlockCopy(hash, 0, result, 0, 8);
+            UnsafeBuffer.BlockCopy(hash, 0, result, 0, 8);
 
             return result;
         }
