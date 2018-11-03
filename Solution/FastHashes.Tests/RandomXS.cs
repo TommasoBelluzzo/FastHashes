@@ -14,11 +14,11 @@ namespace FastHashes.Tests
         #endregion
 
         #region Members
-        private readonly Queue<Byte> m_Bytes;
         private UInt32 m_X;
         private UInt32 m_Y;
         private UInt32 m_Z;
         private UInt32 m_W;
+        private readonly Queue<Byte> m_Bytes;
         #endregion
 
         #region Constructors
