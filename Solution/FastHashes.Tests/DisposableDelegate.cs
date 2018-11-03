@@ -7,8 +7,8 @@ namespace FastHashes.Tests
     public sealed class DisposableDelegate : IDisposable
     {
         #region Members
-        private readonly Action m_Disposer;
         private Boolean m_IsDisposed;
+        private readonly Action m_Disposer;
         #endregion
 
         #region Constructors
