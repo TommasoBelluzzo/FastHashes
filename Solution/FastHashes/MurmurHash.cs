@@ -53,7 +53,7 @@ namespace FastHashes
         protected abstract Byte[] GetHash(Byte[] hash);
         #endregion
 
-        #region Nesting
+        #region Nesting (Classes)
         private abstract class Engine
         {
             #region Properties (Abstract)
