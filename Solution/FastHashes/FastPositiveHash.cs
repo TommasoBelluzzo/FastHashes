@@ -53,7 +53,7 @@ namespace FastHashes
         }
         #endregion
 
-        #region Nesting
+        #region Nesting (Classes)
         private abstract class Engine
         {
             #region Constants
