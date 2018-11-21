@@ -204,10 +204,7 @@ namespace FastHashes.Tests
             Console.WriteLine(" - Display the current help section:");
             Console.WriteLine($"   {assemblyName} -help");
             Console.WriteLine(" - Run the specified tests on the specified hashes:");
-            Console.WriteLine($"   {assemblyName} -hashes [ALL | H1 ... Hn] -tests [ALL | T1 ... Tn]");
-            Console.WriteLine();
-            Console.WriteLine(" - Default execution when no arguments are specified:");
-            Console.WriteLine($"   {assemblyName} -hashes ALL -tests V0");
+            Console.WriteLine($"   {assemblyName} -hashes [ALL | H1 ... Hn] (default: ALL) -tests [ALL | T1 ... Tn] (default: V0)");
             Console.WriteLine();
             Console.WriteLine("Available Tests:");
             Console.WriteLine(" - Q: Quality Tests");
