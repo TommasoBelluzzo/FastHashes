@@ -131,8 +131,12 @@ The application is platform-agnostic, therefore it can be used on both x86 and x
 
 FashHashes.Tests is a console application that needs to be executed through command line instructions.
 
- - `FashHashes.Tests -help` displays the help section.
- - `FashHashes.Tests -tests [ALL | T1 ... Tn] -hashes [ALL | H1 ... Hn]` runs the specified tests on the specified hashes; all the command line parameters must be included because the code doesn't handle default implicit values.
+ - Display the help section:
+   - `FashHashes.Tests -help`
+ - Run the specified tests on the specified hashes:
+   - `FashHashes.Tests -hashes [ALL | H1 ... Hn] -tests [ALL | T1 ... Tn]`
+ - Default execution when no arguments are specified:
+   - `FashHashes.Tests -hashes ALL -tests V0`
 
 *[EXAMPLE 1]* Run validation and quality tests on all the available hashes and save the result on a text file:
 
