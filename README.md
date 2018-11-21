@@ -134,9 +134,7 @@ FashHashes.Tests is a console application that needs to be executed through comm
  - Display the help section:
    - `FashHashes.Tests -help`
  - Run the specified tests on the specified hashes:
-   - `FashHashes.Tests -hashes [ALL | H1 ... Hn] -tests [ALL | T1 ... Tn]`
- - Default execution when no arguments are specified:
-   - `FashHashes.Tests -hashes ALL -tests V0`
+   - `FashHashes.Tests -hashes [ALL | H1 ... Hn] (default: ALL) -tests [ALL | T1 ... Tn] (default: V0)`
 
 *[EXAMPLE 1]* Run validation and quality tests on all the available hashes and save the result on a text file:
 
