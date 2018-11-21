@@ -50,7 +50,7 @@ The key characteristics of the FashHashes library are:
  
 ### Requirements
  
-The library is platform-agnostic, therefore it can be used on both x86 and x64 environments. The solution model targets Visual Studio 2017 and the project is compiled under .NET Framework 4.7.1, therefore it can be used on every machine equipped with Windows 7 or greater.
+The library is os-agnostic (it has been developer under .NET Standard 2.0) and platform-agnostic, (both x86 and x64 environments are supported). The project targets Visual Studio 2017.
 
 ### Performance Benchmarks
 
@@ -125,7 +125,7 @@ Most of them are very CPU intensive and/or utilize a lot of virtual memory.
    
 ### Requirements
  
-The application is platform-agnostic, therefore it can be used on both x86 and x64 environments. The solution model targets Visual Studio 2017 and the project is compiled under .NET Framework 4.7.1, therefore it can be used on every machine equipped with Windows 7 or greater. The application requires administration privileges in order to work properly; a semi-automatic elevation routine is included in the application manifest file.
+The project targets Visual Studio 2017 and .NET Framework 4.7.1, therefore it can be used on every machine equipped with Windows 7 or greater. The application is platform-agnostic, therefore it can be used on both x86 and x64 environments. The application requires administration privileges in order to work properly; a semi-automatic elevation routine is included in the application manifest file.
 
 ### Usage
 
