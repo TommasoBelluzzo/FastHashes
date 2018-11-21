@@ -206,7 +206,7 @@ namespace FastHashes.Tests
             Console.WriteLine(" - Run the specified tests on the specified hashes:");
             Console.WriteLine($"   {assemblyName} -hashes [ALL | H1 ... Hn] -tests [ALL | T1 ... Tn]");
             Console.WriteLine();
-            Console.WriteLine(" - Default:");
+            Console.WriteLine(" - Default execution when no arguments are specified:");
             Console.WriteLine($"   {assemblyName} -hashes ALL -tests V0");
             Console.WriteLine();
             Console.WriteLine("Available Tests:");
