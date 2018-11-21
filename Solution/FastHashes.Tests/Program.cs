@@ -60,10 +60,13 @@ namespace FastHashes.Tests
 
             Dictionary<String,String[]> arguments = CommandLineUtilities.ParseArguments(args);
 
-            if ((arguments.Count != 2) || !arguments.ContainsKey("hashes") || !arguments.ContainsKey("tests"))
+            foreach (String argument in arguments.Keys)
             {
-                Console.WriteLine("ERROR: malformed or unrecognized command.");
-                return;
+                if (!argument.Equals("hashes", StringComparison.Ordinal) && !argument.Equals("tests", StringComparison.Ordinal))
+                {
+                    Console.WriteLine($"ERROR: unrecognized command parameter \"{argument}\".");
+                    return;
+                }
             }
 
             String result = CommandLineUtilities.TryGetHashes(arguments, s_HashInfos, out String[] hashes);
@@ -74,7 +77,7 @@ namespace FastHashes.Tests
                 return;
             }
 
-            result = CommandLineUtilities.TryGetTests(arguments, out Boolean qualityTests, out Boolean speedTests, out Boolean validationTests);
+            result = CommandLineUtilities.TryGetTests(arguments, out Boolean qualityTests, out Boolean speedTests, out ValidationTestsSelection validationTestsSelection);
 
             if (!String.IsNullOrEmpty(result))
             {
@@ -82,12 +85,12 @@ namespace FastHashes.Tests
                 return;
             }
 
-            RunTests(hashes.ToArray(), validationTests, qualityTests, speedTests);
+            RunTests(hashes.ToArray(), validationTestsSelection, qualityTests, speedTests);
         }
         #endregion
 
         #region Methods
-        private static void RunTests(String[] hashes, Boolean validationTests, Boolean qualityTests, Boolean speedTests)
+        private static void RunTests(String[] hashes, ValidationTestsSelection validationTestsSelection, Boolean qualityTests, Boolean speedTests)
         {
             Process process = Process.GetCurrentProcess();
 
@@ -117,11 +120,14 @@ namespace FastHashes.Tests
                 Console.WriteLine(title);
                 Console.WriteLine(frame);
 
-                if (validationTests)
+                if (validationTestsSelection != ValidationTestsSelection.None)
                 {
                     Console.WriteLine();
                     ValidationTests.VerificationTest(hashInfo);
-                
+                }
+
+                if (validationTestsSelection == ValidationTestsSelection.All)
+                {
                     Console.WriteLine();
                     ValidationTests.CombinationsTest(hashInfo);
                     

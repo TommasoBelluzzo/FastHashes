@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 #endregion
@@ -59,12 +60,8 @@ namespace FastHashes.Tests
             if (hashInfos == null)
                 throw new ArgumentNullException(nameof(hashInfos));
 
-            hashes = new String[0];
-
-            String[] argumentHashes = arguments["hashes"];
-
-            if (argumentHashes.Length == 0)
-                return "ERROR: no hashes have been specified.";
+            if (!arguments.TryGetValue("hashes", out String[] argumentHashes))
+                argumentHashes = new[] { "ALL" };
 
             List<String> hashesList;
 
@@ -98,7 +95,10 @@ namespace FastHashes.Tests
                     }
 
                     if (!hashFound)
+                    {
+                        hashes = new String[0];
                         return $"ERROR: unrecognized hash \"{hashName}\"."; 
+                    }
                 }
             }
 
@@ -107,28 +107,32 @@ namespace FastHashes.Tests
             return String.Empty;
         }
 
-        public static String TryGetTests(Dictionary<String,String[]> arguments, out Boolean qualityTests, out Boolean speedTests, out Boolean validationTests)
+        public static String TryGetTests(Dictionary<String,String[]> arguments, out Boolean qualityTests, out Boolean speedTests, out ValidationTestsSelection validationTestsSelection)
         {
             if (arguments == null)
                 throw new ArgumentNullException(nameof(arguments));
 
             qualityTests = false;
             speedTests = false;
-            validationTests = false;
+            validationTestsSelection = ValidationTestsSelection.None;
 
-            String[] argumentTests = arguments["tests"];
-
-            if (argumentTests.Length == 0)
-                return "ERROR: no tests have been specified.";
+            if (!arguments.TryGetValue("tests", out String[] argumentTests))
+                argumentTests = new[] { "V0" };
 
             if ((argumentTests.Length == 1) && String.Equals(argumentTests[0], "ALL", StringComparison.Ordinal))
             {
                 qualityTests = true;
                 speedTests = true;
-                validationTests = true;
+                validationTestsSelection = ValidationTestsSelection.All;
             }
             else
             {
+                if (argumentTests.Contains("ALL", StringComparer.Ordinal))
+                    return "ERROR: if the \"ALL\" attribute is specified, the \"tests\" parameter cannot contain other values.";
+
+                if (argumentTests.Contains("V0", StringComparer.Ordinal) && argumentTests.Contains("V1", StringComparer.Ordinal))
+                    return "ERROR: only one attribute between \"V0\" and \"V1\" can be specified for the \"tests\" parameter.";
+
                 for (Int32 i = 0; i < argumentTests.Length; ++i)
                 {
                     String argumentTest = argumentTests[i];
@@ -143,8 +147,12 @@ namespace FastHashes.Tests
                             speedTests = true;
                             break;
 
-                        case "V":
-                            validationTests = true;
+                        case "V0":
+                            validationTestsSelection = ValidationTestsSelection.VerificationOnly;
+                            break;
+
+                        case "V1":
+                            validationTestsSelection = ValidationTestsSelection.All;
                             break;
 
                         default:
@@ -196,12 +204,16 @@ namespace FastHashes.Tests
             Console.WriteLine(" - Display the current help section:");
             Console.WriteLine($"   {assemblyName} -help");
             Console.WriteLine(" - Run the specified tests on the specified hashes:");
-            Console.WriteLine($"   {assemblyName} -tests [ALL | T1 ... Tn] -hashes [ALL | H1 ... Hn]");
+            Console.WriteLine($"   {assemblyName} -hashes [ALL | H1 ... Hn] -tests [ALL | T1 ... Tn]");
+            Console.WriteLine();
+            Console.WriteLine(" - Default:");
+            Console.WriteLine($"   {assemblyName} -hashes ALL -tests V0");
             Console.WriteLine();
             Console.WriteLine("Available Tests:");
             Console.WriteLine(" - Q: Quality Tests");
             Console.WriteLine(" - S: Speed Tests");
-            Console.WriteLine(" - V: Validation Tests");
+            Console.WriteLine(" - V0: Validation Tests (Verification Only)");
+            Console.WriteLine(" - V1: Validation Tests (All)");
             Console.WriteLine();
             Console.WriteLine("Available Hashes:");
 
