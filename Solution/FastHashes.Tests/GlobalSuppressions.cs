@@ -1,4 +1,4 @@
-﻿#region Using Directives
+#region Using Directives
 using System.Diagnostics.CodeAnalysis;
 #endregion
 
