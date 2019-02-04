@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 #endregion
 
 #region Information
-[assembly: AssemblyDescription("A test suite for the FastHashes library.")]
 [assembly: AssemblyCompany("Tommaso Belluzzo")]
 
 #if (DEBUG)
@@ -18,7 +17,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("Copyright ©2017 Tommaso Belluzzo")]
 [assembly: AssemblyCulture("")]
 [assembly: AssemblyProduct("FastHashes.Tests")]
-[assembly: AssemblyTitle("FastHashes.Tests")]
+[assembly: AssemblyTitle("A test suite for the FastHashes library.")]
 [assembly: AssemblyTrademark("")]
 #endregion
 
