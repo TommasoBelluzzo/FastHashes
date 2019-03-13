@@ -50,7 +50,7 @@ The key characteristics of the FashHashes library are:
  
 ### Requirements
  
-The library is os-agnostic (it has been developer under .NET Standard 2.0) and platform-agnostic, (both x86 and x64 environments are supported). The project targets Visual Studio 2017.
+The library is os-agnostic (it has been developed under .NET Standard 2.0) and platform-agnostic, (both x86 and x64 environments are supported). The project targets Visual Studio 2017.
 
 ### Performance Benchmarks
 
