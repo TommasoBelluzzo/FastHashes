@@ -131,10 +131,10 @@ The project targets Visual Studio 2017 and .NET Framework 4.7.1, therefore it ca
 
 FashHashes.Tests is a console application that needs to be executed through command line instructions.
 
- * Display the help section:
-   * `FashHashes.Tests -help`
- * Run the specified tests on the specified hashes:
-   * `FashHashes.Tests -hashes [ALL | H1 ... Hn] (default: ALL) -tests [ALL | T1 ... Tn] (default: V0)`
+ - Display the help section:
+   - `FashHashes.Tests -help`
+ - Run the specified tests on the specified hashes:
+   - `FashHashes.Tests -hashes [ALL | H1 ... Hn] (default: ALL) -tests [ALL | T1 ... Tn] (default: V0)`
 
 *[EXAMPLE 1]* Run validation and quality tests on all the available hashes and save the result on a text file:
 
