@@ -29,19 +29,19 @@ FashHashes is a pure C# porting of the following non-cryptographic hashes:
    * 64 Bits Output
    * Reference Implementation: [https://github.com/vnmakarov/mum-hash](https://github.com/vnmakarov/mum-hash)
  * `MurmurHash (v3)`
-   - 32/64/128 Bits Output
-   - x86/x64 Variants
-   - Reference Implementation: [https://github.com/aappleby/smhasher](https://github.com/aappleby/smhasher)
- - `SipHash`
-   - 64 Bits Output
-   - 1-3/2-4 Variants
-   - Reference Implementation: [https://github.com/veorq/SipHash](https://github.com/veorq/SipHash)
- - `SpookyHash`
-   - 32/64/128 Bits Output
-   - Reference Implementation: [http://burtleburtle.net/bob/hash/spooky.html](http://burtleburtle.net/bob/hash/spooky.html)
- - `xxHash`
-   - 32/64 Bits Output
-   - Reference Implementation: [https://github.com/Cyan4973/xxHash](https://github.com/Cyan4973/xxHash)
+   * 32/64/128 Bits Output
+   * x86/x64 Variants
+   * Reference Implementation: [https://github.com/aappleby/smhasher](https://github.com/aappleby/smhasher)
+ * `SipHash`
+   * 64 Bits Output
+   * 1-3/2-4 Variants
+   * Reference Implementation: [https://github.com/veorq/SipHash](https://github.com/veorq/SipHash)
+ * `SpookyHash`
+   * 32/64/128 Bits Output
+   * Reference Implementation: [http://burtleburtle.net/bob/hash/spooky.html](http://burtleburtle.net/bob/hash/spooky.html)
+ * `xxHash`
+   * 32/64 Bits Output
+   * Reference Implementation: [https://github.com/Cyan4973/xxHash](https://github.com/Cyan4973/xxHash)
 
 The key characteristics of the FashHashes library are:
  * `Endian-Agnostic Code` (it attemps to provide consistent results regardless of the machine byte order, while only moderately affecting the computations performance);
@@ -102,24 +102,24 @@ FashHashes.Tests is a testing framework for the FastHashes library. It implement
  
 Here is an exhaustive list of the implemented tests:
 
- - **Quality Tests**
-   - Avalanche Test
-   - Bit Independence Criterion Test
-   - Differential Test
- - **Speed Tests**
-   - Bulk Speed Test
-   - Chunks Speed Test
- - **Validation Tests**
-   - Combinations Test
-   - Cyclic Keys Test
-   - Flipped Keys Test
-   - Key Sets Test
-   - Padded Keys Test
-   - Sparse Keys Test
-   - Two Bytes Test
-   - Uniform Keys Test
-   - Windowed Keys Test
-   - Words Test (the `Words.txt` file used by this test is taken from [this Gist](https://gist.github.com/wchargin/8927565))
+ * **Quality Tests**
+   * Avalanche Test
+   * Bit Independence Criterion Test
+   * Differential Test
+ * **Speed Tests**
+   * Bulk Speed Test
+   * Chunks Speed Test
+ * **Validation Tests**
+   * Combinations Test
+   * Cyclic Keys Test
+   * Flipped Keys Test
+   * Key Sets Test
+   * Padded Keys Test
+   * Sparse Keys Test
+   * Two Bytes Test
+   * Uniform Keys Test
+   * Windowed Keys Test
+   * Words Test (the `Words.txt` file used by this test is taken from [this Gist](https://gist.github.com/wchargin/8927565))
    
 Most of them are very CPU intensive and/or utilize a lot of virtual memory.
    
@@ -131,10 +131,10 @@ The project targets Visual Studio 2017 and .NET Framework 4.7.1, therefore it ca
 
 FashHashes.Tests is a console application that needs to be executed through command line instructions.
 
- - Display the help section:
-   - `FashHashes.Tests -help`
- - Run the specified tests on the specified hashes:
-   - `FashHashes.Tests -hashes [ALL | H1 ... Hn] (default: ALL) -tests [ALL | T1 ... Tn] (default: V0)`
+ * Display the help section:
+   * `FashHashes.Tests -help`
+ * Run the specified tests on the specified hashes:
+   * `FashHashes.Tests -hashes [ALL | H1 ... Hn] (default: ALL) -tests [ALL | T1 ... Tn] (default: V0)`
 
 *[EXAMPLE 1]* Run validation and quality tests on all the available hashes and save the result on a text file:
 
