@@ -4,31 +4,31 @@
 
 FashHashes is a pure C# porting of the following non-cryptographic hashes:
 
- - `FarmHash`
-   - 32/64/128 Bits Output
-   - Fingerprint Versions
-   - Reference Implementation: [https://github.com/google/farmhash](https://github.com/google/farmhash)
- - `FastHash`
-   - 32/64 Bits Output
-   - Reference Implementation: [https://github.com/ZilongTan/fast-hash](https://github.com/ZilongTan/fast-hash)
- - `FastPositiveHash / TH1A`
-   - 64 Bits Output
-   - 0/1/2 Variants
-   - Reference Implementation: [https://github.com/leo-yuriev/t1ha](https://github.com/leo-yuriev/t1ha)
- - `HalfSipHash`
-   - 32 Bits Output
-   - Reference Implementation: [https://github.com/veorq/SipHash](https://github.com/veorq/SipHash)
- - `HighwayHash`
-   - 64/128/256 Bits Output
-   - Reference Implementation: [https://github.com/google/highwayhash](https://github.com/google/highwayhash)
- - `MetroHash`
-   - 64/128 Bits Output
-   - 0/1 Variants
-   - Reference Implementation: [https://github.com/jandrewrogers/MetroHash](https://github.com/jandrewrogers/MetroHash)
- - `MumHash`
-   - 64 Bits Output
-   - Reference Implementation: [https://github.com/vnmakarov/mum-hash](https://github.com/vnmakarov/mum-hash)
- - `MurmurHash (v3)`
+ * `FarmHash`
+   * 32/64/128 Bits Output
+   * Fingerprint Versions
+   * Reference Implementation: [https://github.com/google/farmhash](https://github.com/google/farmhash)
+ * `FastHash`
+   * 32/64 Bits Output
+   * Reference Implementation: [https://github.com/ZilongTan/fast-hash](https://github.com/ZilongTan/fast-hash)
+ * `FastPositiveHash / TH1A`
+   * 64 Bits Output
+   * 0/1/2 Variants
+   * Reference Implementation: [https://github.com/leo-yuriev/t1ha](https://github.com/leo-yuriev/t1ha)
+ * `HalfSipHash`
+   * 32 Bits Output
+   * Reference Implementation: [https://github.com/veorq/SipHash](https://github.com/veorq/SipHash)
+ * `HighwayHash`
+   * 64/128/256 Bits Output
+   * Reference Implementation: [https://github.com/google/highwayhash](https://github.com/google/highwayhash)
+ * `MetroHash`
+   * 64/128 Bits Output
+   * 0/1 Variants
+   * Reference Implementation: [https://github.com/jandrewrogers/MetroHash](https://github.com/jandrewrogers/MetroHash)
+ * `MumHash`
+   * 64 Bits Output
+   * Reference Implementation: [https://github.com/vnmakarov/mum-hash](https://github.com/vnmakarov/mum-hash)
+ * `MurmurHash (v3)`
    - 32/64/128 Bits Output
    - x86/x64 Variants
    - Reference Implementation: [https://github.com/aappleby/smhasher](https://github.com/aappleby/smhasher)
@@ -44,9 +44,9 @@ FashHashes is a pure C# porting of the following non-cryptographic hashes:
    - Reference Implementation: [https://github.com/Cyan4973/xxHash](https://github.com/Cyan4973/xxHash)
 
 The key characteristics of the FashHashes library are:
- - `Endian-Agnostic Code` (it attemps to provide consistent results regardless of the machine byte order, while only moderately affecting the computations performance);
- - `Native/Unmanaged Memory Access` (where possible, it uses unsafe memory pointers and native Windows API calls to speed up computations);
- - `Zero-Allocation Algorithms` (all the computations are performed without allocating objects, only primitive types and/or arrays of primitive types are used).
+ * `Endian-Agnostic Code` (it attemps to provide consistent results regardless of the machine byte order, while only moderately affecting the computations performance);
+ * `Native/Unmanaged Memory Access` (where possible, it uses unsafe memory pointers and native Windows API calls to speed up computations);
+ * `Zero-Allocation Algorithms` (all the computations are performed without allocating objects, only primitive types and/or arrays of primitive types are used).
  
 ### Requirements
  
@@ -89,16 +89,16 @@ The library is os-agnostic (it has been developed under .NET Standard 2.0) and p
 
 The tests above have been conducted with the following machine setup:
 
- - `CPU:` Intel Core i7-7700HQ @2.80GHz (4 Cores, 8 Threads, 256KB L1 Cache)
- - `RAM:` 16 GB x DDR4 SO-DIMM @1200MHz
- - `OS:` Microsoft Windows 10 64-Bit
+ * `CPU:` Intel Core i7-7700HQ @2.80GHz (4 Cores, 8 Threads, 256KB L1 Cache)
+ * `RAM:` 16 GB x DDR4 SO-DIMM @1200MHz
+ * `OS:` Microsoft Windows 10 64-Bit
 
 ## The Test Suite
 
 FashHashes.Tests is a testing framework for the FastHashes library. It implements a lot of different tests, most of which are taken from [SMHasher](https://github.com/aappleby/smhasher) and its most notable forks:
 
- - [https://github.com/demerphq/smhasher/](https://github.com/demerphq/smhasher/)
- - [https://github.com/rurban/smhasher](https://github.com/rurban/smhasher)
+ * [https://github.com/demerphq/smhasher/](https://github.com/demerphq/smhasher/)
+ * [https://github.com/rurban/smhasher](https://github.com/rurban/smhasher)
  
 Here is an exhaustive list of the implemented tests:
 
@@ -131,10 +131,10 @@ The project targets Visual Studio 2017 and .NET Framework 4.7.1, therefore it ca
 
 FashHashes.Tests is a console application that needs to be executed through command line instructions.
 
- - Display the help section:
-   - `FashHashes.Tests -help`
- - Run the specified tests on the specified hashes:
-   - `FashHashes.Tests -hashes [ALL | H1 ... Hn] (default: ALL) -tests [ALL | T1 ... Tn] (default: V0)`
+ * Display the help section:
+   * `FashHashes.Tests -help`
+ * Run the specified tests on the specified hashes:
+   * `FashHashes.Tests -hashes [ALL | H1 ... Hn] (default: ALL) -tests [ALL | T1 ... Tn] (default: V0)`
 
 *[EXAMPLE 1]* Run validation and quality tests on all the available hashes and save the result on a text file:
 
