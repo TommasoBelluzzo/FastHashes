@@ -1,7 +1,5 @@
 # FastHashes Framework
 
-## The Library
-
 FashHashes is a pure C# porting of the following non-cryptographic hashes:
 
  * `FarmHash`
@@ -48,11 +46,11 @@ The key characteristics of the FashHashes library are:
  * `Native/Unmanaged Memory Access` (where possible, it uses unsafe memory pointers and native Windows API calls to speed up computations);
  * `Zero-Allocation Algorithms` (all the computations are performed without allocating objects, only primitive types and/or arrays of primitive types are used).
  
-### Requirements
+## Requirements
  
 The library is os-agnostic (it has been developed under .NET Standard 2.0) and platform-agnostic, (both x86 and x64 environments are supported). The project targets Visual Studio 2017.
 
-### Performance Benchmarks
+## Performance Benchmarks
 
 | Hash Rank | Hash Name               | Bulk Speed Test Average ↓ | Chunks Speed Test Average |
 | :---:     | :---:                   | :---:                     | :---:                     |
