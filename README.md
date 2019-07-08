@@ -45,8 +45,8 @@ FashHashes is a pure C# porting of the following non-cryptographic hashes:
 
 FashHashes is...
 
- * `Endian-Agnostic`: it provides consistent results regardless of the machine byte order, while only moderately affecting the computations performance;
- * `High-Performing`: it makes extensive use of unsafe memory pointers to speed up computations;
+ * `High-Performing`: it makes extensive use of method inlining and unsafe memory pointers in order to speed up computations;
+ * `Endian-Agnostic`: it provides consistent results regardless of the machine byte order, while only moderately affecting the performance of computations;
  * `Object-Free`: only primitive types and/or arrays of primitive types are used).
  
 ## Requirements
