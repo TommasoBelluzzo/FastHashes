@@ -46,7 +46,7 @@ FashHashes is a pure C# porting of the following non-cryptographic hashes:
 FashHashes is...
 
  * `High-Performing`: its deeply-optimized code makes extensive use of method inlining and unsafe memory pointers in order to speed up the computations;
- * `Allocation-Free`: all the computations are implemented using a zero-allocation logic, only primitive types and/or arrays of primitive types are used;
+ * `Allocation-Free`: all the computations implement a zero-allocation approach, only primitive types and/or arrays of primitive types are used;
  * `Endian-Agnostic`: all the hashes provide consistent results regardless of the machine byte order, while only moderately affecting the overall performance of the computations.
 
 ## Requirements
