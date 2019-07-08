@@ -46,9 +46,9 @@ FashHashes is a pure C# porting of the following non-cryptographic hashes:
 FashHashes is...
 
  * `High-Performing`: its deeply-optimized code makes extensive use of method inlining and unsafe memory pointers in order to speed up the computations;
- * `Endian-Agnostic`: all the hashes provide consistent results regardless of the machine byte order, while only moderately affecting the overall performance of the computations;
- * `Allocation-Free`: all the computations are implemented using a zero-allocation logic, only primitive types and/or arrays of primitive types are used.
- 
+ * `Allocation-Free`: all the computations are implemented using a zero-allocation logic, only primitive types and/or arrays of primitive types are used;
+ * `Endian-Agnostic`: all the hashes provide consistent results regardless of the machine byte order, while only moderately affecting the overall performance of the computations.
+
 ## Requirements
  
 The library is os-agnostic (it has been developed under .NET Standard 2.0) and platform-agnostic, (both x86 and x64 environments are supported). The project targets Visual Studio 2017.
