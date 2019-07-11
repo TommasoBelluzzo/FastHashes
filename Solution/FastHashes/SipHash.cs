@@ -1,10 +1,12 @@
 ﻿#region Using Directives
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 #endregion
 
 namespace FastHashes
 {
+    /// <summary>Represents the HalfSipHash implementation. This class cannot be derived.</summary>
     public sealed class HalfSipHash : Hash
     {
         #region Constants
@@ -18,25 +20,33 @@ namespace FastHashes
         #endregion
 
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 32;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HalfSipHash"/> using the specified seeds.</summary>
+        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
         public HalfSipHash(UInt64 seed1, UInt64 seed2)
         {
             m_Seed1 = (UInt32)(seed1 - (seed1 >> 32));
             m_Seed2 = (UInt32)(seed2 - (seed2 >> 32));
         }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HalfSipHash"/> using null seeds.</summary>
         public HalfSipHash() : this(0ul, 0ul) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HalfSipHash"/> using the specified value for both seeds.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public HalfSipHash(UInt64 seed) : this(seed, seed) { }
         #endregion
 
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] data, Int32 offset, Int32 length)
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
-            UInt32 b = (UInt32)length << 24;
+            UInt32 b = (UInt32)count << 24;
 
             UInt32[] v =
             {
@@ -46,17 +56,17 @@ namespace FastHashes
                 I1 ^ m_Seed2
             };
 
-            if (length == 0)
+            if (count == 0)
                 goto Finalize;
 
             unsafe
             {
-                fixed (Byte* pin = &data[offset])
+                fixed (Byte* pin = &buffer[offset])
                 {
                     Byte* pointer = pin;
 
-                    Int32 blocks = length / 4;
-                    Int32 remainder = length & 3;
+                    Int32 blocks = count / 4;
+                    Int32 remainder = count & 3;
 
                     while (blocks-- > 0)
                     {
@@ -126,6 +136,7 @@ namespace FastHashes
         #endregion
     }
 
+    /// <summary>Represents the SipHash implementation. This class cannot be derived.</summary>
     public sealed class SipHash : Hash
     {
         #region Constants
@@ -144,12 +155,21 @@ namespace FastHashes
         #endregion
 
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 64;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using the specified variant and seeds.</summary>
+        /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.SipHashVariant"/>.</param>
+        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
+        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public SipHash(SipHashVariant variant, UInt64 seed1, UInt64 seed2)
         {
+            if (!Enum.IsDefined(typeof(SipHashVariant), variant))
+                throw new InvalidEnumArgumentException("Invalid variant specified.");
+
             if (variant == SipHashVariant.V13)
             {
                 m_R1 = 1;
@@ -166,21 +186,35 @@ namespace FastHashes
             m_Seed2 = seed2;
         }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using the variant 2-4 and null seeds.</summary>
         public SipHash() : this(SipHashVariant.V24, 0ul, 0ul) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using the specified variant and null seeds.</summary>
+        /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.SipHashVariant"/>.</param>
+        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public SipHash(SipHashVariant variant) : this(variant, 0ul, 0ul) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using the specified variant and the specified value for both seeds.</summary>
+        /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.SipHashVariant"/>.</param>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public SipHash(SipHashVariant variant, UInt64 seed) : this(variant, seed, seed) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using the variant 2-4 and the specified value for both seeds.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public SipHash(UInt64 seed) : this(SipHashVariant.V24, seed, seed) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using the variant 2-4 and the specified seeds.</summary>
+        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
         public SipHash(UInt64 seed1, UInt64 seed2) : this(SipHashVariant.V24, seed1, seed2) { }
         #endregion
 
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] data, Int32 offset, Int32 length)
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
-            UInt64 b = (UInt64)(length & 0x000000FF) << 56;
+            UInt64 b = (UInt64)(count & 0x000000FF) << 56;
 
             UInt64[] v =
             {
@@ -190,17 +224,17 @@ namespace FastHashes
                 m_Seed2 ^ K3
             };
 
-            if (length == 0)
+            if (count == 0)
                 goto Finalize;
 
             unsafe
             {
-                fixed (Byte* pin = &data[offset])
+                fixed (Byte* pin = &buffer[offset])
                 {
                     Byte* pointer = pin;
 
-                    Int32 blocks = length / 8;
-                    Int32 remainder = length & 7;
+                    Int32 blocks = count / 8;
+                    Int32 remainder = count & 7;
 
                     while (blocks-- > 0)
                     {
@@ -251,6 +285,7 @@ namespace FastHashes
             return result;
         }
 
+        /// <inheritdoc/>
         public override String ToString()
         {
             if (m_Variant == SipHashVariant.V13)

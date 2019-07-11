@@ -1,10 +1,12 @@
 ﻿#region Using Directives
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 #endregion
 
 namespace FastHashes
 {
+    /// <summary>Represents the MetroHash64 implementation. This class cannot be derived.</summary>
     public sealed class MetroHash64 : Hash
     {
         #region Members
@@ -12,34 +14,50 @@ namespace FastHashes
         #endregion
 
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 64;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash64"/> using the specified variant and seed.</summary>
+        /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.MetroHashVariant"/>.</param>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public MetroHash64(MetroHashVariant variant, UInt32 seed)
         {
+            if (!Enum.IsDefined(typeof(MetroHashVariant), variant))
+                throw new InvalidEnumArgumentException("Invalid variant specified.");
+
             if (variant == MetroHashVariant.V1)
                 m_Engine = new Engine1(seed);
             else
                 m_Engine = new Engine2(seed);
         }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash64"/> using the variant 1 and a null seed.</summary>
         public MetroHash64() : this(MetroHashVariant.V1, 0u) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash64"/> using the specified variant and a null seed.</summary>
+        /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.MetroHashVariant"/>.</param>
+        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public MetroHash64(MetroHashVariant variant) : this(variant, 0u) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash64"/> using the variant 1 and the specified seed.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public MetroHash64(UInt32 seed) : this(MetroHashVariant.V1, seed) { }
         #endregion
 
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] data, Int32 offset, Int32 length)
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
-            return m_Engine.ComputeHash(data, offset, length);
+            return m_Engine.ComputeHash(buffer, offset, count);
         }
 
+        /// <inheritdoc/>
         public override String ToString()
         {
-            return String.Concat(GetType().Name, "_", m_Engine.Name);
+            return String.Concat(GetType().Name, "-", m_Engine.Name);
         }
         #endregion
 
@@ -132,7 +150,7 @@ namespace FastHashes
             #endregion
 
             #region Properties
-            public override String Name => "1";
+            public override String Name => "V1";
             #endregion
 
             #region Constructors
@@ -237,7 +255,7 @@ namespace FastHashes
             #endregion
 
             #region Properties
-            public override String Name => "2";
+            public override String Name => "V2";
             #endregion
 
             #region Constructors
@@ -334,6 +352,7 @@ namespace FastHashes
         #endregion
     }
 
+    /// <summary>Represents the MetroHash128 implementation. This class cannot be derived.</summary>
     public sealed class MetroHash128 : Hash
     {
         #region Members
@@ -341,38 +360,54 @@ namespace FastHashes
         #endregion
 
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 128;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash128"/> using the specified variant and seed.</summary>
+        /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.MetroHashVariant"/>.</param>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public MetroHash128(MetroHashVariant variant, UInt32 seed)
         {
+            if (!Enum.IsDefined(typeof(MetroHashVariant), variant))
+                throw new InvalidEnumArgumentException("Invalid variant specified.");
+
             if (variant == MetroHashVariant.V1)
                 m_Engine = new Engine1(seed);
             else
                 m_Engine = new Engine2(seed);
         }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash128"/> using the variant 1 and a null seed.</summary>
         public MetroHash128() : this(MetroHashVariant.V1, 0u) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash128"/> using the specified variant and a null seed.</summary>
+        /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.MetroHashVariant"/>.</param>
+        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public MetroHash128(MetroHashVariant variant) : this(variant, 0u) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash128"/> using the variant 1 and the specified seed.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public MetroHash128(UInt32 seed) : this(MetroHashVariant.V1, seed) { }
         #endregion
 
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] data, Int32 offset, Int32 length)
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
-            return m_Engine.ComputeHash(data, offset, length);
+            return m_Engine.ComputeHash(buffer, offset, count);
         }
 
+        /// <inheritdoc/>
         public override String ToString()
         {
-            return String.Concat(GetType().Name, "_", m_Engine.Name);
+            return String.Concat(GetType().Name, "-", m_Engine.Name);
         }
         #endregion
 
-        #region Nesting
+        #region Nesting (Classes)
         private abstract class Engine
         {
             #region Members
@@ -453,7 +488,7 @@ namespace FastHashes
             #endregion
 
             #region Properties
-            public override String Name => "1";
+            public override String Name => "V1";
             #endregion
 
             #region Constructors
@@ -556,7 +591,7 @@ namespace FastHashes
             #endregion
 
             #region Properties
-            public override String Name => "2";
+            public override String Name => "V2";
             #endregion
 
             #region Constructors

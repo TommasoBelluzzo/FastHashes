@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
+    /// <summary>Represents the base class from which all implementations of SpookyHash must derive.</summary>
     public abstract class SpookyHash : Hash
     {
         #region Constants
@@ -24,6 +25,9 @@ namespace FastHashes
         #endregion
 
         #region Constructors
+        /// <summary>Represents the base constructor used by derived classes.</summary>
+        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
         protected SpookyHash(UInt64 seed1, UInt64 seed2)
         {
             m_Seed1 = seed1;
@@ -32,12 +36,13 @@ namespace FastHashes
         #endregion
 
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] data, Int32 offset, Int32 length)
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
-            if (length < 192)
-                return ComputeHashShort(data, offset, length);
+            if (count < 192)
+                return ComputeHashShort(buffer, offset, count);
 
-            return ComputeHashLong(data, offset, length);
+            return ComputeHashLong(buffer, offset, count);
         }
 
         private Byte[] ComputeHashLong(Byte[] data, Int32 index, Int32 length)
@@ -172,6 +177,9 @@ namespace FastHashes
         #endregion
 
         #region Methods (Abstract)
+        /// <summary>Converts the hash data into a byte array representing the output hash.</summary>
+        /// <param name="hash">The hash data.</param>
+        /// <returns>A byte array representing the output hash.</returns>
         protected abstract Byte[] GetHash(UInt64[] hash);
         #endregion
 
@@ -234,19 +242,25 @@ namespace FastHashes
         #endregion
     }
 
+    /// <summary>Represents the SpookyHash32 implementation. This class cannot be derived.</summary>
     public sealed class SpookyHash32 : SpookyHash
     {
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 32;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SpookyHash32"/> using a null seed.</summary>
         public SpookyHash32() : base(0ul, 0ul) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SpookyHash64"/> using the specified seed.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public SpookyHash32(UInt32 seed) : base(seed, seed) { }
         #endregion
 
         #region Methods
+        /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] hash)
         {
             Byte[] result = new Byte[4];
@@ -262,19 +276,25 @@ namespace FastHashes
         #endregion
     }
 
+    /// <summary>Represents the SpookyHash64 implementation. This class cannot be derived.</summary>
     public sealed class SpookyHash64 : SpookyHash
     {
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 64;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SpookyHash64"/> using a null seed.</summary>
         public SpookyHash64() : base(0ul, 0ul) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SpookyHash64"/> using the specified seed.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public SpookyHash64(UInt64 seed) : base(seed, seed) { }
         #endregion
 
         #region Methods
+        /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] hash)
         {
             Byte[] result = new Byte[8];
@@ -290,21 +310,30 @@ namespace FastHashes
         #endregion
     }
 
+    /// <summary>Represents the SpookyHash128 implementation. This class cannot be derived.</summary>
     public sealed class SpookyHash128 : SpookyHash
     {
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 128;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SpookyHash64"/> using null seeds.</summary>
         public SpookyHash128() : base(0ul, 0ul) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash128"/> using the specified value for both seeds.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public SpookyHash128(UInt64 seed) : base(seed, seed) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SpookyHash128"/> using the specified seeds.</summary>
+        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
         public SpookyHash128(UInt64 seed1, UInt64 seed2) : base(seed1, seed2) { }
         #endregion
 
         #region Methods
+        /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] hash)
         {
             Byte[] result = new Byte[16];

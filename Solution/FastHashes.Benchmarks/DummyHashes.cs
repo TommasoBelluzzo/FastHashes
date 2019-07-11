@@ -7,7 +7,7 @@ namespace FastHashes.Benchmarks
     public abstract class DummyHash : Hash
     {
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] data, Int32 offset, Int32 length)
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
             return (new Byte[Length / 8]);
         }

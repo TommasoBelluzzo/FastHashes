@@ -6,45 +6,63 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
+    /// <summary>Represents the base class from which all implementations of FarmHash with more than 32 bits of output must derive.</summary>
     public abstract class FarmHashG32 : Hash
     {
         #region Constants
+        /// <summary>Represents the K0 value. This field is constant.</summary>
         protected const UInt64 K0 = 0xC3A5C85C97CB3127ul;
+        /// <summary>Represents the K1 value. This field is constant.</summary>
         protected const UInt64 K1 = 0xB492B66FBE98F273ul;
+        /// <summary>Represents the K2 value. This field is constant.</summary>
         protected const UInt64 K2 = 0x9AE16A3B2F90404Ful;
+        /// <summary>Represents the K3 value. This field is constant.</summary>
         protected const UInt64 K3 = 0x9DDFEA08EB382D69ul;
         #endregion
 
+        #region Members
+        /// <summary>Represents the vector of seed used by the hashing algorithm. This field is read-only.</summary>
+        protected readonly ReadOnlyCollection<UInt64> m_Seeds;
+        #endregion
+
         #region Properties
-        public ReadOnlyCollection<UInt64> Seeds { get; }
+        /// <summary>Gets the vector of seed used by the hashing algorithm.</summary>
+        public ReadOnlyCollection<UInt64> Seeds => m_Seeds;
         #endregion
 
         #region Constructors
+        /// <summary>Represents the base constructor without seeds used by derived classes.</summary>
         protected FarmHashG32()
         {
-            Seeds = null;
+            m_Seeds = new ReadOnlyCollection<UInt64>(new UInt64[0]);
         }
 
+        /// <summary>Represents the base constructor with seeds used by derived classes.</summary>
+        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
         protected FarmHashG32(UInt64 seed1, UInt64 seed2)
         {
-            Seeds = new ReadOnlyCollection<UInt64>(new[] { seed1, seed2 });
+            m_Seeds = new ReadOnlyCollection<UInt64>(new[] { seed1, seed2 });
         }
         #endregion
 
         #region Methods (Static)
+        /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static UInt64 HashLength16(UInt64 v1, UInt64 v2, UInt64 m)
         {
-            UInt64 a = Smix((v1 ^ v2) * m);
-            return Smix((v2 ^ a) * m) * m;
+            UInt64 a = ShiftMix((v1 ^ v2) * m);
+            return ShiftMix((v2 ^ a) * m) * m;
         }
 
+        /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static UInt64 Smix(UInt64 v)
+        protected static UInt64 ShiftMix(UInt64 v)
         {
             return (v ^ (v >> 47));
         }
 
+        /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static unsafe void Update(ref UInt64 x, ref UInt64 y, ref UInt64 z, Byte* pointer, UInt64 v0, UInt64 v1, UInt64 w0, UInt64 w1, UInt64 m, UInt64 c)
         {
@@ -55,6 +73,7 @@ namespace FastHashes
             z = RotateRight(z + w0, 33) * m;
         }
 
+        /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static unsafe void HashWeak32(out UInt64 v1, out UInt64 v2, Byte* pointer, UInt64 v3, UInt64 v4)
         {
@@ -78,6 +97,7 @@ namespace FastHashes
         #endregion
     }
 
+    /// <summary>Represents the FarmHash32 implementation. This class cannot be derived.</summary>
     public sealed class FarmHash32 : Hash
     {
         #region Constants
@@ -93,15 +113,19 @@ namespace FastHashes
         #endregion
 
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 32;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash32"/> without seed.</summary>
         public FarmHash32()
         {
             m_Seed = null;
         }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash32"/> using the specified seed.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public FarmHash32(UInt32 seed)
         {
             m_Seed = seed;
@@ -109,20 +133,21 @@ namespace FastHashes
         #endregion
 
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] data, Int32 offset, Int32 length)
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
             UInt32 hash;
 
             unsafe
             {
-                fixed (Byte* pin = &data[offset])
+                fixed (Byte* pin = &buffer[offset])
                 {
                     Byte* pointer = pin;
 
                     if (m_Seed.HasValue)
-                        hash = Hash(pointer, length, m_Seed.Value);
+                        hash = Hash(pointer, count, m_Seed.Value);
                     else
-                        hash = Hash(pointer, length);
+                        hash = Hash(pointer, count);
                 }
             }
 
@@ -320,48 +345,57 @@ namespace FastHashes
         #endregion
     }
 
+    /// <summary>Represents the FarmHash64 implementation. This class cannot be derived.</summary>
     public sealed class FarmHash64 : FarmHashG32
     {
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 64;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash64"/> without seeds.</summary>
         public FarmHash64() { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash64"/> using the constant K2 as first seed and the specified value as second seed.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public FarmHash64(UInt64 seed) : base(K2, seed) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash64"/> using the specified seeds.</summary>
+        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
         public FarmHash64(UInt64 seed1, UInt64 seed2) : base(seed1, seed2) { }
         #endregion
 
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] data, Int32 offset, Int32 length)
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
             UInt64 hash;
 
             unsafe
             {
-                fixed (Byte* pin = &data[offset])
+                fixed (Byte* pin = &buffer[offset])
                 {
                     Byte* pointer = pin;
 
-                    if (length == 0)
+                    if (count == 0)
                         hash = K2;
-                    else if (length <= 3)
-                        hash = Hash1To3(pointer, length);
-                    else if (length <= 7)
-                        hash = Hash4To7(pointer, length);
-                    else if (length <= 16)
-                        hash = Hash8To16(pointer, length);
-                    else if (length <= 32)
-                        hash = Hash17To32(pointer, length);
-                    else if (length <= 64)
-                        hash = Hash33To64(pointer, length);
+                    else if (count <= 3)
+                        hash = Hash1To3(pointer, count);
+                    else if (count <= 7)
+                        hash = Hash4To7(pointer, count);
+                    else if (count <= 16)
+                        hash = Hash8To16(pointer, count);
+                    else if (count <= 32)
+                        hash = Hash17To32(pointer, count);
+                    else if (count <= 64)
+                        hash = Hash33To64(pointer, count);
                     else
-                        hash = Hash65ToEnd(pointer, length);
+                        hash = Hash65ToEnd(pointer, count);
 
-                    if (Seeds != null)
-                        hash = HashLength16(hash - Seeds[0], Seeds[1], K3);
+                    if (m_Seeds.Count > 0)
+                        hash = HashLength16(hash - m_Seeds[0], m_Seeds[1], K3);
                 }
             }
 
@@ -384,7 +418,7 @@ namespace FastHashes
             UInt32 a = pointer[0] + ((UInt32)pointer[length >> 1] << 8);
             UInt32 b = (UInt32)length + ((UInt32)pointer[length - 1] << 2);
 
-            return Smix(a * K2 ^ b * K0) * K2;
+            return ShiftMix(a * K2 ^ b * K0) * K2;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -460,7 +494,7 @@ namespace FastHashes
             UInt64 v0 = 0ul, v1 = 0ul, w0 = 0ul, w1 = 0ul;
             UInt64 x = X0 + Fetch64(pointer);
             UInt64 y = Y0;
-            UInt64 z = Smix((y * K2) + 113ul) * K2;
+            UInt64 z = ShiftMix((y * K2) + 113ul) * K2;
 
             Byte* end = pointer + (((length - 1) / 64) * 64);
 
@@ -490,7 +524,7 @@ namespace FastHashes
             HashWeak32(out w0, out w1, pointer + 32, z + w1, y + Fetch64(pointer + 16));
             Swap(ref z, ref x);
 
-            UInt64 a = HashLength16(v0, w0, m) + (Smix(y) * K0) + z;
+            UInt64 a = HashLength16(v0, w0, m) + (ShiftMix(y) * K0) + z;
             UInt64 b = HashLength16(v1, w1, m) + x;
 
             return HashLength16(a, b, m);
@@ -498,37 +532,46 @@ namespace FastHashes
         #endregion
     }
 
+    /// <summary>Represents the FarmHash128 implementation. This class cannot be derived.</summary>
     public sealed class FarmHash128 : FarmHashG32
     {
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 128;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash128"/> without seeds.</summary>
         public FarmHash128() { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash128"/> using the specified value for both seeds.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public FarmHash128(UInt64 seed) : base(seed, seed) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash128"/> using the specified seeds.</summary>
+        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
         public FarmHash128(UInt64 seed1, UInt64 seed2) : base(seed1, seed2) { }
         #endregion
 
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] data, Int32 offset, Int32 length)
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
             UInt64 seed1, seed2;
             UInt64 hash1, hash2;
 
-            if (length == 0)
+            if (count == 0)
             {
-                if (Seeds == null)
+                if (m_Seeds.Count == 0)
                 {
                     seed1 = K0;
                     seed2 = K1;
                 }
                 else
                 {
-                    seed1 = Seeds[0];
-                    seed2 = Seeds[1];
+                    seed1 = m_Seeds[0];
+                    seed2 = m_Seeds[1];
                 }
 
                 Hash0(out hash1, out hash2, seed1, seed2);
@@ -538,19 +581,19 @@ namespace FastHashes
 
             unsafe
             {
-                fixed (Byte* pin = &data[offset])
+                fixed (Byte* pin = &buffer[offset])
                 {
                     Byte* pointer = pin;
 
-                    if (Seeds == null)
+                    if (m_Seeds.Count == 0)
                     {
-                        if (length >= 16)
+                        if (count >= 16)
                         {
                             seed1 = Fetch64(pointer);
                             seed2 = Fetch64(pointer + 8) + K0;
 
                             pointer += 16;
-                            length -= 16;
+                            count -= 16;
                         }
                         else
                         {
@@ -560,20 +603,20 @@ namespace FastHashes
                     }
                     else
                     {
-                        seed1 = Seeds[0];
-                        seed2 = Seeds[1];
+                        seed1 = m_Seeds[0];
+                        seed2 = m_Seeds[1];
                     }
 
-                    if (length <= 3)
-                        Hash1To3(out hash1, out hash2, pointer, length, seed1, seed2);
-                    else if (length <= 7)
-                        Hash4To7(out hash1, out hash2, pointer, length, seed1, seed2);
-                    else if (length <= 16)
-                        Hash8To16(out hash1, out hash2, pointer, length, seed1, seed2);
-                    else if (length <= 127)
-                        Hash17To127(out hash1, out hash2, pointer, length, seed1, seed2);
+                    if (count <= 3)
+                        Hash1To3(out hash1, out hash2, pointer, count, seed1, seed2);
+                    else if (count <= 7)
+                        Hash4To7(out hash1, out hash2, pointer, count, seed1, seed2);
+                    else if (count <= 16)
+                        Hash8To16(out hash1, out hash2, pointer, count, seed1, seed2);
+                    else if (count <= 127)
+                        Hash17To127(out hash1, out hash2, pointer, count, seed1, seed2);
                     else
-                        Hash128ToEnd(out hash1, out hash2, pointer, length, seed1, seed2);
+                        Hash128ToEnd(out hash1, out hash2, pointer, count, seed1, seed2);
                 }
             }
 
@@ -598,11 +641,11 @@ namespace FastHashes
         #region Methods (Static)
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Hash0(out UInt64 hash1, out UInt64 hash2, UInt64 seed1, UInt64 seed2)
-        {
-            UInt64 a = Smix(seed1 * K1) * K1;
+        { 
+            UInt64 a = ShiftMix(seed1 * K1) * K1;
             UInt64 b = seed2;
             UInt64 c = (b * K1) + K2;
-            UInt64 d = Smix(a + c);
+            UInt64 d = ShiftMix(a + c);
             UInt64 e = HashLength16(a, c, K3);
             UInt64 f = HashLength16(d, b, K3);
 
@@ -618,12 +661,12 @@ namespace FastHashes
             Byte v2 = pointer[length - 1];
             UInt32 v3 = v0 + ((UInt32)v1 << 8);
             UInt32 v4 = (UInt32)length + ((UInt32)v2 << 2);
-            UInt64 k = Smix(v3 * K2 ^ v4 * K0) * K2;
+            UInt64 k = ShiftMix(v3 * K2 ^ v4 * K0) * K2;
 
-            UInt64 a = Smix(seed1 * K1) * K1;
+            UInt64 a = ShiftMix(seed1 * K1) * K1;
             UInt64 b = seed2;
             UInt64 c = (b * K1) + k;
-            UInt64 d = Smix(a + c);
+            UInt64 d = ShiftMix(a + c);
             UInt64 e = HashLength16(a, c, K3);
             UInt64 f = HashLength16(d, b, K3);
 
@@ -641,10 +684,10 @@ namespace FastHashes
             UInt64 v2 = Fetch32(pointer + length - 4);
             UInt64 k = HashLength16(v1, v2, v0);
 
-            UInt64 a = Smix(seed1 * K1) * K1;
+            UInt64 a = ShiftMix(seed1 * K1) * K1;
             UInt64 b = seed2;
             UInt64 c = (b * K1) + k;
-            UInt64 d = Smix(a + c);
+            UInt64 d = ShiftMix(a + c);
             UInt64 e = HashLength16(a, c, K3);
             UInt64 f = HashLength16(d, b, K3);
 
@@ -664,10 +707,10 @@ namespace FastHashes
             UInt64 v4 = (RotateRight(v1, 25) + v2) * v0;
             UInt64 k = HashLength16(v3, v4, v0);
 
-            UInt64 a = Smix(seed1 * K1) * K1;
+            UInt64 a = ShiftMix(seed1 * K1) * K1;
             UInt64 b = seed2;
             UInt64 c = (b * K1) + k;
-            UInt64 d = Smix(a + Fetch64(pointer));
+            UInt64 d = ShiftMix(a + Fetch64(pointer));
             UInt64 e = HashLength16(a, c, K3);
             UInt64 f = HashLength16(d, b, K3);
 
@@ -689,10 +732,10 @@ namespace FastHashes
 
             do
             {
-                a ^= Smix(Fetch64(pointer) * K1) * K1;
+                a ^= ShiftMix(Fetch64(pointer) * K1) * K1;
                 a *= K1;
                 b ^= a;
-                c ^= Smix(Fetch64(pointer + 8) * K1) * K1;
+                c ^= ShiftMix(Fetch64(pointer + 8) * K1) * K1;
                 c *= K1;
                 d ^= c;
 

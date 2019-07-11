@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
+    /// <summary>Represents the xxHash32 implementation. This class cannot be derived.</summary>
     public sealed class xxHash32 : Hash
     {
         #region Constants
@@ -20,24 +21,29 @@ namespace FastHashes
         #endregion
 
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 32;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.xxHash32"/> using the specified seed.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public xxHash32(UInt32 seed)
         {
             m_Seed = seed;
         }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.xxHash32"/> using a null seed.</summary>
         public xxHash32() : this(0u) { }
         #endregion
 
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] data, Int32 offset, Int32 length)
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
             UInt32 hash = m_Seed;
 
-            if (length == 0)
+            if (count == 0)
             {
                 hash += P5;
                 goto Finalize;
@@ -45,12 +51,12 @@ namespace FastHashes
 
             unsafe
             {
-                fixed (Byte* pin = &data[offset])
+                fixed (Byte* pin = &buffer[offset])
                 {
                     Byte* pointer = pin;
 
-                    Int32 blocks = length / 16;
-                    Int32 remainder = length & 15;
+                    Int32 blocks = count / 16;
+                    Int32 remainder = count & 15;
 
                     if (blocks > 0)
                     {
@@ -72,7 +78,7 @@ namespace FastHashes
                     else
                         hash += P5;
 
-                    hash += (UInt32)length;
+                    hash += (UInt32)count;
 
                     if (remainder > 0)
                     {
@@ -131,6 +137,7 @@ namespace FastHashes
         #endregion
     }
 
+    /// <summary>Represents the xxHash64 implementation. This class cannot be derived.</summary>
     public sealed class xxHash64 : Hash
     {
         #region Constants
@@ -146,24 +153,29 @@ namespace FastHashes
         #endregion
 
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 64;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.xxHash64"/> using the specified seed.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public xxHash64(UInt64 seed)
         {
             m_Seed = seed;
         }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.xxHash64"/> using a null seed.</summary>
         public xxHash64() : this(0ul) { }
         #endregion
 
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] data, Int32 offset, Int32 length)
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
             UInt64 hash = m_Seed;
 
-            if (length == 0)
+            if (count == 0)
             {
                 hash += P5;
                 goto Finalize;
@@ -171,12 +183,12 @@ namespace FastHashes
 
             unsafe
             {
-                fixed (Byte* pin = &data[offset])
+                fixed (Byte* pin = &buffer[offset])
                 {
                     Byte* pointer = pin;
 
-                    Int32 blocks = length / 32;
-                    Int32 remainder = length & 31;
+                    Int32 blocks = count / 32;
+                    Int32 remainder = count & 31;
 
                     if (blocks > 0)
                     {
@@ -203,7 +215,7 @@ namespace FastHashes
                     else
                         hash += P5;
 
-                    hash += (UInt64)length;
+                    hash += (UInt64)count;
 
                     if (remainder > 0)
                     {

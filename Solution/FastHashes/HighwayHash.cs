@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
+    /// <summary>Represents the base class from which all implementations of HighwayHash must derive.</summary>
     public abstract class HighwayHash : Hash
     {
         #region Constants
@@ -26,17 +27,22 @@ namespace FastHashes
         #endregion
 
         #region Properties (Abstract)
+        /// <summary>Gets the number of hash finalization cycles.</summary>
         protected abstract Int32 P { get; }
         #endregion
 
         #region Constructors
+        /// <summary>Represents the base constructor with an array of seeds used by derived classes.</summary>
+        /// <param name="seeds">An array of seeds used by the hashing algorithm.</param>
+        /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to 4.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is null.</exception>
         protected HighwayHash(UInt64[] seeds)
         {
             if (seeds == null)
                 throw new ArgumentNullException(nameof(seeds));
 
             if (seeds.Length != 4)
-                throw new ArgumentException("The array must contains 4 seeds.", nameof(seeds));
+                throw new ArgumentException("The specified array must contains 4 seeds.", nameof(seeds));
 
             m_Seed1 = seeds[0];
             m_Seed2 = seeds[1];
@@ -44,6 +50,11 @@ namespace FastHashes
             m_Seed4 = seeds[3];
         }
 
+        /// <summary>Represents the base constructor with seed parameters used by derived classes.</summary>
+        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
+        /// <param name="seed3">The third seed used by the hashing algorithm.</param>
+        /// <param name="seed4">The fourth seed used by the hashing algorithm.</param>
         protected HighwayHash(UInt64 seed1, UInt64 seed2, UInt64 seed3, UInt64 seed4)
         {
             m_Seed1 = seed1;
@@ -54,7 +65,8 @@ namespace FastHashes
         #endregion
 
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] data, Int32 offset, Int32 length)
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
             UInt64[] m0 = { M00, M01, M02, M03 };
             UInt64[] m1 = { M10, M11, M12, M13 };
@@ -75,17 +87,17 @@ namespace FastHashes
                 M13 ^ ((m_Seed4 >> 32) | (m_Seed4 << 32))
             };
 
-            if (length == 0)
+            if (count == 0)
                 goto Finalize;
 
             unsafe
             {
-                fixed (Byte* pin = &data[offset])
+                fixed (Byte* pin = &buffer[offset])
                 {
                     Byte* pointer = pin;
 
-                    Int32 blocks = length / 32;
-                    Int32 remainder = length & 31;
+                    Int32 blocks = count / 32;
+                    Int32 remainder = count & 31;
 
                     while (blocks-- > 0)
                     {
@@ -166,6 +178,12 @@ namespace FastHashes
         #endregion
 
         #region Methods (Abstract)
+        /// <summary>Converts the hash data into a byte array representing the output hash.</summary>
+        /// <param name="m0">The hash data M0.</param>
+        /// <param name="m1">The hash data M1.</param>
+        /// <param name="v0">The hash data V0.</param>
+        /// <param name="v1">The hash data V1.</param> 
+        /// <returns>A byte array representing the output hash.</returns>
         protected abstract Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1);
         #endregion
 
@@ -224,25 +242,41 @@ namespace FastHashes
         #endregion
     }
 
+    /// <summary>Represents the HighwayHash64 implementation. This class cannot be derived.</summary>
     public sealed class HighwayHash64 : HighwayHash
     {
         #region Properties
+        /// <inheritdoc/>
         protected override Int32 P => 4;
 
+        /// <inheritdoc/>
         public override Int32 Length => 64;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash64"/> using null seeds.</summary>
         public HighwayHash64() : base(0ul, 0ul, 0ul, 0ul) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash64"/> using the specified value for all the four seeds.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public HighwayHash64(UInt64 seed) : base(seed, seed, seed, seed) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash64"/> using the specified array of seeds.</summary>
+        /// <param name="seeds">An array of seeds used by the hashing algorithm.</param>
+        /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to 4.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is null.</exception>
         public HighwayHash64(UInt64[] seeds) : base(seeds) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash64"/> using the specified seeds.</summary>
+        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
+        /// <param name="seed3">The third seed used by the hashing algorithm.</param>
+        /// <param name="seed4">The fourth seed used by the hashing algorithm.</param>
         public HighwayHash64(UInt64 seed1, UInt64 seed2, UInt64 seed3, UInt64 seed4) : base(seed1, seed2, seed3, seed4) { }
         #endregion
 
         #region Methods
+        /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1)
         {
             Byte[] result = new Byte[8];
@@ -258,25 +292,41 @@ namespace FastHashes
         #endregion
     }
 
+    /// <summary>Represents the HighwayHash128 implementation. This class cannot be derived.</summary>
     public sealed class HighwayHash128 : HighwayHash
     {
         #region Properties
+        /// <inheritdoc/>
         protected override Int32 P => 6;
 
+        /// <inheritdoc/>
         public override Int32 Length => 128;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash128"/> using null seeds.</summary>
         public HighwayHash128() : base(0ul, 0ul, 0ul, 0ul) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash128"/> using the specified value for all the four seeds.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public HighwayHash128(UInt64 seed) : base(seed, seed, seed, seed) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash128"/> using the specified array of seeds.</summary>
+        /// <param name="seeds">An array of seeds used by the hashing algorithm.</param>
+        /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to 4.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is null.</exception>
         public HighwayHash128(UInt64[] seeds) : base(seeds) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash128"/> using the specified seeds.</summary>
+        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
+        /// <param name="seed3">The third seed used by the hashing algorithm.</param>
+        /// <param name="seed4">The fourth seed used by the hashing algorithm.</param>
         public HighwayHash128(UInt64 seed1, UInt64 seed2, UInt64 seed3, UInt64 seed4) : base(seed1, seed2, seed3, seed4) { }
         #endregion
 
         #region Methods
+        /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1)
         {
             Byte[] result = new Byte[16];
@@ -296,25 +346,41 @@ namespace FastHashes
         #endregion
     }
 
+    /// <summary>Represents the HighwayHash256 implementation. This class cannot be derived.</summary>
     public sealed class HighwayHash256 : HighwayHash
     {
         #region Properties
+        /// <inheritdoc/>
         protected override Int32 P => 10;
 
+        /// <inheritdoc/>
         public override Int32 Length => 256;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash256"/> using null seeds.</summary>
         public HighwayHash256() : base(0ul, 0ul, 0ul, 0ul) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash256"/> using the specified value for all the four seeds.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public HighwayHash256(UInt64 seed) : base(seed, seed, seed, seed) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash256"/> using the specified array of seeds.</summary>
+        /// <param name="seeds">An array of seeds used by the hashing algorithm.</param>
+        /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to 4.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is null.</exception>
         public HighwayHash256(UInt64[] seeds) : base(seeds) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash256"/> using the specified seeds.</summary>
+        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
+        /// <param name="seed3">The third seed used by the hashing algorithm.</param>
+        /// <param name="seed4">The fourth seed used by the hashing algorithm.</param>
         public HighwayHash256(UInt64 seed1, UInt64 seed2, UInt64 seed3, UInt64 seed4) : base(seed1, seed2, seed3, seed4) { }
         #endregion
 
         #region Methods
+        /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1)
         {
             MR(out UInt64 hash1, out UInt64 hash2, v0[0], m0[0], v0[1], m0[1], v1[0], m1[0], v1[1], m1[1]);

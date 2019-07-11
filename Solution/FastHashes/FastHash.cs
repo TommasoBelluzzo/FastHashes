@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
+    /// <summary>Represents the base class from which all implementations of FastHash must derive.</summary>
     public abstract class FastHash : Hash
     {
         #region Constants
@@ -13,10 +14,13 @@ namespace FastHashes
         #endregion
 
         #region Properties
+        /// <summary>Gets the seed used by the hashing algorithm.</summary>
         protected UInt64 Seed { get; }
         #endregion
 
         #region Constructors
+        /// <summary>Represents the base constructor used by derived classes.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         protected FastHash(UInt64 seed)
         {
             Seed = seed;
@@ -24,23 +28,24 @@ namespace FastHashes
         #endregion
 
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] data, Int32 offset, Int32 length)
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
             UInt64 hash = Seed;
 
-            if (length == 0)
+            if (count == 0)
                 goto Finalize;
 
-            hash ^= (UInt64)length * M;
+            hash ^= (UInt64)count * M;
 
             unsafe
             {
-                fixed (Byte* pin = &data[offset])
+                fixed (Byte* pin = &buffer[offset])
                 {
                     Byte* pointer = pin;
 
-                    Int32 blocks = length / 8;
-                    Int32 remainder = length & 7;
+                    Int32 blocks = count / 8;
+                    Int32 remainder = count & 7;
 
                     while (blocks-- > 0)
                         hash = Mix(hash, Read64(ref pointer));
@@ -74,6 +79,9 @@ namespace FastHashes
         #endregion
 
         #region Methods (Abstract)
+        /// <summary>Converts the hash value into a byte array representing the output hash.</summary>
+        /// <param name="hash">The hash value.</param>
+        /// <returns>A byte array representing the output hash.</returns>
         protected abstract Byte[] GetHash(UInt64 hash);
         #endregion
 
@@ -93,19 +101,25 @@ namespace FastHashes
         #endregion
     }
 
+    /// <summary>Represents the FastHash32 implementation. This class cannot be derived.</summary>
     public sealed class FastHash32 : FastHash
     {
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 32;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastHash32"/> using a null seed.</summary>
         public FastHash32() : base(0ul) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastHash32"/> using the specified seed.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public FastHash32(UInt64 seed) : base(seed) { }
         #endregion
 
         #region Methods
+        /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64 hash)
         {
             Byte[] result = new Byte[4];
@@ -121,19 +135,25 @@ namespace FastHashes
         #endregion
     }
 
+    /// <summary>Represents the FastHash64 implementation. This class cannot be derived.</summary>
     public sealed class FastHash64 : FastHash
     {
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 64;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastHash64"/> using a null seed.</summary>
         public FastHash64() : base(0ul) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastHash64"/> using the specified seed.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public FastHash64(UInt64 seed) : base(seed) { }
         #endregion
 
         #region Methods
+        /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64 hash)
         {
             Byte[] result = new Byte[8];

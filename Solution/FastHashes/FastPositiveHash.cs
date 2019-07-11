@@ -1,10 +1,12 @@
 ﻿#region Using Directives
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 #endregion
 
 namespace FastHashes
 {
+    /// <summary>Represents the FastPositiveHash implementation. This class cannot be derived.</summary>
     public sealed class FastPositiveHash : Hash
     {
         #region Members
@@ -12,12 +14,20 @@ namespace FastHashes
         #endregion
 
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 64;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastPositiveHash"/> using the specified variant and seed.</summary>
+        /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.FastPositiveHashVariant"/>.</param>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public FastPositiveHash(FastPositiveHashVariant variant, UInt64 seed)
         {
+            if (!Enum.IsDefined(typeof(FastPositiveHashVariant), variant))
+                throw new InvalidEnumArgumentException("Invalid variant specified.");
+
             switch (variant)
             {
                 case FastPositiveHashVariant.V0:
@@ -34,22 +44,30 @@ namespace FastHashes
             }
         }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastPositiveHash"/> using the variant 2 and a null seed.</summary>
         public FastPositiveHash() : this(FastPositiveHashVariant.V2, 0ul) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastPositiveHash"/> using the specified variant and a null seed.</summary>
+        /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.FastPositiveHashVariant"/>.</param>
+        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public FastPositiveHash(FastPositiveHashVariant variant) : this(variant, 0ul) { }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastPositiveHash"/> using the variant 2 and the specified seed.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public FastPositiveHash(UInt64 seed) : this(FastPositiveHashVariant.V2, seed) { }
         #endregion  
 
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] data, Int32 offset, Int32 length)
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
-            return m_Engine.ComputeHash(data, offset, length);
+            return m_Engine.ComputeHash(buffer, offset, count);
         }
 
+        /// <inheritdoc/>
         public override String ToString()
         {
-            return String.Concat(GetType().Name, "_", m_Engine.Name);
+            return String.Concat(GetType().Name, "-", m_Engine.Name);
         }
         #endregion
 
@@ -122,7 +140,7 @@ namespace FastHashes
             #endregion
 
             #region Properties
-            public override String Name => "0";
+            public override String Name => "V0";
             #endregion
 
             #region Methods
@@ -260,7 +278,7 @@ namespace FastHashes
         private sealed class EngineV1 : Engine
         {
             #region Properties
-            public override String Name => "1";
+            public override String Name => "V1";
             #endregion
 
             #region Constructors
@@ -410,7 +428,7 @@ namespace FastHashes
         private sealed class EngineV2 : Engine
         {
             #region Properties
-            public override String Name => "2";
+            public override String Name => "V2";
             #endregion
 
             #region Constructors

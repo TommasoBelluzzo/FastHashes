@@ -17,7 +17,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("Copyright ©2017 Tommaso Belluzzo")]
 [assembly: AssemblyCulture("")]
 [assembly: AssemblyProduct("FastHashes.Benchmarks")]
-[assembly: AssemblyTitle("Speed tests for the FastHashes library.")]
+[assembly: AssemblyTitle("Benchmarks for the FastHashes library.")]
 [assembly: AssemblyTrademark("")]
 #endregion
 

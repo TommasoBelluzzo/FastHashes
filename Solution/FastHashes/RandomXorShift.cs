@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 namespace FastHashes
 {
+    /// <summary>Represents a pseudorandom number generator based on the XorShift approach.</summary>
     public sealed class RandomXorShift
     {
         #region Constants
@@ -22,6 +23,8 @@ namespace FastHashes
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.RandomXorShift"/> using the specified seed.</summary>
+        /// <param name="seed">A number used to calculate the starting value of the pseudorandom numbers sequence.</param>
         public RandomXorShift(UInt32 seed)
         {
             m_Bytes = new Queue<Byte>();
@@ -32,6 +35,7 @@ namespace FastHashes
             m_W = W;
         }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.RandomXorShift"/> using a null seed.</summary>
         public RandomXorShift() : this(0u) { }
         #endregion
 
@@ -72,6 +76,8 @@ namespace FastHashes
             }
         }
 
+        /// <summary>Returns a random integer.</summary>
+        /// <returns>A 4-byte unsigned integer between 0 and <see cref="F:System.UInt32.MaxValue"/>.</returns>
         public UInt32 NextValue()
         {
             UInt32 t = m_X ^ (m_X << 11);
@@ -84,68 +90,58 @@ namespace FastHashes
             return m_W;
         }
 
-        public void NextBytes(Byte[] array)
+        /// <summary>Fills a byte array with random numbers.</summary>
+        /// <param name="buffer">The byte array to fill.</param>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is null.</exception>
+        public void NextBytes(Byte[] buffer)
         {
-            if (array == null)
-                throw new ArgumentNullException(nameof(array));
+            if (buffer == null)
+                throw new ArgumentNullException(nameof(buffer));
 
-            if (array.Length == 0)
-                return;
-
-            unsafe
-            {
-                fixed (Byte* pin = array)
-                {
-                    Byte* pointer = pin;
-                    NextBytes(pointer, array.Length);
-                }       
-            }
+            NextBytes(buffer, 0, buffer.Length);
         }
 
-        public void NextBytes(Byte[] array, Int32 length)
+        /// <summary>Fills the specified number of elements of a byte array with random numbers, starting at the first element.</summary>
+        /// <param name="buffer">The byte array to fill.</param>
+        /// <param name="count">The number of bytes in the array to fill.</param>
+        /// <exception cref="T:System.ArgumentException">Thrown when the number of bytes in <paramref name="buffer">buffer</paramref> is less than <paramref name="count">count</paramref>.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is null.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="count">count</paramref> is less than 0.</exception>
+        public void NextBytes(Byte[] buffer, Int32 count)
         {
-            if (array == null)
-                throw new ArgumentNullException(nameof(array));
-
-            if (array.Length == 0)
-                return;
-
-            if ((length < 0) || (length > array.Length))
-                throw new ArgumentOutOfRangeException(nameof(length), "The length parameter must be between zero and the number of elements in the array.");
-
-            unsafe
-            {
-                fixed (Byte* pin = array)
-                {
-                    Byte* pointer = pin;
-                    NextBytes(pointer, length);
-                }
-            }
+            NextBytes(buffer, 0, count);
         }
 
-        public void NextBytes(Byte[] array, Int32 offset, Int32 length)
+        /// <summary>Fills the specified region of a byte array with random numbers.</summary>
+        /// <param name="buffer">The byte array to fill.</param>
+        /// <param name="offset">The offset into the byte array from which to begin the fill operation.</param>
+        /// <param name="count">The number of bytes in the array to fill.</param>
+        /// <exception cref="T:System.ArgumentException">Thrown when the number of bytes in <paramref name="buffer">buffer</paramref> is less than <paramref name="offset">sourceOffset</paramref> plus <paramref name="count">count</paramref>.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is null.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="offset">offset</paramref> is not within the bounds of <paramref name="buffer">buffer</paramref>, or when <paramref name="count">count</paramref> is less than 0.</exception>
+        public void NextBytes(Byte[] buffer, Int32 offset, Int32 count)
         {
-            if (array == null)
-                throw new ArgumentNullException(nameof(array));
+            if (buffer == null)
+                throw new ArgumentNullException(nameof(buffer));
 
-            if (array.Length == 0)
+            if (buffer.Length == 0)
                 return;
 
-            if ((offset < 0) || (offset > array.Length))
+            if ((offset < 0) || (offset > buffer.Length))
                 throw new ArgumentOutOfRangeException(nameof(offset), "The offset parameter must be within the bounds of the array.");
 
-            if ((length < 0) || (length > array.Length))
-                throw new ArgumentOutOfRangeException(nameof(length), "The length parameter must be between zero and the number of elements in the array.");
+            if ((count < 0) || (count > buffer.Length))
+                throw new ArgumentOutOfRangeException(nameof(count), "The count parameter must be between zero and the number of elements in the array.");
 
-            if (length > (array.Length - offset))
-                throw new InvalidOperationException("The block defined by offset and length parameters must be within the bounds of the array.");
+            if (count > (buffer.Length - offset))
+                throw new ArgumentException("The block defined by offset and count parameters must be within the bounds of the array.");
 
             unsafe
             {
-                fixed (Byte* pin = &array[offset])
+                fixed (Byte* pin = &buffer[offset])
                 {
                     Byte* pointer = pin;
-                    NextBytes(pointer, length);
+                    NextBytes(pointer, count);
                 }
             }
         }

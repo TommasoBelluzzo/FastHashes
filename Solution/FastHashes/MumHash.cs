@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
+    /// <summary>Represents the MumHash implementation. This class cannot be derived.</summary>
     public sealed class MumHash : Hash
     {
         #region Constants
@@ -27,44 +28,49 @@ namespace FastHashes
         #endregion
 
         #region Properties
+        /// <inheritdoc/>
         public override Int32 Length => 64;
         #endregion
 
         #region Constructors
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MumHash"/> using the specified seed.</summary>
+        /// <param name="seed">The seed used by the hashing algorithm.</param>
         public MumHash(UInt32 seed)
         {
             m_Seed = seed;
         }
 
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MumHash"/> using a null seed.</summary>
         public MumHash() : this(0u) { }
         #endregion
 
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] data, Int32 offset, Int32 length)
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
-            UInt64 hash = Mum(m_Seed + (UInt64)length, BSP);
+            UInt64 hash = Mum(m_Seed + (UInt64)count, BSP);
 
-            if (length == 0)
+            if (count == 0)
                 goto Finalize;
 
             unsafe
             {
-                fixed (Byte* pin = &data[offset])
+                fixed (Byte* pin = &buffer[offset])
                 {
                     Byte* pointer = pin;
 
-                    while (length > 32)
+                    while (count > 32)
                     {
                         for (Int32 i = 0; i < 4; ++i)
                             hash ^= Mum(Read64(ref pointer), P[i]);
 
                         hash = Mum(hash, UP);
 
-                        length -= 32;
+                        count -= 32;
                     }
 
-                    Int32 blocks = length / 8;
-                    Int32 remainder = length & 7;
+                    Int32 blocks = count / 8;
+                    Int32 remainder = count & 7;
 
                     for (Int32 i = 0; i < blocks; ++i)
                         hash ^= Mum(Read64(ref pointer), P[i]);

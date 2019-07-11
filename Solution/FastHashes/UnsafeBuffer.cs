@@ -5,11 +5,21 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
+    /// <summary>Represents a utility class for manipulating byte arrays.</summary>
     public static class UnsafeBuffer
     {
         #region Methods
+        /// <summary>Copies the specified region of a source array into the specified region of a destination array.</summary>
+        /// <param name="source">The source buffer.</param>
+        /// <param name="sourceOffset">The zero-based byte offset into <paramref name="source">source</paramref>.</param>
+        /// <param name="destination">The destination buffer.</param>
+        /// <param name="destinationOffset">The zero-based byte offset into <paramref name="destination">destination</paramref>.</param>
+        /// <param name="count">The number of bytes to copy.</param>
+        /// <exception cref="T:System.ArgumentException">Thrown when the number of bytes in <paramref name="source">source</paramref> is less than <paramref name="sourceOffset">sourceOffset</paramref> plus <paramref name="count">count</paramref>, or when the number of bytes in <paramref name="destination">destination</paramref> is less than <paramref name="destinationOffset">destinationOffset</paramref> plus <paramref name="count">count</paramref>.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="source">source</paramref> and <paramref name="destination">destination</paramref> are null.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="sourceOffset">sourceOffset</paramref> is not within the bounds of <paramref name="source">source</paramref>, when <paramref name="destinationOffset">destinationOffset</paramref> is not within the bounds of <paramref name="destination">destination</paramref>, or when <paramref name="count">count</paramref> is less than 0.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe void BlockCopy(Byte[] source, Int32 sourceOffset, Byte[] destination, Int32 destinationOffset, Int32 length)
+        public static unsafe void BlockCopy(Byte[] source, Int32 sourceOffset, Byte[] destination, Int32 destinationOffset, Int32 count)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
@@ -26,14 +36,14 @@ namespace FastHashes
             if ((destinationOffset < 0) || (destinationOffset >= destinationLength))
                 throw new ArgumentOutOfRangeException(nameof(destinationOffset), "The destination offset parameter must be within the bounds of the destination array.");
 
-            if (length < 0)
-                throw new ArgumentOutOfRangeException(nameof(length), "The length parameter must be greater than or equal to 0.");
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), "The count parameter must be greater than or equal to 0.");
 
-            if ((sourceOffset + length) > sourceLength)
-                throw new InvalidOperationException("The block defined by source offset and length parameters must be within the bounds of the source array.");
+            if ((sourceOffset + count) > sourceLength)
+                throw new ArgumentException("The block defined by source offset and count parameters must be within the bounds of the source array.");
 
-            if ((destinationOffset + length) > destinationLength)
-                throw new InvalidOperationException("The block defined by destination offset and length parameters must be within the bounds of the destination array.");
+            if ((destinationOffset + count) > destinationLength)
+                throw new ArgumentException("The block defined by destination offset and count parameters must be within the bounds of the destination array.");
 
             fixed (Byte* pinSource = &source[sourceOffset])
             fixed (Byte* pinDestination = &destination[destinationOffset])
@@ -43,7 +53,7 @@ namespace FastHashes
                 
                 LengthSwitch:
 
-                switch (length)
+                switch (count)
                 {
                     case 0:
                         return;
@@ -216,7 +226,7 @@ namespace FastHashes
                 Int64* pointerSourceLong = (Int64*)pointerSource;
                 Int64* pointerDestinationLong = (Int64*)pointerDestination;
 
-                while (length >= 64)
+                while (count >= 64)
                 {
                     *(pointerDestinationLong + 0) = *(pointerSourceLong + 0);
                     *(pointerDestinationLong + 1) = *(pointerSourceLong + 1);
@@ -227,16 +237,16 @@ namespace FastHashes
                     *(pointerDestinationLong + 6) = *(pointerSourceLong + 6);
                     *(pointerDestinationLong + 7) = *(pointerSourceLong + 7);
 
-                    if (length == 64)
+                    if (count == 64)
                         return;
 
                     pointerSourceLong += 8;
                     pointerDestinationLong += 8;
 
-                    length -= 64;
+                    count -= 64;
                 }
 
-                if (length > 32)
+                if (count > 32)
                 {
                     *(pointerDestinationLong + 0) = *(pointerSourceLong + 0);
                     *(pointerDestinationLong + 1) = *(pointerSourceLong + 1);
@@ -246,7 +256,7 @@ namespace FastHashes
                     pointerSourceLong += 4;
                     pointerDestinationLong += 4;
 
-                    length -= 32;
+                    count -= 32;
                 }
                 
                 pointerSource = (Byte*)pointerSourceLong;
