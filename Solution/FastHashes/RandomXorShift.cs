@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace FastHashes
 {
-    /// <summary>Represents a pseudorandom number generator based on the XorShift approach.</summary>
+    /// <summary>Represents a pseudorandom number generator based on a variant of the XorShift approach.</summary>
     public sealed class RandomXorShift
     {
         #region Constants

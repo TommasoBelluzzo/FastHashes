@@ -61,10 +61,10 @@ namespace FastHashes
         #endregion
 
         #region Methods (Abstract)
-        /// <summary>Converts the hash data into a byte array representing the output hash.</summary>
-        /// <param name="hash">The hash data.</param>
-        /// <returns>A byte array representing the output hash.</returns>
-        protected abstract Byte[] GetHash(Byte[] hash);
+        /// <summary>Finalizes any partial computation and returns the hash value.</summary>
+        /// <param name="hashData">The unfinalized hash data.</param>
+        /// <returns>A byte array representing the hash value.</returns>
+        protected abstract Byte[] GetHash(Byte[] hashData);
         #endregion
 
         #region Nesting (Classes)
@@ -559,10 +559,10 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] GetHash(Byte[] hash)
+        protected override Byte[] GetHash(Byte[] hashData)
         {
             Byte[] result = new Byte[8];
-            UnsafeBuffer.BlockCopy(hash, 0, result, 0, 8);
+            UnsafeBuffer.BlockCopy(hashData, 0, result, 0, 8);
 
             return result;
         }
@@ -598,9 +598,9 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] GetHash(Byte[] hash)
+        protected override Byte[] GetHash(Byte[] hashData)
         {
-            return hash;
+            return hashData;
         }
         #endregion
     }

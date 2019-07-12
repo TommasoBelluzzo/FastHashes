@@ -79,10 +79,10 @@ namespace FastHashes
         #endregion
 
         #region Methods (Abstract)
-        /// <summary>Converts the hash value into a byte array representing the output hash.</summary>
-        /// <param name="hash">The hash value.</param>
-        /// <returns>A byte array representing the output hash.</returns>
-        protected abstract Byte[] GetHash(UInt64 hash);
+        /// <summary>Finalizes any partial computation and returns the hash value.</summary>
+        /// <param name="hashData">The unfinalized hash data.</param>
+        /// <returns>A byte array representing the hash value.</returns>
+        protected abstract Byte[] GetHash(UInt64 hashData);
         #endregion
 
         #region Methods (Static)
@@ -120,14 +120,14 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] GetHash(UInt64 hash)
+        protected override Byte[] GetHash(UInt64 hashData)
         {
             Byte[] result = new Byte[4];
 
             unsafe
             {
                 fixed (Byte* pointer = result)
-                    *((UInt32*)pointer) = (UInt32)(hash - (hash >> 32));
+                    *((UInt32*)pointer) = (UInt32)(hashData - (hashData >> 32));
             }
 
             return result;
@@ -154,14 +154,14 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] GetHash(UInt64 hash)
+        protected override Byte[] GetHash(UInt64 hashData)
         {
             Byte[] result = new Byte[8];
 
             unsafe
             {
                 fixed (Byte* pointer = result)
-                    *((UInt64*)pointer) = hash;
+                    *((UInt64*)pointer) = hashData;
             }
 
             return result;

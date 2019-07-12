@@ -178,12 +178,12 @@ namespace FastHashes
         #endregion
 
         #region Methods (Abstract)
-        /// <summary>Converts the hash data into a byte array representing the output hash.</summary>
-        /// <param name="m0">The hash data M0.</param>
-        /// <param name="m1">The hash data M1.</param>
-        /// <param name="v0">The hash data V0.</param>
-        /// <param name="v1">The hash data V1.</param> 
-        /// <returns>A byte array representing the output hash.</returns>
+        /// <summary>Finalizes any partial computation and returns the hash value.</summary>
+        /// <param name="m0">The unfinalized hash data M0.</param>
+        /// <param name="m1">The unfinalized hash data M1.</param>
+        /// <param name="v0">The unfinalized hash data V0.</param>
+        /// <param name="v1">The unfinalized hash data V1.</param> 
+        /// <returns>A byte array representing the hash value.</returns>
         protected abstract Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1);
         #endregion
 

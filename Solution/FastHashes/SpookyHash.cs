@@ -177,10 +177,10 @@ namespace FastHashes
         #endregion
 
         #region Methods (Abstract)
-        /// <summary>Converts the hash data into a byte array representing the output hash.</summary>
-        /// <param name="hash">The hash data.</param>
-        /// <returns>A byte array representing the output hash.</returns>
-        protected abstract Byte[] GetHash(UInt64[] hash);
+        /// <summary>Finalizes any partial computation and returns the hash value.</summary>
+        /// <param name="hashData">The unfinalized hash data.</param>
+        /// <returns>A byte array representing the hash value.</returns>
+        protected abstract Byte[] GetHash(UInt64[] hashData);
         #endregion
 
         #region Methods (Static)
@@ -261,14 +261,14 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] GetHash(UInt64[] hash)
+        protected override Byte[] GetHash(UInt64[] hashData)
         {
             Byte[] result = new Byte[4];
 
             unsafe
             {
                 fixed (Byte* pointer = result)
-                    *((UInt32*)pointer) = (UInt32)hash[0];
+                    *((UInt32*)pointer) = (UInt32)hashData[0];
             }
 
             return result;
@@ -295,14 +295,14 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] GetHash(UInt64[] hash)
+        protected override Byte[] GetHash(UInt64[] hashData)
         {
             Byte[] result = new Byte[8];
 
             unsafe
             {
                 fixed (Byte* pointer = result)
-                    *((UInt64*)pointer) = hash[0];
+                    *((UInt64*)pointer) = hashData[0];
             }
 
             return result;
@@ -334,7 +334,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] GetHash(UInt64[] hash)
+        protected override Byte[] GetHash(UInt64[] hashData)
         {
             Byte[] result = new Byte[16];
 
@@ -343,8 +343,8 @@ namespace FastHashes
                 fixed (Byte* pin = result)
                 {
                     UInt64* pointer = (UInt64*)pin;
-                    pointer[0] = hash[0];
-                    pointer[1] = hash[1];
+                    pointer[0] = hashData[0];
+                    pointer[1] = hashData[1];
                 }
             }
 
