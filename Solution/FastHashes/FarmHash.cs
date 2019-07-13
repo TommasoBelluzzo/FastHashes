@@ -26,7 +26,8 @@ namespace FastHashes
         #endregion
 
         #region Properties
-        /// <summary>Gets the vector of seed used by the hashing algorithm.</summary>
+        /// <summary>Gets the seeds used by the hashing algorithm.</summary>
+        /// <value>A collection containing zero or two 8-byte unsigned integers.</value>
         public ReadOnlyCollection<UInt64> Seeds => m_Seeds;
         #endregion
 

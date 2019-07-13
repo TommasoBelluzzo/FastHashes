@@ -28,6 +28,7 @@ namespace FastHashes
 
         #region Properties (Abstract)
         /// <summary>Gets the number of hash finalization cycles.</summary>
+        /// <value>A positive 4-byte signed integer.</value>
         protected abstract Int32 P { get; }
         #endregion
 

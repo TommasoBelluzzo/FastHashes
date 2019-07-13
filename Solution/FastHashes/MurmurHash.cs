@@ -10,7 +10,7 @@ namespace FastHashes
     public abstract class MurmurHashG32 : Hash
     {
         #region Members
-        private readonly Engine m_Engine;
+        internal readonly Engine m_Engine;
         #endregion
 
         #region Constructors
@@ -68,7 +68,7 @@ namespace FastHashes
         #endregion
 
         #region Nesting (Classes)
-        private abstract class Engine
+        internal abstract class Engine
         {
             #region Properties (Abstract)
             public abstract String Name { get; }
@@ -79,7 +79,7 @@ namespace FastHashes
             #endregion
         }
 
-        private sealed class Engine64 : Engine
+        internal sealed class Engine64 : Engine
         {
             #region Constants
             private const UInt64 C1 = 0x87C37B91114253D5ul;
@@ -231,7 +231,7 @@ namespace FastHashes
             #endregion
         }
 
-        private sealed class Engine86 : Engine
+        internal sealed class Engine86 : Engine
         {
             #region Constants
             private const UInt32 C1 = 0x239B961Bu;

@@ -10,7 +10,7 @@ namespace FastHashes
     public sealed class FastPositiveHash : Hash
     {
         #region Members
-        private readonly Engine m_Engine;
+        internal readonly Engine m_Engine;
         #endregion
 
         #region Properties
@@ -72,7 +72,7 @@ namespace FastHashes
         #endregion
 
         #region Nesting (Classes)
-        private abstract class Engine
+        internal abstract class Engine
         {
             #region Constants
             protected const UInt64 P640 = 0xEC99BF0D8372CAABul;
@@ -123,7 +123,7 @@ namespace FastHashes
             #endregion
         }
 
-        private sealed class EngineV0 : Engine
+        internal sealed class EngineV0 : Engine
         {
             #region Constants
             private const UInt32 P320 = 0x92D78269;
@@ -275,7 +275,7 @@ namespace FastHashes
             #endregion
         }
 
-        private sealed class EngineV1 : Engine
+        internal sealed class EngineV1 : Engine
         {
             #region Properties
             public override String Name => "V1";
@@ -425,7 +425,7 @@ namespace FastHashes
             #endregion
         }
 
-        private sealed class EngineV2 : Engine
+        internal sealed class EngineV2 : Engine
         {
             #region Properties
             public override String Name => "V2";

@@ -15,6 +15,7 @@ namespace FastHashes
 
         #region Properties
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
+        /// <value>A 8-byte unsigned integer.</value>
         protected UInt64 Seed { get; }
         #endregion
 

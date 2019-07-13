@@ -19,6 +19,7 @@ namespace FastHashes
 
         #region Properties (Abstract)
         /// <summary>Gets the size, in bits, of the computed hash code.</summary>
+        /// <value>A positive 4-byte signed integer.</value>
         public abstract Int32 Length { get; }
         #endregion
 

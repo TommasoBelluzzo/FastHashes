@@ -10,7 +10,7 @@ namespace FastHashes
     public sealed class MetroHash64 : Hash
     {
         #region Members
-        private readonly Engine m_Engine;
+        internal readonly Engine m_Engine;
         #endregion
 
         #region Properties
@@ -62,7 +62,7 @@ namespace FastHashes
         #endregion
 
         #region Nesting (Classes)
-        private abstract class Engine
+        internal abstract class Engine
         {
             #region Members
             protected readonly UInt64 m_Seed;
@@ -140,7 +140,7 @@ namespace FastHashes
             #endregion
         }
 
-        private sealed class Engine1 : Engine
+        internal sealed class Engine1 : Engine
         {
             #region Constants
             private const UInt64 K0 = 0xC83A91E1ul;
@@ -245,7 +245,7 @@ namespace FastHashes
             #endregion
         }
 
-        private sealed class Engine2 : Engine
+        internal sealed class Engine2 : Engine
         {
             #region Constants
             private const UInt64 K0 = 0xD6D018F5ul;
@@ -408,7 +408,7 @@ namespace FastHashes
         #endregion
 
         #region Nesting (Classes)
-        private abstract class Engine
+        internal abstract class Engine
         {
             #region Members
             protected readonly UInt32 m_Seed;
@@ -478,7 +478,7 @@ namespace FastHashes
             #endregion
         }
 
-        private sealed class Engine1 : Engine
+        internal sealed class Engine1 : Engine
         {
             #region Constants
             private const UInt64 K0 = 0xC83A91E1ul;
@@ -581,7 +581,7 @@ namespace FastHashes
             #endregion
         }
 
-        private sealed class Engine2 : Engine
+        internal sealed class Engine2 : Engine
         {
             #region Constants
             private const UInt64 K0 = 0xD6D018F5ul;
