@@ -22,23 +22,31 @@ namespace FastHashes
         #region Properties
         /// <inheritdoc/>
         public override Int32 Length => 32;
+
+        /// <summary>Gets the first seed used by the hashing algorithm.</summary>
+        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        public UInt64 Seed1 => m_Seed1;
+
+        /// <summary>Gets the second seed used by the hashing algorithm.</summary>
+        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        public UInt64 Seed2 => m_Seed2;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.HalfSipHash"/> using the specified seeds.</summary>
-        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
-        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
+        /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public HalfSipHash(UInt64 seed1, UInt64 seed2)
         {
             m_Seed1 = (UInt32)(seed1 - (seed1 >> 32));
             m_Seed2 = (UInt32)(seed2 - (seed2 >> 32));
         }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HalfSipHash"/> using null seeds.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HalfSipHash"/> using a value of <c>0</c> for both seeds.</summary>
         public HalfSipHash() : this(0ul, 0ul) { }
 
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.HalfSipHash"/> using the specified value for both seeds.</summary>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public HalfSipHash(UInt64 seed) : this(seed, seed) { }
         #endregion
 
@@ -157,13 +165,25 @@ namespace FastHashes
         #region Properties
         /// <inheritdoc/>
         public override Int32 Length => 64;
+
+        /// <summary>Gets the variant of the hashing algorithm.</summary>
+        /// <value>An enumeration value representing the variant of the hashing algorithm. See <see cref="T:FastHashes.SipHashVariant"/>.</value>
+        public SipHashVariant Variant => m_Variant;
+
+        /// <summary>Gets the first seed used by the hashing algorithm.</summary>
+        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        public UInt64 Seed1 => m_Seed1;
+
+        /// <summary>Gets the second seed used by the hashing algorithm.</summary>
+        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        public UInt64 Seed2 => m_Seed2;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using the specified variant and seeds.</summary>
         /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.SipHashVariant"/>.</param>
-        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
-        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
+        /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public SipHash(SipHashVariant variant, UInt64 seed1, UInt64 seed2)
         {
@@ -186,27 +206,27 @@ namespace FastHashes
             m_Seed2 = seed2;
         }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using the variant 2-4 and null seeds.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using <see cref="F:FastHashes.SipHashVariant.V24"/> and a value of <c>0</c> for both seeds.</summary>
         public SipHash() : this(SipHashVariant.V24, 0ul, 0ul) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using the specified variant and null seeds.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using the specified variant and a value of <c>0</c> for both seeds.</summary>
         /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.SipHashVariant"/>.</param>
         /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public SipHash(SipHashVariant variant) : this(variant, 0ul, 0ul) { }
 
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using the specified variant and the specified value for both seeds.</summary>
         /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.SipHashVariant"/>.</param>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public SipHash(SipHashVariant variant, UInt64 seed) : this(variant, seed, seed) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using the variant 2-4 and the specified value for both seeds.</summary>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using <see cref="F:FastHashes.SipHashVariant.V24"/> and the specified value for both seeds.</summary>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public SipHash(UInt64 seed) : this(SipHashVariant.V24, seed, seed) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using the variant 2-4 and the specified seeds.</summary>
-        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
-        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SipHash"/> using <see cref="F:FastHashes.SipHashVariant.V24"/> and the specified seeds.</summary>
+        /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public SipHash(UInt64 seed1, UInt64 seed2) : this(SipHashVariant.V24, seed1, seed2) { }
         #endregion
 
@@ -289,9 +309,9 @@ namespace FastHashes
         public override String ToString()
         {
             if (m_Variant == SipHashVariant.V13)
-                return String.Concat(GetType().Name, "_13");
+                return String.Concat(GetType().Name, "-13");
 
-            return String.Concat(GetType().Name, "_24");
+            return String.Concat(GetType().Name, "-24");
         }
         #endregion
 

@@ -30,17 +30,21 @@ namespace FastHashes
         #region Properties
         /// <inheritdoc/>
         public override Int32 Length => 64;
+
+        /// <summary>Gets the seed used by the hashing algorithm.</summary>
+        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        public UInt64 Seed => m_Seed;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.MumHash"/> using the specified seed.</summary>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public MumHash(UInt32 seed)
         {
             m_Seed = seed;
         }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MumHash"/> using a null seed.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MumHash"/> using a seed value of <c>0</c>.</summary>
         public MumHash() : this(0u) { }
         #endregion
 

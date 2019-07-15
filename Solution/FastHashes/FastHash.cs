@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
-    /// <summary>Represents the base class from which all implementations of FastHash must derive.</summary>
+    /// <summary>Represents the base class from which all implementations of FastHash must derive. This class is abstract.</summary>
     public abstract class FastHash : Hash
     {
         #region Constants
@@ -13,18 +13,23 @@ namespace FastHashes
         private const UInt64 N = 0x2127599bf4325c37ul;
         #endregion
 
+        #region Members
+        /// <summary>Represents the seeds used by the hashing algorithm. This field is read-only.</summary>
+        protected readonly UInt64 m_Seed;
+        #endregion
+
         #region Properties
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
-        /// <value>A 8-byte unsigned integer.</value>
-        protected UInt64 Seed { get; }
+        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        protected UInt64 Seed => m_Seed;
         #endregion
 
         #region Constructors
         /// <summary>Represents the base constructor used by derived classes.</summary>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         protected FastHash(UInt64 seed)
         {
-            Seed = seed;
+            m_Seed = seed;
         }
         #endregion
 
@@ -32,7 +37,7 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
-            UInt64 hash = Seed;
+            UInt64 hash = m_Seed;
 
             if (count == 0)
                 goto Finalize;
@@ -80,9 +85,9 @@ namespace FastHashes
         #endregion
 
         #region Methods (Abstract)
-        /// <summary>Finalizes any partial computation and returns the hash value.</summary>
-        /// <param name="hashData">The unfinalized hash data.</param>
-        /// <returns>A byte array representing the hash value.</returns>
+        /// <summary>Finalizes any partial computation and returns the hash code.</summary>
+        /// <param name="hashData">A <see cref="T:System.UInt64"/> value representing the hash data.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
         protected abstract Byte[] GetHash(UInt64 hashData);
         #endregion
 
@@ -111,11 +116,11 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastHash32"/> using a null seed.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastHash32"/> using a seed value of <c>0</c>.</summary>
         public FastHash32() : base(0ul) { }
 
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastHash32"/> using the specified seed.</summary>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public FastHash32(UInt64 seed) : base(seed) { }
         #endregion
 
@@ -145,11 +150,11 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastHash64"/> using a null seed.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastHash64"/> using a seed value of <c>0</c>.</summary>
         public FastHash64() : base(0ul) { }
 
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastHash64"/> using the specified seed.</summary>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public FastHash64(UInt64 seed) : base(seed) { }
         #endregion
 

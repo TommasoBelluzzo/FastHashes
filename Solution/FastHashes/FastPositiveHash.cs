@@ -10,18 +10,26 @@ namespace FastHashes
     public sealed class FastPositiveHash : Hash
     {
         #region Members
-        internal readonly Engine m_Engine;
+        private readonly Engine m_Engine;
         #endregion
 
         #region Properties
+        /// <summary>Gets the variant of the hashing algorithm.</summary>
+        /// <value>An enumeration value representing the variant of the hashing algorithm. See <see cref="T:FastHashes.FastPositiveHashVariant"/>.</value>
+        public FastPositiveHashVariant Variant => m_Engine.Variant;
+
         /// <inheritdoc/>
         public override Int32 Length => 64;
+
+        /// <summary>Gets the seed used by the hashing algorithm.</summary>
+        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        public UInt64 Seed => m_Engine.Seed;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastPositiveHash"/> using the specified variant and seed.</summary>
         /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.FastPositiveHashVariant"/>.</param>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public FastPositiveHash(FastPositiveHashVariant variant, UInt64 seed)
         {
@@ -44,16 +52,16 @@ namespace FastHashes
             }
         }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastPositiveHash"/> using the variant 2 and a null seed.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastPositiveHash"/> using <see cref="F:FastHashes.FastPositiveHashVariant.V2"/> and a seed value of <c>0</c>.</summary>
         public FastPositiveHash() : this(FastPositiveHashVariant.V2, 0ul) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastPositiveHash"/> using the specified variant and a null seed.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastPositiveHash"/> using the specified variant and a seed value of <c>0</c>.</summary>
         /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.FastPositiveHashVariant"/>.</param>
         /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public FastPositiveHash(FastPositiveHashVariant variant) : this(variant, 0ul) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastPositiveHash"/> using the variant 2 and the specified seed.</summary>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastPositiveHash"/> using <see cref="F:FastHashes.FastPositiveHashVariant.V2"/> and the specified seed.</summary>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public FastPositiveHash(UInt64 seed) : this(FastPositiveHashVariant.V2, seed) { }
         #endregion  
 
@@ -72,7 +80,7 @@ namespace FastHashes
         #endregion
 
         #region Nesting (Classes)
-        internal abstract class Engine
+        private abstract class Engine
         {
             #region Constants
             protected const UInt64 P640 = 0xEC99BF0D8372CAABul;
@@ -88,7 +96,13 @@ namespace FastHashes
             protected readonly UInt64 m_Seed;
             #endregion
 
+            #region Properties
+            public UInt64 Seed => m_Seed;
+            #endregion
+
             #region Properties (Abstract)
+            public abstract FastPositiveHashVariant Variant { get; }
+
             public abstract String Name { get; }
             #endregion
 
@@ -123,7 +137,7 @@ namespace FastHashes
             #endregion
         }
 
-        internal sealed class EngineV0 : Engine
+        private sealed class EngineV0 : Engine
         {
             #region Constants
             private const UInt32 P320 = 0x92D78269;
@@ -140,6 +154,8 @@ namespace FastHashes
             #endregion
 
             #region Properties
+            public override FastPositiveHashVariant Variant => FastPositiveHashVariant.V0;
+
             public override String Name => "V0";
             #endregion
 
@@ -275,9 +291,11 @@ namespace FastHashes
             #endregion
         }
 
-        internal sealed class EngineV1 : Engine
+        private sealed class EngineV1 : Engine
         {
             #region Properties
+            public override FastPositiveHashVariant Variant => FastPositiveHashVariant.V1;
+
             public override String Name => "V1";
             #endregion
 
@@ -425,9 +443,11 @@ namespace FastHashes
             #endregion
         }
 
-        internal sealed class EngineV2 : Engine
+        private sealed class EngineV2 : Engine
         {
             #region Properties
+            public override FastPositiveHashVariant Variant => FastPositiveHashVariant.V2;
+
             public override String Name => "V2";
             #endregion
 

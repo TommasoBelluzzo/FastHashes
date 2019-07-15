@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace FastHashes
 {
-    /// <summary>Represents the base class from which all implementations of hash algorithms must derive.</summary>
+    /// <summary>Represents the base class from which all implementations of hash algorithms must derive. This class is abstract.</summary>
     public abstract class Hash
     {
         #region Members (Static)
@@ -19,7 +19,7 @@ namespace FastHashes
 
         #region Properties (Abstract)
         /// <summary>Gets the size, in bits, of the computed hash code.</summary>
-        /// <value>A positive 4-byte signed integer.</value>
+        /// <value>A <see cref="T:System.Int32"/> greater than or equal to <c>32</c>.</value>
         public abstract Int32 Length { get; }
         #endregion
 
@@ -95,9 +95,9 @@ namespace FastHashes
             return false;
         }
 
-        /// <summary>Reads a 2-byte unsigned integer from the specified byte pointer without increment.</summary>
-        /// <param name="pointer">The byte pointer.</param>
-        /// <returns>A 2-byte unsigned integer.</returns>
+        /// <summary>Reads a 2-bytes unsigned integer from the specified byte pointer, without increment.</summary>
+        /// <param name="pointer">The <see cref="T:System.Byte"/>* to read.</param>
+        /// <returns>A <see cref="T:System.UInt16"/> value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static unsafe UInt16 Fetch16(Byte* pointer)
         {
@@ -116,9 +116,9 @@ namespace FastHashes
             return v;
         }
 
-        /// <summary>Reads a 4-byte unsigned integer from the specified byte pointer without increment.</summary>
-        /// <param name="pointer">The byte pointer.</param>
-        /// <returns>A 4-byte unsigned integer.</returns>
+        /// <summary>Reads a 4-bytes unsigned integer from the specified byte pointer, without increment.</summary>
+        /// <param name="pointer">The <see cref="T:System.Byte"/>* to read.</param>
+        /// <returns>a <see cref="T:System.UInt32"/> value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static unsafe UInt32 Fetch32(Byte* pointer)
         {
@@ -137,9 +137,9 @@ namespace FastHashes
             return v;
         }
         
-        /// <summary>Reads a 8-byte unsigned integer from the specified byte pointer without increment.</summary>
-        /// <param name="pointer">The byte pointer.</param>
-        /// <returns>A 8-byte unsigned integer.</returns>
+        /// <summary>Reads a 8-bytes unsigned integer from the specified byte pointer, without increment.</summary>
+        /// <param name="pointer">The <see cref="T:System.Byte"/>* to read.</param>
+        /// <returns>A <see cref="T:System.UInt64"/> value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static unsafe UInt64 Fetch64(Byte* pointer)
         {
@@ -158,9 +158,9 @@ namespace FastHashes
             return v;
         }
 
-        /// <summary>Reads a 2-byte unsigned integer from the specified byte pointer with increment.</summary>
-        /// <param name="pointer">The byte pointer.</param>
-        /// <returns>A 2-byte unsigned integer.</returns>
+        /// <summary>Reads a 2-bytes unsigned integer from the specified byte pointer, with increment.</summary>
+        /// <param name="pointer">The <see cref="T:System.Byte"/>* to read.</param>
+        /// <returns>A <see cref="T:System.UInt16"/> value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static unsafe UInt16 Read16(ref Byte* pointer)
         {
@@ -181,9 +181,9 @@ namespace FastHashes
             return v;
         }
 
-        /// <summary>Reads a 4-byte unsigned integer from the specified byte pointer with increment.</summary>
-        /// <param name="pointer">The byte pointer.</param>
-        /// <returns>A 4-byte unsigned integer.</returns>
+        /// <summary>Reads a 4-bytes unsigned integer from the specified byte pointer, with increment.</summary>
+        /// <param name="pointer">The <see cref="T:System.Byte"/>* to read.</param>
+        /// <returns>A <see cref="T:System.UInt32"/> value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static unsafe UInt32 Read32(ref Byte* pointer)
         {
@@ -204,9 +204,9 @@ namespace FastHashes
             return v;
         }
 
-        /// <summary>Reads a 8-byte unsigned integer from the specified byte pointer with increment.</summary>
-        /// <param name="pointer">The byte pointer.</param>
-        /// <returns>A 8-byte unsigned integer.</returns>
+        /// <summary>Reads a 8-bytes unsigned integer from the specified byte pointer, with increment.</summary>
+        /// <param name="pointer">The <see cref="T:System.Byte"/>* to read.</param>
+        /// <returns>A <see cref="T:System.UInt64"/> value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static unsafe UInt64 Read64(ref Byte* pointer)
         {
@@ -227,10 +227,10 @@ namespace FastHashes
             return v;
         }
 
-        /// <summary>Rotates a 4-byte unsigned integer left by the specified number of bits.</summary>
-        /// <param name="value">The integer to rotate.</param>
+        /// <summary>Rotates a 4-bytes unsigned integer left by the specified number of bits.</summary>
+        /// <param name="value">The <see cref="T:System.UInt32"/> to rotate.</param>
         /// <param name="rotation">The number of bits to rotate.</param>
-        /// <returns>A 4-byte unsigned integer.</returns>
+        /// <returns>A <see cref="T:System.UInt32"/> value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static UInt32 RotateLeft(UInt32 value, Int32 rotation)
         {
@@ -238,10 +238,10 @@ namespace FastHashes
             return (value << rotation) | (value >> (32 - rotation));
         }
 
-        /// <summary>Rotates a 8-byte unsigned integer left by the specified number of bits.</summary>
-        /// <param name="value">The integer to rotate.</param>
+        /// <summary>Rotates a 8-bytes unsigned integer left by the specified number of bits.</summary>
+        /// <param name="value">The <see cref="T:System.UInt64"/> to rotate.</param>
         /// <param name="rotation">The number of bits to rotate.</param>
-        /// <returns>A 8-byte unsigned integer.</returns>
+        /// <returns>A <see cref="T:System.UInt64"/> value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static UInt64 RotateLeft(UInt64 value, Int32 rotation)
         {
@@ -249,10 +249,10 @@ namespace FastHashes
             return (value << rotation) | (value >> (64 - rotation));
         }
 
-        /// <summary>Rotates a 4-byte unsigned integer right by the specified number of bits.</summary>
-        /// <param name="value">The integer to rotate.</param>
+        /// <summary>Rotates a 4-bytes unsigned integer right by the specified number of bits.</summary>
+        /// <param name="value">The <see cref="T:System.UInt32"/> to rotate.</param>
         /// <param name="rotation">The number of bits to rotate.</param>
-        /// <returns>A 4-byte unsigned integer.</returns>
+        /// <returns>A <see cref="T:System.UInt32"/> value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static UInt32 RotateRight(UInt32 value, Int32 rotation)
         {
@@ -260,10 +260,10 @@ namespace FastHashes
             return (value >> rotation) | (value << (32 - rotation));
         }
 
-        /// <summary>Rotates a 8-byte unsigned integer right by the specified number of bits.</summary>
-        /// <param name="value">The integer to rotate.</param>
+        /// <summary>Rotates a 8-bytes unsigned integer right by the specified number of bits.</summary>
+        /// <param name="value">The <see cref="T:System.UInt64"/> to rotate.</param>
         /// <param name="rotation">The number of bits to rotate.</param>
-        /// <returns>A 8-byte unsigned integer.</returns>
+        /// <returns>A <see cref="T:System.UInt64"/> value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static UInt64 RotateRight(UInt64 value, Int32 rotation)
         {
@@ -271,9 +271,9 @@ namespace FastHashes
             return (value >> rotation) | (value << (64 - rotation));
         }
 
-        /// <summary>Swaps the value of two 2-byte unsigned integers.</summary>
-        /// <param name="value1">The first integer, whose value is assigned to the second one.</param>
-        /// <param name="value2">The second integer, whose value is assigned to the first one.</param>
+        /// <summary>Swaps the value of two 2-bytes unsigned integers.</summary>
+        /// <param name="value1">The first <see cref="T:System.UInt16"/>, whose value is assigned to the second one.</param>
+        /// <param name="value2">The second <see cref="T:System.UInt16"/>, whose value is assigned to the first one.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static void Swap(ref UInt16 value1, ref UInt16 value2)
         {
@@ -282,9 +282,9 @@ namespace FastHashes
             value2 = tmp;
         }
 
-        /// <summary>Swaps the value of two 4-byte unsigned integers.</summary>
-        /// <param name="value1">The first integer, whose value is assigned to the second one.</param>
-        /// <param name="value2">The second integer, whose value is assigned to the first one.</param>
+        /// <summary>Swaps the value of two 4-bytes unsigned integers.</summary>
+        /// <param name="value1">The first <see cref="T:System.UInt32"/>, whose value is assigned to the second one.</param>
+        /// <param name="value2">The second <see cref="T:System.UInt32"/>, whose value is assigned to the first one.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static void Swap(ref UInt32 value1, ref UInt32 value2)
         {
@@ -293,9 +293,9 @@ namespace FastHashes
             value2 = tmp;
         }
 
-        /// <summary>Swaps the value of two 8-byte unsigned integers.</summary>
-        /// <param name="value1">The first integer, whose value is assigned to the second one.</param>
-        /// <param name="value2">The second integer, whose value is assigned to the first one.</param>
+        /// <summary>Swaps the value of two 8-bytes unsigned integers.</summary>
+        /// <param name="value1">The first <see cref="T:System.UInt64"/>, whose value is assigned to the second one.</param>
+        /// <param name="value2">The second <see cref="T:System.UInt64"/>, whose value is assigned to the first one.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static void Swap(ref UInt64 value1, ref UInt64 value2)
         {
@@ -305,8 +305,8 @@ namespace FastHashes
         }
 
         /// <summary>Computes the hash of the specified byte array.</summary>
-        /// <param name="buffer">The byte array whose hash must be computed.</param>
-        /// <returns>A byte arrat representing the computed hash.</returns>
+        /// <param name="buffer">The <see cref="T:System.Byte"/>[] whose hash must be computed.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is null.</exception>
         public Byte[] ComputeHash(Byte[] buffer)
         {
@@ -317,8 +317,9 @@ namespace FastHashes
         }
 
         /// <summary>Computes the hash of the specified number of elements of a byte array, starting at the first element.</summary>
-        /// <param name="buffer">The byte array whose hash must be computed.</param>
+        /// <param name="buffer">The <see cref="T:System.Byte"/>[] whose hash must be computed.</param>
         /// <param name="count">The number of bytes in the array to use as data.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
         /// <exception cref="T:System.ArgumentException">Thrown when the number of bytes in <paramref name="buffer">buffer</paramref> is less than <paramref name="count">count</paramref>.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is null.</exception>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="count">count</paramref> is less than 0.</exception>
@@ -328,12 +329,13 @@ namespace FastHashes
         }
 
         /// <summary>Computes the hash of the specified region of a byte array.</summary>
-        /// <param name="buffer">The byte array whose hash must be computed.</param>
+        /// <param name="buffer">The <see cref="T:System.Byte"/>[] whose hash must be computed.</param>
         /// <param name="offset">The offset into the byte array from which to begin using data.</param>
         /// <param name="count">The number of bytes in the array to use as data.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
         /// <exception cref="T:System.ArgumentException">Thrown when the number of bytes in <paramref name="buffer">buffer</paramref> is less than <paramref name="offset">sourceOffset</paramref> plus <paramref name="count">count</paramref>.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is null.</exception>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="offset">offset</paramref> is not within the bounds of <paramref name="buffer">buffer</paramref>, or when <paramref name="count">count</paramref> is less than 0.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="offset">offset</paramref> is not within the bounds of <paramref name="buffer">buffer</paramref> or when <paramref name="count">count</paramref> is less than 0.</exception>
         public Byte[] ComputeHash(Byte[] buffer, Int32 offset, Int32 count)
         {
             if (buffer == null)
@@ -353,7 +355,8 @@ namespace FastHashes
             return ComputeHashInternal(buffer, offset, count);
         }
 
-        /// <inheritdoc/>
+        /// <summary>Returns a string that represents the current instance.</summary>
+        /// <returns>A <see cref="T:System.String"/> that represents the current instance.</returns>
         public override String ToString()
         {
             return GetType().Name;
@@ -362,9 +365,10 @@ namespace FastHashes
 
         #region Methods (Abstract)
         /// <summary>Represents the core hashing function of the algorithm.</summary>
-        /// <param name="buffer">The byte array whose hash must be computed.</param>
+        /// <param name="buffer">The <see cref="T:System.Byte"/>[] whose hash must be computed.</param>
         /// <param name="offset">The offset into the byte array from which to begin using data.</param>
         /// <param name="count">The number of bytes in the array to use as data.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
         protected abstract Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count);
         #endregion
     }

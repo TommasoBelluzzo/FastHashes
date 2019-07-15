@@ -117,7 +117,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DisposableDelegate.cs" />
-    <Compile Include="DummyHashes.cs" />
+    <Compile Include="DummyHash.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Program.cs" />

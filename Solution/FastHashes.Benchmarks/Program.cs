@@ -30,10 +30,7 @@ namespace FastHashes.Benchmarks
 
         private static readonly List<(String,Func<UInt32,Hash>)> s_HashInitializers = new List<(String,Func<UInt32,Hash>)>
         {
-            ("DummyHash32",  x => new DummyHash32()),
-            ("DummyHash64",  x => new DummyHash64()),
-            ("DummyHash128",  x => new DummyHash128()),
-            ("DummyHash256",  x => new DummyHash256()),
+            ("DummyHash",  x => new DummyHash()),
             ("FarmHash32",  x => new FarmHash32(x)),
             ("FarmHash64",  x => new FarmHash64(x)),
             ("FarmHash128",  x => new FarmHash128(x)),

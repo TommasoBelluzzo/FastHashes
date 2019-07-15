@@ -6,17 +6,30 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
-    /// <summary>Represents the base class from which all implementations of MurmurHash with more than 32 bits of output must derive.</summary>
+    /// <summary>Represents the base class from which all implementations of MurmurHash with more than 32 bits of output must derive. This class is abstract.</summary>
     public abstract class MurmurHashG32 : Hash
     {
         #region Members
-        internal readonly Engine m_Engine;
+        private readonly Engine m_Engine;
+        #endregion
+
+        #region Properties
+        /// <summary>Gets the engine category of the hashing algorithm.</summary>
+        /// <value>An enumeration value representing the engine category of the hashing algorithm. See <see cref="T:FastHashes.MurmurHashEngine"/>.</value>
+        public MurmurHashEngine Category => m_Engine.Category;
+
+        /// <inheritdoc/>
+        public override Int32 Length => 64;
+
+        /// <summary>Gets the seed used by the hashing algorithm.</summary>
+        /// <value>A <see cref="T:System.UInt32"/> value.</value>
+        public UInt32 Seed => m_Engine.Seed;
         #endregion
 
         #region Constructors
         /// <summary>Represents the base constructor used by derived classes.</summary>
-        /// <param name="engine">The engine used by the hashing algorithm. See <see cref="T:FastHashes.MurmurHashEngine"/>.</param>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <param name="engine">The engine category used by the hashing algorithm. See <see cref="T:FastHashes.MurmurHashEngine"/>.</param>
+        /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="engine">engine</paramref> is undefined.</exception>
         protected MurmurHashG32(MurmurHashEngine engine, UInt32 seed)
         {
@@ -61,17 +74,34 @@ namespace FastHashes
         #endregion
 
         #region Methods (Abstract)
-        /// <summary>Finalizes any partial computation and returns the hash value.</summary>
-        /// <param name="hashData">The unfinalized hash data.</param>
-        /// <returns>A byte array representing the hash value.</returns>
+        /// <summary>Finalizes any partial computation and returns the hash code.</summary>
+        /// <param name="hashData">A <see cref="T:System.Byte"/>[] representing the hash data.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
         protected abstract Byte[] GetHash(Byte[] hashData);
         #endregion
 
         #region Nesting (Classes)
-        internal abstract class Engine
+        private abstract class Engine
         {
+            #region Members
+            private readonly UInt32 m_OriginalSeed;
+            #endregion
+
             #region Properties (Abstract)
+            public UInt32 Seed => m_OriginalSeed;
+            #endregion
+
+            #region Properties (Abstract)
+            public abstract MurmurHashEngine Category { get; }
+
             public abstract String Name { get; }
+            #endregion
+
+            #region Constructors
+            public Engine(UInt32 seed)
+            {
+                m_OriginalSeed = seed;
+            }
             #endregion
 
             #region Methods (Abstract)
@@ -79,7 +109,7 @@ namespace FastHashes
             #endregion
         }
 
-        internal sealed class Engine64 : Engine
+        private sealed class Engine64 : Engine
         {
             #region Constants
             private const UInt64 C1 = 0x87C37B91114253D5ul;
@@ -96,11 +126,13 @@ namespace FastHashes
             #endregion
 
             #region Properties
+            public override MurmurHashEngine Category => MurmurHashEngine.x64;
+
             public override String Name => "x64";
             #endregion
 
             #region Constructors
-            public Engine64(UInt32 seed)
+            public Engine64(UInt32 seed) : base(seed)
             {
                 m_Seed1 = seed;
                 m_Seed2 = seed;
@@ -231,7 +263,7 @@ namespace FastHashes
             #endregion
         }
 
-        internal sealed class Engine86 : Engine
+        private sealed class Engine86 : Engine
         {
             #region Constants
             private const UInt32 C1 = 0x239B961Bu;
@@ -254,11 +286,13 @@ namespace FastHashes
             #endregion
 
             #region Properties
+            public override MurmurHashEngine Category => MurmurHashEngine.x86;
+
             public override String Name => "x86";
             #endregion
 
             #region Constructors
-            public Engine86(UInt32 seed)
+            public Engine86(UInt32 seed) : base(seed)
             {
                 m_Seed1 = seed;
                 m_Seed2 = seed;
@@ -437,17 +471,21 @@ namespace FastHashes
         #region Properties
         /// <inheritdoc/>
         public override Int32 Length => 32;
+
+        /// <summary>Gets the seed used by the hashing algorithm.</summary>
+        /// <value>A <see cref="T:System.UInt32"/> value.</value>
+        public UInt32 Seed => m_Seed;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash32"/> using the specified seed.</summary>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         public MurmurHash32(UInt32 seed)
         {
             m_Seed = seed;
         }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash32"/> using a null seed.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash32"/> using a seed value of <c>0</c>.</summary>
         public MurmurHash32() : this(0u) { }
         #endregion
 
@@ -539,21 +577,21 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash64"/> using the automatic engine selection and a null seed.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash64"/> using the automatic engine selection and a seed value of <c>0</c>.</summary>
         public MurmurHash64() : base(MurmurHashEngine.Auto, 0u) { }
         
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash64"/> using the specified engine and a null seed.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash64"/> using the specified engine category and a seed value of <c>0</c>.</summary>
         /// <param name="engine">The engine of the hashing algorithm. See <see cref="T:FastHashes.MurmurHashEngine"/>.</param>
         public MurmurHash64(MurmurHashEngine engine) : base(engine, 0u) {}
         
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash64"/> using the automatic engine selection and the specified seed.</summary>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash64"/> using the automatic engine category selection and the specified seed.</summary>
+        /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         public MurmurHash64(UInt32 seed) : base(MurmurHashEngine.Auto, seed) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash64"/> using the specified engine and seed.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash64"/> using the specified engine category and seed.</summary>
         /// <param name="engine">The engine of the hashing algorithm. See <see cref="T:FastHashes.MurmurHashEngine"/>.</param>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
-        /// /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="engine">engine</paramref> is undefined.</exception>
+        /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
+        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="engine">engine</paramref> is undefined.</exception>
         public MurmurHash64(MurmurHashEngine engine, UInt32 seed) : base(engine, seed) {}
         #endregion
 
@@ -578,21 +616,21 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash128"/> using the automatic engine selection and a null seed.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash128"/> using the automatic engine selection and a seed value of <c>0</c>.</summary>
         public MurmurHash128() : base(MurmurHashEngine.Auto, 0u) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash128"/> using the specified engine and a null seed.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash128"/> using the specified engine category and a seed value of <c>0</c>.</summary>
         /// <param name="engine">The engine of the hashing algorithm. See <see cref="T:FastHashes.MurmurHashEngine"/>.</param>
         public MurmurHash128(MurmurHashEngine engine) : base(engine, 0u) { }
 
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash128"/> using the automatic engine selection and the specified seed.</summary>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         public MurmurHash128(UInt32 seed) : base(MurmurHashEngine.Auto, seed) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash128"/> using the specified engine and seed.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MurmurHash128"/> using the specified engine category and seed.</summary>
         /// <param name="engine">The engine of the hashing algorithm. See <see cref="T:FastHashes.MurmurHashEngine"/>.</param>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
-        /// /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="engine">engine</paramref> is undefined.</exception>
+        /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
+        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="engine">engine</paramref> is undefined.</exception>
         public MurmurHash128(MurmurHashEngine engine, UInt32 seed) : base(engine, seed) { }
         #endregion
 

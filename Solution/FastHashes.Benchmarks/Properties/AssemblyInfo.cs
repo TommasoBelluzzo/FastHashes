@@ -29,7 +29,7 @@ using System.Runtime.InteropServices;
 #endregion
 
 #region Version
-[assembly: AssemblyFileVersion("1.7.2.0")]
-[assembly: AssemblyInformationalVersion("1.7.2.0")]
-[assembly: AssemblyVersion("1.7.2")]
+[assembly: AssemblyFileVersion("1.7.3.0")]
+[assembly: AssemblyInformationalVersion("1.7.3.0")]
+[assembly: AssemblyVersion("1.7.3")]
 #endregion

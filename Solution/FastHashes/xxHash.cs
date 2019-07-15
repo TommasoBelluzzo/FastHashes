@@ -23,17 +23,21 @@ namespace FastHashes
         #region Properties
         /// <inheritdoc/>
         public override Int32 Length => 32;
+
+        /// <summary>Gets the seed used by the hashing algorithm.</summary>
+        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        public UInt64 Seed => m_Seed;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.xxHash32"/> using the specified seed.</summary>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public xxHash32(UInt32 seed)
         {
             m_Seed = seed;
         }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.xxHash32"/> using a null seed.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.xxHash32"/> using a seed value of <c>0</c>.</summary>
         public xxHash32() : this(0u) { }
         #endregion
 
@@ -155,17 +159,21 @@ namespace FastHashes
         #region Properties
         /// <inheritdoc/>
         public override Int32 Length => 64;
+
+        /// <summary>Gets the seed used by the hashing algorithm.</summary>
+        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        public UInt64 Seed => m_Seed;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.xxHash64"/> using the specified seed.</summary>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public xxHash64(UInt64 seed)
         {
             m_Seed = seed;
         }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.xxHash64"/> using a null seed.</summary>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.xxHash64"/> using a seed value of <c>0</c>.</summary>
         public xxHash64() : this(0ul) { }
         #endregion
 

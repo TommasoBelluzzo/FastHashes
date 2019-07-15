@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
-    /// <summary>Represents the base class from which all implementations of FarmHash with more than 32 bits of output must derive.</summary>
+    /// <summary>Represents the base class from which all implementations of FarmHash with more than 32 bits of output must derive. This class is abstract.</summary>
     public abstract class FarmHashG32 : Hash
     {
         #region Constants
@@ -21,13 +21,13 @@ namespace FastHashes
         #endregion
 
         #region Members
-        /// <summary>Represents the vector of seed used by the hashing algorithm. This field is read-only.</summary>
+        /// <summary>Represents the seeds used by the hashing algorithm. This field is read-only.</summary>
         protected readonly ReadOnlyCollection<UInt64> m_Seeds;
         #endregion
 
         #region Properties
         /// <summary>Gets the seeds used by the hashing algorithm.</summary>
-        /// <value>A collection containing zero or two 8-byte unsigned integers.</value>
+        /// <value>A <see cref="System.Collections.ObjectModel.ReadOnlyCollection{T}"/> containing <c>0</c> or <c>2</c> <see cref="T:System.UInt64"/> values.</value>
         public ReadOnlyCollection<UInt64> Seeds => m_Seeds;
         #endregion
 
@@ -38,9 +38,9 @@ namespace FastHashes
             m_Seeds = new ReadOnlyCollection<UInt64>(new UInt64[0]);
         }
 
-        /// <summary>Represents the base constructor with seeds used by derived classes.</summary>
-        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
-        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
+        /// <summary>Represents the base constructor with two seeds used by derived classes.</summary>
+        /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         protected FarmHashG32(UInt64 seed1, UInt64 seed2)
         {
             m_Seeds = new ReadOnlyCollection<UInt64>(new[] { seed1, seed2 });
@@ -116,6 +116,10 @@ namespace FastHashes
         #region Properties
         /// <inheritdoc/>
         public override Int32 Length => 32;
+
+        /// <summary>Gets the seed used by the hashing algorithm.</summary>
+        /// <value>A <see cref="T:System.UInt32"/>? value.</value>
+        public UInt32? Seed => m_Seed;
         #endregion
 
         #region Constructors
@@ -126,7 +130,7 @@ namespace FastHashes
         }
 
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash32"/> using the specified seed.</summary>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         public FarmHash32(UInt32 seed)
         {
             m_Seed = seed;
@@ -358,13 +362,13 @@ namespace FastHashes
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash64"/> without seeds.</summary>
         public FarmHash64() { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash64"/> using the constant K2 as first seed and the specified value as second seed.</summary>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash64"/> using <see cref="F:FastHashes.FarmHashG32.K2"/> as first seed and the specified value as second seed.</summary>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public FarmHash64(UInt64 seed) : base(K2, seed) { }
 
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash64"/> using the specified seeds.</summary>
-        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
-        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
+        /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public FarmHash64(UInt64 seed1, UInt64 seed2) : base(seed1, seed2) { }
         #endregion
 
@@ -545,13 +549,13 @@ namespace FastHashes
         /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash128"/> without seeds.</summary>
         public FarmHash128() { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash128"/> using the specified value for both seeds.</summary>
-        /// <param name="seed">The seed used by the hashing algorithm.</param>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash128"/> using the specified <see cref="T:System.UInt64"/> value for both seeds.</summary>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public FarmHash128(UInt64 seed) : base(seed, seed) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash128"/> using the specified seeds.</summary>
-        /// <param name="seed1">The first seed used by the hashing algorithm.</param>
-        /// <param name="seed2">The second seed used by the hashing algorithm.</param>
+        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash128"/> using the specified <see cref="T:System.UInt64"/> seeds.</summary>
+        /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public FarmHash128(UInt64 seed1, UInt64 seed2) : base(seed1, seed2) { }
         #endregion
 
