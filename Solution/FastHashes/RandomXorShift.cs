@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace FastHashes
 {
-    /// <summary>Represents a pseudorandom number generator based on a variant of the XorShift approach.</summary>
+    /// <summary>Represents a pseudorandom numbers generator based on a variant of the XorShift approach.</summary>
     public sealed class RandomXorShift
     {
         #region Constants
@@ -23,8 +23,8 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.RandomXorShift"/> using the specified seed.</summary>
-        /// <param name="seed">A <see cref="T:System.UInt32"/> value used to calculate the starting value of the pseudorandom numbers sequence.</param>
+        /// <summary>Initializes a new instance using the specified seed.</summary>
+        /// <param name="seed">The <see cref="T:System.UInt32"/> seed used to calculate the starting value of the pseudorandom numbers sequence.</param>
         public RandomXorShift(UInt32 seed)
         {
             m_Bytes = new Queue<Byte>();
@@ -35,7 +35,7 @@ namespace FastHashes
             m_W = W;
         }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.RandomXorShift"/> using a seed value of <c>0</c>.</summary>
+        /// <summary>Initializes a new instance using a seed value of <c>0</c>.</summary>
         public RandomXorShift() : this(0u) { }
         #endregion
 
@@ -77,7 +77,7 @@ namespace FastHashes
         }
 
         /// <summary>Returns a random 4-byte unsigned integer.</summary>
-        /// <returns>A <see cref="T:System.UInt32"/> value between <c>0</c> and <see cref="F:System.UInt32.MaxValue"/>.</returns>
+        /// <returns>An <see cref="T:System.UInt32"/> value.</returns>
         public UInt32 NextValue()
         {
             UInt32 t = m_X ^ (m_X << 11);
@@ -92,7 +92,7 @@ namespace FastHashes
 
         /// <summary>Fills a byte array with random numbers.</summary>
         /// <param name="buffer">The <see cref="T:System.Byte"/>[] to fill.</param>
-        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is null.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
         public void NextBytes(Byte[] buffer)
         {
             if (buffer == null)
@@ -105,8 +105,8 @@ namespace FastHashes
         /// <param name="buffer">The <see cref="T:System.Byte"/>[] to fill.</param>
         /// <param name="count">The number of bytes in the array to fill.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the number of bytes in <paramref name="buffer">buffer</paramref> is less than <paramref name="count">count</paramref>.</exception>
-        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is null.</exception>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="count">count</paramref> is less than 0.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="count">count</paramref> is less than <c>0</c>.</exception>
         public void NextBytes(Byte[] buffer, Int32 count)
         {
             NextBytes(buffer, 0, count);
@@ -117,8 +117,8 @@ namespace FastHashes
         /// <param name="offset">The offset into the byte array from which to begin the fill operation.</param>
         /// <param name="count">The number of bytes in the array to fill.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the number of bytes in <paramref name="buffer">buffer</paramref> is less than <paramref name="offset">sourceOffset</paramref> plus <paramref name="count">count</paramref>.</exception>
-        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is null.</exception>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="offset">offset</paramref> is not within the bounds of <paramref name="buffer">buffer</paramref> or when <paramref name="count">count</paramref> is less than 0.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="offset">offset</paramref> is not within the bounds of <paramref name="buffer">buffer</paramref> or when <paramref name="count">count</paramref> is less than <c>0</c>.</exception>
         public void NextBytes(Byte[] buffer, Int32 offset, Int32 count)
         {
             if (buffer == null)

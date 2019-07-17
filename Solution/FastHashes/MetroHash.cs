@@ -15,20 +15,20 @@ namespace FastHashes
 
         #region Properties
         /// <summary>Gets the variant of the hashing algorithm.</summary>
-        /// <value>An enumeration value representing the variant of the hashing algorithm. See <see cref="T:FastHashes.MetroHashVariant"/>.</value>
+        /// <value>An enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/>.</value>
         public MetroHashVariant Variant => m_Engine.Variant;
 
         /// <inheritdoc/>
         public override Int32 Length => 64;
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
-        /// <value>A <see cref="T:System.UInt32"/> value.</value>
+        /// <value>An <see cref="T:System.UInt32"/> value.</value>
         public UInt32 Seed => m_Engine.Seed;
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash64"/> using the specified variant and seed.</summary>
-        /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.MetroHashVariant"/>.</param>
+        /// <summary>Initializes a new instance using the specified variant and seed.</summary>
+        /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public MetroHash64(MetroHashVariant variant, UInt32 seed)
@@ -42,15 +42,15 @@ namespace FastHashes
                 m_Engine = new Engine2(seed);
         }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash64"/> using <see cref="F:FastHashes.MetroHashVariant.V1"/> and a seed value of <c>0</c>.</summary>
+        /// <summary>Initializes a new instance using <see cref="F:FastHashes.MetroHashVariant.V1"/> and a seed value of <c>0</c>.</summary>
         public MetroHash64() : this(MetroHashVariant.V1, 0u) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash64"/> using the specified variant and a seed value of <c>0</c>.</summary>
-        /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.MetroHashVariant"/>.</param>
+        /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
+        /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public MetroHash64(MetroHashVariant variant) : this(variant, 0u) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash64"/> using <see cref="F:FastHashes.MetroHashVariant.V1"/> and the specified <see cref="T:System.UInt32"/> seed.</summary>
+        /// <summary>Initializes a new instance using <see cref="F:FastHashes.MetroHashVariant.V1"/> and the specified <see cref="T:System.UInt32"/> seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         public MetroHash64(UInt32 seed) : this(MetroHashVariant.V1, seed) { }
         #endregion
@@ -379,20 +379,20 @@ namespace FastHashes
 
         #region Properties
         /// <summary>Gets the variant of the hashing algorithm.</summary>
-        /// <value>An enumeration value representing the variant of the hashing algorithm. See <see cref="T:FastHashes.MetroHashVariant"/>.</value>
+        /// <value>An enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/>.</value>
         public MetroHashVariant Variant => m_Engine.Variant;
 
         /// <inheritdoc/>
         public override Int32 Length => 128;
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
-        /// <value>A <see cref="T:System.UInt32"/> value.</value>
+        /// <value>An <see cref="T:System.UInt32"/> value.</value>
         public UInt32 Seed => m_Engine.Seed;
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash128"/> using the specified variant and seed.</summary>
-        /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.MetroHashVariant"/>.</param>
+        /// <summary>Initializes a new instance using the specified variant and seed.</summary>
+        /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public MetroHash128(MetroHashVariant variant, UInt32 seed)
@@ -406,15 +406,15 @@ namespace FastHashes
                 m_Engine = new Engine2(seed);
         }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash64"/> using <see cref="F:FastHashes.MetroHashVariant.V1"/> and a seed value of <c>0</c>.</summary>
+        /// <summary>Initializes a new instance using <see cref="F:FastHashes.MetroHashVariant.V1"/> and a seed value of <c>0</c>.</summary>
         public MetroHash128() : this(MetroHashVariant.V1, 0u) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash128"/> using the specified variant and a seed value of <c>0</c>.</summary>
-        /// <param name="variant">The variant of the hashing algorithm. See <see cref="T:FastHashes.MetroHashVariant"/>.</param>
+        /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
+        /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public MetroHash128(MetroHashVariant variant) : this(variant, 0u) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.MetroHash128"/> using <see cref="F:FastHashes.MetroHashVariant.V1"/> and the specified seed.</summary>
+        /// <summary>Initializes a new instance using <see cref="F:FastHashes.MetroHashVariant.V1"/> and the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         public MetroHash128(UInt32 seed) : this(MetroHashVariant.V1, seed) { }
         #endregion

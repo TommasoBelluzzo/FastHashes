@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
-    /// <summary>Represents the base class from which all implementations of HighwayHash must derive. This class is abstract.</summary>
+    /// <summary>Represents the base class from which all the HighwayHash implementations must derive. This class is abstract.</summary>
     public abstract class HighwayHash : Hash
     {
         #region Constants
@@ -28,33 +28,33 @@ namespace FastHashes
 
         #region (Properties)
         /// <summary>Gets the first seed used by the hashing algorithm.</summary>
-        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        /// <value>An <see cref="T:System.UInt64"/> value.</value>
         public UInt64 Seed1 => m_Seed1;
 
         /// <summary>Gets the second seed used by the hashing algorithm.</summary>
-        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        /// <value>An <see cref="T:System.UInt64"/> value.</value>
         public UInt64 Seed2 => m_Seed2;
 
         /// <summary>Gets the third seed used by the hashing algorithm.</summary>
-        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        /// <value>An <see cref="T:System.UInt64"/> value.</value>
         public UInt64 Seed3 => m_Seed3;
 
         /// <summary>Gets the fourth seed used by the hashing algorithm.</summary>
-        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        /// <value>An <see cref="T:System.UInt64"/> value.</value>
         public UInt64 Seed4 => m_Seed4;
         #endregion
 
         #region Properties (Abstract)
         /// <summary>Gets the number of hash finalization cycles.</summary>
-        /// <value>An unsigned integer between <c>0</c> and <see cref="F:System.UInt32.MaxValue"/>.</value>
+        /// <value>An <see cref="T:System.UInt32"/> value.</value>
         protected abstract UInt32 P { get; }
         #endregion
 
         #region Constructors
         /// <summary>Represents the compact base constructor used by derived classes.</summary>
-        /// <param name="seeds">A <see cref="T:System.UInt64"/>[] of seeds used by the hashing algorithm.</param>
+        /// <param name="seeds">The <see cref="T:System.UInt64"/>[] of seeds used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to 4.</exception>
-        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is null.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is <c>null</c>.</exception>
         protected HighwayHash(UInt64[] seeds)
         {
             if (seeds == null)
@@ -198,10 +198,10 @@ namespace FastHashes
 
         #region Methods (Abstract)
         /// <summary>Finalizes any partial computation and returns the hash code.</summary>
-        /// <param name="m0">A <see cref="T:System.UInt64"/>[] representing the hash data M0.</param>
-        /// <param name="m1">A <see cref="T:System.UInt64"/>[] representing the hash data M1.</param>
-        /// <param name="v0">A <see cref="T:System.UInt64"/>[] representing the hash data V0.</param>
-        /// <param name="v1">A <see cref="T:System.UInt64"/>[] representing the hash data V1.</param>
+        /// <param name="m0">The <see cref="T:System.UInt64"/>[] representing the hash data M0.</param>
+        /// <param name="m1">The <see cref="T:System.UInt64"/>[] representing the hash data M1.</param>
+        /// <param name="v0">The <see cref="T:System.UInt64"/>[] representing the hash data V0.</param>
+        /// <param name="v1">The <see cref="T:System.UInt64"/>[] representing the hash data V1.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
         protected abstract Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1);
         #endregion
@@ -273,20 +273,20 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash64"/> using a value of <c>0</c> for all the seeds.</summary>
+        /// <summary>Initializes a new instance using a value of <c>0</c> for all the seeds.</summary>
         public HighwayHash64() : base(0ul, 0ul, 0ul, 0ul) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash64"/> using the specified value for all the seeds.</summary>
+        /// <summary>Initializes a new instance using the specified value for all the seeds.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public HighwayHash64(UInt64 seed) : base(seed, seed, seed, seed) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash64"/> using the specified <see cref="T:System.UInt64"/> seeds.</summary>
-        /// <param name="seeds">A <see cref="T:System.UInt64"/>[] of seeds used by the hashing algorithm.</param>
+        /// <summary>Initializes a new instance using the specified <see cref="T:System.UInt64"/> seeds.</summary>
+        /// <param name="seeds">The <see cref="T:System.UInt64"/>[] of seeds used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to 4.</exception>
-        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is null.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is <c>null</c>.</exception>
         public HighwayHash64(UInt64[] seeds) : base(seeds) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash64"/> using the specified seeds.</summary>
+        /// <summary>Initializes a new instance using the specified seeds.</summary>
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed3">The third <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
@@ -323,20 +323,20 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash128"/> using a value of <c>0</c> for all the seeds.</summary>
+        /// <summary>Initializes a new instance using a value of <c>0</c> for all the seeds.</summary>
         public HighwayHash128() : base(0ul, 0ul, 0ul, 0ul) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash128"/> using the specified value for all the seeds.</summary>
+        /// <summary>Initializes a new instance using the specified value for all the seeds.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public HighwayHash128(UInt64 seed) : base(seed, seed, seed, seed) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash128"/> using the specified seeds.</summary>
-        /// <param name="seeds">A <see cref="T:System.UInt64"/>[] of seeds used by the hashing algorithm.</param>
+        /// <summary>Initializes a new instance using the specified seeds.</summary>
+        /// <param name="seeds">The <see cref="T:System.UInt64"/>[] of seeds used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to 4.</exception>
-        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is null.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is <c>null</c>.</exception>
         public HighwayHash128(UInt64[] seeds) : base(seeds) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash128"/> using the specified seeds.</summary>
+        /// <summary>Initializes a new instance using the specified seeds.</summary>
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed3">The third <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
@@ -377,20 +377,20 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash256"/> using a value of <c>0</c> for all the seeds.</summary>
+        /// <summary>Initializes a new instance using a value of <c>0</c> for all the seeds.</summary>
         public HighwayHash256() : base(0ul, 0ul, 0ul, 0ul) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash256"/> using the specified value for all the four seeds.</summary>
+        /// <summary>Initializes a new instance using the specified value for all the four seeds.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public HighwayHash256(UInt64 seed) : base(seed, seed, seed, seed) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash256"/> using the specified seeds.</summary>
-        /// <param name="seeds">A <see cref="T:System.UInt64"/>[] of seeds used by the hashing algorithm.</param>
+        /// <summary>Initializes a new instance using the specified seeds.</summary>
+        /// <param name="seeds">The <see cref="T:System.UInt64"/>[] of seeds used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to 4.</exception>
-        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is null.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is <c>null</c>.</exception>
         public HighwayHash256(UInt64[] seeds) : base(seeds) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.HighwayHash256"/> using the specified seeds.</summary>
+        /// <summary>Initializes a new instance using the specified seeds.</summary>
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed3">The third <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>

@@ -16,8 +16,8 @@ namespace FastHashes
         /// <param name="destinationOffset">The zero-based offset into <paramref name="destination">destination</paramref>.</param>
         /// <param name="count">The number of bytes to copy.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the number of bytes in <paramref name="source">source</paramref> is less than <paramref name="sourceOffset">sourceOffset</paramref> plus <paramref name="count">count</paramref> or when the number of bytes in <paramref name="destination">destination</paramref> is less than <paramref name="destinationOffset">destinationOffset</paramref> plus <paramref name="count">count</paramref>.</exception>
-        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="source">source</paramref> and <paramref name="destination">destination</paramref> are null.</exception>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="sourceOffset">sourceOffset</paramref> is not within the bounds of <paramref name="source">source</paramref>, when <paramref name="destinationOffset">destinationOffset</paramref> is not within the bounds of <paramref name="destination">destination</paramref> or when <paramref name="count">count</paramref> is less than 0.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="source">source</paramref> and <paramref name="destination">destination</paramref> are <c>null</c>.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="sourceOffset">sourceOffset</paramref> is not within the bounds of <paramref name="source">source</paramref>, when <paramref name="destinationOffset">destinationOffset</paramref> is not within the bounds of <paramref name="destination">destination</paramref> or when <paramref name="count">count</paramref> is less than <c>0</c>.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void BlockCopy(Byte[] source, Int32 sourceOffset, Byte[] destination, Int32 destinationOffset, Int32 count)
         {

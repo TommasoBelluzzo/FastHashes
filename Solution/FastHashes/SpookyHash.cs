@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
-    /// <summary>Represents the base class from which all implementations of SpookyHash must derive. This class is abstract.</summary>
+    /// <summary>Represents the base class from which all the SpookyHash implementations must derive. This class is abstract.</summary>
     public abstract class SpookyHash : Hash
     {
         #region Constants
@@ -26,11 +26,11 @@ namespace FastHashes
 
         #region Properties
         /// <summary>Gets the first seed used by the hashing algorithm.</summary>
-        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        /// <value>An <see cref="T:System.UInt64"/> value.</value>
         public UInt64 Seed1 => m_Seed1;
 
         /// <summary>Gets the second seed used by the hashing algorithm.</summary>
-        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        /// <value>An <see cref="T:System.UInt64"/> value.</value>
         public UInt64 Seed2 => m_Seed2;
         #endregion
 
@@ -188,7 +188,7 @@ namespace FastHashes
 
         #region Methods (Abstract)
         /// <summary>Finalizes any partial computation and returns the hash code.</summary>
-        /// <param name="hashData">A <see cref="T:System.UInt64"/>[] representing the hash data.</param>
+        /// <param name="hashData">The <see cref="T:System.UInt64"/>[] representing the hash data.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
         protected abstract Byte[] GetHash(UInt64[] hashData);
         #endregion
@@ -261,14 +261,14 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SpookyHash32"/> using a value of <c>0</c> for both seeds.</summary>
+        /// <summary>Initializes a new instance using a value of <c>0</c> for both seeds.</summary>
         public SpookyHash32() : base(0ul, 0ul) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SpookyHash64"/> using the specified value for both seeds.</summary>
+        /// <summary>Initializes a new instance using the specified value for both seeds.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public SpookyHash32(UInt32 seed) : base(seed, seed) { }
         
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SpookyHash32"/> using the specified seeds.</summary>
+        /// <summary>Initializes a new instance using the specified seeds.</summary>
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public SpookyHash32(UInt64 seed1, UInt64 seed2) : base(seed1, seed2) { }
@@ -300,14 +300,14 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SpookyHash64"/> using a value of <c>0</c> for both seeds.</summary>
+        /// <summary>Initializes a new instance using a value of <c>0</c> for both seeds.</summary>
         public SpookyHash64() : base(0ul, 0ul) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SpookyHash64"/> using the specified value for both seeds.</summary>
+        /// <summary>Initializes a new instance using the specified value for both seeds.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public SpookyHash64(UInt64 seed) : base(seed, seed) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SpookyHash64"/> using the specified seeds.</summary>
+        /// <summary>Initializes a new instance using the specified seeds.</summary>
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public SpookyHash64(UInt64 seed1, UInt64 seed2) : base(seed1, seed2) { }
@@ -339,14 +339,14 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SpookyHash64"/> using a value of <c>0</c> for both seeds.</summary>
+        /// <summary>Initializes a new instance using a value of <c>0</c> for both seeds.</summary>
         public SpookyHash128() : base(0ul, 0ul) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FarmHash128"/> using the specified value for both seeds.</summary>
+        /// <summary>Initializes a new instance using the specified value for both seeds.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public SpookyHash128(UInt64 seed) : base(seed, seed) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.SpookyHash128"/> using the specified seeds.</summary>
+        /// <summary>Initializes a new instance using the specified seeds.</summary>
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public SpookyHash128(UInt64 seed1, UInt64 seed2) : base(seed1, seed2) { }

@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
-    /// <summary>Represents the base class from which all implementations of FastHash must derive. This class is abstract.</summary>
+    /// <summary>Represents the base class from which all the FastHash implementations must derive. This class is abstract.</summary>
     public abstract class FastHash : Hash
     {
         #region Constants
@@ -20,7 +20,7 @@ namespace FastHashes
 
         #region Properties
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
-        /// <value>A <see cref="T:System.UInt64"/> value.</value>
+        /// <value>An <see cref="T:System.UInt64"/> value.</value>
         protected UInt64 Seed => m_Seed;
         #endregion
 
@@ -86,7 +86,7 @@ namespace FastHashes
 
         #region Methods (Abstract)
         /// <summary>Finalizes any partial computation and returns the hash code.</summary>
-        /// <param name="hashData">A <see cref="T:System.UInt64"/> value representing the hash data.</param>
+        /// <param name="hashData">The <see cref="T:System.UInt64"/> value representing the hash data.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
         protected abstract Byte[] GetHash(UInt64 hashData);
         #endregion
@@ -116,10 +116,10 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastHash32"/> using a seed value of <c>0</c>.</summary>
+        /// <summary>Initializes a new instance using a seed value of <c>0</c>.</summary>
         public FastHash32() : base(0ul) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastHash32"/> using the specified seed.</summary>
+        /// <summary>Initializes a new instance using the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public FastHash32(UInt64 seed) : base(seed) { }
         #endregion
@@ -150,10 +150,10 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastHash64"/> using a seed value of <c>0</c>.</summary>
+        /// <summary>Initializes a new instance using a seed value of <c>0</c>.</summary>
         public FastHash64() : base(0ul) { }
 
-        /// <summary>Initializes a new instance of <see cref="T:FastHashes.FastHash64"/> using the specified seed.</summary>
+        /// <summary>Initializes a new instance using the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         public FastHash64(UInt64 seed) : base(seed) { }
         #endregion
