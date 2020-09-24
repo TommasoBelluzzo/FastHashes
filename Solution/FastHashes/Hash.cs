@@ -34,7 +34,6 @@ namespace FastHashes
                 CreateNoWindow = true,
                 ErrorDialog = false,
                 FileName = "uname",
-                LoadUserProfile = false,
                 RedirectStandardOutput = true,
                 UseShellExecute = false
             };
