@@ -8,8 +8,8 @@ name: "Continuous Integration"
 on: [ workflow_dispatch ]
 
 jobs:
-  ci:
-    name: CI
+  continuous_integration:
+    name: Continuous Integration
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -24,8 +24,11 @@ jobs:
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
     - name: Restore Dependencies
-      run: dotnet restore ./Solution
+      run: dotnet restore 
+      working-directory: ./Solution
     - name: Build
-      run: dotnet build --no-restore --configuration Release
+      run: dotnet build --configuration Release --no-restore
+      working-directory: ./Solution
     - name: Test
-      run: dotnet test --no-build --verbosity normal --configuration Release
+      run: dotnet test --configuration Release --no-build --verbosity normal
+      working-directory: ./Solution
