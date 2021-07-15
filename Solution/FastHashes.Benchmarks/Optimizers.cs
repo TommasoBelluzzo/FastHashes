@@ -96,6 +96,7 @@ namespace FastHashes.Benchmarks
         private readonly Process m_Process; 
         private readonly ProcessPriorityClass m_PriorityClass; 
         private readonly GCLatencyMode m_LatencyMode; 
+        private Boolean m_RestorePriority; 
         #endregion
 
         #region Constructors
@@ -104,6 +105,7 @@ namespace FastHashes.Benchmarks
             m_Process = Process.GetCurrentProcess();
             m_PriorityClass = m_Process.PriorityClass;
             m_LatencyMode = GCSettings.LatencyMode;
+            m_RestorePriority = false;
 
             Initialization();
         }
@@ -115,28 +117,41 @@ namespace FastHashes.Benchmarks
             try
             {
                 m_Process.PriorityClass = ProcessPriorityClass.RealTime;
+                m_RestorePriority = true;
             }
-            catch { }
-
-            try
+            catch
             {
-                m_Process.PriorityClass = ProcessPriorityClass.High;
+                try
+                {
+                    m_Process.PriorityClass = ProcessPriorityClass.High;
+                    m_RestorePriority = true;
+                }
+                catch
+                {
+                    try
+                    {
+                        m_Process.PriorityClass = ProcessPriorityClass.AboveNormal;
+                        m_RestorePriority = true;
+                    }
+                    catch { }
+                }
             }
-            catch { }
 
-            try
-            {
-                m_Process.PriorityClass = ProcessPriorityClass.AboveNormal;
-            }
-            catch { }
-            
             GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
         }
 
         protected override void Finalization()
         {
             GCSettings.LatencyMode = m_LatencyMode;
-            m_Process.PriorityClass = m_PriorityClass;
+
+            if (m_RestorePriority)
+            {
+                try
+                {
+                    m_Process.PriorityClass = m_PriorityClass;
+                }
+                catch { }
+            }
         }
         #endregion
     }

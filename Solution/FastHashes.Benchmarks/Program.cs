@@ -163,12 +163,12 @@ namespace FastHashes.Benchmarks
                 for (Int32 align = 0; align < 8; ++align)
                 {
                     speed[align] = GetAverageSpeed(hashInitializer, BST_KEYSLENGTH, BST_REPETITIONS, align);
-                    Console.WriteLine($" - Alignment {align}: {Utilities.FormatSpeed(speed[align])}");
+                    Console.WriteLine($" - Average Speed Alignment {align}: {Utilities.FormatSpeed(speed[align])}");
                 }
 
                 Double averageSpeed = MathUtilities.Mean(speed);
 
-                Console.WriteLine($" - Average Speed: {Utilities.FormatSpeed(averageSpeed)}");
+                Console.WriteLine($" - Average Speed Overall: {Utilities.FormatSpeed(averageSpeed)}");
             }
         }
 
@@ -210,8 +210,11 @@ namespace FastHashes.Benchmarks
                     offset = keySize;
 
                     Console.WriteLine($" - Average Speed {offsetStart}-{offset - 1} Bytes: {Utilities.FormatSpeed(speed / count)}");
-                    Console.WriteLine($" - Average Speed Overall: {Utilities.FormatSpeed(totalSpeed / totalCount)}");
                 }
+
+                Double averageSpeed = totalSpeed / totalCount;
+
+                Console.WriteLine($" - Average Speed Overall: {Utilities.FormatSpeed(averageSpeed)}");
             }
         }
         #endregion
