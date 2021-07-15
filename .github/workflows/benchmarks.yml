@@ -1,0 +1,24 @@
+name: "Benchmarks"
+
+on: workflow_dispatch
+
+jobs:
+  continuous_integration:
+    name: Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+    - name: Repository Checkout
+      uses: actions/checkout@v2
+    - name: .NET Setup
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 2.1.x
+    - name: Restore
+      run: dotnet restore --force-evaluate
+      working-directory: ./Solution
+    - name: Build
+      run: dotnet build ./FastHashes.sln --configuration Release --no-restore --no-incremental --verbosity normal
+      working-directory: ./Solution
+    - name: Run
+      run: dotnet run --project ./FastHashes.Benchmarks/FastHashes.Benchmarks.csproj --configuration Release --no-restore --no-build --verbosity normal
+      working-directory: ./Solution
