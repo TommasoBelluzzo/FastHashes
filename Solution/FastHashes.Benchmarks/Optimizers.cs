@@ -112,7 +112,24 @@ namespace FastHashes.Benchmarks
         #region Methods
         private void Initialization()
         {
-            m_Process.PriorityClass = ProcessPriorityClass.RealTime;
+            try
+            {
+                m_Process.PriorityClass = ProcessPriorityClass.RealTime;
+            }
+            catch { }
+
+            try
+            {
+                m_Process.PriorityClass = ProcessPriorityClass.High;
+            }
+            catch { }
+
+            try
+            {
+                m_Process.PriorityClass = ProcessPriorityClass.AboveNormal;
+            }
+            catch { }
+            
             GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
         }
 
