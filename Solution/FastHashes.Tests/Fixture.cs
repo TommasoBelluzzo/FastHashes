@@ -26,6 +26,10 @@ namespace FastHashes.Tests
 #endif
             String filePath = Path.Combine(fileDirectory, @"Data\Words.txt");
 
+            Console.WriteLine(AppDomain.CurrentDomain.RelativeSearchPath);
+            Console.WriteLine(AppDomain.CurrentDomain.BaseDirectory);
+            Console.WriteLine(fileDirectory);
+
             m_Words = File.Exists(filePath) ? File.ReadAllLines(filePath) : new String[0];
         }
         #endregion
