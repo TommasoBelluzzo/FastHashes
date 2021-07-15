@@ -1,0 +1,32 @@
+name: "Code Analysis"
+
+on:
+  schedule:
+    - cron: '00 19 * * 5'
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'csharp' ]
+    steps:
+    - name: Repository Checkout
+      uses: actions/checkout@v2
+    - name: Analysis Initialization
+      uses: github/codeql-action/init@v1
+      with:
+        languages: ${{ matrix.language }}
+    - name: Analysis Autobuild
+      uses: github/codeql-action/autobuild@v1
+      #run: |
+      #  make bootstrap
+      #  make release
+    - name: Analysis Execution
+      uses: github/codeql-action/analyze@v1
