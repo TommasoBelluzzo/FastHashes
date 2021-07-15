@@ -1,0 +1,72 @@
+name: Package Publishing
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target:'
+        required: true
+        default: 'MINOR'
+
+jobs:
+  publishing:
+    name: Publishing
+    runs-on: ubuntu-latest
+    steps:
+    - name: Repository Checkout
+      uses: actions/checkout@v2
+    - name: .NET Setup
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 2.1.x
+    - name: Version Bump
+      id: bump
+      env:
+        TARGET: ${{ github.event.inputs.target }}
+        VERSION_REGEX: __version__[[:space:]]=[[:space:]]'[[:digit:]]\.[[:digit:]]\.[[:digit:]]'
+        VERSION: '0.0.0'
+        VERSION_MAJOR: 0
+        VERSION_MINOR: 0
+        VERSION_RELEASE: 0
+        VERSION_MINOR: 0
+      run: |
+        TARGET=${TARGET^^}
+        if [[ $TARGET != 'MAJOR' ]] && [[ $TARGET != 'MINOR' ]] && [[ $TARGET != 'BUILD' ]] && [[ $TARGET != 'NONE' ]]; then
+          echo 'INVALID INPUT (TARGET)'
+          exit 1
+        fi
+        find . -type f -name '*.csproj' -print0 | while read -r -d $'\0' FILE
+        do
+          echo "$FILE"
+        done
+        exit 1
+        grep $VERSION_REGEX $VERSION_FILE
+        VERSION=$(grep $VERSION_REGEX $VERSION_FILE | cut -d "'" -f2)
+        VERSION_MAJOR=$(echo $VERSION | cut -d "." -f1)
+        VERSION_MINOR=$(echo $VERSION | cut -d "." -f2)
+        VERSION_RELEASE=$(echo $VERSION | cut -d "." -f3)
+        if [[ $TARGET == 'MAJOR' ]]; then
+          VERSION_MAJOR=$(($VERSION_MAJOR + 1))
+          VERSION_MINOR=0
+          VERSION_RELEASE=0
+        elif [[ $TARGET == 'MINOR' ]]; then
+          VERSION_MINOR=$(($VERSION_MINOR + 1))
+          VERSION_RELEASE=0
+        elif [[ $TARGET == 'RELEASE' ]]; then
+          VERSION_RELEASE=$(($VERSION_RELEASE + 1))
+        fi
+        VERSION=$(printf '%d.%d.%d' $VERSION_MAJOR $VERSION_MINOR $VERSION_RELEASE 2>/dev/null)
+        sed -i "s/$VERSION_REGEX/__version__ = '$VERSION'/g" $VERSION_FILE
+        grep $VERSION_REGEX $VERSION_FILE
+        echo "::set-output name=target::$TARGET"
+        echo "::set-output name=pypi::$PYPI"
+        echo "::set-output name=conda::$CONDA"
+        echo "::set-output name=version_file::$VERSION_FILE"
+        echo "::set-output name=version_regex::$VERSION_REGEX"
+        echo "::set-output name=version::$VERSION"
+    - name: Restore
+      working-directory: Solution/
+      run: dotnet restore --force-evaluate
+    - name: Build
+      working-directory: Solution/
+      run: dotnet build FastHashes.sln --configuration Release --no-restore --no-incremental --verbosity normal

@@ -23,11 +23,11 @@ jobs:
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
     - name: Restore
+      working-directory: Solution/
       run: dotnet restore --force-evaluate
-      working-directory: ./Solution
     - name: Build
-      run: dotnet build ./FastHashes.sln --configuration Release --no-restore --no-incremental --verbosity normal
-      working-directory: ./Solution
+      working-directory: Solution/
+      run: dotnet build FastHashes.sln --configuration Release --no-restore --no-incremental --verbosity normal
     - name: Test
-      run: dotnet test ./FastHashes.sln --configuration Release --no-restore --no-build --verbosity normal
-      working-directory: ./Solution
+      working-directory: Solution/
+      run: dotnet test FastHashes.sln --configuration Release --no-restore --no-build --verbosity normal
