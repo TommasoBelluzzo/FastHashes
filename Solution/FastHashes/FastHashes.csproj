@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -8,7 +8,7 @@
     <Company />
     <Description>A .NET implementation of different non-cryptographic hashes.</Description>
     <PackageTags>algorithm hash</PackageTags>
-    <Copyright>Copyright ©2017 Tommaso Belluzzo</Copyright>
+    <Copyright>Copyright ©2017-2021 Tommaso Belluzzo</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/TommasoBelluzzo/FastHashes</PackageProjectUrl>
     <RepositoryUrl>https://github.com/TommasoBelluzzo/FastHashes</RepositoryUrl>
@@ -17,6 +17,7 @@
     <AssemblyVersion>1.7.5.0</AssemblyVersion>
     <FileVersion>1.7.5.0</FileVersion>
     <Version>1.7.5</Version>
+    <PackageLicenseUrl>https://github.com/TommasoBelluzzo/FastHashes/blob/master/LICENSE.md</PackageLicenseUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -32,6 +33,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Debug-x64\</OutputPath>
     <PlatformTarget>x64</PlatformTarget>
+	<DocumentationFile></DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
@@ -39,6 +41,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Debug-x86\</OutputPath>
     <PlatformTarget>x86</PlatformTarget>
+	<DocumentationFile></DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

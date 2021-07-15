@@ -1,70 +1,57 @@
 ﻿#region Using Directives
 using System;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security;
 #endregion
 
 namespace FastHashes.Benchmarks
 {
+#if !NETCOREAPP1_0 && !NETCOREAPP1_1
     [SuppressUnmanagedCodeSecurity]
+#endif
     internal static class NativeMethods
     {
         #region Imports
-        [DllImport("Kernel32.dll", CallingConvention=CallingConvention.StdCall, CharSet=CharSet.Unicode, ExactSpelling=true, SetLastError=true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern Boolean QueryPerformanceCounter([Out] out Int64 frequency);
+#if WINDOWS
+        [DllImport("Kernel32.dll", CallingConvention=CallingConvention.StdCall, ExactSpelling=true, SetLastError=true)]
+        private static extern IntPtr GetCurrentThread();
 
-        [DllImport("Kernel32.dll", CallingConvention=CallingConvention.StdCall, CharSet=CharSet.Unicode, ExactSpelling=true, SetLastError=true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern Boolean QueryPerformanceFrequency([Out] out Int64 frequency);
+        [DllImport("Kernel32.dll", CallingConvention=CallingConvention.StdCall, ExactSpelling=true, SetLastError=true)]
+        private static extern IntPtr SetThreadAffinityMask(IntPtr thread, IntPtr affinity);
+#else
+        [DllImport("libc", CallingConvention=CallingConvention.Cdecl, EntryPoint="sched_getaffinity", SetLastError=true)]
+        private static extern Int32 GetThreadAffinityMask(Int32 processId, IntPtr affinitySize, ref UInt64 affinity);
 
-        [DllImport("Kernel32.dll", CallingConvention=CallingConvention.StdCall, CharSet=CharSet.Unicode, ExactSpelling=true, SetLastError=true)]
-        private static extern UInt32 GetCurrentThreadId();
+        [DllImport("libc", CallingConvention=CallingConvention.Cdecl, EntryPoint="sched_setaffinity", SetLastError=true)]
+        private static extern Int32 SetThreadAffinityMask(Int32 processId, IntPtr affinitySize, ref UInt64 affinity);
+#endif
         #endregion
 
         #region Methods
-        public static Double GetFrequency()
+#if WINDOWS
+        public static IntPtr SetThreadAffinity(IntPtr affinity)
         {
-            Boolean result = QueryPerformanceFrequency(out Int64 frequency);
-
-            if (!result)
-                throw new Win32Exception(Marshal.GetLastWin32Error());
-
-            return frequency;
+            return ((affinity == IntPtr.Zero) ? IntPtr.Zero : SetThreadAffinityMask(GetCurrentThread(), affinity));
         }
-
-        public static Double GetTime()
+#else
+        public static IntPtr SetThreadAffinity(IntPtr affinity)
         {
-            Boolean result = QueryPerformanceCounter(out Int64 time);
+            if (affinity == IntPtr.Zero)
+                return IntPtr.Zero;
 
-            if (!result)
-                throw new Win32Exception(Marshal.GetLastWin32Error());
+            IntPtr affinitySize = new IntPtr(8);
+            UInt64 affinityMask = (UInt64)affinity.ToInt64();
+            UInt64 affinityMaskCurrent = 0u;
 
-            return time;
+            if (NativeMethods.GetThreadAffinityMask(0, affinitySize, ref affinityMaskCurrent) != 0)          
+              return IntPtr.Zero;
+
+            if (NativeMethods.SetThreadAffinityMask(0, affinitySize, ref affinityMask) != 0)
+              return IntPtr.Zero;
+
+            return new IntPtr((Int64)affinityMaskCurrent);
         }
-
-        public static ProcessThread GetCurrentThread()
-        {
-            Int32 threadId = (Int32)GetCurrentThreadId();
-
-            Process process = Process.GetCurrentProcess();
-            ProcessThread thread = null;
-
-            for (Int32 i = 0; i < process.Threads.Count; ++i)
-            {
-                ProcessThread currentThread = process.Threads[i];
-
-                if (currentThread.Id == threadId)
-                {
-                    thread = currentThread;
-                    break;
-                }
-            }
-
-            return thread;
-        }
+#endif
         #endregion
     }
 }

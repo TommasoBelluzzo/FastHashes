@@ -1,6 +1,5 @@
 ﻿#region Using Directives
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 #endregion
 
@@ -30,11 +29,11 @@ namespace FastHashes
         /// <summary>Initializes a new instance using the specified variant and seed.</summary>
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public MetroHash64(MetroHashVariant variant, UInt32 seed)
         {
             if (!Enum.IsDefined(typeof(MetroHashVariant), variant))
-                throw new InvalidEnumArgumentException("Invalid variant specified.");
+                throw new ArgumentException("Invalid variant specified.", nameof(variant));
 
             if (variant == MetroHashVariant.V1)
                 m_Engine = new Engine1(seed);
@@ -47,7 +46,7 @@ namespace FastHashes
 
         /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
-        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public MetroHash64(MetroHashVariant variant) : this(variant, 0u) { }
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.MetroHashVariant.V1"/> and the specified <see cref="T:System.UInt32"/> seed.</summary>
@@ -65,7 +64,7 @@ namespace FastHashes
         /// <inheritdoc/>
         public override String ToString()
         {
-            return String.Concat(GetType().Name, "-", m_Engine.Name);
+            return $"{GetType().Name}-{m_Engine.Name}";
         }
         #endregion
 
@@ -394,11 +393,11 @@ namespace FastHashes
         /// <summary>Initializes a new instance using the specified variant and seed.</summary>
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public MetroHash128(MetroHashVariant variant, UInt32 seed)
         {
             if (!Enum.IsDefined(typeof(MetroHashVariant), variant))
-                throw new InvalidEnumArgumentException("Invalid variant specified.");
+                throw new ArgumentException("Invalid variant specified.", nameof(variant));
 
             if (variant == MetroHashVariant.V1)
                 m_Engine = new Engine1(seed);
@@ -411,7 +410,7 @@ namespace FastHashes
 
         /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
-        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public MetroHash128(MetroHashVariant variant) : this(variant, 0u) { }
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.MetroHashVariant.V1"/> and the specified seed.</summary>
@@ -429,7 +428,7 @@ namespace FastHashes
         /// <inheritdoc/>
         public override String ToString()
         {
-            return String.Concat(GetType().Name, "-", m_Engine.Name);
+            return $"{GetType().Name}-{m_Engine.Name}";
         }
         #endregion
 

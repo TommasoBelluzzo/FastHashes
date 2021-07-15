@@ -1,6 +1,5 @@
 ﻿#region Using Directives
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 #endregion
 
@@ -184,11 +183,11 @@ namespace FastHashes
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.SipHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public SipHash(SipHashVariant variant, UInt64 seed1, UInt64 seed2)
         {
             if (!Enum.IsDefined(typeof(SipHashVariant), variant))
-                throw new InvalidEnumArgumentException("Invalid variant specified.");
+                throw new ArgumentException("Invalid variant specified.", nameof(variant));
 
             if (variant == SipHashVariant.V13)
             {
@@ -211,13 +210,13 @@ namespace FastHashes
 
         /// <summary>Initializes a new instance using the specified variant and a value of <c>0</c> for both seeds.</summary>
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.SipHashVariant"/> representing the variant of the hashing algorithm.</param>
-        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public SipHash(SipHashVariant variant) : this(variant, 0ul, 0ul) { }
 
         /// <summary>Initializes a new instance using the specified variant and the specified value for both seeds.</summary>
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.SipHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public SipHash(SipHashVariant variant, UInt64 seed) : this(variant, seed, seed) { }
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.SipHashVariant.V24"/> and the specified value for both seeds.</summary>
@@ -308,10 +307,7 @@ namespace FastHashes
         /// <inheritdoc/>
         public override String ToString()
         {
-            if (m_Variant == SipHashVariant.V13)
-                return String.Concat(GetType().Name, "-13");
-
-            return String.Concat(GetType().Name, "-24");
+            return $"{GetType().Name}-{((m_Variant == SipHashVariant.V13) ? "-13" : "-24")}";
         }
         #endregion
 

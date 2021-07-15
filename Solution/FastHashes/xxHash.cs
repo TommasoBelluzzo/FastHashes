@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the xxHash32 implementation. This class cannot be derived.</summary>
-    public sealed class xxHash32 : Hash
+    public sealed class XxHash32 : Hash
     {
         #region Constants
         private const UInt32 P1 = 0x9E3779B1u;
@@ -32,13 +32,13 @@ namespace FastHashes
         #region Constructors
         /// <summary>Initializes a new instance using the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        public xxHash32(UInt32 seed)
+        public XxHash32(UInt32 seed)
         {
             m_Seed = seed;
         }
 
         /// <summary>Initializes a new instance using a seed value of <c>0</c>.</summary>
-        public xxHash32() : this(0u) { }
+        public XxHash32() : this(0u) { }
         #endregion
 
         #region Methods
@@ -142,7 +142,7 @@ namespace FastHashes
     }
 
     /// <summary>Represents the xxHash64 implementation. This class cannot be derived.</summary>
-    public sealed class xxHash64 : Hash
+    public sealed class XxHash64 : Hash
     {
         #region Constants
         private const UInt64 P1 = 0x9E3779B185EBCA87ul;
@@ -168,13 +168,13 @@ namespace FastHashes
         #region Constructors
         /// <summary>Initializes a new instance using the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        public xxHash64(UInt64 seed)
+        public XxHash64(UInt64 seed)
         {
             m_Seed = seed;
         }
 
         /// <summary>Initializes a new instance using a seed value of <c>0</c>.</summary>
-        public xxHash64() : this(0ul) { }
+        public XxHash64() : this(0ul) { }
         #endregion
 
         #region Methods

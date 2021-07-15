@@ -1,108 +1,93 @@
 ﻿#region Using Directives
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime;
-using System.Threading;
+using System.Linq;
+
 #endregion
 
 namespace FastHashes.Benchmarks
 {
     public static class Program
     {
-        #region Constants
-        private const Int32 BST_KEYSLENGTH = 256 * 1024;
-        private const Int32 BST_REPETITIONS = 5000;
-        private const Int32 WARMUP_ITERATIONS = 3;
-        #endregion
-
-        #region Members
-        private static readonly Double s_Frequency = NativeMethods.GetFrequency();
-
-        private static readonly List<(Func<Int32,Int32>,Int32,Int32)> s_Parameters = new List<(Func<Int32,Int32>,Int32,Int32)>
+        #region Setup
+        private static readonly List<BenchmarkCase> s_BenchmarkCases = new List<BenchmarkCase>
         {
-            (i => i + 1, 32, 200000),
-            (i => i + 2, 64, 100000),
-            (i => i + 4, 128, 50000),
-            (i => i + 8, 256, 25000),
-            (i => i * 2, 65536, 12500)
+            new BenchmarkCase("DummyHash", seed => new DummyHash()),
+            new BenchmarkCase("FarmHash32", seed => new FarmHash32(seed)),
+            new BenchmarkCase("FarmHash64", seed => new FarmHash64(seed)),
+            new BenchmarkCase("FarmHash128", seed => new FarmHash128(seed)),
+            new BenchmarkCase("FastHash32", seed => new FastHash32(seed)),
+            new BenchmarkCase("FastHash64", seed => new FastHash64(seed)),
+            new BenchmarkCase("FastPositiveHash-V0", seed => new FastPositiveHash(FastPositiveHashVariant.V0, seed)),
+            new BenchmarkCase("FastPositiveHash-V1", seed => new FastPositiveHash(FastPositiveHashVariant.V1, seed)),
+            new BenchmarkCase("FastPositiveHash-V2", seed => new FastPositiveHash(FastPositiveHashVariant.V2, seed)),
+            new BenchmarkCase("HalfSipHash", seed => new HalfSipHash(seed)),
+            new BenchmarkCase("HighwayHash64", seed => new HighwayHash64(seed)),
+            new BenchmarkCase("HighwayHash128", seed => new HighwayHash128(seed)),
+            new BenchmarkCase("HighwayHash256", seed => new HighwayHash256(seed)),
+            new BenchmarkCase("MetroHash64-V1", seed => new MetroHash64(MetroHashVariant.V1, seed)),
+            new BenchmarkCase("MetroHash64-V2", seed => new MetroHash64(MetroHashVariant.V2, seed)),
+            new BenchmarkCase("MetroHash128-V1", seed => new MetroHash128(MetroHashVariant.V1, seed)),
+            new BenchmarkCase("MetroHash128-V2", seed => new MetroHash128(MetroHashVariant.V2, seed)),
+            new BenchmarkCase("MurmurHash32", seed => new MurmurHash32(seed)),
+            new BenchmarkCase("MurmurHash64-x86", seed => new MurmurHash64(MurmurHashEngine.x86, seed)),
+            new BenchmarkCase("MurmurHash64-x64", seed => new MurmurHash64(MurmurHashEngine.x64, seed)),
+            new BenchmarkCase("MurmurHash128-x86", seed => new MurmurHash128(MurmurHashEngine.x86, seed)),
+            new BenchmarkCase("MurmurHash128-x64", seed => new MurmurHash128(MurmurHashEngine.x64, seed)),
+            new BenchmarkCase("MumHash", seed => new MumHash(seed)),
+            new BenchmarkCase("SipHash-13", seed => new SipHash(SipHashVariant.V13, seed)),
+            new BenchmarkCase("SipHash-24", seed => new SipHash(SipHashVariant.V24, seed)),
+            new BenchmarkCase("SpookyHash32", seed => new SpookyHash32(seed)),
+            new BenchmarkCase("SpookyHash64", seed => new SpookyHash64(seed)),
+            new BenchmarkCase("SpookyHash128", seed => new SpookyHash128(seed)),
+            new BenchmarkCase("xxHash32", seed => new XxHash32(seed)),
+            new BenchmarkCase("xxHash64", seed => new XxHash64(seed))
         };
 
-        private static readonly List<(String,Func<UInt32,Hash>)> s_HashInitializers = new List<(String,Func<UInt32,Hash>)>
+        private const Int32 BST_KEYSLENGTH = 256 * 1024;
+        private const Int32 BST_REPETITIONS = 5000;
+        private const Int32 CLOCK_MAXIMUM_IDLE_TIME = 10;
+        private const Int32 WARMUP_ITERATIONS = 3;
+
+        private static readonly List<ChunkParameter> s_ChunkParameters = new List<ChunkParameter>
         {
-            ("DummyHash",  x => new DummyHash()),
-            ("FarmHash32",  x => new FarmHash32(x)),
-            ("FarmHash64",  x => new FarmHash64(x)),
-            ("FarmHash128",  x => new FarmHash128(x)),
-            ("FastHash32",  x => new FastHash32(x)),
-            ("FastHash64",  x => new FastHash64(x)),
-            ("FastPositiveHash-V0",  x => new FastPositiveHash(FastPositiveHashVariant.V0, x)),
-            ("FastPositiveHash-V1",  x => new FastPositiveHash(FastPositiveHashVariant.V1, x)),
-            ("FastPositiveHash-V2",  x => new FastPositiveHash(FastPositiveHashVariant.V2, x)),
-            ("HalfSipHash",  x => new HalfSipHash(x)),
-            ("HighwayHash64",  x => new HighwayHash64(x)),
-            ("HighwayHash128",  x => new HighwayHash128(x)),
-            ("HighwayHash256",  x => new HighwayHash256(x)),
-            ("MetroHash64-V1",  x => new MetroHash64(MetroHashVariant.V1, x)),
-            ("MetroHash64-V2",  x => new MetroHash64(MetroHashVariant.V2, x)),
-            ("MetroHash128-V1",  x => new MetroHash128(MetroHashVariant.V1, x)),
-            ("MetroHash128-V2",  x => new MetroHash128(MetroHashVariant.V2, x)),
-            ("MurmurHash32",  x => new MurmurHash32(x)),
-            ("MurmurHash64-x86",  x => new MurmurHash64(MurmurHashEngine.x86, x)),
-            ("MurmurHash64-x64",  x => new MurmurHash64(MurmurHashEngine.x64, x)),
-            ("MurmurHash128-x86",  x => new MurmurHash128(MurmurHashEngine.x86, x)),
-            ("MurmurHash128-x64",  x => new MurmurHash128(MurmurHashEngine.x64, x)),
-            ("MumHash",  x => new MumHash(x)),
-            ("SipHash-13",  x => new SipHash(SipHashVariant.V13, x)),
-            ("SipHash-24",  x => new SipHash(SipHashVariant.V24, x)),
-            ("SpookyHash32",  x => new SpookyHash32(x)),
-            ("SpookyHash64",  x => new SpookyHash64(x)),
-            ("SpookyHash128",  x => new SpookyHash128(x)),
-            ("xxHash32",  x => new xxHash32(x)),
-            ("xxHash64",  x => new xxHash64(x))
+            new ChunkParameter(i => i + 1, 32, 200000),
+            new ChunkParameter(i => i + 2, 64, 100000),
+            new ChunkParameter(i => i + 4, 128, 50000),
+            new ChunkParameter(i => i + 8, 256, 25000),
+            new ChunkParameter(i => i * 2, 65536, 12500)
         };
         #endregion
 
         #region Entry Point
         public static void Main()
         {
-            Process process = Process.GetCurrentProcess();
-
-            IntPtr affinityNew = (IntPtr)(1 << (Environment.ProcessorCount - 1));
-            IntPtr affinityOld = process.ProcessorAffinity;
-
-            process.ProcessorAffinity = affinityNew;
-
-            Thread.BeginThreadAffinity();
-            ProcessThread thread = NativeMethods.GetCurrentThread();
-
-            if (thread != null)
-                thread.ProcessorAffinity = affinityNew;
-
-            for (Int32 i = 0; i < s_HashInitializers.Count; ++i)
+            using (new AffinityOptimizer())
             {
-                var hashInitializer = s_HashInitializers[i];
+                for (Int32 i = 0; i < s_BenchmarkCases.Count; ++i)
+                {
+                    BenchmarkCase benchmarkCase = s_BenchmarkCases[i];
 
-                String title = $"# HASH: {hashInitializer.Item1} #";
-                String frame = new String('#', title.Length);
+                    String title = $"# HASH: {benchmarkCase.HashName} #";
+                    String frame = new String('#', title.Length);
 
-                Console.WriteLine(frame);
-                Console.WriteLine(title);
-                Console.WriteLine(frame);
+                    Console.WriteLine(frame);
+                    Console.WriteLine(title);
+                    Console.WriteLine(frame);
 
-                BulkSpeedTest(hashInitializer.Item2);
-                ChunksSpeedTest(hashInitializer.Item2);
-
-                if (i != (s_HashInitializers.Count - 1))
                     Console.WriteLine();
+                    BulkSpeedTest(benchmarkCase.HashInitializer);
+
+                    Console.WriteLine();
+                    ChunksSpeedTest(benchmarkCase.HashInitializer);
+
+                    if (i != (s_BenchmarkCases.Count - 1))
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine();
+                    }
+                }
             }
-
-            process.ProcessorAffinity = affinityOld;
-
-            if (thread != null)
-                thread.ProcessorAffinity = affinityOld;
-
-            Thread.EndThreadAffinity();
         }
         #endregion
 
@@ -128,19 +113,22 @@ namespace FastHashes.Benchmarks
 
                         Hash hash = hashInitializer((UInt32)i);
 
-                        Double start = NativeMethods.GetTime();
-                        hash.ComputeHash(key, offset, length);
-                        Double end = NativeMethods.GetTime();
+                        using (Clock clock = new Clock(CLOCK_MAXIMUM_IDLE_TIME))
+                        {
+                            DateTime start = clock.GetTime();
+                            hash.ComputeHash(key, offset, length);
+                            DateTime end = clock.GetTime();
 
-                        Double ms = ((end - start + 1.0d) * 1000.0d) / s_Frequency;
-                        Double bps = (length * 1000.0d) / ms;
+                            Double ms = (end - start).TotalMilliseconds;
+                            Double bps = (length * 1000.0d) / ms;
 
-                        if (bps >= 0.0d)
-                            results.Add(bps);
+                            if (bps >= 0.0d)
+                                results.Add(bps);
+                        }
                     }
 
-                    Double mean = Utilities.Mean(results);
-                    Double threshold = 2.0d * Utilities.StandardDeviation(results, mean);
+                    Double mean = MathUtilities.Mean(results);
+                    Double threshold = 2.0d * MathUtilities.StandardDeviation(results, mean);
  
                     for (Int32 i = results.Count - 1; i >= 0; --i)
                     {
@@ -148,40 +136,18 @@ namespace FastHashes.Benchmarks
                             results.RemoveAt(i);
                     }
  
-                    return Utilities.Mean(results);
+                    return MathUtilities.Mean(results);
                 }
             }
-        }
-
-        private static IDisposable SpeedTestOptimizer()
-        {
-            Process process = Process.GetCurrentProcess();
-            ProcessPriorityClass lastPriorityClass = process.PriorityClass;
-            GCLatencyMode lastLatencyMode = GCSettings.LatencyMode;
-
-            return new DisposableDelegate
-            (
-                () =>
-                {
-                    process.PriorityClass = ProcessPriorityClass.RealTime;
-                    GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
-                },
-                () =>
-                {
-                    GCSettings.LatencyMode = lastLatencyMode;
-                    process.PriorityClass = lastPriorityClass;
-                }
-            );
         }
 
         private static void BulkSpeedTest(Func<UInt32,Hash> hashInitializer)
         {
             Console.WriteLine("[BULK SPEED TEST]");
-            Console.WriteLine($"Frequency: {s_Frequency / 1e6d:F2} MHz");
             Console.WriteLine($"Keys Length: {BST_KEYSLENGTH} Bytes");
             Console.WriteLine($"Repetitions: {BST_REPETITIONS}");
 
-            using (SpeedTestOptimizer())
+            using (new SpeedOptimizer())
             {
                 for (Int32 i = 0; i < WARMUP_ITERATIONS; ++i)
                     GetAverageSpeed(hashInitializer, BST_KEYSLENGTH, BST_REPETITIONS, 0);
@@ -194,17 +160,19 @@ namespace FastHashes.Benchmarks
                     Console.WriteLine($" - Alignment {align}: {Utilities.FormatSpeed(speed[align])}");
                 }
 
-                Console.WriteLine($" - Average Speed: {Utilities.FormatSpeed(Utilities.Mean(speed))}");
+                Double averageSpeed = MathUtilities.Mean(speed);
+
+                Console.WriteLine($" - Average Speed: {Utilities.FormatSpeed(averageSpeed)}");
             }
         }
 
         private static void ChunksSpeedTest(Func<UInt32,Hash> hashInitializer)
         {
             Console.WriteLine("[CHUNKS SPEED TEST]");
-            Console.WriteLine($"Frequency: {s_Frequency / 1e6d:F2} MHz");
-            Console.WriteLine("Keys Length Span: 0-65535 Bytes");
+            Console.WriteLine($"Keys Length Span: 0-{s_ChunkParameters.Max(x => x.KeySize)} Bytes");
+            Console.WriteLine($"Repetitions Span: {s_ChunkParameters.Min(x => x.Repetitions)}-{s_ChunkParameters.Max(x => x.Repetitions)}");
 
-            using (SpeedTestOptimizer())
+            using (new SpeedOptimizer())
             {
                 for (Int32 i = 0; i < WARMUP_ITERATIONS; ++i)
                     GetAverageSpeed(hashInitializer, BST_KEYSLENGTH, BST_REPETITIONS, 0);
@@ -213,12 +181,11 @@ namespace FastHashes.Benchmarks
                 Int32 totalCount = 0;
                 Int32 offset = 0;
 
-                for (Int32 i = 0; i < s_Parameters.Count; ++i)
+                foreach (ChunkParameter chunkParameter in s_ChunkParameters)
                 {
-                    var p = s_Parameters[i];
-                    Func<Int32,Int32> increment = p.Item1;
-                    Int32 keySize = p.Item2;
-                    Int32 repetitions = p.Item3;
+                    Func<Int32,Int32> increment = chunkParameter.Increment;
+                    Int32 keySize = chunkParameter.KeySize;
+                    Int32 repetitions = chunkParameter.Repetitions;
 
                     Double speed = 0.0d;
                     Int32 count = 0;

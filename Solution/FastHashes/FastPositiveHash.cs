@@ -1,6 +1,5 @@
 ﻿#region Using Directives
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 #endregion
 
@@ -30,11 +29,11 @@ namespace FastHashes
         /// <summary>Initializes a new instance using the specified variant and seed.</summary>
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.FastPositiveHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentException ">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public FastPositiveHash(FastPositiveHashVariant variant, UInt64 seed)
         {
             if (!Enum.IsDefined(typeof(FastPositiveHashVariant), variant))
-                throw new InvalidEnumArgumentException("Invalid variant specified.");
+                throw new ArgumentException("Invalid variant specified.", nameof(variant));
 
             switch (variant)
             {
@@ -57,7 +56,7 @@ namespace FastHashes
 
         /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.FastPositiveHashVariant"/> representing the variant of the hashing algorithm.</param>
-        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentException ">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
         public FastPositiveHash(FastPositiveHashVariant variant) : this(variant, 0ul) { }
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.FastPositiveHashVariant.V2"/> and the specified seed.</summary>
@@ -75,7 +74,7 @@ namespace FastHashes
         /// <inheritdoc/>
         public override String ToString()
         {
-            return String.Concat(GetType().Name, "-", m_Engine.Name);
+            return $"{GetType().Name}-{m_Engine.Name}";
         }
         #endregion
 

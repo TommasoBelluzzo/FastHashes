@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
@@ -7,7 +7,7 @@
     <Authors>Tommaso Belluzzo</Authors>
     <Company />
     <Description>Unit tests for the FastHashes library.</Description>
-    <Copyright>Copyright ©2017 Tommaso Belluzzo</Copyright>
+    <Copyright>Copyright ©2017-2021 Tommaso Belluzzo</Copyright>
     <PackageProjectUrl>https://github.com/TommasoBelluzzo/FastHashes</PackageProjectUrl>
     <RepositoryUrl>https://github.com/TommasoBelluzzo/FastHashes</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -15,6 +15,8 @@
     <AssemblyVersion>1.7.5.0</AssemblyVersion>
     <FileVersion>1.7.5.0</FileVersion>
     <Version>1.7.5</Version>
+    <PackageLicenseUrl>https://github.com/TommasoBelluzzo/FastHashes/blob/master/LICENSE.md</PackageLicenseUrl>
+    <PackageTags>algorithm hash</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -70,6 +72,10 @@
     <OutputPath>..\Output\Release-x86\</OutputPath>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <None Remove="FastHashes.Tests.csproj.DotSettings" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />

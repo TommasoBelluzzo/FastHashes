@@ -1,8 +1,6 @@
 ﻿#region Using Directives
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 #endregion
 
 namespace FastHashes.Tests
@@ -10,7 +8,7 @@ namespace FastHashes.Tests
     public static class Utilities
     {
         #region Methods
-        private static Boolean EqualSequences(Byte[] array1, Byte[] array2)
+        private static Boolean SequencesEqual(Byte[] array1, Byte[] array2)
         {
             if (ReferenceEquals(array1, array2))
                 return true;
@@ -99,7 +97,7 @@ namespace FastHashes.Tests
 
             for (Int32 i = 1; i < hashesCount; ++i)
             {
-                if (EqualSequences(hashes[i], hashes[i - 1]))
+                if (SequencesEqual(hashes[i], hashes[i - 1]))
                     ++actualCollisions;
             }
 
@@ -110,23 +108,6 @@ namespace FastHashes.Tests
                 return true;
 
             return false;
-        }
-
-        public static String GetStaticFilePath(String fileName)
-        {
-            if (String.IsNullOrWhiteSpace(fileName))
-                throw new ArgumentException("Invalid file name specified.", nameof(fileName));
-
-            Uri codeBaseUrl = new Uri(Assembly.GetExecutingAssembly().CodeBase);
-            String codeBasePath = Uri.UnescapeDataString(codeBaseUrl.AbsolutePath);
-            String dataPath = Path.Combine(Path.GetDirectoryName(codeBasePath), "Data");
-
-            String filePath = Path.Combine(dataPath, fileName);
-
-            if (!File.Exists(filePath))
-                throw new FileNotFoundException("The specified file could not be found.", filePath);
-
-            return filePath;
         }
 
         public static void FillBuffer(Byte[] buffer, Byte filler)

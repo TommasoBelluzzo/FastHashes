@@ -1,6 +1,5 @@
 ﻿#region Using Directives
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 #endregion
 
@@ -30,11 +29,11 @@ namespace FastHashes
         /// <summary>Represents the base constructor used by derived classes.</summary>
         /// <param name="engine">The enumerator value of type <see cref="T:FastHashes.MurmurHashEngine"/> representing the engine category used by the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="engine">engine</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="engine">engine</paramref> is undefined.</exception>
         protected MurmurHashG32(MurmurHashEngine engine, UInt32 seed)
         {
             if (!Enum.IsDefined(typeof(MurmurHashEngine), engine))
-                throw new InvalidEnumArgumentException("Invalid engine specified.");
+                throw new ArgumentException("Invalid engine specified.", nameof(engine));
 
             switch (engine)
             {
@@ -48,7 +47,11 @@ namespace FastHashes
 
                 default:
                 {
+#if NETCOREAPP1_0 || NETCOREAPP1_1
+                    if ((IntPtr.Size * 8) == 64)
+#else
                     if (Environment.Is64BitProcess)
+#endif
                         m_Engine = new Engine64(seed);
                     else
                         m_Engine = new Engine86(seed);
@@ -69,7 +72,7 @@ namespace FastHashes
         /// <inheritdoc/>
         public override String ToString()
         {
-            return String.Concat(GetType().Name, "-", m_Engine.Name);
+            return $"{GetType().Name}-{m_Engine.Name}";
         }
         #endregion
 
@@ -591,7 +594,7 @@ namespace FastHashes
         /// <summary>Initializes a new instance using the specified engine category and seed.</summary>
         /// <param name="engine">The enumerator value of type <see cref="T:FastHashes.MurmurHashEngine"/> representing the engine category used by the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="engine">engine</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="engine">engine</paramref> is undefined.</exception>
         public MurmurHash64(MurmurHashEngine engine, UInt32 seed) : base(engine, seed) {}
         #endregion
 
@@ -630,7 +633,7 @@ namespace FastHashes
         /// <summary>Initializes a new instance using the specified engine category and seed.</summary>
         /// <param name="engine">The enumerator value of type <see cref="T:FastHashes.MurmurHashEngine"/> representing the engine category used by the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ComponentModel.InvalidEnumArgumentException">Thrown when the value of <paramref name="engine">engine</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="engine">engine</paramref> is undefined.</exception>
         public MurmurHash128(MurmurHashEngine engine, UInt32 seed) : base(engine, seed) { }
         #endregion
 

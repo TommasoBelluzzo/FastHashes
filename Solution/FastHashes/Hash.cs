@@ -2,7 +2,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 #endregion
@@ -26,13 +25,16 @@ namespace FastHashes
         #region Methods
         private static Boolean AllowsUnalignedRead()
         {
-            if ((new[] {"x86", "amd64"}).Contains(Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE"), StringComparer.OrdinalIgnoreCase))
+            Regex regex = new Regex(@"amd64|i\d86|x64|x86_64", RegexOptions.IgnoreCase);
+
+            String architecture = Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
+
+            if (!String.IsNullOrWhiteSpace(architecture) && regex.IsMatch(architecture))
                 return true;
 
             ProcessStartInfo si = new ProcessStartInfo
             {
                 CreateNoWindow = true,
-                ErrorDialog = false,
                 FileName = "uname",
                 RedirectStandardOutput = true,
                 UseShellExecute = false
@@ -49,13 +51,13 @@ namespace FastHashes
 
                     using (StreamReader stream = process.StandardOutput)
                     {
-                        String output = stream.ReadLine();
+                        String line = stream.ReadLine();
 
-                        if (!String.IsNullOrWhiteSpace(output))
+                        if (!String.IsNullOrWhiteSpace(line))
                         {
-                            output = output.Trim();
+                            String output = line.Trim();
 
-                            if ((new[] {"amd64", "i386", "x64", "x86_64"}).Contains(output, StringComparer.OrdinalIgnoreCase))
+                            if (regex.IsMatch(output))
                                 return true;
                         }
                     }
@@ -74,16 +76,13 @@ namespace FastHashes
 
                     using (StreamReader stream = process.StandardOutput)
                     {
-                        String output = stream.ReadLine();
+                        String line = stream.ReadLine();
 
-                        if (!String.IsNullOrWhiteSpace(output))
+                        if (!String.IsNullOrWhiteSpace(line))
                         {
-                            output = output.Trim();
+                            String output = line.Trim();
 
-                            if ((new[] {"amd64", "x64", "x86_64"}).Contains(output, StringComparer.OrdinalIgnoreCase))
-                                return true;
-
-                            if ((new Regex(@"i\d86")).IsMatch(output))
+                            if (regex.IsMatch(output))
                                 return true;
                         }
                     }
