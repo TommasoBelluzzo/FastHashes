@@ -27,8 +27,8 @@ jobs:
       run: dotnet restore 
       working-directory: ./Solution
     - name: Build
-      run: dotnet build ./FastHashes.sln --configuration Release --no-incremental --no-restore --verbosity normal
+      run: dotnet build ./FastHashes.sln --configuration Release --no-restore --no-incremental --verbosity normal
       working-directory: ./Solution
     - name: Test
-      run: dotnet test --configuration Release --no-build --verbosity normal
+      run: dotnet test ./FastHashes.sln --configuration Release --no-build --no-build --verbosity normal
       working-directory: ./Solution
