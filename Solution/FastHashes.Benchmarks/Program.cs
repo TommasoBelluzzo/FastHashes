@@ -62,6 +62,12 @@ namespace FastHashes.Benchmarks
         #region Entry Point
         public static void Main()
         {
+            if (!Clock.IsHighResolution)
+            {
+                Console.WriteLine("The clock doesn't support high resolution.");
+                Environment.Exit(1);
+            }
+
             using (new AffinityOptimizer())
             {
                 for (Int32 i = 0; i < s_BenchmarkCases.Count; ++i)

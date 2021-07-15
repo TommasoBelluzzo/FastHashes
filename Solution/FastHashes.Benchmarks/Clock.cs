@@ -16,7 +16,11 @@ namespace FastHashes.Benchmarks
         private readonly ThreadLocal<Double> m_StartTimestamp;
         private Boolean m_IsDisposed;
         #endregion
-        
+
+        #region Properties
+        public static Boolean IsHighResolution => Stopwatch.IsHighResolution;
+        #endregion
+
         #region Constructors
         public Clock(Int32 maximumIdleTime)
         {
