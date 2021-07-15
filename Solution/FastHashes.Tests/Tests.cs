@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Xunit;
+using Xunit.Abstractions;
 #endregion
 
 namespace FastHashes.Tests
@@ -59,13 +60,15 @@ namespace FastHashes.Tests
 
         #region Members
         private readonly Fixture m_Fixture;
+        private readonly ITestOutputHelper m_Output;
         private readonly RandomXorShift m_Random;
         #endregion
 
         #region Constructors
-        public Tests(Fixture fixture)
+        public Tests(Fixture fixture, ITestOutputHelper output)
         {
             m_Fixture = fixture;
+            m_Output = output;
             m_Random = new RandomXorShift();
         }
         #endregion
@@ -75,6 +78,11 @@ namespace FastHashes.Tests
         [MemberData(nameof(DataCollision))]
         public void CollisionTests(String hashName)
         {
+            string aaa =
+                $"{AppContext.BaseDirectory} - {AppDomain.CurrentDomain.RelativeSearchPath} - {AppDomain.CurrentDomain.BaseDirectory}";
+
+            m_Output.WriteLine(aaa);
+
             Int32 wordsCount = m_Fixture.Words.Count();
 
             Assert.False(wordsCount == 0, "Fixture Words Empty");

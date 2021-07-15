@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        dotnet-version: [ 2.x ]
+        dotnet-version: [ 2.1.x ]
     steps:
     - name: Repository Checkout
       uses: actions/checkout@v2
@@ -24,11 +24,11 @@ jobs:
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
     - name: Restore Dependencies
-      run: dotnet restore 
+      run: dotnet restore --force-evaluate
       working-directory: ./Solution
     - name: Build
       run: dotnet build ./FastHashes.sln --configuration Release --no-restore --no-incremental --verbosity normal
       working-directory: ./Solution
     - name: Test
-      run: dotnet test ./FastHashes.sln --configuration Release --no-build --no-build --verbosity normal
+      run: dotnet test ./FastHashes.sln --configuration Release --no-restore --no-build --logger "console;verbosity=normal" --verbosity normal
       working-directory: ./Solution

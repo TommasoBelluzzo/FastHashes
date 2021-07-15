@@ -22,15 +22,24 @@ namespace FastHashes.Tests
 #if NETCOREAPP1_0 || NETCOREAPP1_1
             String fileDirectory = AppContext.BaseDirectory;
 #else
-            String fileDirectory = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
+            String fileDirectory = AppDomain.CurrentDomain.BaseDirectory;
 #endif
+
+            if (String.IsNullOrWhiteSpace(fileDirectory))
+            {
+                m_Words = new String[0];
+                return;
+            }
+
             String filePath = Path.Combine(fileDirectory, @"Data\Words.txt");
 
-            Console.WriteLine(AppDomain.CurrentDomain.RelativeSearchPath);
-            Console.WriteLine(AppDomain.CurrentDomain.BaseDirectory);
-            Console.WriteLine(fileDirectory);
+            if (!File.Exists(filePath))
+            {
+                m_Words = new String[0];
+                return;
+            }
 
-            m_Words = File.Exists(filePath) ? File.ReadAllLines(filePath) : new String[0];
+            m_Words = File.ReadAllLines(filePath);
         }
         #endregion
 
