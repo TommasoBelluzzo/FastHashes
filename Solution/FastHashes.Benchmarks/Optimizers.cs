@@ -55,6 +55,7 @@ namespace FastHashes.Benchmarks
         {
             m_Process = Process.GetCurrentProcess();
             m_ProcessAffinity = m_Process.ProcessorAffinity;
+            m_ThreadAffinity = IntPtr.Zero;
 
             Initialization();
         }
