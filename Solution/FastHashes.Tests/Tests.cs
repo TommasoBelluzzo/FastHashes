@@ -1,6 +1,7 @@
 ﻿#region Using Directives
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Xunit;
@@ -78,10 +79,11 @@ namespace FastHashes.Tests
         [MemberData(nameof(DataCollision))]
         public void CollisionTests(String hashName)
         {
-            string aaa =
-                $"{AppContext.BaseDirectory} - {AppDomain.CurrentDomain.RelativeSearchPath} - {AppDomain.CurrentDomain.BaseDirectory}";
+            string dir = AppDomain.CurrentDomain.BaseDirectory;
 
-            m_Output.WriteLine(aaa);
+            string asd = String.Join('\n',Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories));
+                    
+            m_Output.WriteLine(asd);
 
             Int32 wordsCount = m_Fixture.Words.Count();
 

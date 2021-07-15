@@ -31,7 +31,7 @@ namespace FastHashes.Tests
                 return;
             }
 
-            String filePath = Path.Combine(fileDirectory, @"Data\Words.txt");
+            String filePath = Path.Combine(fileDirectory, "Data", "Words.txt");
 
             if (!File.Exists(filePath))
             {
