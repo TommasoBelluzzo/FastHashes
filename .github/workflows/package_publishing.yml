@@ -34,8 +34,8 @@ jobs:
         while IFS= read -r FILE; do
           FILES+=($FILE)
           if [[ $FILE =~ ^.+FastHashes\.csproj$ ]]; then
-            grep -P $VERSION_REGEX $FILE
-            VERSION=$(grep -P <$VERSION_REGEX $FILE | cut -d '>' -f2)
+            grep -P '<$VERSION_REGEX' $FILE
+            VERSION=$(grep -P '<$VERSION_REGEX' $FILE | cut -d '>' -f2)
             VERSION_MAJOR=$(echo $VERSION | cut -d '.' -f1)
             VERSION_MINOR=$(echo $VERSION | cut -d '.' -f2)
             VERSION_BUILD=$(echo $VERSION | cut -d '.' -f3)
