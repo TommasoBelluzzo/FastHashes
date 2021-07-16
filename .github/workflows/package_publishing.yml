@@ -43,7 +43,7 @@ jobs:
             VERSION_MINOR=$(echo $VERSION | cut -d '.' -f2)
             VERSION_BUILD=$(echo $VERSION | cut -d '.' -f3)
           fi
-        done < <(find . -type f -name '*.csproj')
+        done < <(find . -type f -name *.csproj)
         if [[ ${#FILES[@]} -eq 0 ]]; then
           echo 'NO FILES FOUND'
           exit 1
