@@ -35,19 +35,16 @@ jobs:
         FILES=()
         find . -type f -name '*.csproj' -print0 | while read -r -d $'\0' FILE
         do
-          FILES+=($FILE)
-          if [[ $FILE =~ ^.+FastHashes.csproj$ ]]; then
+          FILES+=("$FILE")
+          if [[ $FILE =~ '^.+FastHashes.csproj$' ]]; then
             grep $VERSION_REGEX1 $FILE
             VERSION=$(grep $VERSION_REGEX1 $FILE | awk '{ gsub(/<[^>]*>/,""); print }')
-            VERSION_MAJOR=$(echo $VERSION | cut -d "." -f1)
-            VERSION_MINOR=$(echo $VERSION | cut -d "." -f2)
-            VERSION_BUILD=$(echo $VERSION | cut -d "." -f3)
-            VERSION_REVISION=$(echo $VERSION | cut -d "." -f4)
+            VERSION_MAJOR=$(echo $VERSION | cut -d '.' -f1)
+            VERSION_MINOR=$(echo $VERSION | cut -d '.' -f2)
+            VERSION_BUILD=$(echo $VERSION | cut -d '.' -f3)
           fi
         done
         if [[ ${#FILES[@]} -eq 0 ]]; then
-          echo ${#FILES[@]}
-          echo "${#FILES[@]}"
           echo 'NO FILES FOUND'
           exit 1
         fi
@@ -59,14 +56,14 @@ jobs:
         if [[ $TARGET == 'MAJOR' ]]; then
           VERSION_MAJOR=$(($VERSION_MAJOR + 1))
           VERSION_MINOR=0
-          VERSION_RELEASE=0
+          VERSION_BUILD=0
         elif [[ $TARGET == 'MINOR' ]]; then
           VERSION_MINOR=$(($VERSION_MINOR + 1))
-          VERSION_RELEASE=0
-        elif [[ $TARGET == 'RELEASE' ]]; then
-          VERSION_RELEASE=$(($VERSION_RELEASE + 1))
+          VERSION_BUILD=0
+        elif [[ $TARGET == 'BUILD' ]]; then
+          VERSION_BUILD=$(($VERSION_BUILD + 1))
         fi
-        VERSION=$(printf '%d.%d.%d' $VERSION_MAJOR $VERSION_MINOR $VERSION_RELEASE 2>/dev/null)
+        VERSION=$(printf '%d.%d.%d' $VERSION_MAJOR $VERSION_MINOR $VERSION_BUILD 2>/dev/null)
         sed -i "s/$VERSION_REGEX/__version__ = '$VERSION'/g" $VERSION_FILE
         grep $VERSION_REGEX $VERSION_FILE
         echo "::set-output name=target::$TARGET"
