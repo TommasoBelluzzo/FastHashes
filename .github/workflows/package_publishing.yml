@@ -23,7 +23,11 @@ jobs:
       id: bump
       env:
         TARGET: ${{ github.event.inputs.target }}
-        VERSION_REGEX: __version__[[:space:]]=[[:space:]]'[[:digit:]]\.[[:digit:]]\.[[:digit:]]'
+        FILES: []
+        VERSION_REGEX1: <Version>[[:digit:]]\.[[:digit:]]\.[[:digit:]]</Version>
+        VERSION_REGEX2: <AssemblyVersion>[[:digit:]]\.[[:digit:]]\.[[:digit:]]\.[[:digit:]]</Version>
+        VERSION_REGEX3: <FileVersion>[[:digit:]]\.[[:digit:]]\.[[:digit:]]\.[[:digit:]]</FileVersion>
+        VERSION_FOUND: false
         VERSION: '0.0.0'
         VERSION_MAJOR: 0
         VERSION_MINOR: 0
@@ -35,16 +39,25 @@ jobs:
           echo 'INVALID INPUT (TARGET)'
           exit 1
         fi
+        FILES=()
         find . -type f -name '*.csproj' -print0 | while read -r -d $'\0' FILE
         do
-          echo "$FILE"
+          FILES+=($FILE)
+          if [[ $FILE =~ ^.+FastHashes.csproj$ ]]; then
+            grep $VERSION_REGEX1 $FILE
+            VERSION=$(grep $VERSION_REGEX1 $FILE | awk '{ gsub(/<[^>]*>/,""); print }')
+            VERSION_MAJOR=$(echo $VERSION | cut -d "." -f1)
+            VERSION_MINOR=$(echo $VERSION | cut -d "." -f2)
+            VERSION_BUILD=$(echo $VERSION | cut -d "." -f3)
+            VERSION_REVISION=$(echo $VERSION | cut -d "." -f4)
+            VERSION_FOUND=true
+          fi
         done
+        if [[ $VERSION_FOUND = false ]]; then
+          echo 'VERSION NOT FOUND'
+          exit 1
+        fi
         exit 1
-        grep $VERSION_REGEX $VERSION_FILE
-        VERSION=$(grep $VERSION_REGEX $VERSION_FILE | cut -d "'" -f2)
-        VERSION_MAJOR=$(echo $VERSION | cut -d "." -f1)
-        VERSION_MINOR=$(echo $VERSION | cut -d "." -f2)
-        VERSION_RELEASE=$(echo $VERSION | cut -d "." -f3)
         if [[ $TARGET == 'MAJOR' ]]; then
           VERSION_MAJOR=$(($VERSION_MAJOR + 1))
           VERSION_MINOR=0
