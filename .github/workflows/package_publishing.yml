@@ -36,7 +36,7 @@ jobs:
         while IFS= read -r -d $'\0' FILE; do
           echo "$FILE"
           FILES+=("$FILE")
-          if [[ $FILE =~ '^.+FastHashes.csproj$' ]]; then
+          if [[ $FILE =~ ^.+FastHashes.csproj$ ]]; then
             grep $VERSION_REGEX1 $FILE
             VERSION=$(grep $VERSION_REGEX1 $FILE | awk '{ gsub(/<[^>]*>/,""); print }')
             VERSION_MAJOR=$(echo $VERSION | cut -d '.' -f1)
