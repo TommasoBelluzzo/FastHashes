@@ -33,8 +33,7 @@ jobs:
           exit 1
         fi
         FILES=()
-        find . -type f -name '*.csproj'
-        while IFS= read -r -d $'\0' FILE; do
+        while IFS= read -r FILE; do
           echo "$FILE"
           FILES+=("$FILE")
           if [[ $FILE =~ ^.+FastHashes\.csproj$ ]]; then
