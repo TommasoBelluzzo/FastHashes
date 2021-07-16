@@ -25,49 +25,51 @@ jobs:
         TARGET: ${{ github.event.inputs.target }}
         VERSION_REGEX: Version>\d+\.\d+\.\d+
       run: |
-        TARGET=${TARGET^^}
-        if [[ $TARGET != 'MAJOR' ]] && [[ $TARGET != 'MINOR' ]] && [[ $TARGET != 'BUILD' ]] && [[ $TARGET != 'NONE' ]]; then
-          echo 'INVALID INPUT'
+        TARGET="${TARGET^^}"
+        if [[ "$TARGET" != "MAJOR" ]] && [[ "$TARGET" != "MINOR" ]] && [[ "$TARGET" != "BUILD" ]] && [[ "$TARGET" != "NONE" ]]; then
+          echo "INVALID INPUT"
           exit 1
         fi
         FILES=()
         while IFS= read -r FILE; do
-          FILES+=($FILE)
-          if [[ $FILE =~ ^.+FastHashes\.csproj$ ]]; then
-            grep -P '<$VERSION_REGEX' $FILE
-            VERSION=$(grep -P '<$VERSION_REGEX' $FILE | cut -d '>' -f2)
-            VERSION_MAJOR=$(echo $VERSION | cut -d '.' -f1)
-            VERSION_MINOR=$(echo $VERSION | cut -d '.' -f2)
-            VERSION_BUILD=$(echo $VERSION | cut -d '.' -f3)
+          FILES+=("$FILE")
+          if [[ "$FILE" =~ ^.+FastHashes\.csproj$ ]]; then
+            grep -P "<$VERSION_REGEX" $FILE
+            VERSION=$(grep -P "<$VERSION_REGEX" $FILE | cut -d ">" -f2)
+            VERSION_MAJOR=$(echo "$VERSION" | cut -d "." -f1)
+            VERSION_MINOR=$(echo "$VERSION" | cut -d "." -f2)
+            VERSION_BUILD=$(echo "$VERSION" | cut -d "." -f3)
           fi
-        done < <(find . -type f -name '*.csproj')
-        if [[ ${#FILES[@]} -eq 0 ]]; then
-          echo 'NO PROJECT FILES FOUND'
+        done < <(find . -type f -name "*.csproj")
+        if [[ "${#FILES[@]}" -eq 0 ]]; then
+          echo "NO PROJECT FILES FOUND"
           exit 1
         fi
-        if [[ -z ${VERSION+x} ]]; then
-          echo 'VERSION NOT FOUND'
+        if [[ -z "${VERSION+x}" ]]; then
+          echo "VERSION NOT FOUND"
           exit 1
         fi
-        if [[ $TARGET == 'MAJOR' ]]; then
-          VERSION_MAJOR=$(($VERSION_MAJOR + 1))
+        if [[ "$TARGET" == "MAJOR" ]]; then
+          VERSION_MAJOR=$(($VERSION_MAJOR+1))
           VERSION_MINOR=0
           VERSION_BUILD=0
-        elif [[ $TARGET == 'MINOR' ]]; then
-          VERSION_MINOR=$(($VERSION_MINOR + 1))
+        elif [[ "$TARGET" == "MINOR" ]]; then
+          VERSION_MINOR=$(($VERSION_MINOR+1))
           VERSION_BUILD=0
-        elif [[ $TARGET == 'BUILD' ]]; then
-          VERSION_BUILD=$(($VERSION_BUILD + 1))
+        elif [[ "$TARGET" == "BUILD" ]]; then
+          VERSION_BUILD=$(($VERSION_BUILD+1))
         fi
-        VERSION=$(printf '%d.%d.%d' $VERSION_MAJOR $VERSION_MINOR $VERSION_BUILD 2>/dev/null)
-        for FILE in ${FILES[@]}; do
-          PATTERN=$(grep -Poh $VERSION_REGEX $FILE)
-          sed -i 's/Assembly$PATTERN/AssemblyVersion>$VERSION/g' $FILE
-          grep -P Assembly$VERSION_REGEX $FILE
-          sed -i 's/File$PATTERN/FileVersion>$VERSION/g' $FILE
-          grep -P File$VERSION_REGEX $FILE
-          sed -i 's/<$PATTERN/<Version>$VERSION/g' $FILE
-          grep -P <$VERSION_REGEX $FILE
+        VERSION=$(printf "%d.%d.%d" $VERSION_MAJOR $VERSION_MINOR $VERSION_BUILD 2>/dev/null)
+        for FILE in "${FILES[@]}"; do
+          PATTERN=$(grep -Poh "<$VERSION_REGEX" $FILE)
+          sed -i "s/$PATTERN/<Version>$VERSION/g" $FILE
+          grep -P "<$VERSION_REGEX" $FILE
+          PATTERN=$(grep -Poh "<Assembly$VERSION_REGEX" $FILE)
+          sed -i "s/$PATTERN/<AssemblyVersion>$VERSION/g" $FILE
+          grep -P "<Assembly$VERSION_REGEX" $FILE
+          PATTERN=$(grep -Poh "<File$VERSION_REGEX" $FILE)
+          sed -i "s/$PATTERN/<FileVersion>$VERSION/g" $FILE
+          grep -P "<File$VERSION_REGEX" $FILE
         done
         echo "::set-output name=version::$VERSION"
     - name: Restore
