@@ -33,17 +33,18 @@ jobs:
           exit 1
         fi
         FILES=()
+        find . -type f -name '*.csproj'
         while IFS= read -r -d $'\0' FILE; do
           echo "$FILE"
           FILES+=("$FILE")
           if [[ $FILE =~ ^.+FastHashes\.csproj$ ]]; then
             grep $VERSION_REGEX1 $FILE
-            VERSION=$(grep $VERSION_REGEX1 $FILE | awk "{ gsub(/<[^>]*>/,''); print }")
-            VERSION_MAJOR=$(echo $VERSION | cut -d "." -f1)
-            VERSION_MINOR=$(echo $VERSION | cut -d "." -f2)
-            VERSION_BUILD=$(echo $VERSION | cut -d "." -f3)
+            VERSION=$(grep $VERSION_REGEX1 $FILE | awk '{ gsub(/<[^>]*>/,""); print }')
+            VERSION_MAJOR=$(echo $VERSION | cut -d '.' -f1)
+            VERSION_MINOR=$(echo $VERSION | cut -d '.' -f2)
+            VERSION_BUILD=$(echo $VERSION | cut -d '.' -f3)
           fi
-        done < <(find . -type f -name "*.csproj")
+        done < <(find . -type f -name '*.csproj')
         if [[ ${#FILES[@]} -eq 0 ]]; then
           echo 'NO FILES FOUND'
           exit 1
