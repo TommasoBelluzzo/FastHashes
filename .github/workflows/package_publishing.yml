@@ -27,8 +27,8 @@ jobs:
         VERSION: '0.0.0'
         VERSION_MAJOR: 0
         VERSION_MINOR: 0
-        VERSION_RELEASE: 0
-        VERSION_MINOR: 0
+        VERSION_BUILD: 0
+        VERSION_REVISION: 0
       run: |
         TARGET=${TARGET^^}
         if [[ $TARGET != 'MAJOR' ]] && [[ $TARGET != 'MINOR' ]] && [[ $TARGET != 'BUILD' ]] && [[ $TARGET != 'NONE' ]]; then
