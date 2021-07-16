@@ -3,22 +3,19 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
     <StartupObject>FastHashes.Benchmarks.Program</StartupObject>
     <Authors>Tommaso Belluzzo</Authors>
     <Company />
     <Description>Benchmarks for the FastHashes library.</Description>
     <Copyright>Copyright ©2017-2021 Tommaso Belluzzo</Copyright>
-    <PackageProjectUrl>https://github.com/TommasoBelluzzo/FastHashes</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/TommasoBelluzzo/FastHashes</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
     <NeutralLanguage>en</NeutralLanguage>
     <AssemblyVersion>1.7.5.0</AssemblyVersion>
     <FileVersion>1.7.5.0</FileVersion>
     <Version>1.7.5</Version>
-    <PackageLicenseUrl>https://github.com/TommasoBelluzzo/FastHashes/blob/master/LICENSE.md</PackageLicenseUrl>
-    <PackageTags>algorithm hash</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/TommasoBelluzzo/FastHashes</RepositoryUrl>
+    <IsPackable>false</IsPackable>
     <IsMacOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsMacOS>
     <IsUnix Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsUnix>
     <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>

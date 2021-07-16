@@ -78,3 +78,6 @@ jobs:
     - name: Build
       working-directory: Solution/
       run: dotnet build FastHashes.sln --configuration Release --no-restore --no-incremental --verbosity normal
+    - name: Pack
+      working-directory: Solution/
+      run: dotnet pack FastHashes/FastHashes.csproj --configuration Release --no-restore --no-build --include-symbols --verbosity normal
