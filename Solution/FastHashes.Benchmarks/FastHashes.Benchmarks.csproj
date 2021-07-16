@@ -10,9 +10,9 @@
     <Description>Benchmarks for the FastHashes library.</Description>
     <Copyright>Copyright ©2017-2021 Tommaso Belluzzo</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
-    <AssemblyVersion>1.7.5.0</AssemblyVersion>
-    <FileVersion>1.7.5.0</FileVersion>
-    <Version>1.7.5</Version>
+    <AssemblyVersion>1.7.6.0</AssemblyVersion>
+    <FileVersion>1.7.6.0</FileVersion>
+    <Version>1.7.6</Version>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/TommasoBelluzzo/FastHashes</RepositoryUrl>
     <IsPackable>false</IsPackable>
