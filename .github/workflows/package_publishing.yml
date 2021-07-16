@@ -46,6 +46,8 @@ jobs:
           fi
         done
         if [[ ${#FILES[@]} -eq 0 ]]; then
+          echo ${#FILES[@]}
+          echo "${#FILES[@]}"
           echo 'NO FILES FOUND'
           exit 1
         fi
