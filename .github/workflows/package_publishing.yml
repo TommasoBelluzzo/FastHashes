@@ -9,8 +9,8 @@ on:
         default: 'MINOR'
 
 jobs:
-  publishing:
-    name: Publishing
+  task:
+    name: Task
     runs-on: ubuntu-latest
     steps:
     - name: Repository Checkout
@@ -26,7 +26,7 @@ jobs:
         VERSION_REGEX: Version>\d+\.\d+\.\d+
       run: |
         TARGET="${TARGET^^}"
-        if [[ "$TARGET" != "MAJOR" ]] && [[ "$TARGET" != "MINOR" ]] && [[ "$TARGET" != "BUILD" ]] && [[ "$TARGET" != "NONE" ]]; then
+        if [[ "$TARGET" != "MAJOR" ]] && [[ "$TARGET" != "MINOR" ]] && [[ "$TARGET" != "BUILD" ]]; then
           echo "INVALID INPUT"
           exit 1
         fi
@@ -56,20 +56,23 @@ jobs:
         elif [[ "$TARGET" == "MINOR" ]]; then
           VERSION_MINOR=$(($VERSION_MINOR+1))
           VERSION_BUILD=0
-        elif [[ "$TARGET" == "BUILD" ]]; then
+        else
           VERSION_BUILD=$(($VERSION_BUILD+1))
         fi
         VERSION=$(printf "%d.%d.%d" $VERSION_MAJOR $VERSION_MINOR $VERSION_BUILD 2>/dev/null)
+        ASSEMBLY_VERSION=$(printf "%d.0.0" $VERSION_MAJOR 2>/dev/null)
         for FILE in "${FILES[@]}"; do
           PATTERN=$(grep -Poh "<$VERSION_REGEX" $FILE)
           sed -i "s/$PATTERN/<Version>$VERSION/g" $FILE
           grep -P "<$VERSION_REGEX" $FILE
-          PATTERN=$(grep -Poh "<Assembly$VERSION_REGEX" $FILE)
-          sed -i "s/$PATTERN/<AssemblyVersion>$VERSION/g" $FILE
-          grep -P "<Assembly$VERSION_REGEX" $FILE
           PATTERN=$(grep -Poh "<File$VERSION_REGEX" $FILE)
           sed -i "s/$PATTERN/<FileVersion>$VERSION/g" $FILE
           grep -P "<File$VERSION_REGEX" $FILE
+          if [[ "$TARGET" == "MAJOR" ]]; then
+            PATTERN=$(grep -Poh "<Assembly$VERSION_REGEX" $FILE)
+            sed -i "s/$PATTERN/<AssemblyVersion>$ASSEMBLY_VERSION/g" $FILE
+            grep -P "<Assembly$VERSION_REGEX" $FILE
+          fi
         done
         echo "::set-output name=version::$VERSION"
     - name: Restore
@@ -77,10 +80,7 @@ jobs:
       run: dotnet restore --force-evaluate
     - name: Build
       working-directory: Solution/
-      run: dotnet build FastHashes.sln --configuration Release --no-restore --no-incremental --verbosity normal
+      run: dotnet build FastHashes/FastHashes.csproj --configuration Release --no-restore --no-incremental --verbosity normal
     - name: Pack
       working-directory: Solution/
-      run: dotnet pack FastHashes/FastHashes.csproj --configuration Release --no-restore --no-build --include-symbols --verbosity normal
-    - name: Publish
-      working-directory: Solution/
-      run: dotnet pack FastHashes/FastHashes.csproj --configuration Release --no-restore --no-build --include-symbols --verbosity normal
+      run: dotnet pack FastHashes/FastHashes.csproj --output Package --configuration Release --no-restore --no-build --include-symbols --verbosity normal

@@ -8,9 +8,9 @@
     <Description>Unit tests for the FastHashes library.</Description>
     <Copyright>Copyright ©2017-2021 Tommaso Belluzzo</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
-    <AssemblyVersion>1.7.6.0</AssemblyVersion>
-    <FileVersion>1.7.6.0</FileVersion>
     <Version>1.7.6</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.7.6.0</FileVersion>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/TommasoBelluzzo/FastHashes</RepositoryUrl>
     <IsPackable>false</IsPackable>
@@ -21,9 +21,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Debug\</OutputPath>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <DocumentationFile></DocumentationFile>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -31,9 +32,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Debug-x64\</OutputPath>
     <PlatformTarget>x64</PlatformTarget>
+    <DocumentationFile></DocumentationFile>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
@@ -41,42 +43,46 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Debug-x86\</OutputPath>
     <PlatformTarget>x86</PlatformTarget>
+    <DocumentationFile></DocumentationFile>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
-    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsAsErrors />
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Release\</OutputPath>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <DocumentationFile></DocumentationFile>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
-    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsAsErrors />
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Release-x64\</OutputPath>
     <PlatformTarget>x64</PlatformTarget>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <DocumentationFile></DocumentationFile>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
-    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsAsErrors />
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Release-x86\</OutputPath>
     <PlatformTarget>x86</PlatformTarget>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <DocumentationFile></DocumentationFile>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>

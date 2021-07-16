@@ -8,15 +8,19 @@
     <Description>A .NET implementation of different non-cryptographic hashes.</Description>
     <Copyright>Copyright ©2017-2021 Tommaso Belluzzo</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
-    <AssemblyVersion>1.7.6.0</AssemblyVersion>
-    <FileVersion>1.7.6.0</FileVersion>
     <Version>1.7.6</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.7.6.0</FileVersion>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/TommasoBelluzzo/FastHashes</RepositoryUrl>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/TommasoBelluzzo/FastHashes</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>algorithm hash</PackageTags>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -36,9 +40,9 @@
     <OutputPath>..\Output\Debug-x64\</OutputPath>
     <PlatformTarget>x64</PlatformTarget>
 	<DocumentationFile></DocumentationFile>
-	<GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-	<DebugType>full</DebugType>
-	<DebugSymbols>true</DebugSymbols>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
@@ -47,45 +51,54 @@
     <OutputPath>..\Output\Debug-x86\</OutputPath>
     <PlatformTarget>x86</PlatformTarget>
 	<DocumentationFile></DocumentationFile>
-	<GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-	<DebugType>full</DebugType>
-	<DebugSymbols>true</DebugSymbols>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugType>portable</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Release\</OutputPath>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>..\Output\Release\FastHashes.xml</DocumentationFile>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <DebugType>portable</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Release-x64\</OutputPath>
     <PlatformTarget>x64</PlatformTarget>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>..\Output\Release-x64\FastHashes.xml</DocumentationFile>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <DebugType>portable</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Release-x86\</OutputPath>
     <PlatformTarget>x86</PlatformTarget>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>..\Output\Release-x86\FastHashes.xml</DocumentationFile>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
 </Project>
