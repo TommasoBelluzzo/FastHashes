@@ -23,9 +23,9 @@ jobs:
       id: bump
       env:
         TARGET: ${{ github.event.inputs.target }}
-        VERSION_REGEX1: <Version>\d+\.\d+\.\d+</Version>
-        VERSION_REGEX2: <AssemblyVersion>\d+\.\d+\.\d+\.\d+</Version>
-        VERSION_REGEX3: <FileVersion>\d+\.\d+\.\d+\.\d+</FileVersion>
+        VERSION_REGEX1: <Version>\d+\.\d+\.\d+<\/Version>
+        VERSION_REGEX2: <AssemblyVersion>\d+\.\d+\.\d+\.\d+<\/AssemblyVersion>
+        VERSION_REGEX3: <FileVersion>\d+\.\d+\.\d+\.\d+<\/FileVersion>
       run: |
         TARGET=${TARGET^^}
         if [[ $TARGET != 'MAJOR' ]] && [[ $TARGET != 'MINOR' ]] && [[ $TARGET != 'BUILD' ]] && [[ $TARGET != 'NONE' ]]; then
