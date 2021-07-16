@@ -23,9 +23,9 @@ jobs:
       id: bump
       env:
         TARGET: ${{ github.event.inputs.target }}
-        VERSION_REGEX1: <Version>[[:digit:]]\.[[:digit:]]\.[[:digit:]]</Version>
-        VERSION_REGEX2: <AssemblyVersion>[[:digit:]]\.[[:digit:]]\.[[:digit:]]\.[[:digit:]]</Version>
-        VERSION_REGEX3: <FileVersion>[[:digit:]]\.[[:digit:]]\.[[:digit:]]\.[[:digit:]]</FileVersion>
+        VERSION_REGEX1: <Version>\d+\.\d+\.\d+</Version>
+        VERSION_REGEX2: <AssemblyVersion>\d+\.\d+\.\d+\.\d+</Version>
+        VERSION_REGEX3: <FileVersion>\d+\.\d+\.\d+\.\d+</FileVersion>
       run: |
         TARGET=${TARGET^^}
         if [[ $TARGET != 'MAJOR' ]] && [[ $TARGET != 'MINOR' ]] && [[ $TARGET != 'BUILD' ]] && [[ $TARGET != 'NONE' ]]; then
@@ -36,7 +36,7 @@ jobs:
         while IFS= read -r FILE; do
           FILES+=($FILE)
           if [[ $FILE =~ ^.+FastHashes\.csproj$ ]]; then
-            grep $VERSION_REGEX1 $FILE
+            grep -P $VERSION_REGEX1 $FILE
             VERSION=$(grep $VERSION_REGEX1 $FILE | awk '{ gsub(/<[^>]*>/,""); print }')
             VERSION_MAJOR=$(echo $VERSION | cut -d '.' -f1)
             VERSION_MINOR=$(echo $VERSION | cut -d '.' -f2)
@@ -64,11 +64,11 @@ jobs:
         VERSION=$(printf '%d.%d.%d' $VERSION_MAJOR $VERSION_MINOR $VERSION_BUILD 2>/dev/null)
         for FILE in ${FILES[@]}; do
           sed -i 's/$VERSION_REGEX1/<Version>$VERSION<\/Version>/g' $FILE
-          grep $VERSION_REGEX1 $FILE
+          grep -P $VERSION_REGEX1 $FILE
           sed -i 's/$VERSION_REGEX2/<AssemblyVersion>$VERSION\.0<\/AssemblyVersion>/g' $FILE
-          grep $VERSION_REGEX2 $FILE
+          grep -P $VERSION_REGEX2 $FILE
           sed -i 's/$VERSION_REGEX3/<FileVersion>$VERSION\.0<\/FileVersion>/g' $FILE
-          grep $VERSION_REGEX3 $FILE
+          grep -P $VERSION_REGEX3 $FILE
         done
         echo "::set-output name=version::$VERSION"
     - name: Restore
