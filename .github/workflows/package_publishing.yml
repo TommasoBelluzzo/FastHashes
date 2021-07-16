@@ -33,8 +33,7 @@ jobs:
           exit 1
         fi
         FILES=()
-         while read -r -d $'\0' FILE
-        do
+        while read -r -d $'\0' FILE; do
           FILES+=("$FILE")
           if [[ $FILE =~ '^.+FastHashes.csproj$' ]]; then
             grep $VERSION_REGEX1 $FILE
