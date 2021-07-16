@@ -33,7 +33,7 @@ jobs:
           exit 1
         fi
         FILES=()
-        find . -type f -name '*.csproj' -print0 | while read -r -d $'\0' FILE
+         while read -r -d $'\0' FILE
         do
           FILES+=("$FILE")
           if [[ $FILE =~ '^.+FastHashes.csproj$' ]]; then
@@ -43,7 +43,7 @@ jobs:
             VERSION_MINOR=$(echo $VERSION | cut -d '.' -f2)
             VERSION_BUILD=$(echo $VERSION | cut -d '.' -f3)
           fi
-        done
+        done < <(find . -type f -name '*.csproj')
         if [[ ${#FILES[@]} -eq 0 ]]; then
           echo 'NO FILES FOUND'
           exit 1
