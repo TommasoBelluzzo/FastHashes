@@ -63,11 +63,11 @@ jobs:
         fi
         VERSION=$(printf '%d.%d.%d' $VERSION_MAJOR $VERSION_MINOR $VERSION_BUILD 2>/dev/null)
         for FILE in ${FILES[@]}; do
-          sed -i 's/$VERSION_REGEX1/<Version>$VERSION</Version>/g' $FILE
+          sed -i 's/$VERSION_REGEX1/<Version>$VERSION<\/Version>/g' $FILE
           grep $VERSION_REGEX1 $FILE
-          sed -i 's/$VERSION_REGEX2/<AssemblyVersion>$VERSION.0</AssemblyVersion>/g' $FILE
+          sed -i 's/$VERSION_REGEX2/<AssemblyVersion>$VERSION\.0<\/AssemblyVersion>/g' $FILE
           grep $VERSION_REGEX2 $FILE
-          sed -i 's/$VERSION_REGEX3/<FileVersion>$VERSION.0</FileVersion>/g' $FILE
+          sed -i 's/$VERSION_REGEX3/<FileVersion>$VERSION\.0<\/FileVersion>/g' $FILE
           grep $VERSION_REGEX3 $FILE
         done
         echo "::set-output name=version::$VERSION"
