@@ -64,13 +64,13 @@ jobs:
         VERSION=$(printf '%d.%d.%d' $VERSION_MAJOR $VERSION_MINOR $VERSION_BUILD 2>/dev/null)
         for FILE in ${FILES[@]}; do
           PATTERN=$(grep -Poh $VERSION_REGEX1 $FILE)
-          sed -i 's/$PATTERN/<Version>$VERSION<\/Version>/g' <<< $FILE
+          sed -i 's/$PATTERN/<Version>$VERSION<\/Version>/g' $FILE
           grep -P $VERSION_REGEX1 $FILE
           PATTERN=$(grep -Poh $VERSION_REGEX2 $FILE)
-          perl -pe 's/$PATTERN/<AssemblyVersion>$VERSION\.0<\/AssemblyVersion>/g' $FILE
+          sed -i 's/$PATTERN/<AssemblyVersion>$VERSION\.0<\/AssemblyVersion>/g' $FILE
           grep -P $VERSION_REGEX2 $FILE
           PATTERN=$(grep -Poh $VERSION_REGEX3 $FILE)
-          perl -pe 's/$PATTERN/<FileVersion>$VERSION\.0<\/FileVersion>/g' $FILE
+          sed -i 's/$PATTERN/<FileVersion>$VERSION\.0<\/FileVersion>/g' $FILE
           grep -P $VERSION_REGEX3 $FILE
         done
         echo "::set-output name=version::$VERSION"
