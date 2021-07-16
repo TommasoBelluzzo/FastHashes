@@ -51,6 +51,10 @@ jobs:
           echo 'VERSION NOT FOUND'
           exit 1
         fi
+        echo $VERSION
+        echo $VERSION_MINOR
+        echo $VERSION_BUILD
+        echo $VERSION_BUILD
         if [[ $TARGET == 'MAJOR' ]]; then
           VERSION_MAJOR=$(($VERSION_MAJOR + 1))
           VERSION_MINOR=0
@@ -62,6 +66,10 @@ jobs:
           VERSION_BUILD=$(($VERSION_BUILD + 1))
         fi
         VERSION=$(printf '%d.%d.%d' $VERSION_MAJOR $VERSION_MINOR $VERSION_BUILD 2>/dev/null)
+        echo $VERSION
+        echo $VERSION_MINOR
+        echo $VERSION_BUILD
+        echo $VERSION_BUILD
         for FILE in ${FILES[@]}; do
           sed -i 's/$VERSION_REGEX1/<Version>$VERSION<\/Version>/g' $FILE
           grep -P $VERSION_REGEX1 $FILE
