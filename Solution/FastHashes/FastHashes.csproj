@@ -5,7 +5,7 @@
     <Platforms>AnyCPU;x64;x86</Platforms>
     <Authors>Tommaso Belluzzo</Authors>
     <Company />
-    <Description>A .NET implementation of different non-cryptographic hashes.</Description>
+    <Description>A .NET implementation of several non-cryptographic hashes.</Description>
     <Copyright>Copyright ©2017-2021 Tommaso Belluzzo</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
     <Version>1.7.6</Version>
