@@ -34,8 +34,7 @@ jobs:
         fi
         FILES=()
         while IFS= read -r FILE; do
-          echo "$FILE"
-          FILES+=("$FILE")
+          FILES+=($FILE)
           if [[ $FILE =~ ^.+FastHashes\.csproj$ ]]; then
             grep $VERSION_REGEX1 $FILE
             VERSION=$(grep $VERSION_REGEX1 $FILE | awk '{ gsub(/<[^>]*>/,""); print }')
@@ -45,14 +44,13 @@ jobs:
           fi
         done < <(find . -type f -name '*.csproj')
         if [[ ${#FILES[@]} -eq 0 ]]; then
-          echo 'NO FILES FOUND'
+          echo 'NO PROJECT FILES FOUND'
           exit 1
         fi
         if [[ -z ${VERSION+x} ]]; then
           echo 'VERSION NOT FOUND'
           exit 1
         fi
-        exit 1
         if [[ $TARGET == 'MAJOR' ]]; then
           VERSION_MAJOR=$(($VERSION_MAJOR + 1))
           VERSION_MINOR=0
@@ -64,13 +62,14 @@ jobs:
           VERSION_BUILD=$(($VERSION_BUILD + 1))
         fi
         VERSION=$(printf '%d.%d.%d' $VERSION_MAJOR $VERSION_MINOR $VERSION_BUILD 2>/dev/null)
-        sed -i "s/$VERSION_REGEX/__version__ = '$VERSION'/g" $VERSION_FILE
-        grep $VERSION_REGEX $VERSION_FILE
-        echo "::set-output name=target::$TARGET"
-        echo "::set-output name=pypi::$PYPI"
-        echo "::set-output name=conda::$CONDA"
-        echo "::set-output name=version_file::$VERSION_FILE"
-        echo "::set-output name=version_regex::$VERSION_REGEX"
+        for FILE in ${FILES[@]}; do
+          sed -i 's/$VERSION_REGEX1/<Version>$VERSION</Version>/g' $FILE
+          grep $VERSION_REGEX1 $FILE
+          sed -i 's/$VERSION_REGEX2/<AssemblyVersion>$VERSION.0</AssemblyVersion>/g' $FILE
+          grep $VERSION_REGEX2 $FILE
+          sed -i 's/$VERSION_REGEX3/<FileVersion>$VERSION.0</FileVersion>'/g' $FILE
+          grep $VERSION_REGEX3 $FILE
+        done
         echo "::set-output name=version::$VERSION"
     - name: Restore
       working-directory: Solution/
