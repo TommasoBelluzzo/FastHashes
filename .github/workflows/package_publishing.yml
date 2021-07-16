@@ -34,6 +34,7 @@ jobs:
         fi
         FILES=()
         while IFS= read -r -d $'\0' FILE; do
+          echo "$FILE"
           FILES+=("$FILE")
           if [[ $FILE =~ '^.+FastHashes.csproj$' ]]; then
             grep $VERSION_REGEX1 $FILE
