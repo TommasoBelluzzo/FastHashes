@@ -5,8 +5,8 @@ on:
     - cron: '00 19 * * 5'
 
 jobs:
-  analyze:
-    name: Analyze
+  task:
+    name: Task
     runs-on: ubuntu-latest
     permissions:
       actions: read

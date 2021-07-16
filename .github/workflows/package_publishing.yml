@@ -62,16 +62,16 @@ jobs:
         VERSION=$(printf "%d.%d.%d" $VERSION_MAJOR $VERSION_MINOR $VERSION_BUILD 2>/dev/null)
         ASSEMBLY_VERSION=$(printf "%d.0.0" $VERSION_MAJOR 2>/dev/null)
         for FILE in "${FILES[@]}"; do
-          PATTERN=$(grep -Poh "<$VERSION_REGEX" $FILE)
-          sed -i "s/$PATTERN/<Version>$VERSION/g" $FILE
-          grep -P "<$VERSION_REGEX" $FILE
-          PATTERN=$(grep -Poh "<File$VERSION_REGEX" $FILE)
-          sed -i "s/$PATTERN/<FileVersion>$VERSION/g" $FILE
-          grep -P "<File$VERSION_REGEX" $FILE
+          PATTERN=$(grep -Poh "<$VERSION_REGEX" "$FILE")
+          sed -i "s/$PATTERN/<Version>$VERSION/g" "$FILE"
+          grep -P "<$VERSION_REGEX" "$FILE"
+          PATTERN=$(grep -Poh "<File$VERSION_REGEX" "$FILE")
+          sed -i "s/$PATTERN/<FileVersion>$VERSION/g" "$FILE"
+          grep -P "<File$VERSION_REGEX" "$FILE"
           if [[ "$TARGET" == "MAJOR" ]]; then
-            PATTERN=$(grep -Poh "<Assembly$VERSION_REGEX" $FILE)
-            sed -i "s/$PATTERN/<AssemblyVersion>$ASSEMBLY_VERSION/g" $FILE
-            grep -P "<Assembly$VERSION_REGEX" $FILE
+            PATTERN=$(grep -Poh "<Assembly$VERSION_REGEX" "$FILE")
+            sed -i "s/$PATTERN/<AssemblyVersion>$ASSEMBLY_VERSION/g" "$FILE"
+            grep -P "<Assembly$VERSION_REGEX" "$FILE"
           fi
         done
         echo "::set-output name=version::$VERSION"

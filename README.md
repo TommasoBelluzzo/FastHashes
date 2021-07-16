@@ -50,7 +50,9 @@ FashHashes is a pure C# porting of the following non-cryptographic hashes:
 
 ## Requirements
  
-The project targets `Visual Studio 2017`.
+The library targets `.NET Standard 2.0`.
+
+The auxiliary projects target `.NET Core 2.1`.
 
 ## Performance Benchmarks
 
