@@ -43,14 +43,13 @@ jobs:
             VERSION_MINOR=$(echo $VERSION | cut -d "." -f2)
             VERSION_BUILD=$(echo $VERSION | cut -d "." -f3)
             VERSION_REVISION=$(echo $VERSION | cut -d "." -f4)
-            VERSION_FOUND=true
           fi
         done
         if [[ ${#FILES[@]} -eq 0 ]]; then
           echo 'NO FILES FOUND'
           exit 1
         fi
-        if [[ $VERSION_FOUND = false ]]; then
+        if [[ -z ${VERSION+x} ]]; then
           echo 'VERSION NOT FOUND'
           exit 1
         fi
