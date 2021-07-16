@@ -23,20 +23,13 @@ jobs:
       id: bump
       env:
         TARGET: ${{ github.event.inputs.target }}
-        FILES: []
         VERSION_REGEX1: <Version>[[:digit:]]\.[[:digit:]]\.[[:digit:]]</Version>
         VERSION_REGEX2: <AssemblyVersion>[[:digit:]]\.[[:digit:]]\.[[:digit:]]\.[[:digit:]]</Version>
         VERSION_REGEX3: <FileVersion>[[:digit:]]\.[[:digit:]]\.[[:digit:]]\.[[:digit:]]</FileVersion>
-        VERSION_FOUND: false
-        VERSION: '0.0.0'
-        VERSION_MAJOR: 0
-        VERSION_MINOR: 0
-        VERSION_BUILD: 0
-        VERSION_REVISION: 0
       run: |
         TARGET=${TARGET^^}
         if [[ $TARGET != 'MAJOR' ]] && [[ $TARGET != 'MINOR' ]] && [[ $TARGET != 'BUILD' ]] && [[ $TARGET != 'NONE' ]]; then
-          echo 'INVALID INPUT (TARGET)'
+          echo 'INVALID INPUT'
           exit 1
         fi
         FILES=()
@@ -53,6 +46,10 @@ jobs:
             VERSION_FOUND=true
           fi
         done
+        if [[ ${#FILES[@]} -eq 0 ]]; then
+          echo 'NO FILES FOUND'
+          exit 1
+        fi
         if [[ $VERSION_FOUND = false ]]; then
           echo 'VERSION NOT FOUND'
           exit 1
