@@ -110,7 +110,7 @@ namespace FastHashes
             hash *= P3;
             hash ^= hash >> 16;
 
-            Byte[] result = ToByte64(hash);
+            Byte[] result = ToByteArray64(hash);
 
             return result;
         }
@@ -257,7 +257,7 @@ namespace FastHashes
             hash *= P3;
             hash ^= hash >> 32;
 
-            Byte[] result = ToByte64(hash);
+            Byte[] result = ToByteArray64(hash);
 
             return result;
         }

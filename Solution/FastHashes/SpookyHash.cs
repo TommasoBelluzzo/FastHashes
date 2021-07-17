@@ -285,7 +285,7 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] hashData)
         {
-            Byte[] result = ToByte32(hashData[0]);
+            Byte[] result = ToByteArray32(hashData[0]);
 
             return result;
         }
@@ -322,7 +322,7 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] hashData)
         {
-            Byte[] result = ToByte64(hashData[0]);
+            Byte[] result = ToByteArray64(hashData[0]);
 
             return result;
         }

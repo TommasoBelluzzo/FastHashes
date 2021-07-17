@@ -1,7 +1,6 @@
 ﻿#region Using Directives
 using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
@@ -97,9 +96,8 @@ namespace FastHashes
         /// <summary>Converts a 4-bytes unsigned integer to a byte array.</summary>
         /// <param name="value">The <see cref="T:System.UInt32"/> to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
-        [ExcludeFromCodeCoverage]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static unsafe Byte[] ToByte32(UInt32 value)
+        protected static unsafe Byte[] ToByteArray32(UInt32 value)
         {
             Byte[] array = new Byte[4];
 
@@ -112,9 +110,8 @@ namespace FastHashes
         /// <summary>Converts a 8-bytes unsigned integer to a 4-bytes array.</summary>
         /// <param name="value">The <see cref="T:System.UInt64"/> to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
-        [ExcludeFromCodeCoverage]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static unsafe Byte[] ToByte32(UInt64 value)
+        protected static unsafe Byte[] ToByteArray32(UInt64 value)
         {
             Byte[] array = new Byte[4];
 
@@ -127,9 +124,8 @@ namespace FastHashes
         /// <summary>Converts a 4-bytes unsigned integer to a 8-bytes array.</summary>
         /// <param name="value">The <see cref="T:System.UInt64"/> to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
-        [ExcludeFromCodeCoverage]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static unsafe Byte[] ToByte64(UInt32 value)
+        protected static unsafe Byte[] ToByteArray64(UInt32 value)
         {
             Byte[] array = new Byte[8];
 
@@ -142,9 +138,8 @@ namespace FastHashes
         /// <summary>Converts a 8-bytes unsigned integer to a byte array.</summary>
         /// <param name="value">The <see cref="T:System.UInt64"/> to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
-        [ExcludeFromCodeCoverage]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static unsafe Byte[] ToByte64(UInt64 value)
+        protected static unsafe Byte[] ToByteArray64(UInt64 value)
         {
             Byte[] array = new Byte[8];
 
