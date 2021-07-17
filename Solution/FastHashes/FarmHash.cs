@@ -1,6 +1,7 @@
 ﻿#region Using Directives
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
 
@@ -28,6 +29,7 @@ namespace FastHashes
         #region Properties
         /// <summary>Gets the seeds used by the hashing algorithm.</summary>
         /// <value>A <see cref="System.Collections.ObjectModel.ReadOnlyCollection{T}"/> containing <c>0</c> or <c>2</c> <see cref="T:System.UInt64"/> values.</value>
+        [ExcludeFromCodeCoverage]
         public ReadOnlyCollection<UInt64> Seeds => m_Seeds;
         #endregion
 
@@ -115,10 +117,12 @@ namespace FastHashes
 
         #region Properties
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override Int32 Length => 32;
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt32"/>? value.</value>
+        [ExcludeFromCodeCoverage]
         public UInt32? Seed => m_Seed;
         #endregion
 
@@ -349,20 +353,24 @@ namespace FastHashes
     {
         #region Properties
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override Int32 Length => 64;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance without seeds.</summary>
+        [ExcludeFromCodeCoverage]
         public FarmHash64() { }
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.FarmHashG32.K2"/> as first seed and the specified value as second seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public FarmHash64(UInt64 seed) : base(K2, seed) { }
 
         /// <summary>Initializes a new instance using the specified seeds.</summary>
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public FarmHash64(UInt64 seed1, UInt64 seed2) : base(seed1, seed2) { }
         #endregion
 
@@ -530,20 +538,24 @@ namespace FastHashes
     {
         #region Properties
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override Int32 Length => 128;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance without seeds.</summary>
+        [ExcludeFromCodeCoverage]
         public FarmHash128() { }
 
         /// <summary>Initializes a new instance using the specified <see cref="T:System.UInt64"/> value for both seeds.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public FarmHash128(UInt64 seed) : base(seed, seed) { }
 
         /// <summary>Initializes a new instance using the specified <see cref="T:System.UInt64"/> seeds.</summary>
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public FarmHash128(UInt64 seed1, UInt64 seed2) : base(seed1, seed2) { }
         #endregion
 

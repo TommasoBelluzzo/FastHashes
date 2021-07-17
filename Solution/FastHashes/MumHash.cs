@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
 
@@ -29,10 +30,12 @@ namespace FastHashes
 
         #region Properties
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override Int32 Length => 64;
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
+        [ExcludeFromCodeCoverage]
         public UInt64 Seed => m_Seed;
         #endregion
 
@@ -45,6 +48,7 @@ namespace FastHashes
         }
 
         /// <summary>Initializes a new instance using a seed value of <c>0</c>.</summary>
+        [ExcludeFromCodeCoverage]
         public MumHash() : this(0u) { }
         #endregion
 

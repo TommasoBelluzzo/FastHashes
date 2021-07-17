@@ -74,6 +74,7 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override String ToString()
         {
             return $"{GetType().Name}-{m_Engine.Name}";

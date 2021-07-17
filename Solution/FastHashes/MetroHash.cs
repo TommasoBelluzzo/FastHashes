@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
 
@@ -15,13 +16,16 @@ namespace FastHashes
         #region Properties
         /// <summary>Gets the variant of the hashing algorithm.</summary>
         /// <value>An enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/>.</value>
+        [ExcludeFromCodeCoverage]
         public MetroHashVariant Variant => m_Engine.Variant;
 
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override Int32 Length => 64;
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt32"/> value.</value>
+        [ExcludeFromCodeCoverage]
         public UInt32 Seed => m_Engine.Seed;
         #endregion
 
@@ -42,15 +46,18 @@ namespace FastHashes
         }
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.MetroHashVariant.V1"/> and a seed value of <c>0</c>.</summary>
+        [ExcludeFromCodeCoverage]
         public MetroHash64() : this(MetroHashVariant.V1, 0u) { }
 
         /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        [ExcludeFromCodeCoverage]
         public MetroHash64(MetroHashVariant variant) : this(variant, 0u) { }
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.MetroHashVariant.V1"/> and the specified <see cref="T:System.UInt32"/> seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public MetroHash64(UInt32 seed) : this(MetroHashVariant.V1, seed) { }
         #endregion
 
@@ -62,6 +69,7 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override String ToString()
         {
             return $"{GetType().Name}-{m_Engine.Name}";
@@ -76,6 +84,7 @@ namespace FastHashes
             #endregion
 
             #region Properties
+            [ExcludeFromCodeCoverage]
             public UInt32 Seed => m_Seed;
             #endregion
 
@@ -163,12 +172,15 @@ namespace FastHashes
             #endregion
 
             #region Properties
+            [ExcludeFromCodeCoverage]
             public override MetroHashVariant Variant => MetroHashVariant.V1;
 
+            [ExcludeFromCodeCoverage]
             public override String Name => "V1";
             #endregion
 
             #region Constructors
+            [ExcludeFromCodeCoverage]
             public Engine1(UInt32 seed) : base(seed) { }
             #endregion
 
@@ -264,12 +276,15 @@ Finalize:
             #endregion
 
             #region Properties
+            [ExcludeFromCodeCoverage]
             public override MetroHashVariant Variant => MetroHashVariant.V2;
 
+            [ExcludeFromCodeCoverage]
             public override String Name => "V2";
             #endregion
 
             #region Constructors
+            [ExcludeFromCodeCoverage]
             public Engine2(UInt32 seed) : base(seed) { }
             #endregion
 
@@ -367,13 +382,16 @@ Finalize:
         #region Properties
         /// <summary>Gets the variant of the hashing algorithm.</summary>
         /// <value>An enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/>.</value>
+        [ExcludeFromCodeCoverage]
         public MetroHashVariant Variant => m_Engine.Variant;
 
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override Int32 Length => 128;
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt32"/> value.</value>
+        [ExcludeFromCodeCoverage]
         public UInt32 Seed => m_Engine.Seed;
         #endregion
 
@@ -394,15 +412,18 @@ Finalize:
         }
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.MetroHashVariant.V1"/> and a seed value of <c>0</c>.</summary>
+        [ExcludeFromCodeCoverage]
         public MetroHash128() : this(MetroHashVariant.V1, 0u) { }
 
         /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        [ExcludeFromCodeCoverage]
         public MetroHash128(MetroHashVariant variant) : this(variant, 0u) { }
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.MetroHashVariant.V1"/> and the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public MetroHash128(UInt32 seed) : this(MetroHashVariant.V1, seed) { }
         #endregion
 
@@ -414,6 +435,7 @@ Finalize:
         }
 
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override String ToString()
         {
             return $"{GetType().Name}-{m_Engine.Name}";
@@ -428,6 +450,7 @@ Finalize:
             #endregion
 
             #region Properties
+            [ExcludeFromCodeCoverage]
             public UInt32 Seed => m_Seed;
             #endregion
 
@@ -507,12 +530,15 @@ Finalize:
             #endregion
 
             #region Properties
+            [ExcludeFromCodeCoverage]
             public override MetroHashVariant Variant => MetroHashVariant.V1;
 
+            [ExcludeFromCodeCoverage]
             public override String Name => "V1";
             #endregion
 
             #region Constructors
+            [ExcludeFromCodeCoverage]
             public Engine1(UInt32 seed) : base(seed) { }
             #endregion
 

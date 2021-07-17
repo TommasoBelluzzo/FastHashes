@@ -1,6 +1,7 @@
 ﻿#region Using Directives
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
@@ -451,6 +452,7 @@ namespace FastHashes
 
         /// <summary>Returns the text representation of the current instance.</summary>
         /// <returns>A <see cref="T:System.String"/> representing the current instance.</returns>
+        [ExcludeFromCodeCoverage]
         public override String ToString()
         {
             return GetType().Name;

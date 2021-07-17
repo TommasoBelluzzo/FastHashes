@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
 
@@ -20,14 +21,17 @@ namespace FastHashes
 
         #region Properties
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override Int32 Length => 32;
 
         /// <summary>Gets the first seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
+        [ExcludeFromCodeCoverage]
         public UInt64 Seed1 => m_Seed1;
 
         /// <summary>Gets the second seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
+        [ExcludeFromCodeCoverage]
         public UInt64 Seed2 => m_Seed2;
         #endregion
 
@@ -42,10 +46,12 @@ namespace FastHashes
         }
 
         /// <summary>Initializes a new instance using a value of <c>0</c> for both seeds.</summary>
+        [ExcludeFromCodeCoverage]
         public HalfSipHash() : this(0ul, 0ul) { }
 
         /// <summary>Initializes a new instance using the specified value for both seeds.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public HalfSipHash(UInt64 seed) : this(seed, seed) { }
         #endregion
 
@@ -157,18 +163,22 @@ Finalize:
 
         #region Properties
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override Int32 Length => 64;
 
         /// <summary>Gets the variant of the hashing algorithm.</summary>
         /// <value>An enumerator value of type <see cref="T:FastHashes.SipHashVariant"/>.</value>
+        [ExcludeFromCodeCoverage]
         public SipHashVariant Variant => m_Variant;
 
         /// <summary>Gets the first seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
+        [ExcludeFromCodeCoverage]
         public UInt64 Seed1 => m_Seed1;
 
         /// <summary>Gets the second seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
+        [ExcludeFromCodeCoverage]
         public UInt64 Seed2 => m_Seed2;
         #endregion
 
@@ -200,26 +210,31 @@ Finalize:
         }
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.SipHashVariant.V24"/> and a value of <c>0</c> for both seeds.</summary>
+        [ExcludeFromCodeCoverage]
         public SipHash() : this(SipHashVariant.V24, 0ul, 0ul) { }
 
         /// <summary>Initializes a new instance using the specified variant and a value of <c>0</c> for both seeds.</summary>
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.SipHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        [ExcludeFromCodeCoverage]
         public SipHash(SipHashVariant variant) : this(variant, 0ul, 0ul) { }
 
         /// <summary>Initializes a new instance using the specified variant and the specified value for both seeds.</summary>
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.SipHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        [ExcludeFromCodeCoverage]
         public SipHash(SipHashVariant variant, UInt64 seed) : this(variant, seed, seed) { }
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.SipHashVariant.V24"/> and the specified value for both seeds.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public SipHash(UInt64 seed) : this(SipHashVariant.V24, seed, seed) { }
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.SipHashVariant.V24"/> and the specified seeds.</summary>
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public SipHash(UInt64 seed1, UInt64 seed2) : this(SipHashVariant.V24, seed1, seed2) { }
         #endregion
 
@@ -293,6 +308,7 @@ Finalize:
         }
 
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override String ToString()
         {
             return $"{GetType().Name}-{((m_Variant == SipHashVariant.V13) ? "-13" : "-24")}";

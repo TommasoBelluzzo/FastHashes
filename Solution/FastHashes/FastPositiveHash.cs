@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
 
@@ -15,13 +16,16 @@ namespace FastHashes
         #region Properties
         /// <summary>Gets the variant of the hashing algorithm.</summary>
         /// <value>An enumerator value of type <see cref="T:FastHashes.FastPositiveHashVariant"/>.</value>
+        [ExcludeFromCodeCoverage]
         public FastPositiveHashVariant Variant => m_Engine.Variant;
 
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override Int32 Length => 64;
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
+        [ExcludeFromCodeCoverage]
         public UInt64 Seed => m_Engine.Seed;
         #endregion
 
@@ -52,15 +56,18 @@ namespace FastHashes
         }
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.FastPositiveHashVariant.V2"/> and a seed value of <c>0</c>.</summary>
+        [ExcludeFromCodeCoverage]
         public FastPositiveHash() : this(FastPositiveHashVariant.V2, 0ul) { }
 
         /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.FastPositiveHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException ">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        [ExcludeFromCodeCoverage]
         public FastPositiveHash(FastPositiveHashVariant variant) : this(variant, 0ul) { }
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.FastPositiveHashVariant.V2"/> and the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public FastPositiveHash(UInt64 seed) : this(FastPositiveHashVariant.V2, seed) { }
         #endregion  
 
@@ -72,6 +79,7 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override String ToString()
         {
             return $"{GetType().Name}-{m_Engine.Name}";
@@ -96,6 +104,7 @@ namespace FastHashes
             #endregion
 
             #region Properties
+            [ExcludeFromCodeCoverage]
             public UInt64 Seed => m_Seed;
             #endregion
 
@@ -148,14 +157,17 @@ namespace FastHashes
             private const UInt32 P326 = 0xC4BB3575;
             #endregion
 
-            #region Constructors
-            public EngineV0(UInt64 seed) : base(seed) { }
-            #endregion
-
             #region Properties
+            [ExcludeFromCodeCoverage]
             public override FastPositiveHashVariant Variant => FastPositiveHashVariant.V0;
 
+            [ExcludeFromCodeCoverage]
             public override String Name => "V0";
+            #endregion
+
+            #region Constructors
+            [ExcludeFromCodeCoverage]
+            public EngineV0(UInt64 seed) : base(seed) { }
             #endregion
 
             #region Methods
@@ -287,12 +299,15 @@ Finalize:
         private sealed class EngineV1 : Engine
         {
             #region Properties
+            [ExcludeFromCodeCoverage]
             public override FastPositiveHashVariant Variant => FastPositiveHashVariant.V1;
 
+            [ExcludeFromCodeCoverage]
             public override String Name => "V1";
             #endregion
 
             #region Constructors
+            [ExcludeFromCodeCoverage]
             public EngineV1(UInt64 seed) : base(seed) { }
             #endregion
 
@@ -433,12 +448,15 @@ Finalize:
         private sealed class EngineV2 : Engine
         {
             #region Properties
+            [ExcludeFromCodeCoverage]
             public override FastPositiveHashVariant Variant => FastPositiveHashVariant.V2;
 
+            [ExcludeFromCodeCoverage]
             public override String Name => "V2";
             #endregion
 
             #region Constructors
+            [ExcludeFromCodeCoverage]
             public EngineV2(UInt64 seed) : base(seed) { }
             #endregion
 
