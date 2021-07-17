@@ -25,7 +25,7 @@ namespace FastHashes
         #region Methods
         private static Boolean AllowsUnalignedRead()
         {
-            Regex regex = new Regex(@"amd64|i\d86|x64|x86_64", RegexOptions.IgnoreCase);
+            Regex regex = new Regex(@"amd64|i\d86|x64|x86_64", (RegexOptions.Compiled | RegexOptions.IgnoreCase));
 
             String architecture = Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
 
