@@ -79,9 +79,16 @@ The library includes the following non-cryptographic hashes:
 
 ## Requirements
  
-The library targets `.NET Standard 2.0`.
+The following `Target Frameworks` are defined:
 
-The auxiliary projects target `.NET Core 2.1`.
+ * Library: `.NET Standard 2.0`
+ * Auxiliary Projects: `.NET Core 2.1`
+ 
+The following `Nuget` packages are required for performing unit tests:
+
+* [Microsoft.NET.Test.Sdk](https://www.nuget.org/packages/Microsoft.NET.Test.Sdk/)
+* [xunit](https://www.nuget.org/packages/xunit/)
+* [coverlet.msbuild](https://www.nuget.org/packages/coverlet.msbuild/) *(Optional)*
 
 ## Performance Benchmarks
 
