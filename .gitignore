@@ -18,6 +18,7 @@
 [Rr]elease/
 [Rr]eleases/
 [Oo]utput/
+[Pp]ackage/
 [Cc]overage/
 x64/
 x86/
@@ -181,6 +182,7 @@ PublishScripts/
 
 # NuGet Packages
 *.nupkg
+*.snupkg
 # The packages folder can be ignored because of Package Restore
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
