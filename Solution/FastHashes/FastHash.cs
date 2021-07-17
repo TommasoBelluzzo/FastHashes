@@ -76,7 +76,7 @@ namespace FastHashes
                 }
             }
 
-            Finalize:
+Finalize:
 
             hash ^= hash >> 23;
             hash *= N;

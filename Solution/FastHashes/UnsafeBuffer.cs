@@ -51,7 +51,7 @@ namespace FastHashes
                 Byte* pointerSource = pinSource;
                 Byte* pointerDestination = pinDestination;
                 
-                LengthSwitch:
+LengthSwitch:
 
                 switch (count)
                 {

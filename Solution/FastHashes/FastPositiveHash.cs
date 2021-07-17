@@ -245,7 +245,7 @@ namespace FastHashes
                     }
                 }
 
-                Finalize:
+Finalize:
 
                 UInt64 hash = (b ^ RotateRight(a, 13)) | ((UInt64)a << 32);
                 hash *= P640;
@@ -254,13 +254,7 @@ namespace FastHashes
                 hash ^= hash >> 47;
                 hash *= P646;
 
-                Byte[] result = new Byte[8];
-
-                unsafe
-                {
-                    fixed (Byte* pointer = result)
-                        *((UInt64*)pointer) = hash;
-                }
+                Byte[] result = ToByteArray64(hash);
 
                 return result;
             }
@@ -403,18 +397,12 @@ namespace FastHashes
                     }
                 }
 
-                Finalize:
+Finalize:
 
                 UInt64 h0 = (a ^ b) * P640;
                 UInt64 h1 = MixT(RotateRight(a + b, 17), P644) + (h0 ^ RotateRight(h0, 41));
 
-                Byte[] result = new Byte[8];
-
-                unsafe
-                {
-                    fixed (Byte* pointer = result)
-                        *((UInt64*)pointer) = h1;
-                }
+                Byte[] result = ToByteArray64(h1);
 
                 return result;
             }
@@ -555,7 +543,7 @@ namespace FastHashes
                     }
                 }
 
-                Finalize:
+Finalize:
 
                 UInt64 h0 = (a + RotateRight(b, 41)) * P640;
                 UInt64 h1 = (RotateRight(a, 23) + b) * P646;
@@ -563,13 +551,7 @@ namespace FastHashes
 
                 UInt64 h2 = l ^ h;
 
-                Byte[] result = new Byte[8];
-
-                unsafe
-                {
-                    fixed (Byte* pointer = result)
-                        *((UInt64*)pointer) = h2;
-                }
+                Byte[] result = ToByteArray64(h2);
 
                 return result;
             }

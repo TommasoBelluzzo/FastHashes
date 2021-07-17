@@ -177,7 +177,7 @@ namespace FastHashes
                 }
             }
 
-            Finalize:
+Finalize:
 
             for (UInt32 i = 0; i < P; ++i)
             {

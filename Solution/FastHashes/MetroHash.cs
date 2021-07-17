@@ -241,19 +241,13 @@ namespace FastHashes
                     }
                 }
 
-                Finalize:
+Finalize:
 
                 hash ^= RotateRight(hash, 33);
                 hash *= K0;
                 hash ^= RotateRight(hash, 33);
 
-                Byte[] result = new Byte[8];
-
-                unsafe
-                {
-                    fixed (Byte* buffer = result)
-                        *((UInt64*)buffer) = hash;
-                }
+                Byte[] result = ToByteArray64(hash);
 
                 return result;
             }
@@ -348,19 +342,13 @@ namespace FastHashes
                     }
                 }
 
-                Finalize:
+Finalize:
 
                 hash ^= RotateRight(hash, 28);
                 hash *= K0;
                 hash ^= RotateRight(hash, 29);
 
-                Byte[] result = new Byte[8];
-
-                unsafe
-                {
-                    fixed (Byte* buffer = result)
-                        *((UInt64*)buffer) = hash;
-                }
+                Byte[] result = ToByteArray64(hash);
 
                 return result;
             }
@@ -590,24 +578,14 @@ namespace FastHashes
                     }
                 }
 
-                Finalize:
+Finalize:
 
                 hash1 = Fin(hash1, hash2, 13, K0);
                 hash2 = Fin(hash2, hash1, 37, K1);
                 hash1 = Fin(hash1, hash2, 13, K2);
                 hash2 = Fin(hash2, hash1, 37, K3);
 
-                Byte[] result = new Byte[16];
-
-                unsafe
-                {
-                    fixed (Byte* buffer = result)
-                    {
-                        UInt64* pointer = (UInt64*)buffer;
-                        pointer[0] = hash1;
-                        pointer[1] = hash2;
-                    }
-                }
+                Byte[] result = ToByteArray64(hash1, hash2);
 
                 return result;
             }
@@ -695,24 +673,14 @@ namespace FastHashes
                     }
                 }
 
-                Finalize:
+Finalize:
 
                 hash1 = Fin(hash1, hash2, 33, K0);
                 hash2 = Fin(hash2, hash1, 33, K1);
                 hash1 = Fin(hash1, hash2, 33, K2);
                 hash2 = Fin(hash2, hash1, 33, K3);
 
-                Byte[] result = new Byte[16];
-
-                unsafe
-                {
-                    fixed (Byte* buffer = result)
-                    {
-                        UInt64* pointer = (UInt64*)buffer;
-                        pointer[0] = hash1;
-                        pointer[1] = hash2;
-                    }
-                }
+                Byte[] result = ToByteArray64(hash1, hash2);
 
                 return result;
             }

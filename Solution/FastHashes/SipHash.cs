@@ -96,7 +96,7 @@ namespace FastHashes
                 }
             }
 
-            Finalize:
+Finalize:
 
             v[3] ^= b;
 
@@ -109,13 +109,7 @@ namespace FastHashes
             for (Int32 i = 0; i < 4; ++i)
                 Mix(ref v);
 
-            Byte[] result = new Byte[4];
-
-            unsafe
-            {
-                fixed (Byte* pointer = result)
-                    *((UInt32*)pointer) = v[1] ^ v[3];
-            }
+            Byte[] result = ToByteArray32(v[1] ^ v[3]);
 
             return result;
         }
@@ -280,7 +274,7 @@ namespace FastHashes
                 }
             }
 
-            Finalize:
+Finalize:
 
             v[3] ^= b;
 
@@ -293,13 +287,7 @@ namespace FastHashes
             for (Int32 i = 0; i < m_R2; ++i)
                 Mix(ref v);
 
-            Byte[] result = new Byte[8];
-
-            unsafe
-            {
-                fixed (Byte* pointer = result)
-                    *((UInt64*)pointer) = v[0] ^ v[1] ^ v[2] ^ v[3];
-            }
+            Byte[] result = ToByteArray64(v[0] ^ v[1] ^ v[2] ^ v[3]);
 
             return result;
         }

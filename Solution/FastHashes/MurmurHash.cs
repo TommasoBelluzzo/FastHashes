@@ -206,7 +206,7 @@ namespace FastHashes
                     }
                 }
 
-                Finalize:
+Finalize:
 
                 UInt64 lengthUnsigned = (UInt64)length;
                 hash1 ^= lengthUnsigned;
@@ -221,17 +221,7 @@ namespace FastHashes
                 hash1 += hash2;
                 hash2 += hash1;
 
-                Byte[] result = new Byte[16];
-
-                unsafe
-                {
-                    fixed (Byte* pin = result)
-                    {
-                        UInt64* pointer = (UInt64*)pin;
-                        pointer[0] = hash1;
-                        pointer[1] = hash2;
-                    }
-                }
+                Byte[] result = ToByteArray64(hash1, hash2);
 
                 return result;
             }
@@ -386,7 +376,7 @@ namespace FastHashes
                     }
                 }
 
-                Finalize:
+Finalize:
 
                 UInt32 lengthUnsigned = (UInt32)length;
                 hash1 ^= lengthUnsigned;
@@ -409,19 +399,7 @@ namespace FastHashes
                 hash3 += hash1;
                 hash4 += hash1;
 
-                Byte[] result = new Byte[16];
-
-                unsafe
-                {
-                    fixed (Byte* pin = result)
-                    {
-                        UInt32* pointer = (UInt32*)pin;
-                        pointer[0] = hash1;
-                        pointer[1] = hash2;
-                        pointer[2] = hash3;
-                        pointer[3] = hash4;
-                    }
-                }
+                Byte[] result = ToByteArray32(hash1, hash2, hash3, hash4);
 
                 return result;
             }
@@ -539,7 +517,7 @@ namespace FastHashes
                 }
             }
 
-            Finalize:
+Finalize:
 
             hash ^= (UInt32)count;
             hash ^= hash >> 16;
@@ -548,13 +526,7 @@ namespace FastHashes
             hash *= F2;
             hash ^= hash >> 16;
 
-            Byte[] result = new Byte[4];
-
-            unsafe
-            {
-                fixed (Byte* pointer = result)
-                    *((UInt32*)pointer) = hash;
-            }
+            Byte[] result = ToByteArray32(hash);
 
             return result;
         }

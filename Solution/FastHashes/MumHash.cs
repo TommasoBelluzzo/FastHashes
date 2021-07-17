@@ -125,18 +125,12 @@ namespace FastHashes
                 }
             }
 
-            Finalize:
+Finalize:
 
             hash ^= Mum(hash, FP1);
             hash ^= Mum(hash, FP2);
 
-            Byte[] result = new Byte[8];
-
-            unsafe
-            {
-                fixed (Byte* pointer = result)
-                    *((UInt64*)pointer) = hash;
-            }
+            Byte[] result = ToByteArray64(hash);
 
             return result;
         }

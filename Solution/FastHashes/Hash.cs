@@ -121,6 +121,26 @@ namespace FastHashes
             return array;
         }
 
+        /// <summary>Converts an array of a 4-bytes unsigned integers to a byte array.</summary>
+        /// <param name="values">The <see cref="T:System.UInt32"/>[] value to convert.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected static unsafe Byte[] ToByteArray32(params UInt32[] values)
+        {
+            Int32 length = values.Length;
+            Byte[] array = new Byte[4 * length];
+
+            fixed (Byte* pin = array)
+            {
+                UInt32* pointer = (UInt32*)pin;
+
+                for (Int32 i = 0; i < length; ++i)
+                    pointer[i] = values[i];
+            }
+
+            return array;
+        }
+
         /// <summary>Converts a 4-bytes unsigned integer to a 8-bytes array.</summary>
         /// <param name="value">The <see cref="T:System.UInt64"/> to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
@@ -145,6 +165,26 @@ namespace FastHashes
 
             fixed (Byte* pointer = array)
                 *((UInt64*)pointer) = value;
+
+            return array;
+        }
+
+        /// <summary>Converts an array of a 8-bytes unsigned integers to a byte array.</summary>
+        /// <param name="values">The <see cref="T:System.UInt64"/>[] value to convert.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected static unsafe Byte[] ToByteArray64(params UInt64[] values)
+        {
+            Int32 length = values.Length;
+            Byte[] array = new Byte[8 * length];
+
+            fixed (Byte* pin = array)
+            {
+                UInt64* pointer = (UInt64*)pin;
+
+                for (Int32 i = 0; i < length; ++i)
+                    pointer[i] = values[i];
+            }
 
             return array;
         }

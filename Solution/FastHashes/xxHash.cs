@@ -102,7 +102,7 @@ namespace FastHashes
                 }
             }
 
-            Finalize:
+Finalize:
 
             hash ^= hash >> 15;
             hash *= P2;
@@ -249,7 +249,7 @@ namespace FastHashes
                 }
             }
 
-            Finalize:
+Finalize:
 
             hash ^= hash >> 33;
             hash *= P2;

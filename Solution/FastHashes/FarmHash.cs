@@ -156,13 +156,7 @@ namespace FastHashes
                 }
             }
 
-            Byte[] result = new Byte[4];
-
-            unsafe
-            {
-                fixed (Byte* pointer = result)
-                    *((UInt32*)pointer) = hash;
-            }
+            Byte[] result = ToByteArray64(hash);
 
             return result;
         }
@@ -404,13 +398,7 @@ namespace FastHashes
                 }
             }
 
-            Byte[] result = new Byte[8];
-
-            unsafe
-            {
-                fixed (Byte* pointer = result)
-                    *((UInt64*)pointer) = hash;
-            }
+            Byte[] result = ToByteArray64(hash);
 
             return result;
         }
@@ -625,19 +613,9 @@ namespace FastHashes
                 }
             }
 
-            Finalize:
+Finalize:
 
-            Byte[] result = new Byte[16];
-
-            unsafe
-            {
-                fixed (Byte* pin = result)
-                {
-                    UInt64* pointer = (UInt64*)pin;
-                    pointer[0] = hash1;
-                    pointer[1] = hash2;
-                }
-            }
+            Byte[] result = ToByteArray64(hash1, hash2);
 
             return result;
         }
