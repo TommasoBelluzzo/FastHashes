@@ -628,12 +628,15 @@ Finalize:
             #endregion
 
             #region Properties
+            [ExcludeFromCodeCoverage]
             public override MetroHashVariant Variant => MetroHashVariant.V2;
 
+            [ExcludeFromCodeCoverage]
             public override String Name => "V2";
             #endregion
 
             #region Constructors
+            [ExcludeFromCodeCoverage]
             public Engine2(UInt32 seed) : base(seed) { }
             #endregion
 

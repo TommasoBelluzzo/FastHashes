@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
 
@@ -26,21 +27,25 @@ namespace FastHashes
         private readonly UInt64 m_Seed4;
         #endregion
 
-        #region (Properties)
+        #region Properties
         /// <summary>Gets the first seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
+        [ExcludeFromCodeCoverage]
         public UInt64 Seed1 => m_Seed1;
 
         /// <summary>Gets the second seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
+        [ExcludeFromCodeCoverage]
         public UInt64 Seed2 => m_Seed2;
 
         /// <summary>Gets the third seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
+        [ExcludeFromCodeCoverage]
         public UInt64 Seed3 => m_Seed3;
 
         /// <summary>Gets the fourth seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
+        [ExcludeFromCodeCoverage]
         public UInt64 Seed4 => m_Seed4;
         #endregion
 
@@ -266,24 +271,29 @@ Finalize:
     {
         #region Properties
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         protected override UInt32 P => 4;
 
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override Int32 Length => 64;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance using a value of <c>0</c> for all the seeds.</summary>
+        [ExcludeFromCodeCoverage]
         public HighwayHash64() : base(0ul, 0ul, 0ul, 0ul) { }
 
         /// <summary>Initializes a new instance using the specified value for all the seeds.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public HighwayHash64(UInt64 seed) : base(seed, seed, seed, seed) { }
 
         /// <summary>Initializes a new instance using the specified <see cref="T:System.UInt64"/> seeds.</summary>
         /// <param name="seeds">The <see cref="T:System.UInt64"/>[] of seeds used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to 4.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is <c>null</c>.</exception>
+        [ExcludeFromCodeCoverage]
         public HighwayHash64(UInt64[] seeds) : base(seeds) { }
 
         /// <summary>Initializes a new instance using the specified seeds.</summary>
@@ -291,6 +301,7 @@ Finalize:
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed3">The third <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed4">The fourth <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public HighwayHash64(UInt64 seed1, UInt64 seed2, UInt64 seed3, UInt64 seed4) : base(seed1, seed2, seed3, seed4) { }
         #endregion
 
@@ -316,24 +327,29 @@ Finalize:
     {
         #region Properties
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         protected override UInt32 P => 6;
 
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override Int32 Length => 128;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance using a value of <c>0</c> for all the seeds.</summary>
+        [ExcludeFromCodeCoverage]
         public HighwayHash128() : base(0ul, 0ul, 0ul, 0ul) { }
 
         /// <summary>Initializes a new instance using the specified value for all the seeds.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public HighwayHash128(UInt64 seed) : base(seed, seed, seed, seed) { }
 
         /// <summary>Initializes a new instance using the specified seeds.</summary>
         /// <param name="seeds">The <see cref="T:System.UInt64"/>[] of seeds used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to 4.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is <c>null</c>.</exception>
+        [ExcludeFromCodeCoverage]
         public HighwayHash128(UInt64[] seeds) : base(seeds) { }
 
         /// <summary>Initializes a new instance using the specified seeds.</summary>
@@ -341,6 +357,7 @@ Finalize:
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed3">The third <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed4">The fourth <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public HighwayHash128(UInt64 seed1, UInt64 seed2, UInt64 seed3, UInt64 seed4) : base(seed1, seed2, seed3, seed4) { }
         #endregion
 
@@ -370,24 +387,29 @@ Finalize:
     {
         #region Properties
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         protected override UInt32 P => 10;
 
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override Int32 Length => 256;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance using a value of <c>0</c> for all the seeds.</summary>
+        [ExcludeFromCodeCoverage]
         public HighwayHash256() : base(0ul, 0ul, 0ul, 0ul) { }
 
         /// <summary>Initializes a new instance using the specified value for all the four seeds.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public HighwayHash256(UInt64 seed) : base(seed, seed, seed, seed) { }
 
         /// <summary>Initializes a new instance using the specified seeds.</summary>
         /// <param name="seeds">The <see cref="T:System.UInt64"/>[] of seeds used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to 4.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is <c>null</c>.</exception>
+        [ExcludeFromCodeCoverage]
         public HighwayHash256(UInt64[] seeds) : base(seeds) { }
 
         /// <summary>Initializes a new instance using the specified seeds.</summary>
@@ -395,6 +417,7 @@ Finalize:
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed3">The third <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed4">The fourth <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public HighwayHash256(UInt64 seed1, UInt64 seed2, UInt64 seed3, UInt64 seed4) : base(seed1, seed2, seed3, seed4) { }
         #endregion
 
