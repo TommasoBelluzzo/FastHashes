@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
 
@@ -21,6 +22,7 @@ namespace FastHashes
         #region Properties
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
+        [ExcludeFromCodeCoverage]
         protected UInt64 Seed => m_Seed;
         #endregion
 
@@ -112,15 +114,18 @@ namespace FastHashes
     {
         #region Properties
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override Int32 Length => 32;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance using a seed value of <c>0</c>.</summary>
+        [ExcludeFromCodeCoverage]
         public FastHash32() : base(0ul) { }
 
         /// <summary>Initializes a new instance using the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public FastHash32(UInt64 seed) : base(seed) { }
         #endregion
 
@@ -146,15 +151,18 @@ namespace FastHashes
     {
         #region Properties
         /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
         public override Int32 Length => 64;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance using a seed value of <c>0</c>.</summary>
+        [ExcludeFromCodeCoverage]
         public FastHash64() : base(0ul) { }
 
         /// <summary>Initializes a new instance using the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public FastHash64(UInt64 seed) : base(seed) { }
         #endregion
 
