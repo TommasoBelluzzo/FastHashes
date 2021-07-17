@@ -25,6 +25,12 @@ FashHashes is a pure C# porting of several non-cryptographic hashes.
       <a href="https://www.nuget.org/packages/FastHashes/"><img alt="Downloads" src="https://img.shields.io/nuget/dt/FastHashes?style=flat&label=Downloads&color=1081C2"/></a>
     </td>
   </tr>
+  <tr>
+    <td align="right">Donation:</td>
+    <td align="left">
+      <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T8X35C2FED9SU"><img alt="PayPal" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif"/></a>
+    </td>
+  </tr>
 </table>
 
 ## Main Features
