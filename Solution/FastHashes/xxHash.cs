@@ -110,13 +110,7 @@ namespace FastHashes
             hash *= P3;
             hash ^= hash >> 16;
 
-            Byte[] result = new Byte[4];
-
-            unsafe
-            {
-                fixed (Byte* pointer = result)
-                    *((UInt32*)pointer) = hash;
-            }
+            Byte[] result = ToByte64(hash);
 
             return result;
         }
@@ -263,13 +257,7 @@ namespace FastHashes
             hash *= P3;
             hash ^= hash >> 32;
 
-            Byte[] result = new Byte[8];
-
-            unsafe
-            {
-                fixed (Byte* pointer = result)
-                    *((UInt64*)pointer) = hash;
-            }
+            Byte[] result = ToByte64(hash);
 
             return result;
         }

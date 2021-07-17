@@ -285,13 +285,7 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] hashData)
         {
-            Byte[] result = new Byte[4];
-
-            unsafe
-            {
-                fixed (Byte* pointer = result)
-                    *((UInt32*)pointer) = (UInt32)hashData[0];
-            }
+            Byte[] result = ToByte32(hashData[0]);
 
             return result;
         }
@@ -328,13 +322,7 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] hashData)
         {
-            Byte[] result = new Byte[8];
-
-            unsafe
-            {
-                fixed (Byte* pointer = result)
-                    *((UInt64*)pointer) = hashData[0];
-            }
+            Byte[] result = ToByte64(hashData[0]);
 
             return result;
         }

@@ -93,6 +93,58 @@ namespace FastHashes
             return false;
         }
 
+        /// <summary>Converts a 4-bytes unsigned integer to a byte array.</summary>
+        /// <param name="value">The <see cref="T:System.UInt32"/> to convert.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
+        protected static unsafe Byte[] ToByte32(UInt32 value)
+        {
+            Byte[] array = new Byte[4];
+
+            fixed (Byte* pointer = array)
+                *((UInt32*)pointer) = value;
+
+            return array;
+        }
+
+        /// <summary>Converts a 8-bytes unsigned integer to a 4-bytes array.</summary>
+        /// <param name="value">The <see cref="T:System.UInt64"/> to convert.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
+        protected static unsafe Byte[] ToByte32(UInt64 value)
+        {
+            Byte[] array = new Byte[4];
+
+            fixed (Byte* pointer = array)
+                *((UInt32*)pointer) = (UInt32)value;
+
+            return array;
+        }
+
+        /// <summary>Converts a 4-bytes unsigned integer to a 8-bytes array.</summary>
+        /// <param name="value">The <see cref="T:System.UInt64"/> to convert.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
+        protected static unsafe Byte[] ToByte64(UInt32 value)
+        {
+            Byte[] array = new Byte[8];
+
+            fixed (Byte* pointer = array)
+                *((UInt64*)pointer) = value;
+
+            return array;
+        }
+
+        /// <summary>Converts a 8-bytes unsigned integer to a byte array.</summary>
+        /// <param name="value">The <see cref="T:System.UInt64"/> to convert.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
+        protected static unsafe Byte[] ToByte64(UInt64 value)
+        {
+            Byte[] array = new Byte[8];
+
+            fixed (Byte* pointer = array)
+                *((UInt64*)pointer) = value;
+
+            return array;
+        }
+
         /// <summary>Reads a 2-bytes unsigned integer from the specified byte pointer, without increment.</summary>
         /// <param name="pointer">The <see cref="T:System.Byte"/>* to read.</param>
         /// <returns>An <see cref="T:System.UInt16"/> value.</returns>
