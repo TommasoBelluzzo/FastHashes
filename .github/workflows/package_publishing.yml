@@ -88,7 +88,7 @@ jobs:
       env:
         VERSION: ${{ steps.bump.outputs.version }}
       working-directory: Solution/
-      run: dotnet publish "Package/FastHashes.${VERSION}.nupkg" --source https://api.nuget.org/v3/index.json --api-key "${{ secrets.NUGET_TOKEN }}" --skip-duplicate
+      run: dotnet publish "Package/FastHashes.${VERSION}.nupkg" --source https://api.nuget.org/v3/index.json -k "${{ secrets.NUGET_TOKEN }}" --skip-duplicate
     - name: Version Commit
       env:
         VERSION: ${{ steps.bump.outputs.version }}
