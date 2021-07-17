@@ -30,4 +30,4 @@ jobs:
       run: dotnet build FastHashes.sln --configuration Release --no-restore --no-incremental --verbosity normal
     - name: Test
       working-directory: Solution/
-      run: dotnet test FastHashes.sln --configuration Release --no-restore --no-build --verbosity normal
+      run: dotnet test FastHashes.sln --configuration Release --no-restore --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutput=../Coverage/ /p:CoverletOutputFormat=lcov

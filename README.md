@@ -84,11 +84,10 @@ The following `Target Frameworks` are defined:
  * Library: `.NET Standard 2.0`
  * Auxiliary Projects: `.NET Core 2.1`
  
-The following `Nuget` packages are required for performing unit tests:
+The following `NuGet` packages are required for performing unit tests:
 
 * [Microsoft.NET.Test.Sdk](https://www.nuget.org/packages/Microsoft.NET.Test.Sdk/)
 * [xunit](https://www.nuget.org/packages/xunit/)
-* [coverlet.msbuild](https://www.nuget.org/packages/coverlet.msbuild/) *(Optional)*
 
 ## Performance Benchmarks
 

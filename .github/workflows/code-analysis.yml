@@ -19,7 +19,7 @@ jobs:
       uses: github/codeql-action/init@v1
       with:
         languages: csharp
-    - name: Analysis Autobuild
+    - name: Analysis Build
       uses: github/codeql-action/autobuild@v1
     - name: Analysis Execution
       uses: github/codeql-action/analyze@v1
