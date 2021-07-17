@@ -83,12 +83,12 @@ jobs:
       run: dotnet build FastHashes/FastHashes.csproj --configuration Release --no-restore --no-incremental --verbosity normal
     - name: Pack
       working-directory: Solution/
-      run: dotnet pack FastHashes/FastHashes.csproj --output Package/ --configuration Release --no-restore --no-build --include-symbols --verbosity normal
+      run: dotnet pack FastHashes/FastHashes.csproj --output ../Package/ --configuration Release --no-restore --no-build --include-symbols --verbosity normal
     - name: Publish
       env:
         VERSION: ${{ steps.bump.outputs.version }}
       working-directory: Solution/
-      run: dotnet nuget push "Package/FastHashes.${VERSION}.nupkg" --source https://api.nuget.org/v3/index.json --api-key "${{ secrets.NUGET_TOKEN }}"
+      run: dotnet nuget push Package/FastHashes.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_TOKEN }}
     - name: Version Commit
       env:
         VERSION: ${{ steps.bump.outputs.version }}
@@ -97,5 +97,5 @@ jobs:
         git config --local user.email "${{ secrets.BOT_EMAIL }}"
         git add --a
         git commit -m "Package Publishing $VERSION"
-        git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
         git push
