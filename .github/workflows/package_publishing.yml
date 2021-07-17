@@ -88,7 +88,7 @@ jobs:
       env:
         VERSION: ${{ steps.bump.outputs.version }}
       working-directory: Solution/
-      run: dotnet publish Package/FastHashes.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_TOKEN }} --skip-duplicate
+      run: dotnet publish "Package/FastHashes.${VERSION}.nupkg" --source https://api.nuget.org/v3/index.json --api-key "${{ secrets.NUGET_TOKEN }}" --skip-duplicate
     - name: Version Commit
       env:
         VERSION: ${{ steps.bump.outputs.version }}
@@ -97,5 +97,5 @@ jobs:
         git config --local user.email "${{ secrets.BOT_EMAIL }}"
         git add --a
         git commit -m "Package Publishing $VERSION"
-        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+        git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
         git push
