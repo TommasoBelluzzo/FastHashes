@@ -19,8 +19,8 @@ jobs:
           echo "$FILE"
           PATTERN=$(grep -Poh "$LICENSE_REGEX" "$FILE")
           echo "$PATTERN"
-          echo "s/$PATTERN/2019-$CURRENT_YEAR/g"
-          sed -i "s/$PATTERN/2019-$CURRENT_YEAR/g" "$FILE"
+          echo "s/$PATTERN/2017-$CURRENT_YEAR/g"
+          sed -i "s/$PATTERN/2017-$CURRENT_YEAR/g" "$FILE"
           grep -P "$LICENSE_REGEX" "$FILE"
           FILES=$((FILES+1))
         done < <(grep -P "$LICENSE_REGEX" -Rl .)
