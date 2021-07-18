@@ -22,7 +22,7 @@ jobs:
           grep -P "$LICENSE_FILE" "$FILE"
           COUNTER=$((COUNTER+1))
         done < <(grep -P "$LICENSE_REGEX" -Rl .)
-        if [[ "$COUNTER -ne 5 ]]; then
+        if [[ "$COUNTER" -ne 5 ]]; then
           echo "INVALID NUMBER OF FILES"
           exit 1
         fi
