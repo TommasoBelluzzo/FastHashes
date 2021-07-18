@@ -11,11 +11,11 @@ jobs:
       uses: actions/checkout@v2
     - name: Year Replacement
       env:
-        LICENSE_REGEX: 2019-\d{4}
+        LICENSE_REGEX: 2017-\d{4}
         LICENSE_FILE: LICENSE.md
       run: |
         CURRENT_YEAR=$(date +%Y)
-        grep -P "$LICENSE_REGEX" "$LICENSE_FILE"
+        grep -P "$LICENSE_REGEX" -Rl .
         sed -i "s/$LICENSE_REGEX/2019-$CURRENT_YEAR/g" "$LICENSE_FILE"
         grep -P "$LICENSE_REGEX" "$LICENSE_FILE"
         git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
