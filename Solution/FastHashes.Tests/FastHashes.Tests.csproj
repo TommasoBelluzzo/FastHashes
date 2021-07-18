@@ -6,7 +6,7 @@
     <Authors>Tommaso Belluzzo</Authors>
     <Company />
     <Description>Unit tests for the FastHashes library.</Description>
-    <Copyright>Copyright ©2017-2020 Tommaso Belluzzo</Copyright>
+    <Copyright>Copyright ©2017-2021 Tommaso Belluzzo</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
     <Version>2.0.0</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
