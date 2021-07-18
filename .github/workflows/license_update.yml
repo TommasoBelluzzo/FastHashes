@@ -12,14 +12,13 @@ jobs:
     - name: Year Replacement
       env:
         LICENSE_REGEX: 2017-\d{4}
-        LICENSE_FILE: LICENSE.md
       run: |
         CURRENT_YEAR=$(date +%Y)
         FILES=0
         while IFS= read -r FILE; do
-          PATTERN=$(grep -Poh "$LICENSE_FILE" "$FILE")
+          PATTERN=$(grep -Poh "$LICENSE_REGEX" "$FILE")
           sed -i "s/$PATTERN/2019-$CURRENT_YEAR/g" "$FILE"
-          grep -P "$LICENSE_FILE" "$FILE"
+          grep -P "$LICENSE_REGEX" "$FILE"
           COUNTER=$((COUNTER+1))
         done < <(grep -P "$LICENSE_REGEX" -Rl .)
         if [[ "$COUNTER" -ne 5 ]]; then
