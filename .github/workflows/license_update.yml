@@ -24,7 +24,7 @@ jobs:
           grep -P "$LICENSE_REGEX" "$FILE"
           FILES=$((FILES+1))
         done < <(grep -P "$LICENSE_REGEX" -Rl .)
-        if [[ "$FILES" -eq 0 ]]; then
+        if [[ "$FILES" -ne 4 ]]; then
           echo "NO FILES CHANGED"
           exit 1
         fi
