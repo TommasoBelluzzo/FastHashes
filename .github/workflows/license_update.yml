@@ -15,7 +15,11 @@ jobs:
         LICENSE_FILE: LICENSE.md
       run: |
         CURRENT_YEAR=$(date +%Y)
-        grep -P "$LICENSE_REGEX" -Rl .
+        grep -P "$LICENSE_REGEX" -Rl . 
+        while IFS= read -r FILE; do
+          echo "$FILE"
+        done < <(grep -P "$LICENSE_REGEX" -Rl .)
+        exit 1
         sed -i "s/$LICENSE_REGEX/2019-$CURRENT_YEAR/g" "$LICENSE_FILE"
         grep -P "$LICENSE_REGEX" "$LICENSE_FILE"
         git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
