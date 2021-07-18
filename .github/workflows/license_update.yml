@@ -18,10 +18,7 @@ jobs:
         CURRENT_YEAR=$(date +%Y)
         FILES=0
         while IFS= read -r FILE; do
-          echo "$FILE"
           PATTERN=$(grep -Poh "$LICENSE_REGEX" "$FILE")
-          echo "$PATTERN"
-          echo "s/$PATTERN/2017-$CURRENT_YEAR/g"
           sed -i "s/$PATTERN/2017-$CURRENT_YEAR/g" "$FILE"
           grep -P "$LICENSE_REGEX" "$FILE"
           FILES=$((FILES+1))
