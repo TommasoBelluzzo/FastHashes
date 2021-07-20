@@ -30,7 +30,7 @@ namespace FastHashes.Tests
             new TestCase(241u, 10, 0, null, 0, 10, typeof(ArgumentNullException)),
             new TestCase(241u, 10, -1, 10, 0, 10, typeof(ArgumentOutOfRangeException)),
             new TestCase(241u, 10, 0, 10, 15, 10, typeof(ArgumentOutOfRangeException)),
-            new TestCase(241u, 10, 0, 10, 0, 0, typeof(ArgumentOutOfRangeException)),
+            new TestCase(241u, 10, 0, 10, 0, -5, typeof(ArgumentOutOfRangeException)),
             new TestCase(241u, 10, 2, 10, 0, 9, typeof(ArgumentException)),
             new TestCase(241u, 10, 0, 10, 2, 9, typeof(ArgumentException))
         };
