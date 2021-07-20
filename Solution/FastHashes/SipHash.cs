@@ -39,6 +39,7 @@ namespace FastHashes
         /// <summary>Initializes a new instance using the specified seeds.</summary>
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public HalfSipHash(UInt64 seed1, UInt64 seed2)
         {
             m_Seed1 = (UInt32)(seed1 - (seed1 >> 32));
@@ -56,6 +57,25 @@ namespace FastHashes
         #endregion
 
         #region Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void Mix(ref UInt32[] v)
+        {
+            v[0] += v[1];
+            v[1] = RotateLeft(v[1], 5);
+            v[1] ^= v[0];
+            v[0] = RotateLeft(v[0], 16);
+            v[2] += v[3];    
+            v[3] = RotateLeft(v[3], 8);
+            v[3] ^= v[2];
+            v[0] += v[3];
+            v[3] = RotateLeft(v[3], 7);
+            v[3] ^= v[0];
+            v[2] += v[1];
+            v[1] = RotateLeft(v[1], 13);
+            v[1] ^= v[2];
+            v[2] = RotateLeft(v[2], 16);
+        }
+
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
@@ -120,27 +140,6 @@ Finalize:
             return result;
         }
         #endregion
-
-        #region Methods (Static)
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Mix(ref UInt32[] v)
-        {
-            v[0] += v[1];
-            v[1] = RotateLeft(v[1], 5);
-            v[1] ^= v[0];
-            v[0] = RotateLeft(v[0], 16);
-            v[2] += v[3];    
-            v[3] = RotateLeft(v[3], 8);
-            v[3] ^= v[2];
-            v[0] += v[3];
-            v[3] = RotateLeft(v[3], 7);
-            v[3] ^= v[0];
-            v[2] += v[1];
-            v[1] = RotateLeft(v[1], 13);
-            v[1] ^= v[2];
-            v[2] = RotateLeft(v[2], 16);
-        }
-        #endregion
     }
 
     /// <summary>Represents the SipHash implementation. This class cannot be derived.</summary>
@@ -188,6 +187,7 @@ Finalize:
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        [ExcludeFromCodeCoverage]
         public SipHash(SipHashVariant variant, UInt64 seed1, UInt64 seed2)
         {
             if (!Enum.IsDefined(typeof(SipHashVariant), variant))
@@ -239,6 +239,25 @@ Finalize:
         #endregion
 
         #region Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void Mix(ref UInt64[] v)
+        {
+            v[0] += v[1];
+            v[2] += v[3];
+            v[1] = RotateLeft(v[1], 13);
+            v[3] = RotateLeft(v[3], 16);
+            v[1] ^= v[0];
+            v[3] ^= v[2];
+            v[0] = RotateLeft(v[0], 32);
+            v[2] += v[1];
+            v[0] += v[3];
+            v[1] = RotateLeft(v[1], 17);
+            v[3] = RotateLeft(v[3], 21);
+            v[1] ^= v[2];
+            v[3] ^= v[0];
+            v[2] = RotateLeft(v[2], 32);
+        }
+
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
@@ -312,27 +331,6 @@ Finalize:
         public override String ToString()
         {
             return $"{GetType().Name}-{((m_Variant == SipHashVariant.V13) ? "-13" : "-24")}";
-        }
-        #endregion
-
-        #region Methods (Static)
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Mix(ref UInt64[] v)
-        {
-            v[0] += v[1];
-            v[2] += v[3];
-            v[1] = RotateLeft(v[1], 13);
-            v[3] = RotateLeft(v[3], 16);
-            v[1] ^= v[0];
-            v[3] ^= v[2];
-            v[0] = RotateLeft(v[0], 32);
-            v[2] += v[1];
-            v[0] += v[3];
-            v[1] = RotateLeft(v[1], 17);
-            v[3] = RotateLeft(v[3], 21);
-            v[1] ^= v[2];
-            v[3] ^= v[0];
-            v[2] = RotateLeft(v[2], 32);
         }
         #endregion
     }

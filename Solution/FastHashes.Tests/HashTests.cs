@@ -5,11 +5,12 @@ using System.Linq;
 using System.Text;
 using Xunit;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 #endregion
 
 namespace FastHashes.Tests
 {
-    public sealed class Tests : IClassFixture<Fixture>
+    public sealed class HashTests : IClassFixture<Fixture>
     {
         #region Test Cases
         private static readonly List<TestCase> s_TestCases = new List<TestCase>
@@ -54,37 +55,34 @@ namespace FastHashes.Tests
         public static IEnumerable<Object[]> DataValidation()
         {
             foreach (TestCase testCase in s_TestCases)
-                yield return (new Object[] { testCase.HashName, testCase.HashValue });
+                yield return (new Object[] { testCase.HashName, testCase.ExpectedValue });
         }
         #endregion
 
         #region Members
         private readonly Fixture m_Fixture;
         private readonly ITestOutputHelper m_Output;
-        private readonly RandomXorShift m_Random;
         #endregion
 
         #region Constructors
-        public Tests(Fixture fixture, ITestOutputHelper output)
+        public HashTests(Fixture fixture, ITestOutputHelper output)
         {
             m_Fixture = fixture;
             m_Output = output;
-            m_Random = new RandomXorShift();
         }
         #endregion
 
         #region Methods
-        [Theory(DisplayName="Collision Tests")]
+        [Theory]
         [MemberData(nameof(DataCollision))]
-        public void CollisionTests(String hashName)
+        public void CollisionTest(String hashName)
         {
             Int32 wordsCount = m_Fixture.Words.Count();
 
             Assert.False(wordsCount == 0, "Fixture Words Empty");
 
             Func<UInt32,Hash> hashInitializer = s_TestCases.Single(x => x.HashName == hashName).HashInitializer;
-            
-            Hash hash = hashInitializer(m_Random.NextValue());
+            Hash hash = hashInitializer((UInt32)((new Random()).Next()));
             Int32 hashBytes = hash.Length / 8;
 
             Byte filler = Convert.ToByte('!');
@@ -103,12 +101,14 @@ namespace FastHashes.Tests
                     hashes.Add(hash.ComputeHash(buffer, 0, lineBytesLength + j));
             }
 
-            Assert.False(Utilities.CollisionsThresholdExceeded(hashes, hashBytes), "Collisions Threshold Exceeded");
+            Boolean cte = Utilities.CollisionsThresholdExceeded(hashes, hashBytes);
+
+            Assert.False(cte, "Collisions Threshold Exceeded");
         }
 
-        [Theory(DisplayName="Validation Tests")]
+        [Theory]
         [MemberData(nameof(DataValidation))]
-        public void ValidationTests(String hashName, UInt32 hashValue)
+        public void ValidationTest(String hashName, UInt32 expectedValue)
         {
             Func<UInt32,Hash> hashInitializer = s_TestCases.Single(x => x.HashName == hashName).HashInitializer;
 
@@ -130,8 +130,53 @@ namespace FastHashes.Tests
         
             Byte[] h0 = hash0.ComputeHash(bufferFinal);   
             UInt32 actualValue = (UInt32)((h0[0] << 0) | (h0[1] << 8) | (h0[2] << 16) | (h0[3] << 24));
-        
-            Assert.Equal(hashValue, actualValue);
+
+            m_Output.WriteLine($"EXPECTED={expectedValue}");
+            m_Output.WriteLine($"ACTUAL={actualValue}");
+
+            Assert.Equal(expectedValue, actualValue);
+        }
+        #endregion
+
+        #region Nested Classes
+        public sealed class TestCase
+        {
+            #region Members
+            private readonly Func<UInt32,Hash> m_HashInitializer;
+            private readonly String m_HashName;
+            private readonly UInt32 m_ExpectedValue;
+            #endregion
+
+            #region Properties
+            public Func<UInt32,Hash> HashInitializer => m_HashInitializer;
+            public String HashName => m_HashName;
+            public UInt32 ExpectedValue => m_ExpectedValue;
+            #endregion
+
+            #region Constructors
+            public TestCase(String hashName, Func<UInt32,Hash> hashInitializer, UInt32 expectedValue)
+            {
+                if (String.IsNullOrWhiteSpace(hashName))
+                    throw new ArgumentException("Invalid hash name specified.", nameof(hashName));
+
+                if (hashInitializer == null)
+                    throw new ArgumentException("Invalid hash initializer specified.", nameof(hashInitializer));
+
+                if (expectedValue == 0u)
+                    throw new ArgumentException("Invalid expected value specified.", nameof(expectedValue));
+
+                m_HashInitializer = hashInitializer;
+                m_HashName = hashName;
+                m_ExpectedValue = expectedValue;
+            }
+            #endregion
+
+            #region Methods
+            public override String ToString()
+            {
+                return $"{GetType().Name}: {m_HashName}";
+            }
+            #endregion
         }
         #endregion
     }

@@ -42,6 +42,7 @@ namespace FastHashes
         #region Constructors
         /// <summary>Initializes a new instance using the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public MumHash(UInt32 seed)
         {
             m_Seed = seed;
@@ -53,6 +54,27 @@ namespace FastHashes
         #endregion
 
         #region Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static UInt64 Mum(UInt64 v1, UInt64 v2)
+        {
+            UInt64 hv1 = v1 >> 32;
+            UInt64 lv1 = (UInt32) v1;
+
+            UInt64 hv2 = v2 >> 32;
+            UInt64 lv2 = (UInt32)v2;
+
+            UInt64 rh = hv1 * hv2;
+            UInt64 rl = lv1 * lv2;
+
+            UInt64 rm0 = hv1 * lv2;
+            UInt64 rm1 = hv2 * lv1;
+
+            UInt64 lo = rl + (rm0 << 32) + (rm1 << 32);
+            UInt64 hi = rh + (rm0 >> 32) + (rm1 >> 32);
+
+            return hi + lo;
+        }
+
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
@@ -137,29 +159,6 @@ Finalize:
             Byte[] result = ToByteArray64(hash);
 
             return result;
-        }
-        #endregion
-
-        #region Methods (Static)
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt64 Mum(UInt64 v1, UInt64 v2)
-        {
-            UInt64 hv1 = v1 >> 32;
-            UInt64 lv1 = (UInt32) v1;
-
-            UInt64 hv2 = v2 >> 32;
-            UInt64 lv2 = (UInt32)v2;
-
-            UInt64 rh = hv1 * hv2;
-            UInt64 rl = lv1 * lv2;
-
-            UInt64 rm0 = hv1 * lv2;
-            UInt64 rm1 = hv2 * lv1;
-
-            UInt64 lo = rl + (rm0 << 32) + (rm1 << 32);
-            UInt64 hi = rh + (rm0 >> 32) + (rm1 >> 32);
-
-            return hi + lo;
         }
         #endregion
     }

@@ -34,6 +34,7 @@ namespace FastHashes
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.FastPositiveHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException ">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        [ExcludeFromCodeCoverage]
         public FastPositiveHash(FastPositiveHashVariant variant, UInt64 seed)
         {
             if (!Enum.IsDefined(typeof(FastPositiveHashVariant), variant))
@@ -86,7 +87,7 @@ namespace FastHashes
         }
         #endregion
 
-        #region Nesting (Classes)
+        #region Nested Classes
         private abstract class Engine
         {
             #region Constants
@@ -104,28 +105,23 @@ namespace FastHashes
             #endregion
 
             #region Properties
+            public abstract FastPositiveHashVariant Variant { get; }
+
+            public abstract String Name { get; }
+
             [ExcludeFromCodeCoverage]
             public UInt64 Seed => m_Seed;
             #endregion
 
-            #region Properties (Abstract)
-            public abstract FastPositiveHashVariant Variant { get; }
-
-            public abstract String Name { get; }
-            #endregion
-
             #region Constructors
+            [ExcludeFromCodeCoverage]
             protected Engine(UInt64 seed)
             {
                 m_Seed = seed;
             }
             #endregion
 
-            #region Methods (Abstract)
-            public abstract Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length);
-            #endregion
-
-            #region Methods (Static)
+            #region Methods
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static void Mux(out UInt64 l, out UInt64 h, UInt64 v, UInt64 p)
             {
@@ -142,6 +138,8 @@ namespace FastHashes
                 l = bd + (adbc << 32);
                 h = (a * c) + (adbc >> 32) + (carry << 32) + ((l < bd) ? 1ul : 0ul);
             }
+
+            public abstract Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length);
             #endregion
         }
 
@@ -171,6 +169,27 @@ namespace FastHashes
             #endregion
 
             #region Methods
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void MixB(ref UInt32 a, ref UInt32 b, ref UInt32 c, ref UInt32 d, UInt32[] w)
+            {
+                UInt32 d13 = w[1] + RotateRight(w[3] + d, 17);
+                UInt32 c02 = w[0] ^ RotateRight(w[2] + c, 11);
+
+                d ^= RotateRight(a + w[0], 3);
+                c ^= RotateRight(b + w[1], 7);
+                b = P321 * (c02 + w[3]);
+                a = P320 * (d13 ^ w[2]);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void MixT(ref UInt32 v1, ref UInt32 v2, UInt32 v3, UInt32 p)
+            {
+                UInt64 l = (v2 + v3) * (UInt64)p;
+
+                v1 ^= (UInt32)l;
+                v2 += (UInt32)(l >> 32);
+            }
+
             public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
             {
                 UInt32 unsignedLength = (UInt32)length;
@@ -271,29 +290,6 @@ Finalize:
                 return result;
             }
             #endregion
-
-            #region Methods (Static)
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void MixB(ref UInt32 a, ref UInt32 b, ref UInt32 c, ref UInt32 d, UInt32[] w)
-            {
-                UInt32 d13 = w[1] + RotateRight(w[3] + d, 17);
-                UInt32 c02 = w[0] ^ RotateRight(w[2] + c, 11);
-
-                d ^= RotateRight(a + w[0], 3);
-                c ^= RotateRight(b + w[1], 7);
-                b = P321 * (c02 + w[3]);
-                a = P320 * (d13 ^ w[2]);
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void MixT(ref UInt32 v1, ref UInt32 v2, UInt32 v3, UInt32 p)
-            {
-                UInt64 l = (v2 + v3) * (UInt64)p;
-
-                v1 ^= (UInt32)l;
-                v2 += (UInt32)(l >> 32);
-            }
-            #endregion
         }
 
         private sealed class EngineV1 : Engine
@@ -312,6 +308,25 @@ Finalize:
             #endregion
 
             #region Methods
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void MixB(ref UInt64 a, ref UInt64 b, ref UInt64 c, ref UInt64 d, UInt64[] w)
+            {
+                UInt64 d02 = w[0] ^ RotateRight(w[2] + d, 17);
+                UInt64 c13 = w[1] ^ RotateRight(w[3] + c, 17);
+
+                d -= b ^ RotateRight(w[1], 31);
+                c += a ^ RotateRight(w[0], 41);
+                b ^= P640 * (c13 + w[2]);
+                a ^= P641 * (d02 + w[3]);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static UInt64 MixT(UInt64 v, UInt64 p)
+            {
+                Mux(out UInt64 l, out UInt64 h, v, p);
+                return l ^ h;
+            }
+
             public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
             {
                 UInt64 unsignedLength = (UInt64)length;
@@ -422,27 +437,6 @@ Finalize:
                 return result;
             }
             #endregion
-
-            #region Methods (Static)
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void MixB(ref UInt64 a, ref UInt64 b, ref UInt64 c, ref UInt64 d, UInt64[] w)
-            {
-                UInt64 d02 = w[0] ^ RotateRight(w[2] + d, 17);
-                UInt64 c13 = w[1] ^ RotateRight(w[3] + c, 17);
-
-                d -= b ^ RotateRight(w[1], 31);
-                c += a ^ RotateRight(w[0], 41);
-                b ^= P640 * (c13 + w[2]);
-                a ^= P641 * (d02 + w[3]);
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static UInt64 MixT(UInt64 v, UInt64 p)
-            {
-                Mux(out UInt64 l, out UInt64 h, v, p);
-                return l ^ h;
-            }
-            #endregion
         }
 
         private sealed class EngineV2 : Engine
@@ -461,6 +455,26 @@ Finalize:
             #endregion
 
             #region Methods
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void MixB(ref UInt64 a, ref UInt64 b, ref UInt64 c, ref UInt64 d, UInt64[] w)
+            {
+                UInt64 d02 = w[0] + RotateRight(w[2] + d, 56);
+                UInt64 c13 = w[1] + RotateRight(w[3] + c, 19);
+
+                d ^= b + RotateRight(w[1], 38);                
+                c ^= a + RotateRight(w[0], 57);                
+                b ^= P646 * (c13 + w[2]);                  
+                a ^= P645 * (d02 + w[3]);                  
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void MixT(ref UInt64 v1, ref UInt64 v2, UInt64 v3, UInt64 p)
+            {
+                Mux(out UInt64 l, out UInt64 h, v3 + v2, p);
+                v1 ^= l;
+                v2 += h;              
+            }
+
             public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
             {
                 UInt64 unsignedLength = (UInt64)length;
@@ -572,28 +586,6 @@ Finalize:
                 Byte[] result = ToByteArray64(h2);
 
                 return result;
-            }
-            #endregion
-
-            #region Methods (Static)
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void MixB(ref UInt64 a, ref UInt64 b, ref UInt64 c, ref UInt64 d, UInt64[] w)
-            {
-                UInt64 d02 = w[0] + RotateRight(w[2] + d, 56);
-                UInt64 c13 = w[1] + RotateRight(w[3] + c, 19);
-
-                d ^= b + RotateRight(w[1], 38);                
-                c ^= a + RotateRight(w[0], 57);                
-                b ^= P646 * (c13 + w[2]);                  
-                a ^= P645 * (d02 + w[3]);                  
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void MixT(ref UInt64 v1, ref UInt64 v2, UInt64 v3, UInt64 p)
-            {
-                Mux(out UInt64 l, out UInt64 h, v3 + v2, p);
-                v1 ^= l;
-                v2 += h;              
             }
             #endregion
         }

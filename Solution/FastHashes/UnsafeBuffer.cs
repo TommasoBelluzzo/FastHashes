@@ -36,8 +36,8 @@ namespace FastHashes
             if ((destinationOffset < 0) || (destinationOffset >= destinationLength))
                 throw new ArgumentOutOfRangeException(nameof(destinationOffset), "The destination offset parameter must be within the bounds of the destination array.");
 
-            if (count < 0)
-                throw new ArgumentOutOfRangeException(nameof(count), "The count parameter must be greater than or equal to 0.");
+            if (count < 1)
+                throw new ArgumentOutOfRangeException(nameof(count), "The count parameter must be greater than or equal to 1.");
 
             if ((sourceOffset + count) > sourceLength)
                 throw new ArgumentException("The block defined by source offset and count parameters must be within the bounds of the source array.");
@@ -55,8 +55,6 @@ LengthSwitch:
 
                 switch (count)
                 {
-                    case 0:
-                        return;
                     case 1:
                         *pointerDestination = *pointerSource;
                         return;

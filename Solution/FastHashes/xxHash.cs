@@ -35,6 +35,7 @@ namespace FastHashes
         #region Constructors
         /// <summary>Initializes a new instance using the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public XxHash32(UInt32 seed)
         {
             m_Seed = seed;
@@ -46,6 +47,26 @@ namespace FastHashes
         #endregion
 
         #region Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static UInt32 Add(UInt32 v1, UInt32 v2, UInt32 v3, UInt32 v4)
+        {
+            v1 = RotateLeft(v1, 1);
+            v2 = RotateLeft(v2, 7);
+            v3 = RotateLeft(v3, 12);
+            v4 = RotateLeft(v4, 18);
+
+            return v1 + v2 + v3 + v4;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static UInt32 Mix(UInt32 v, UInt32 p1, UInt32 p2, Int32 r, UInt32 k)
+        {
+            v += k * p1;
+            v = RotateLeft(v, r) * p2;
+
+            return v;
+        }
+
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
@@ -115,28 +136,6 @@ Finalize:
             return result;
         }
         #endregion
-
-        #region Methods (Static)
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt32 Add(UInt32 v1, UInt32 v2, UInt32 v3, UInt32 v4)
-        {
-            v1 = RotateLeft(v1, 1);
-            v2 = RotateLeft(v2, 7);
-            v3 = RotateLeft(v3, 12);
-            v4 = RotateLeft(v4, 18);
-
-            return v1 + v2 + v3 + v4;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt32 Mix(UInt32 v, UInt32 p1, UInt32 p2, Int32 r, UInt32 k)
-        {
-            v += k * p1;
-            v = RotateLeft(v, r) * p2;
-
-            return v;
-        }
-        #endregion
     }
 
     /// <summary>Represents the xxHash64 implementation. This class cannot be derived.</summary>
@@ -168,6 +167,7 @@ Finalize:
         #region Constructors
         /// <summary>Initializes a new instance using the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public XxHash64(UInt64 seed)
         {
             m_Seed = seed;
@@ -179,6 +179,77 @@ Finalize:
         #endregion
 
         #region Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static UInt64 Add(UInt64 v1, UInt64 v2, UInt64 v3, UInt64 v4)
+        {
+            v1 = RotateLeft(v1, 1);
+            v2 = RotateLeft(v2, 7);
+            v3 = RotateLeft(v3, 12);
+            v4 = RotateLeft(v4, 18);
+
+            return v1 + v2 + v3 + v4;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static UInt64 Mix8(UInt64 v1, Byte v2)
+        {
+            v1 ^= v2 * P5;
+            v1 = RotateLeft(v1, 11);
+            v1 *= P1;
+
+            return v1;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static UInt64 Mix32(UInt64 v1, UInt32 v2)
+        {
+            v1 ^= v2 * P1;
+            v1 = RotateLeft(v1, 23);
+            v1 *= P2;
+            v1 += P3;
+
+            return v1;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static UInt64 Mix64(UInt64 v1, UInt64 v2)
+        {
+            v2 *= P2;
+            v2 = RotateLeft(v2, 31);
+            v2 *= P1;
+
+            v1 ^= v2;
+            v1 = RotateLeft(v1, 27);
+            v1 *= P1;
+            v1 += P4;
+
+            return v1;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static UInt64 Mix256A(UInt64 v, UInt64 p1, UInt64 p2, UInt64 k)
+        {
+            v += k * p1;
+            v = RotateLeft(v, 31);
+            v *= p2;
+
+            return v;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static UInt64 Mix256B(UInt64 v1, UInt64 v2)
+        {
+            v2 *= P2;
+            v2 = RotateLeft(v2, 31);
+            v2 *= P1;
+
+            v1 ^= v2;
+            v1 *= P1;
+            v1 += P4;
+
+            return v1;
+        }
+
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
@@ -260,79 +331,6 @@ Finalize:
             Byte[] result = ToByteArray64(hash);
 
             return result;
-        }
-        #endregion
-
-        #region Methods (Static)
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt64 Add(UInt64 v1, UInt64 v2, UInt64 v3, UInt64 v4)
-        {
-            v1 = RotateLeft(v1, 1);
-            v2 = RotateLeft(v2, 7);
-            v3 = RotateLeft(v3, 12);
-            v4 = RotateLeft(v4, 18);
-
-            return v1 + v2 + v3 + v4;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt64 Mix8(UInt64 v1, Byte v2)
-        {
-            v1 ^= v2 * P5;
-            v1 = RotateLeft(v1, 11);
-            v1 *= P1;
-
-            return v1;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt64 Mix32(UInt64 v1, UInt32 v2)
-        {
-            v1 ^= v2 * P1;
-            v1 = RotateLeft(v1, 23);
-            v1 *= P2;
-            v1 += P3;
-
-            return v1;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt64 Mix64(UInt64 v1, UInt64 v2)
-        {
-            v2 *= P2;
-            v2 = RotateLeft(v2, 31);
-            v2 *= P1;
-
-            v1 ^= v2;
-            v1 = RotateLeft(v1, 27);
-            v1 *= P1;
-            v1 += P4;
-
-            return v1;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt64 Mix256A(UInt64 v, UInt64 p1, UInt64 p2, UInt64 k)
-        {
-            v += k * p1;
-            v = RotateLeft(v, 31);
-            v *= p2;
-
-            return v;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt64 Mix256B(UInt64 v1, UInt64 v2)
-        {
-            v2 *= P2;
-            v2 = RotateLeft(v2, 31);
-            v2 *= P1;
-
-            v1 ^= v2;
-            v1 *= P1;
-            v1 += P4;
-
-            return v1;
         }
         #endregion
     }

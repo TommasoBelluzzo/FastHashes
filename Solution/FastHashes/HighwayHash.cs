@@ -28,6 +28,10 @@ namespace FastHashes
         #endregion
 
         #region Properties
+        /// <summary>Gets the number of hash finalization cycles.</summary>
+        /// <value>An <see cref="T:System.UInt32"/> value.</value>
+        protected abstract UInt32 P { get; }
+
         /// <summary>Gets the first seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
         [ExcludeFromCodeCoverage]
@@ -49,17 +53,12 @@ namespace FastHashes
         public UInt64 Seed4 => m_Seed4;
         #endregion
 
-        #region Properties (Abstract)
-        /// <summary>Gets the number of hash finalization cycles.</summary>
-        /// <value>An <see cref="T:System.UInt32"/> value.</value>
-        protected abstract UInt32 P { get; }
-        #endregion
-
         #region Constructors
         /// <summary>Represents the compact base constructor used by derived classes.</summary>
         /// <param name="seeds">The <see cref="T:System.UInt64"/>[] of seeds used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to 4.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is <c>null</c>.</exception>
+        [ExcludeFromCodeCoverage]
         protected HighwayHash(UInt64[] seeds)
         {
             if (seeds == null)
@@ -79,6 +78,7 @@ namespace FastHashes
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed3">The third <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed4">The fourth <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         protected HighwayHash(UInt64 seed1, UInt64 seed2, UInt64 seed3, UInt64 seed4)
         {
             m_Seed1 = seed1;
@@ -89,6 +89,69 @@ namespace FastHashes
         #endregion
 
         #region Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static UInt64 Mix(UInt64 v, Int32 r)
+        {
+            UInt32 h0 = (UInt32)(v & 0x00000000FFFFFFFFul);
+            UInt32 h1 = (UInt32)(v >> 32);
+
+            v = RotateLeft(h0, r);
+            v |= (UInt64)RotateLeft(h1, r) << 32;
+
+            return v;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void Mix(ref UInt64 m0, ref UInt64 m1, ref UInt64 v0, ref UInt64 v1, UInt64 k)
+        {
+            v1 += m0 + k;
+            m0 ^= (v1 & 0x00000000FFFFFFFFul) * (v0 >> 32);
+            v0 += m1;
+            m1 ^= (v0 & 0x00000000FFFFFFFFul) * (v1 >> 32);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void Update(ref UInt64[] m0, ref UInt64[] m1, ref UInt64[] v0, ref UInt64[] v1, UInt64[] k)
+        {
+            for (Int32 i = 0; i < 4; ++i)
+                Mix(ref m0[i], ref m1[i], ref v0[i], ref v1[i], k[i]);
+
+            ZMA(ref v0[0], ref v0[1], v1[1], v1[0]);
+            ZMA(ref v0[2], ref v0[3], v1[3], v1[2]);
+            ZMA(ref v1[0], ref v1[1], v0[1], v0[0]);
+            ZMA(ref v1[2], ref v1[3], v0[3], v0[2]);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void ZMA(ref UInt64 v1, ref UInt64 v2, UInt64 v3, UInt64 v4)
+        {
+            v1 += (((v4 & 0x00000000FF000000ul)
+                | (v3 & 0x000000FF00000000ul)) >> 24)
+                | (((v4 & 0x0000FF0000000000ul)
+                | (v3 & 0x00FF000000000000ul)) >> 16)
+                | (v4 & 0x0000000000FF0000ul)
+                | ((v4 & 0x000000000000FF00ul) << 32)
+                | ((v3 & 0xFF00000000000000ul) >> 8)
+                | (v4 << 56);
+
+            v2 += (((v3 & 0x00000000FF000000ul)
+                | (v4 & 0x000000FF00000000ul)) >> 24)
+                | (v3 & 0x0000000000FF0000ul)
+                | ((v3 & 0x0000FF0000000000ul) >> 16)
+                | ((v3 & 0x000000000000FF00ul) << 24)
+                | ((v4 & 0x00FF000000000000ul) >> 8)
+                | ((v3 & 0x00000000000000FFul) << 48)
+                | (v4 & 0xFF00000000000000ul);
+        }
+
+        /// <summary>Finalizes any partial computation and returns the hash code.</summary>
+        /// <param name="m0">The <see cref="T:System.UInt64"/>[] representing the hash data M0.</param>
+        /// <param name="m1">The <see cref="T:System.UInt64"/>[] representing the hash data M1.</param>
+        /// <param name="v0">The <see cref="T:System.UInt64"/>[] representing the hash data V0.</param>
+        /// <param name="v1">The <see cref="T:System.UInt64"/>[] representing the hash data V1.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
+        protected abstract Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1);
+
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
@@ -200,70 +263,6 @@ Finalize:
             return GetHash(m0, m1, v0, v1);
         }
         #endregion
-
-        #region Methods (Abstract)
-        /// <summary>Finalizes any partial computation and returns the hash code.</summary>
-        /// <param name="m0">The <see cref="T:System.UInt64"/>[] representing the hash data M0.</param>
-        /// <param name="m1">The <see cref="T:System.UInt64"/>[] representing the hash data M1.</param>
-        /// <param name="v0">The <see cref="T:System.UInt64"/>[] representing the hash data V0.</param>
-        /// <param name="v1">The <see cref="T:System.UInt64"/>[] representing the hash data V1.</param>
-        /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
-        protected abstract Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1);
-        #endregion
-
-        #region Methods (Static)
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt64 Mix(UInt64 v, Int32 r)
-        {
-            UInt32 h0 = (UInt32)(v & 0x00000000FFFFFFFFul);
-            UInt32 h1 = (UInt32)(v >> 32);
-
-            v = RotateLeft(h0, r);
-            v |= (UInt64)RotateLeft(h1, r) << 32;
-
-            return v;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Mix(ref UInt64 m0, ref UInt64 m1, ref UInt64 v0, ref UInt64 v1, UInt64 k)
-        {
-            v1 += m0 + k;
-            m0 ^= (v1 & 0x00000000FFFFFFFFul) * (v0 >> 32);
-            v0 += m1;
-            m1 ^= (v0 & 0x00000000FFFFFFFFul) * (v1 >> 32);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Update(ref UInt64[] m0, ref UInt64[] m1, ref UInt64[] v0, ref UInt64[] v1, UInt64[] k)
-        {
-            for (Int32 i = 0; i < 4; ++i)
-                Mix(ref m0[i], ref m1[i], ref v0[i], ref v1[i], k[i]);
-
-            ZMA(ref v0[0], ref v0[1], v1[1], v1[0]);
-            ZMA(ref v0[2], ref v0[3], v1[3], v1[2]);
-            ZMA(ref v1[0], ref v1[1], v0[1], v0[0]);
-            ZMA(ref v1[2], ref v1[3], v0[3], v0[2]);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ZMA(ref UInt64 v1, ref UInt64 v2, UInt64 v3, UInt64 v4)
-        {
-            v1 += (((v4 & 0x00000000FF000000ul) | (v3 & 0x000000FF00000000ul)) >> 24)
-                | (((v4 & 0x0000FF0000000000ul) | (v3 & 0x00FF000000000000ul)) >> 16)
-                | (v4 & 0x0000000000FF0000ul)
-                | ((v4 & 0x000000000000FF00ul) << 32)
-                | ((v3 & 0xFF00000000000000ul) >> 8)
-                | (v4 << 56);
-
-            v2 += (((v3 & 0x00000000FF000000ul) | (v4 & 0x000000FF00000000ul)) >> 24)
-                | (v3 & 0x0000000000FF0000ul)
-                | ((v3 & 0x0000FF0000000000ul) >> 16)
-                | ((v3 & 0x000000000000FF00ul) << 24)
-                | ((v4 & 0x00FF000000000000ul) >> 8)
-                | ((v3 & 0x00000000000000FFul) << 48)
-                | (v4 & 0xFF00000000000000ul);
-        }
-        #endregion
     }
 
     /// <summary>Represents the HighwayHash64 implementation. This class cannot be derived.</summary>
@@ -272,11 +271,11 @@ Finalize:
         #region Properties
         /// <inheritdoc/>
         [ExcludeFromCodeCoverage]
-        protected override UInt32 P => 4;
+        public override Int32 Length => 64;
 
         /// <inheritdoc/>
         [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
+        protected override UInt32 P => 4;
         #endregion
 
         #region Constructors
@@ -328,11 +327,11 @@ Finalize:
         #region Properties
         /// <inheritdoc/>
         [ExcludeFromCodeCoverage]
-        protected override UInt32 P => 6;
+        public override Int32 Length => 128;
 
         /// <inheritdoc/>
         [ExcludeFromCodeCoverage]
-        public override Int32 Length => 128;
+        protected override UInt32 P => 6;
         #endregion
 
         #region Constructors
@@ -388,11 +387,11 @@ Finalize:
         #region Properties
         /// <inheritdoc/>
         [ExcludeFromCodeCoverage]
-        protected override UInt32 P => 10;
+        public override Int32 Length => 256;
 
         /// <inheritdoc/>
         [ExcludeFromCodeCoverage]
-        public override Int32 Length => 256;
+        protected override UInt32 P => 10;
         #endregion
 
         #region Constructors
@@ -422,6 +421,17 @@ Finalize:
         #endregion
 
         #region Methods
+        private static void MR(out UInt64 hash1, out UInt64 hash2, UInt64 v1, UInt64 m1, UInt64 v2, UInt64 m2, UInt64 v3, UInt64 m3, UInt64 v4, UInt64 m4)
+        {
+            UInt64 a0 = v1 + m1;
+            UInt64 a1 = v2 + m2;
+            UInt64 a2 = v3 + m3;
+            UInt64 a3 = (v4 + m4) & 0x3FFFFFFFFFFFFFFFul;
+
+            hash1 = a0 ^ (a2 << 1) ^ (a2 << 2);
+            hash2 = a1 ^ ((a3 << 1) | (a2 >> 63)) ^ ((a3 << 2) | (a2 >> 62));
+        }
+
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1)
         {
@@ -443,19 +453,6 @@ Finalize:
             }
 
             return result;
-        }
-        #endregion
-
-        #region Methods (Static)
-        private static void MR(out UInt64 hash1, out UInt64 hash2, UInt64 v1, UInt64 m1, UInt64 v2, UInt64 m2, UInt64 v3, UInt64 m3, UInt64 v4, UInt64 m4)
-        {
-            UInt64 a0 = v1 + m1;
-            UInt64 a1 = v2 + m2;
-            UInt64 a2 = v3 + m3;
-            UInt64 a3 = (v4 + m4) & 0x3FFFFFFFFFFFFFFFul;
-
-            hash1 = a0 ^ (a2 << 1) ^ (a2 << 2);
-            hash2 = a1 ^ ((a3 << 1) | (a2 >> 63)) ^ ((a3 << 2) | (a2 >> 62));
         }
         #endregion
     }

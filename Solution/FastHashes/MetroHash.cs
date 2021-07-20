@@ -14,14 +14,14 @@ namespace FastHashes
         #endregion
 
         #region Properties
+        /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
+        public override Int32 Length => 64;
+
         /// <summary>Gets the variant of the hashing algorithm.</summary>
         /// <value>An enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/>.</value>
         [ExcludeFromCodeCoverage]
         public MetroHashVariant Variant => m_Engine.Variant;
-
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt32"/> value.</value>
@@ -34,6 +34,7 @@ namespace FastHashes
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        [ExcludeFromCodeCoverage] 
         public MetroHash64(MetroHashVariant variant, UInt32 seed)
         {
             if (!Enum.IsDefined(typeof(MetroHashVariant), variant))
@@ -76,7 +77,7 @@ namespace FastHashes
         }
         #endregion
 
-        #region Nesting (Classes)
+        #region Nested Classes
         private abstract class Engine
         {
             #region Members
@@ -84,28 +85,23 @@ namespace FastHashes
             #endregion
 
             #region Properties
+            public abstract MetroHashVariant Variant { get; }
+
+            public abstract String Name { get; }
+
             [ExcludeFromCodeCoverage]
             public UInt32 Seed => m_Seed;
             #endregion
 
-            #region Properties (Abstract)
-            public abstract MetroHashVariant Variant { get; }
-
-            public abstract String Name { get; }
-            #endregion
-
             #region Constructors
+            [ExcludeFromCodeCoverage]
             protected Engine(UInt32 seed)
             {
                 m_Seed = seed;
             }
             #endregion
 
-            #region Methods (Abstract)
-            public abstract Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length);
-            #endregion
-
-            #region Methods (Static)
+            #region Methods
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static UInt64 Mix8(UInt64 v1, Byte v2, Int32 r, UInt64 k1, UInt64 k2)
             {
@@ -159,6 +155,8 @@ namespace FastHashes
 
                 return v1;
             }
+            
+            public abstract Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length);
             #endregion
         }
 
@@ -380,14 +378,14 @@ Finalize:
         #endregion
 
         #region Properties
+        /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
+        public override Int32 Length => 128;
+
         /// <summary>Gets the variant of the hashing algorithm.</summary>
         /// <value>An enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/>.</value>
         [ExcludeFromCodeCoverage]
         public MetroHashVariant Variant => m_Engine.Variant;
-
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 128;
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt32"/> value.</value>
@@ -400,6 +398,7 @@ Finalize:
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        [ExcludeFromCodeCoverage]
         public MetroHash128(MetroHashVariant variant, UInt32 seed)
         {
             if (!Enum.IsDefined(typeof(MetroHashVariant), variant))
@@ -442,7 +441,7 @@ Finalize:
         }
         #endregion
 
-        #region Nesting (Classes)
+        #region Nested Classes
         private abstract class Engine
         {
             #region Members
@@ -450,28 +449,23 @@ Finalize:
             #endregion
 
             #region Properties
+            public abstract MetroHashVariant Variant { get; }
+
+            public abstract String Name { get; }
+
             [ExcludeFromCodeCoverage]
             public UInt32 Seed => m_Seed;
             #endregion
 
-            #region Properties (Abstract)
-            public abstract MetroHashVariant Variant { get; }
-
-            public abstract String Name { get; }
-            #endregion
-
             #region Constructors
+            [ExcludeFromCodeCoverage]
             protected Engine(UInt32 seed)
             {
                 m_Seed = seed;
             }
             #endregion
 
-            #region Methods (Abstract)
-            public abstract Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length);
-            #endregion
-
-            #region Methods (Static)
+            #region Methods
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static UInt64 Fin(UInt64 v1, UInt64 v2, Int32 r, UInt64 k)
             {
@@ -517,6 +511,8 @@ Finalize:
             {
                 return (v1 ^ RotateRight(((v2 + v3) * k1) + v4, r) * k2);
             }
+
+            public abstract Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length);
             #endregion
         }
 

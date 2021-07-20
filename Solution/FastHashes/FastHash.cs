@@ -29,6 +29,7 @@ namespace FastHashes
         #region Constructors
         /// <summary>Represents the base constructor used by derived classes.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         protected FastHash(UInt64 seed)
         {
             m_Seed = seed;
@@ -36,6 +37,24 @@ namespace FastHashes
         #endregion
 
         #region Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static UInt64 Mix(UInt64 v1, UInt64 v2)
+        {
+            v2 ^= v2 >> 23;
+            v2 *= N;
+            v2 ^= v2 >> 47;
+
+            v1 ^= v2;
+            v1 *= M;
+
+            return v1;
+        }
+
+        /// <summary>Finalizes any partial computation and returns the hash code.</summary>
+        /// <param name="hashData">The <see cref="T:System.UInt64"/> value representing the hash data.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
+        protected abstract Byte[] GetHash(UInt64 hashData);
+
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
@@ -83,28 +102,6 @@ Finalize:
             hash ^= hash >> 47;
 
             return GetHash(hash);
-        }
-        #endregion
-
-        #region Methods (Abstract)
-        /// <summary>Finalizes any partial computation and returns the hash code.</summary>
-        /// <param name="hashData">The <see cref="T:System.UInt64"/> value representing the hash data.</param>
-        /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
-        protected abstract Byte[] GetHash(UInt64 hashData);
-        #endregion
-
-        #region Methods (Static)
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt64 Mix(UInt64 v1, UInt64 v2)
-        {
-            v2 ^= v2 >> 23;
-            v2 *= N;
-            v2 ^= v2 >> 47;
-
-            v1 ^= v2;
-            v1 *= M;
-
-            return v1;
         }
         #endregion
     }

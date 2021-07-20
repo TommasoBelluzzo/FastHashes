@@ -12,12 +12,12 @@ namespace FastHashes
     /// <summary>Represents the base class from which all the hash algorithms must derive. This class is abstract.</summary>
     public abstract class Hash
     {
-        #region Members (Static)
+        #region Members
         private static readonly Boolean s_AllowsUnalignedRead = AllowsUnalignedRead();
         private static readonly Boolean s_IsLittleEndian = BitConverter.IsLittleEndian;
         #endregion
 
-        #region Properties (Abstract)
+        #region Properties
         /// <summary>Gets the size, in bits, of the computed hash code.</summary>
         /// <value>An <see cref="T:System.Int32"/> value, greater than or equal to <c>32</c>.</value>
         public abstract Int32 Length { get; }
@@ -399,6 +399,13 @@ namespace FastHashes
             value2 = tmp;
         }
 
+        /// <summary>Represents the core hashing function of the algorithm.</summary>
+        /// <param name="buffer">The <see cref="T:System.Byte"/>[] whose hash must be computed.</param>
+        /// <param name="offset">The offset into the byte array from which to begin using data.</param>
+        /// <param name="count">The number of bytes in the array to use as data.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
+        protected abstract Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count);
+
         /// <summary>Computes the hash of the specified byte array.</summary>
         /// <param name="buffer">The <see cref="T:System.Byte"/>[] whose hash must be computed.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
@@ -457,15 +464,6 @@ namespace FastHashes
         {
             return GetType().Name;
         }
-        #endregion
-
-        #region Methods (Abstract)
-        /// <summary>Represents the core hashing function of the algorithm.</summary>
-        /// <param name="buffer">The <see cref="T:System.Byte"/>[] whose hash must be computed.</param>
-        /// <param name="offset">The offset into the byte array from which to begin using data.</param>
-        /// <param name="count">The number of bytes in the array to use as data.</param>
-        /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
-        protected abstract Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count);
         #endregion
     }
 }

@@ -11,18 +11,15 @@ namespace FastHashes
     {
         #region Constants
         private const UInt64 C = 0xDEADBEEFDEADBEEFul;
+        private static readonly Int32[] LRE = { 44, 15, 34, 21, 38, 33, 10, 13, 38, 53, 42, 54 };
+        private static readonly Int32[] LRM = { 11, 32, 43, 31, 17, 28, 39, 57, 55, 54, 22, 46 };
+        private static readonly Int32[] SRE = { 15, 52, 26, 51, 28,  9, 47, 54, 32, 25, 63 };
+        private static readonly Int32[] SRM = { 50, 52, 30, 41, 54, 48, 38, 37, 62, 34,  5, 36 };
         #endregion
 
         #region Members
         private readonly UInt64 m_Seed1;
         private readonly UInt64 m_Seed2;
-        #endregion
-
-        #region Members (Static)
-        private static readonly Int32[] LRE = { 44, 15, 34, 21, 38, 33, 10, 13, 38, 53, 42, 54 };
-        private static readonly Int32[] LRM = { 11, 32, 43, 31, 17, 28, 39, 57, 55, 54, 22, 46 };
-        private static readonly Int32[] SRE = { 15, 52, 26, 51, 28,  9, 47, 54, 32, 25, 63 };
-        private static readonly Int32[] SRM = { 50, 52, 30, 41, 54, 48, 38, 37, 62, 34,  5, 36 };
         #endregion
 
         #region Properties
@@ -41,6 +38,7 @@ namespace FastHashes
         /// <summary>Represents the base constructor used by derived classes.</summary>
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         protected SpookyHash(UInt64 seed1, UInt64 seed2)
         {
             m_Seed1 = seed1;
@@ -49,13 +47,60 @@ namespace FastHashes
         #endregion
 
         #region Methods
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void LongEnd(ref UInt64[] hash)
         {
-            if (count < 192)
-                return ComputeHashShort(buffer, offset, count);
+            for (Int32 j = 0; j < 12; ++j)
+            {
+                Int32 idxA = (j + 11) % 12;
+                Int32 idxB = (j + 1) % 12;
 
-            return ComputeHashLong(buffer, offset, count);
+                hash[idxA] += hash[idxB]; 
+                hash[(j + 2) % 12] ^= hash[idxA]; 
+                hash[idxB] = RotateLeft(hash[idxB], LRE[j]);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void LongMix(ref UInt64[] hash, UInt64[] v)
+        {
+            for (Int32 i = 0; i < 12; ++i)
+            {
+                Int32 idx = (i + 11) % 12;
+
+                hash[i] += v[i]; 
+                hash[(i + 2) % 12] ^= hash[(i + 10) % 12]; 
+                hash[idx] ^= hash[i];
+                hash[i] = RotateLeft(hash[i], LRM[i]); 
+                hash[idx] += hash[(i + 1) % 12];
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void ShortEnd(ref UInt64[] hash)
+        {
+            for (Int32 i = 0; i < 11; ++i)
+            {
+                Int32 idxA = (i + 2) % 4;
+                Int32 idxB = (i + 3) % 4;
+
+                hash[idxB] ^= hash[idxA];
+                hash[idxA] = RotateLeft(hash[idxA], SRE[i]);
+                hash[idxB] += hash[idxA];
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void ShortMix(ref UInt64[] hash)
+        {
+            for (Int32 i = 0; i < 12; ++i)
+            {
+                Int32 idx = (i + 2) % 4;
+
+                hash[idx] = RotateLeft(hash[idx], SRM[i]);
+                hash[idx] += hash[(i + 3) % 4];
+                hash[i % 4] ^= hash[idx];
+            }
         }
 
         private Byte[] ComputeHashLong(Byte[] data, Int32 index, Int32 length)
@@ -187,70 +232,19 @@ namespace FastHashes
 
             return GetHash(hash);
         }
-        #endregion
 
-        #region Methods (Abstract)
         /// <summary>Finalizes any partial computation and returns the hash code.</summary>
         /// <param name="hashData">The <see cref="T:System.UInt64"/>[] representing the hash data.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
         protected abstract Byte[] GetHash(UInt64[] hashData);
-        #endregion
 
-        #region Methods (Static)
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void LongEnd(ref UInt64[] hash)
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
-            for (Int32 j = 0; j < 12; ++j)
-            {
-                Int32 idxA = (j + 11) % 12;
-                Int32 idxB = (j + 1) % 12;
+            if (count < 192)
+                return ComputeHashShort(buffer, offset, count);
 
-                hash[idxA] += hash[idxB]; 
-                hash[(j + 2) % 12] ^= hash[idxA]; 
-                hash[idxB] = RotateLeft(hash[idxB], LRE[j]);
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void LongMix(ref UInt64[] hash, UInt64[] v)
-        {
-            for (Int32 i = 0; i < 12; ++i)
-            {
-                Int32 idx = (i + 11) % 12;
-
-                hash[i] += v[i]; 
-                hash[(i + 2) % 12] ^= hash[(i + 10) % 12]; 
-                hash[idx] ^= hash[i];
-                hash[i] = RotateLeft(hash[i], LRM[i]); 
-                hash[idx] += hash[(i + 1) % 12];
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ShortEnd(ref UInt64[] hash)
-        {
-            for (Int32 i = 0; i < 11; ++i)
-            {
-                Int32 idxA = (i + 2) % 4;
-                Int32 idxB = (i + 3) % 4;
-
-                hash[idxB] ^= hash[idxA];
-                hash[idxA] = RotateLeft(hash[idxA], SRE[i]);
-                hash[idxB] += hash[idxA];
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ShortMix(ref UInt64[] hash)
-        {
-            for (Int32 i = 0; i < 12; ++i)
-            {
-                Int32 idx = (i + 2) % 4;
-
-                hash[idx] = RotateLeft(hash[idx], SRM[i]);
-                hash[idx] += hash[(i + 3) % 4];
-                hash[i % 4] ^= hash[idx];
-            }
+            return ComputeHashLong(buffer, offset, count);
         }
         #endregion
     }

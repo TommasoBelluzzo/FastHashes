@@ -1,6 +1,8 @@
 ﻿#region Using Directives
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+
 #endregion
 
 namespace FastHashes
@@ -22,9 +24,17 @@ namespace FastHashes
         private readonly Queue<Byte> m_Bytes;
         #endregion
 
+        #region Properties
+        /// <summary>The seed used by the pseudorandom numbers generator.</summary>
+        /// <value>An <see cref="T:System.UInt32"/> value.</value>
+        [ExcludeFromCodeCoverage] 
+        public UInt32 Seed => m_X;
+        #endregion
+
         #region Constructors
         /// <summary>Initializes a new instance using the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used to calculate the starting value of the pseudorandom numbers sequence.</param>
+        [ExcludeFromCodeCoverage]
         public RandomXorShift(UInt32 seed)
         {
             m_Bytes = new Queue<Byte>();
@@ -36,6 +46,7 @@ namespace FastHashes
         }
 
         /// <summary>Initializes a new instance using a seed value of <c>0</c>.</summary>
+        [ExcludeFromCodeCoverage]
         public RandomXorShift() : this(0u) { }
         #endregion
 
@@ -76,6 +87,13 @@ namespace FastHashes
             }
         }
 
+        /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
+        public override String ToString()
+        {
+            return $"{GetType().Name}: {m_X}";
+        }
+
         /// <summary>Returns a random 4-byte unsigned integer.</summary>
         /// <returns>An <see cref="T:System.UInt32"/> value.</returns>
         public UInt32 NextValue()
@@ -85,7 +103,7 @@ namespace FastHashes
             m_X = m_Y;
             m_Y = m_Z;
             m_Z = m_W;
-            m_W = m_W ^ (m_W >> 19) ^ (t ^ (t >> 8));
+            m_W ^= (m_W >> 19) ^ (t ^ (t >> 8));
 
             return m_W;
         }

@@ -14,14 +14,14 @@ namespace FastHashes
         #endregion
 
         #region Properties
+        /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
+        public override Int32 Length => 64;
+
         /// <summary>Gets the engine category of the hashing algorithm.</summary>
         /// <value>An enumerator value of type <see cref="T:FastHashes.MurmurHashEngine"/>.</value>
         [ExcludeFromCodeCoverage]
         public MurmurHashEngine Category => m_Engine.Category;
-
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt32"/> value.</value>
@@ -34,6 +34,7 @@ namespace FastHashes
         /// <param name="engine">The enumerator value of type <see cref="T:FastHashes.MurmurHashEngine"/> representing the engine category used by the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="engine">engine</paramref> is undefined.</exception>
+        [ExcludeFromCodeCoverage]
         protected MurmurHashG32(MurmurHashEngine engine, UInt32 seed)
         {
             if (!Enum.IsDefined(typeof(MurmurHashEngine), engine))
@@ -67,6 +68,11 @@ namespace FastHashes
         #endregion
 
         #region Methods
+        /// <summary>Finalizes any partial computation and returns the hash code.</summary>
+        /// <param name="hashData">The <see cref="T:System.Byte"/>[] representing the hash data.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
+        protected abstract Byte[] GetHash(Byte[] hashData);
+
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
@@ -81,39 +87,31 @@ namespace FastHashes
         }
         #endregion
 
-        #region Methods (Abstract)
-        /// <summary>Finalizes any partial computation and returns the hash code.</summary>
-        /// <param name="hashData">The <see cref="T:System.Byte"/>[] representing the hash data.</param>
-        /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
-        protected abstract Byte[] GetHash(Byte[] hashData);
-        #endregion
-
-        #region Nesting (Classes)
+        #region Nested Classes
         private abstract class Engine
         {
             #region Members
-            private readonly UInt32 m_OriginalSeed;
+            private readonly UInt32 m_Seed;
             #endregion
 
             #region Properties
-            [ExcludeFromCodeCoverage]
-            public UInt32 Seed => m_OriginalSeed;
-            #endregion
-
-            #region Properties (Abstract)
             public abstract MurmurHashEngine Category { get; }
 
             public abstract String Name { get; }
+
+            [ExcludeFromCodeCoverage]
+            public UInt32 Seed => m_Seed;
             #endregion
 
             #region Constructors
+            [ExcludeFromCodeCoverage]
             protected Engine(UInt32 seed)
             {
-                m_OriginalSeed = seed;
+                m_Seed = seed;
             }
             #endregion
 
-            #region Methods (Abstract)
+            #region Methods
             public abstract Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length);
             #endregion
         }
@@ -143,6 +141,7 @@ namespace FastHashes
             #endregion
 
             #region Constructors
+            [ExcludeFromCodeCoverage]
             public Engine64(UInt32 seed) : base(seed)
             {
                 m_Seed1 = seed;
@@ -151,6 +150,39 @@ namespace FastHashes
             #endregion
 
             #region Methods
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static UInt64 Fin(UInt64 hash)
+            {
+                hash ^= hash >> 33;
+                hash *= F1;
+                hash ^= hash >> 33;
+                hash *= F2;
+                hash ^= hash >> 33;
+
+                return hash;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static UInt64 Mix(UInt64 v, UInt64 c1, UInt64 c2, Int32 r)
+            {
+                v *= c1;
+                v = RotateLeft(v, r);
+                v *= c2;
+
+                return v;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static UInt64 Mur(UInt64 v1, UInt64 v2, UInt64 v3, Int32 r, UInt64 n)
+            {
+                v1 ^= v3;
+                v1 = RotateLeft(v1, r);
+                v1 += v2;
+                v1 = (v1 * 5ul) + n;
+
+                return v1;
+            }
+
             public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
             {
                 UInt64 hash1 = m_Seed1;
@@ -227,41 +259,6 @@ Finalize:
                 return result;
             }
             #endregion
-
-            #region Methods (Static)
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static UInt64 Fin(UInt64 hash)
-            {
-                hash ^= hash >> 33;
-                hash *= F1;
-                hash ^= hash >> 33;
-                hash *= F2;
-                hash ^= hash >> 33;
-
-                return hash;
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static UInt64 Mix(UInt64 v, UInt64 c1, UInt64 c2, Int32 r)
-            {
-                v *= c1;
-                v = RotateLeft(v, r);
-                v *= c2;
-
-                return v;
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static UInt64 Mur(UInt64 v1, UInt64 v2, UInt64 v3, Int32 r, UInt64 n)
-            {
-                v1 ^= v3;
-                v1 = RotateLeft(v1, r);
-                v1 += v2;
-                v1 = (v1 * 5ul) + n;
-
-                return v1;
-            }
-            #endregion
         }
 
         private sealed class Engine86 : Engine
@@ -295,6 +292,7 @@ Finalize:
             #endregion
 
             #region Constructors
+            [ExcludeFromCodeCoverage]
             public Engine86(UInt32 seed) : base(seed)
             {
                 m_Seed1 = seed;
@@ -305,6 +303,39 @@ Finalize:
             #endregion
 
             #region Methods
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static UInt32 Fin(UInt32 hash)
+            {
+                hash ^= hash >> 16;
+                hash *= F1;
+                hash ^= hash >> 13;
+                hash *= F2;
+                hash ^= hash >> 16;
+
+                return hash;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static UInt32 Mix(UInt32 v, UInt32 c1, UInt32 c2, Int32 r)
+            {
+                v *= c1;
+                v = RotateLeft(v, r);
+                v *= c2;
+
+                return v;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static UInt32 Mur(UInt32 v1, UInt32 v2, UInt32 v3, Int32 r, UInt32 n)
+            {
+                v1 ^= v3;
+                v1 = RotateLeft(v1, r);
+                v1 += v2;
+                v1 = (v1 * 5u) + n;
+
+                return v1;
+            }
+
             public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
             {
                 UInt32 hash1 = m_Seed1;
@@ -405,41 +436,6 @@ Finalize:
                 return result;
             }
             #endregion
-
-            #region Methods (Static)
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static UInt32 Fin(UInt32 hash)
-            {
-                hash ^= hash >> 16;
-                hash *= F1;
-                hash ^= hash >> 13;
-                hash *= F2;
-                hash ^= hash >> 16;
-
-                return hash;
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static UInt32 Mix(UInt32 v, UInt32 c1, UInt32 c2, Int32 r)
-            {
-                v *= c1;
-                v = RotateLeft(v, r);
-                v *= c2;
-
-                return v;
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static UInt32 Mur(UInt32 v1, UInt32 v2, UInt32 v3, Int32 r, UInt32 n)
-            {
-                v1 ^= v3;
-                v1 = RotateLeft(v1, r);
-                v1 += v2;
-                v1 = (v1 * 5u) + n;
-
-                return v1;
-            }
-            #endregion
         }
         #endregion
     }
@@ -473,6 +469,7 @@ Finalize:
         #region Constructors
         /// <summary>Initializes a new instance using the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
         public MurmurHash32(UInt32 seed)
         {
             m_Seed = seed;
@@ -484,6 +481,26 @@ Finalize:
         #endregion
 
         #region Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static UInt32 Mix(UInt32 v)
+        {
+            v *= C1;
+            v = RotateLeft(v, 15);
+            v *= C2;
+
+            return v;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static UInt32 Mur(UInt32 v1, UInt32 v2)
+        {
+            v1 ^= Mix(v2);
+            v1 = RotateLeft(v1, 13);
+            v1 = (v1 * 5u) + N;
+
+            return v1;
+        }
+
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
@@ -530,28 +547,6 @@ Finalize:
             Byte[] result = ToByteArray32(hash);
 
             return result;
-        }
-        #endregion
-
-        #region Methods (Static)
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt32 Mix(UInt32 v)
-        {
-            v *= C1;
-            v = RotateLeft(v, 15);
-            v *= C2;
-
-            return v;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt32 Mur(UInt32 v1, UInt32 v2)
-        {
-            v1 ^= Mix(v2);
-            v1 = RotateLeft(v1, 13);
-            v1 = (v1 * 5u) + N;
-
-            return v1;
         }
         #endregion
     }
