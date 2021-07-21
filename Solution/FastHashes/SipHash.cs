@@ -135,9 +135,9 @@ Finalize:
             for (Int32 i = 0; i < 4; ++i)
                 Mix(ref v);
 
-            Byte[] result = ToByteArray32(v[1] ^ v[3]);
+            UInt32 hash = v[1] ^ v[3];
 
-            return result;
+            return ToByteArray32(hash);
         }
         #endregion
     }
@@ -321,9 +321,9 @@ Finalize:
             for (Int32 i = 0; i < m_R2; ++i)
                 Mix(ref v);
 
-            Byte[] result = ToByteArray64(v[0] ^ v[1] ^ v[2] ^ v[3]);
+            UInt64 hash = v[0] ^ v[1] ^ v[2] ^ v[3];
 
-            return result;
+            return ToByteArray64(hash);
         }
 
         /// <inheritdoc/>

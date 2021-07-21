@@ -308,15 +308,9 @@ Finalize:
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1)
         {
-            Byte[] result = new Byte[8];
+            UInt64 hash = v0[0] + v1[0] + m0[0] + m1[0];
 
-            unsafe
-            {
-                fixed (Byte* pointer = result)
-                    *((UInt64*)pointer) = v0[0] + v1[0] + m0[0] + m1[0];
-            }
-
-            return result;
+            return ToByteArray64(hash);
         }
         #endregion
     }
@@ -364,19 +358,10 @@ Finalize:
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1)
         {
-            Byte[] result = new Byte[16];
+            UInt64 hash1 = v0[0] + m0[0] + v1[2] + m1[2];
+            UInt64 hash2 = v0[1] + m0[1] + v1[3] + m1[3];
 
-            unsafe
-            {
-                fixed (Byte* pin = result)
-                {
-                    UInt64* pointer = (UInt64*)pin;
-                    pointer[0] = v0[0] + m0[0] + v1[2] + m1[2];
-                    pointer[1] = v0[1] + m0[1] + v1[3] + m1[3];
-                }
-            }
-
-            return result;
+            return ToByteArray64(hash1, hash2);
         }
         #endregion
     }
@@ -438,21 +423,7 @@ Finalize:
             MR(out UInt64 hash1, out UInt64 hash2, v0[0], m0[0], v0[1], m0[1], v1[0], m1[0], v1[1], m1[1]);
             MR(out UInt64 hash3, out UInt64 hash4, v0[2], m0[2], v0[3], m0[3], v1[2], m1[2], v1[3], m1[3]);
 
-            Byte[] result = new Byte[32];
-
-            unsafe
-            {
-                fixed (Byte* pin = result)
-                {
-                    UInt64* pointer = (UInt64*)pin;
-                    pointer[0] = hash1;
-                    pointer[1] = hash2;
-                    pointer[2] = hash3;
-                    pointer[3] = hash4;
-                }
-            }
-
-            return result;
+            return ToByteArray64(hash1, hash2, hash3, hash4);
         }
         #endregion
     }

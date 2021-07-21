@@ -343,9 +343,7 @@ namespace FastHashes
                 }
             }
 
-            Byte[] result = ToByteArray64(hash);
-
-            return result;
+            return ToByteArray64(hash);
         }
         #endregion
     }
@@ -526,9 +524,7 @@ namespace FastHashes
                 }
             }
 
-            Byte[] result = ToByteArray64(hash);
-
-            return result;
+            return ToByteArray64(hash);
         }
         #endregion
     }
@@ -799,9 +795,7 @@ namespace FastHashes
 
 Finalize:
 
-            Byte[] result = ToByteArray64(hash1, hash2);
-
-            return result;
+            return ToByteArray64(hash1, hash2);
         }
         #endregion
     }

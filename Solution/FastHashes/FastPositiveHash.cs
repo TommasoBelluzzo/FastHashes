@@ -285,9 +285,7 @@ Finalize:
                 hash ^= hash >> 47;
                 hash *= P646;
 
-                Byte[] result = ToByteArray64(hash);
-
-                return result;
+                return ToByteArray64(hash);
             }
             #endregion
         }
@@ -430,11 +428,9 @@ Finalize:
 Finalize:
 
                 UInt64 h0 = (a ^ b) * P640;
-                UInt64 h1 = MixT(RotateRight(a + b, 17), P644) + (h0 ^ RotateRight(h0, 41));
+                UInt64 hash = MixT(RotateRight(a + b, 17), P644) + (h0 ^ RotateRight(h0, 41));
 
-                Byte[] result = ToByteArray64(h1);
-
-                return result;
+                return ToByteArray64(hash);
             }
             #endregion
         }
@@ -581,11 +577,9 @@ Finalize:
                 UInt64 h1 = (RotateRight(a, 23) + b) * P646;
                 Mux(out UInt64 l, out UInt64 h, h0 ^ h1, P645);
 
-                UInt64 h2 = l ^ h;
+                UInt64 hash = l ^ h;
 
-                Byte[] result = ToByteArray64(h2);
-
-                return result;
+                return ToByteArray64(hash);
             }
             #endregion
         }

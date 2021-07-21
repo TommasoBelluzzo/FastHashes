@@ -130,15 +130,9 @@ Finalize:
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64 hashData)
         {
-            Byte[] result = new Byte[4];
+            hashData -= (hashData >> 32);
 
-            unsafe
-            {
-                fixed (Byte* pointer = result)
-                    *((UInt32*)pointer) = (UInt32)(hashData - (hashData >> 32));
-            }
-
-            return result;
+            return ToByteArray32(hashData);
         }
         #endregion
     }
@@ -167,15 +161,7 @@ Finalize:
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64 hashData)
         {
-            Byte[] result = new Byte[8];
-
-            unsafe
-            {
-                fixed (Byte* pointer = result)
-                    *((UInt64*)pointer) = hashData;
-            }
-
-            return result;
+            return ToByteArray64(hashData);;
         }
         #endregion
     }
