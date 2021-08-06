@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
-    /// <summary>Represents a utility for manipulating byte arrays.</summary>
+    /// <summary>Provides static methods for high speed byte arrays manipulation.</summary>
     public static class UnsafeBuffer
     {
         #region Methods
