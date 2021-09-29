@@ -21,6 +21,8 @@
     <PackageTags>algorithm hash</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>FastHashes.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
