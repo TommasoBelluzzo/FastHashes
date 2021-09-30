@@ -3,24 +3,15 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <Authors>Tommaso Belluzzo</Authors>
-    <Company />
     <Description>A .NET implementation of several non-cryptographic hashes.</Description>
-    <Copyright>Copyright ©2017-2021 Tommaso Belluzzo</Copyright>
-    <NeutralLanguage>en</NeutralLanguage>
-    <Version>2.2.0</Version>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.2.0.0</FileVersion>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/TommasoBelluzzo/FastHashes</RepositoryUrl>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>FastHashes.snk</AssemblyOriginatorKeyFile>
     <IsPackable>true</IsPackable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/TommasoBelluzzo/FastHashes</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>algorithm hash</PackageTags>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>FastHashes.snk</AssemblyOriginatorKeyFile>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

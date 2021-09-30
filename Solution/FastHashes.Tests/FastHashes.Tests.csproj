@@ -3,16 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <Authors>Tommaso Belluzzo</Authors>
-    <Company />
     <Description>Unit tests for the FastHashes library.</Description>
-    <Copyright>Copyright ©2017-2021 Tommaso Belluzzo</Copyright>
-    <NeutralLanguage>en</NeutralLanguage>
-    <Version>2.2.0</Version>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.2.0.0</FileVersion>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/TommasoBelluzzo/FastHashes</RepositoryUrl>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 

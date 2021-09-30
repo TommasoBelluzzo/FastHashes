@@ -1,5 +1,17 @@
 <Project>
 
+  <PropertyGroup>
+    <Authors>Tommaso Belluzzo</Authors>
+    <Company />
+    <Copyright>Copyright ©2017-2021 Tommaso Belluzzo</Copyright>
+    <NeutralLanguage>en</NeutralLanguage>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/TommasoBelluzzo/FastHashes</RepositoryUrl>
+    <Version>2.2.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.2.0.0</FileVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
   </ItemGroup>
