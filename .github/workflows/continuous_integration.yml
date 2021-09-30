@@ -31,6 +31,14 @@ jobs:
     - name: Test
       working-directory: Solution/
       run: dotnet test FastHashes.sln --configuration Release --no-restore --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutput=../Coverage/ /p:CoverletOutputFormat=lcov
+     - name: Version Bump
+      id: bump
+      env:
+        TARGET: ${{ github.event.inputs.target }}
+        VERSION_REGEX: Version>\d+\.\d+\.\d+
+      run: |
+        echo "The present working directory is `pwd`"
+        ls -A
     - name: Coverage
       uses: coverallsapp/github-action@master
       with:
