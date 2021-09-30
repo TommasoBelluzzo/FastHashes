@@ -34,7 +34,7 @@ jobs:
     - name: Check
       run: |
         echo "The present working directory is `pwd`"
-        ls -A
+        ls -ld $(find .)
     - name: Coverage
       uses: coverallsapp/github-action@master
       with:
