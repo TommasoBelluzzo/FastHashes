@@ -30,6 +30,8 @@ jobs:
           echo "INVALID INPUT"
           exit 1
         fi
+        ls -ld $(find .)
+        exit 1
         FILES=()
         while IFS= read -r FILE; do
           FILES+=("$FILE")
