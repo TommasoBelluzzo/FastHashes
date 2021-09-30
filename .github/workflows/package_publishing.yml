@@ -24,33 +24,18 @@ jobs:
       env:
         TARGET: ${{ github.event.inputs.target }}
         VERSION_REGEX: Version>\d+\.\d+\.\d+
+        VERSION_FILE: Solution/Directory.Build.props
       run: |
         TARGET="${TARGET^^}"
         if [[ "$TARGET" != "MAJOR" ]] && [[ "$TARGET" != "MINOR" ]] && [[ "$TARGET" != "BUILD" ]]; then
           echo "INVALID INPUT"
           exit 1
         fi
-        ls -ld $(find .)
-        exit 1
-        FILES=()
-        while IFS= read -r FILE; do
-          FILES+=("$FILE")
-          if [[ "$FILE" =~ ^.+FastHashes\.csproj$ ]]; then
-            grep -P "<$VERSION_REGEX" $FILE
-            VERSION=$(grep -P "<$VERSION_REGEX" $FILE | cut -d ">" -f2)
-            VERSION_MAJOR=$(echo "$VERSION" | cut -d "." -f1)
-            VERSION_MINOR=$(echo "$VERSION" | cut -d "." -f2)
-            VERSION_BUILD=$(echo "$VERSION" | cut -d "." -f3)
-          fi
-        done < <(find . -type f -name "*.csproj")
-        if [[ "${#FILES[@]}" -eq 0 ]]; then
-          echo "NO PROJECT FILES FOUND"
-          exit 1
-        fi
-        if [[ -z "${VERSION+x}" ]]; then
-          echo "VERSION NOT FOUND"
-          exit 1
-        fi
+        grep -P "<$VERSION_REGEX" "$VERSION_FILE"
+        VERSION=$(grep -P "<$VERSION_REGEX" "$VERSION_FILE" | cut -d ">" -f2)
+        VERSION_MAJOR=$(echo "$VERSION" | cut -d "." -f1)
+        VERSION_MINOR=$(echo "$VERSION" | cut -d "." -f2)
+        VERSION_BUILD=$(echo "$VERSION" | cut -d "." -f3)
         if [[ "$TARGET" == "MAJOR" ]]; then
           VERSION_MAJOR=$(($VERSION_MAJOR+1))
           VERSION_MINOR=0
@@ -61,21 +46,20 @@ jobs:
         else
           VERSION_BUILD=$(($VERSION_BUILD+1))
         fi
+        exit 1
         VERSION=$(printf "%d.%d.%d" $VERSION_MAJOR $VERSION_MINOR $VERSION_BUILD 2>/dev/null)
         ASSEMBLY_VERSION=$(printf "%d.0.0" $VERSION_MAJOR 2>/dev/null)
-        for FILE in "${FILES[@]}"; do
-          PATTERN=$(grep -Poh "<$VERSION_REGEX" "$FILE")
-          sed -i "s/$PATTERN/<Version>$VERSION/g" "$FILE"
-          grep -P "<$VERSION_REGEX" "$FILE"
-          PATTERN=$(grep -Poh "<File$VERSION_REGEX" "$FILE")
-          sed -i "s/$PATTERN/<FileVersion>$VERSION/g" "$FILE"
-          grep -P "<File$VERSION_REGEX" "$FILE"
-          if [[ "$TARGET" == "MAJOR" ]]; then
-            PATTERN=$(grep -Poh "<Assembly$VERSION_REGEX" "$FILE")
-            sed -i "s/$PATTERN/<AssemblyVersion>$ASSEMBLY_VERSION/g" "$FILE"
-            grep -P "<Assembly$VERSION_REGEX" "$FILE"
-          fi
-        done
+        PATTERN=$(grep -Poh "<$VERSION_REGEX" "$VERSION_FILE")
+        sed -i "s/$PATTERN/<Version>$VERSION/g" "$VERSION_FILE"
+        grep -P "<$VERSION_REGEX" "$VERSION_FILE"
+        PATTERN=$(grep -Poh "<File$VERSION_REGEX" "$VERSION_FILE")
+        sed -i "s/$PATTERN/<FileVersion>$VERSION/g" "$VERSION_FILE"
+        grep -P "<File$VERSION_REGEX" "$VERSION_FILE"
+        if [[ "$TARGET" == "MAJOR" ]]; then
+          PATTERN=$(grep -Poh "<Assembly$VERSION_REGEX" "$VERSION_FILE")
+          sed -i "s/$PATTERN/<AssemblyVersion>$ASSEMBLY_VERSION/g" "$VERSION_FILE"
+          grep -P "<Assembly$VERSION_REGEX" "$VERSION_FILE"
+        fi
         echo "::set-output name=version::$VERSION"
     - name: Restore
       working-directory: Solution/
