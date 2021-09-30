@@ -90,6 +90,10 @@ The following `Target Frameworks` are defined:
  * Library: `.NET Standard 2.0`
  * Auxiliary Projects: `.NET Core 2.1`
  
+The following `NuGet` packages are required for building the library:
+
+* [Microsoft.SourceLink.GitHub](https://www.nuget.org/packages/Microsoft.SourceLink.GitHub)
+ 
 The following `NuGet` packages are required for performing unit tests:
 
 * [Microsoft.NET.Test.Sdk](https://www.nuget.org/packages/Microsoft.NET.Test.Sdk/)
