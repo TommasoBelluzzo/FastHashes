@@ -46,7 +46,6 @@ jobs:
         else
           VERSION_BUILD=$(($VERSION_BUILD+1))
         fi
-        exit 1
         VERSION=$(printf "%d.%d.%d" $VERSION_MAJOR $VERSION_MINOR $VERSION_BUILD 2>/dev/null)
         ASSEMBLY_VERSION=$(printf "%d.0.0" $VERSION_MAJOR 2>/dev/null)
         PATTERN=$(grep -Poh "<$VERSION_REGEX" "$VERSION_FILE")
@@ -61,6 +60,7 @@ jobs:
           grep -P "<Assembly$VERSION_REGEX" "$VERSION_FILE"
         fi
         echo "::set-output name=version::$VERSION"
+        exit 1
     - name: Restore
       working-directory: Solution/
       run: dotnet restore --force-evaluate
