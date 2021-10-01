@@ -5,11 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedFiles Condition="'$(DebugType)' != 'none'" Include="$(GeneratedAssemblyInfoFile)"/>
+    <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
   </ItemGroup>
 
   <ItemGroup>
-    <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
+    <EmbeddedFiles Condition="'$(DebugType)' != 'none'" Include="$(GeneratedAssemblyInfoFile)"/>
   </ItemGroup>
 
   <Target Condition="'$(DeterministicSourcePaths)' == 'true'" Name="CoverletGetPathMap" DependsOnTargets="InitializeSourceRootMappedPaths" Returns="@(_LocalTopLevelSourceRoot)">
