@@ -65,10 +65,10 @@ jobs:
       run: dotnet restore --force-evaluate
     - name: Build
       working-directory: Solution/
-      run: dotnet build FastHashes/FastHashes.csproj --configuration Release --no-restore --no-incremental --verbosity d
+      run: dotnet build FastHashes/FastHashes.csproj --verbosity d --configuration Release --no-restore --no-incremental
     - name: Pack
       working-directory: Solution/
-      run: dotnet pack FastHashes/FastHashes.csproj --configuration Release --no-restore --no-build --verbosity d --output ../Package/
+      run: dotnet pack FastHashes/FastHashes.csproj --verbosity d --configuration Release --no-restore --no-build --output ../Package/
     - name: Upload
       uses: actions/upload-artifact@v2
       with:
