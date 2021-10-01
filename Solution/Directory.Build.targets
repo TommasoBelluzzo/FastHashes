@@ -1,5 +1,5 @@
 <Project>
 
-  <Import Condition="'$(GITHUB_ACTIONS)' == 'true'" Project="$(MSBuildThisFileDirectory)\DeterministicBuild.targets" />
+  <Import Condition="'$(GITHUB_ACTIONS)' == 'true'" Project="$([System.IO.Path]::Combine('$(MSBuildThisFileDirectory)','DeterministicBuild.targets')) />
 
 </Project>

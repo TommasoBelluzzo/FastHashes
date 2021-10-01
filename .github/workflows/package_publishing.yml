@@ -18,7 +18,7 @@ jobs:
     - name: .NET Setup
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 2.1.x
+        dotnet-version: 3.1.x
     - name: Version Bump
       id: bump
       env:
@@ -65,12 +65,17 @@ jobs:
       run: dotnet restore --force-evaluate
     - name: Build
       working-directory: Solution/
-      run: dotnet build FastHashes/FastHashes.csproj --configuration Release --no-restore --no-incremental --verbosity normal
+      run: dotnet build FastHashes/FastHashes.csproj --configuration Release --no-restore --no-incremental --verbosity d
     - name: Pack
       working-directory: Solution/
-      run: dotnet pack FastHashes/FastHashes.csproj --configuration Release --no-restore --no-build --include-symbols --verbosity normal --output ../Package/
+      run: dotnet pack FastHashes/FastHashes.csproj --configuration Release --no-restore --no-build --verbosity d --output ../Package/
     - name: Upload
       uses: actions/upload-artifact@v2
       with:
-        name: np
+        name: nupkg
         path: Solution/Package/FastHashes.2.4.0.nupkg
+    - name: Upload
+      uses: actions/upload-artifact@v2
+      with:
+        name: snupkg
+        path: Solution/Package/FastHashes.2.4.0.snupkg
