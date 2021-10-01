@@ -7,9 +7,9 @@
     <NeutralLanguage>en</NeutralLanguage>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/TommasoBelluzzo/FastHashes</RepositoryUrl>
-    <Version>2.3.0</Version>
+    <Version>2.4.0</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.3.0.0</FileVersion>
+    <FileVersion>2.4.0.0</FileVersion>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
