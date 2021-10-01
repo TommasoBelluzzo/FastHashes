@@ -91,7 +91,7 @@
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="" />
   </ItemGroup>
-  
+
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
