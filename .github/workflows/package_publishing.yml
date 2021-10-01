@@ -71,6 +71,6 @@ jobs:
       run: dotnet pack FastHashes/FastHashes.csproj --configuration Release --no-restore --no-build --include-symbols --verbosity normal --output ../Package/
     - name: Upload
       uses: actions/upload-artifact@v2
-        with:
-          name: np
-          path: Solution/Package/FastHashes.${VERSION}.nupkg
+      with:
+        name: np
+        path: Solution/Package/FastHashes.${VERSION}.nupkg
