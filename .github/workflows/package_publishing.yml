@@ -26,6 +26,7 @@ jobs:
         VERSION_REGEX: Version>\d+\.\d+\.\d+
         VERSION_FILE: Solution/Directory.Build.props
       run: |
+        echo "$GITHUB_ACTIONS"
         TARGET="${TARGET^^}"
         if [[ "$TARGET" != "MAJOR" ]] && [[ "$TARGET" != "MINOR" ]] && [[ "$TARGET" != "BUILD" ]]; then
           echo "INVALID INPUT"
