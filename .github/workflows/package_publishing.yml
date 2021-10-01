@@ -60,7 +60,6 @@ jobs:
           grep -P "<Assembly$VERSION_REGEX" "$VERSION_FILE"
         fi
         echo "::set-output name=version::$VERSION"
-        exit 1
     - name: Restore
       working-directory: Solution/
       run: dotnet restore --force-evaluate
