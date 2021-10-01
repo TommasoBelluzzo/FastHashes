@@ -73,12 +73,14 @@ jobs:
       env:
         VERSION: ${{ steps.bump.outputs.version }}
       working-directory: Solution/
+      run: dotnet nuget push Package/FastHashes.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_TOKEN }}
+    - name: Version Commit
+      env:
+        VERSION: ${{ steps.bump.outputs.version }}
       run: |
-        if [[ -f "Package/FastHashes.${VERSION}.nupkg" ]]
-        then
-          echo "nupkg exists"
-        fi
-        if [[ -f "Package/FastHashes.${VERSION}.snupkg" ]]
-        then
-          echo "snupkg exists"
-        fi
+        git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+        git config --local user.name "${{ secrets.BOT_USERNAME }}"
+        git config --local user.email "${{ secrets.BOT_EMAIL }}"
+        git add --a
+        git commit -m "Release $VERSION"  
+        git push
