@@ -65,17 +65,20 @@ jobs:
       run: dotnet restore --force-evaluate
     - name: Build
       working-directory: Solution/
-      run: dotnet build FastHashes/FastHashes.csproj --verbosity d --configuration Release --no-restore --no-incremental
+      run: dotnet build FastHashes/FastHashes.csproj --verbosity normal --configuration Release --no-restore --no-incremental
     - name: Pack
       working-directory: Solution/
-      run: dotnet pack FastHashes/FastHashes.csproj --verbosity d --configuration Release --no-restore --no-build --output ../Package/
-    - name: Upload
-      uses: actions/upload-artifact@v2
-      with:
-        name: nupkg
-        path: Solution/Package/FastHashes.2.4.0.nupkg
-    - name: Upload
-      uses: actions/upload-artifact@v2
-      with:
-        name: snupkg
-        path: Solution/Package/FastHashes.2.4.0.snupkg
+      run: dotnet pack FastHashes/FastHashes.csproj --verbosity normal --configuration Release --no-restore --no-build --output ../Package/
+    - name: Publish
+      env:
+        VERSION: ${{ steps.bump.outputs.version }}
+      working-directory: Solution/
+      run: |
+        if [[ -f "Package/FastHashes.${VERSION}.nupkg" ]]
+        then
+          echo "nupkg exists"
+        fi
+        if [[ -f "Package/FastHashes.${VERSION}.snupkg" ]]
+        then
+          echo "snupkg exists"
+        fi
