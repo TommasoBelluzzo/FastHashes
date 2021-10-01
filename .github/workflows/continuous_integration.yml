@@ -27,10 +27,10 @@ jobs:
       run: dotnet restore --force-evaluate
     - name: Build
       working-directory: Solution/
-      run: dotnet build FastHashes.sln --configuration Release --no-restore --no-incremental --verbosity diag
+      run: dotnet build FastHashes.sln --configuration Release --no-restore --no-incremental --verbosity normal
     - name: Test
       working-directory: Solution/
-      run: dotnet test FastHashes.sln --configuration Release --no-restore --no-build --verbosity diag /p:CollectCoverage=true /p:CoverletOutput=../Coverage/ /p:CoverletOutputFormat=lcov
+      run: dotnet test FastHashes.sln --configuration Release --no-restore --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutput=../Coverage/ /p:CoverletOutputFormat=lcov
     - name: Coverage
       uses: coverallsapp/github-action@master
       with:
