@@ -1,6 +1,6 @@
 # FastHashes
 
-FashHashes is a pure C# implementation of several non-cryptographic hashes.
+FashHashes is a .NET implementation of several non-cryptographic hashes.
 
 <table>
   <tr>
