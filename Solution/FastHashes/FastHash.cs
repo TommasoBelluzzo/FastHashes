@@ -161,7 +161,7 @@ Finalize:
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64 hashData)
         {
-            return ToByteArray64(hashData);;
+            return ToByteArray64(hashData);
         }
         #endregion
     }

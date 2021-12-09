@@ -1,10 +1,7 @@
 ﻿#region Using Directives
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 #endregion
 
 namespace FastHashes
@@ -13,7 +10,6 @@ namespace FastHashes
     public abstract class Hash
     {
         #region Members
-        private static readonly Boolean s_AllowsUnalignedRead = AllowsUnalignedRead();
         private static readonly Boolean s_IsLittleEndian = BitConverter.IsLittleEndian;
         #endregion
 
@@ -24,76 +20,6 @@ namespace FastHashes
         #endregion
 
         #region Methods
-        private static Boolean AllowsUnalignedRead()
-        {
-            Regex regex = new Regex(@"amd64|i\d86|x64|x86_64", (RegexOptions.Compiled | RegexOptions.IgnoreCase));
-
-            String architecture = Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
-
-            if (!String.IsNullOrWhiteSpace(architecture) && regex.IsMatch(architecture))
-                return true;
-
-            ProcessStartInfo si = new ProcessStartInfo
-            {
-                CreateNoWindow = true,
-                FileName = "uname",
-                RedirectStandardOutput = true,
-                UseShellExecute = false
-            };
-
-            try
-            {
-                using (Process process = new Process())
-                {
-                    process.StartInfo = si;
-                    process.StartInfo.Arguments = "-p";
-
-                    process.Start();
-
-                    using (StreamReader stream = process.StandardOutput)
-                    {
-                        String line = stream.ReadLine();
-
-                        if (!String.IsNullOrWhiteSpace(line))
-                        {
-                            String output = line.Trim();
-
-                            if (regex.IsMatch(output))
-                                return true;
-                        }
-                    }
-                }
-            }
-            catch { }
-
-            try
-            {
-                using (Process process = new Process())
-                {
-                    process.StartInfo = si;
-                    process.StartInfo.Arguments = "-m";
-
-                    process.Start();
-
-                    using (StreamReader stream = process.StandardOutput)
-                    {
-                        String line = stream.ReadLine();
-
-                        if (!String.IsNullOrWhiteSpace(line))
-                        {
-                            String output = line.Trim();
-
-                            if (regex.IsMatch(output))
-                                return true;
-                        }
-                    }
-                }
-            }
-            catch { }
-
-            return false;
-        }
-
         /// <summary>Converts a 4-bytes unsigned integer to a byte array.</summary>
         /// <param name="value">The <see cref="T:System.UInt32"/> to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
@@ -199,12 +125,7 @@ namespace FastHashes
             UInt16 v;
 
             if (s_IsLittleEndian)
-            { 
-                if (s_AllowsUnalignedRead || (((Int64)pointer & 7) == 0))
-                    v = *((UInt16*)pointer);
-                else
-                    v = (UInt16)(pointer[0] | (pointer[1] << 8));
-            }
+                v = *((UInt16*)pointer);
             else
                 v = (UInt16)((pointer[0] << 8) | pointer[1]);
 
@@ -220,14 +141,9 @@ namespace FastHashes
             UInt32 v;
 
             if (s_IsLittleEndian)
-            { 
-                if (s_AllowsUnalignedRead || (((Int64)pointer & 7) == 0))
-                    v = *((UInt32*)pointer);
-                else
-                    v = (UInt32)(pointer[0] | (pointer[1] << 8) | (pointer[2] << 16) | (pointer[3] << 24));
-            }
+                v = *((UInt32*)pointer);
             else
-                v = (UInt32)((pointer[0] << 24) | (pointer[1] << 16) | (pointer[2] << 8) | pointer[3]);
+                v = ((UInt32)pointer[0] << 24) | ((UInt32)pointer[1] << 16) | ((UInt32)pointer[2] << 8) | pointer[3];
 
             return v;
         }
@@ -241,14 +157,9 @@ namespace FastHashes
             UInt64 v;
 
             if (s_IsLittleEndian)
-            { 
-                if (s_AllowsUnalignedRead || (((Int64)pointer & 7) == 0))
-                    v = *((UInt64*)pointer);
-                else
-                    v = (UInt64)(pointer[0] | (pointer[1] << 8) | (pointer[2] << 16) | (pointer[3] << 24) | (pointer[4] << 32) | (pointer[5] << 40) | (pointer[6] << 48) | (pointer[7] << 56));
-            }
+                v = *((UInt64*)pointer);
             else
-                v = (UInt64)((pointer[0] << 56) | (pointer[1] << 48) | (pointer[2] << 40) | (pointer[3] << 32) | (pointer[4] << 24) | (pointer[5] << 16) | (pointer[6] << 8) | pointer[7]);
+                v = ((UInt64)pointer[0] << 56) | ((UInt64)pointer[1] << 48) | ((UInt64)pointer[2] << 40) | ((UInt64)pointer[3] << 32) | ((UInt64)pointer[4] << 24) | ((UInt64)pointer[5] << 16) | ((UInt64)pointer[6] << 8) | pointer[7];
 
             return v;
         }
@@ -262,12 +173,7 @@ namespace FastHashes
             UInt16 v;
 
             if (s_IsLittleEndian)
-            { 
-                if (s_AllowsUnalignedRead || (((Int64)pointer & 7) == 0))
-                    v = *((UInt16*)pointer);
-                else
-                    v = (UInt16)(pointer[0] | (pointer[1] << 8));
-            }
+                v = *((UInt16*)pointer);
             else
                 v = (UInt16)((pointer[0] << 8) | pointer[1]);
 
@@ -285,14 +191,9 @@ namespace FastHashes
             UInt32 v;
 
             if (s_IsLittleEndian)
-            { 
-                if (s_AllowsUnalignedRead || (((Int64)pointer & 7) == 0))
-                    v = *((UInt32*)pointer);
-                else
-                    v = (UInt32)(pointer[0] | (pointer[1] << 8) | (pointer[2] << 16) | (pointer[3] << 24));
-            }
+                v = *((UInt32*)pointer);
             else
-                v = (UInt32)((pointer[0] << 24) | (pointer[1] << 16) | (pointer[2] << 8) | pointer[3]);
+                v = ((UInt32)pointer[0] << 24) | ((UInt32)pointer[1] << 16) | ((UInt32)pointer[2] << 8) | pointer[3];
 
             pointer += 4;
 
@@ -308,14 +209,9 @@ namespace FastHashes
             UInt64 v;
 
             if (s_IsLittleEndian)
-            { 
-                if (s_AllowsUnalignedRead || (((Int64)pointer & 7) == 0))
-                    v = *((UInt64*)pointer);
-                else
-                    v = (UInt64)(pointer[0] | (pointer[1] << 8) | (pointer[2] << 16) | (pointer[3] << 24) | (pointer[4] << 32) | (pointer[5] << 40) | (pointer[6] << 48) | (pointer[7] << 56));
-            }
+                v = *((UInt64*)pointer);
             else
-                v = (UInt64)((pointer[0] << 56) | (pointer[1] << 48) | (pointer[2] << 40) | (pointer[3] << 32) | (pointer[4] << 24) | (pointer[5] << 16) | (pointer[6] << 8) | pointer[7]);
+                v = ((UInt64)pointer[0] << 56) | ((UInt64)pointer[1] << 48) | ((UInt64)pointer[2] << 40) | ((UInt64)pointer[3] << 32) | ((UInt64)pointer[4] << 24) | ((UInt64)pointer[5] << 16) | ((UInt64)pointer[6] << 8) | pointer[7];
 
             pointer += 8;
 
