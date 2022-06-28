@@ -74,9 +74,9 @@ namespace FastHashes
         protected abstract Byte[] GetHash(Byte[] hashData);
 
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<byte> buffer)
         {
-            return GetHash(m_Engine.ComputeHash(buffer, offset, count));
+            return GetHash(m_Engine.ComputeHash(buffer));
         }
 
         /// <inheritdoc/>
@@ -112,7 +112,7 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            public abstract Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length);
+            public abstract Byte[] ComputeHash(ReadOnlySpan<byte> data);
             #endregion
         }
 
@@ -183,8 +183,11 @@ namespace FastHashes
                 return v1;
             }
 
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
+            public override Byte[] ComputeHash(ReadOnlySpan<byte> data)
             {
+                int offset = 0;
+                int length = data.Length;
+
                 UInt64 hash1 = m_Seed1;
                 UInt64 hash2 = m_Seed2;
 
@@ -336,8 +339,11 @@ Finalize:
                 return v1;
             }
 
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
+            public override Byte[] ComputeHash(ReadOnlySpan<byte> data)
             {
+                int offset = 0;
+                int length = data.Length;
+
                 UInt32 hash1 = m_Seed1;
                 UInt32 hash2 = m_Seed2;
                 UInt32 hash3 = m_Seed3;
@@ -502,8 +508,11 @@ Finalize:
         }
 
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<byte> buffer)
         {
+            int count = buffer.Length;
+            int offset = 0;
+
             UInt32 hash = m_Seed;
 
             if (count == 0)

@@ -11,7 +11,7 @@ namespace FastHashes.Benchmarks
         #endregion
 
         #region Methods
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
         {
             return (new Byte[Length / 8]);
         }

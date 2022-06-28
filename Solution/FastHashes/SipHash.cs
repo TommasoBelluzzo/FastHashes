@@ -77,8 +77,11 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<byte> buffer)
         {
+            int count = buffer.Length;
+            int offset = 0;
+
             UInt32 b = (UInt32)count << 24;
 
             UInt32[] v =
@@ -259,8 +262,10 @@ Finalize:
         }
 
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<byte> buffer)
         {
+            int count = buffer.Length;
+            int offset = 0;
             UInt64 b = (UInt64)(count & 0x000000FF) << 56;
 
             UInt64[] v =

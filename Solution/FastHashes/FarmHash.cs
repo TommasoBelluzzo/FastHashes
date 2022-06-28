@@ -326,21 +326,33 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<byte> buffer)
         {
-            UInt32 hash;
-
+            UInt32 hash = 0;
+            int count = buffer.Length;
             unsafe
             {
-                fixed (Byte* pin = &buffer[offset])
+                if (count == 0)
                 {
-                    Byte* pointer = pin;
-
+                    Byte* pin = (byte*)0;
                     if (m_Seed.HasValue)
-                        hash = Hash(pointer, count, m_Seed.Value);
+                        hash = Hash(pin, count, m_Seed.Value);
                     else
-                        hash = Hash(pointer, count);
+                        hash = Hash(pin, count);
                 }
+                else
+                {
+                    fixed (Byte* pin = &buffer[0])
+                    {
+                        Byte* pointer = pin;
+
+                        if (m_Seed.HasValue)
+                            hash = Hash(pointer, count, m_Seed.Value);
+                        else
+                            hash = Hash(pointer, count);
+                    }
+                }
+
             }
 
             return ToByteArray64(hash);
@@ -494,34 +506,40 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<byte> buffer)
         {
             UInt64 hash;
-
+            int count = buffer.Length;
             unsafe
             {
-                fixed (Byte* pin = &buffer[offset])
+                if (count == 0)
                 {
-                    Byte* pointer = pin;
-
-                    if (count == 0)
-                        hash = K2;
-                    else if (count <= 3)
-                        hash = Hash1To3(pointer, count);
-                    else if (count <= 7)
-                        hash = Hash4To7(pointer, count);
-                    else if (count <= 16)
-                        hash = Hash8To16(pointer, count);
-                    else if (count <= 32)
-                        hash = Hash17To32(pointer, count);
-                    else if (count <= 64)
-                        hash = Hash33To64(pointer, count);
-                    else
-                        hash = Hash65ToEnd(pointer, count);
-
-                    if (m_Seeds.Count > 0)
-                        hash = HashLength16(hash - m_Seeds[0], m_Seeds[1], K3);
+                    hash = K2;
                 }
+                else
+                {
+                    fixed (Byte* pin = &buffer[0])
+                    {
+                        Byte* pointer = pin;
+
+                        if (count == 0)
+                            hash = K2;
+                        else if (count <= 3)
+                            hash = Hash1To3(pointer, count);
+                        else if (count <= 7)
+                            hash = Hash4To7(pointer, count);
+                        else if (count <= 16)
+                            hash = Hash8To16(pointer, count);
+                        else if (count <= 32)
+                            hash = Hash17To32(pointer, count);
+                        else if (count <= 64)
+                            hash = Hash33To64(pointer, count);
+                        else
+                            hash = Hash65ToEnd(pointer, count);
+                    }
+                }
+                if (m_Seeds.Count > 0)
+                    hash = HashLength16(hash - m_Seeds[0], m_Seeds[1], K3);
             }
 
             return ToByteArray64(hash);
@@ -558,7 +576,7 @@ namespace FastHashes
         #region Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Hash0(out UInt64 hash1, out UInt64 hash2, UInt64 seed1, UInt64 seed2)
-        { 
+        {
             UInt64 a = ShiftMix(seed1 * K1) * K1;
             UInt64 b = seed2;
             UInt64 c = (b * K1) + K2;
@@ -729,10 +747,12 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<byte> buffer)
         {
             UInt64 seed1, seed2;
             UInt64 hash1, hash2;
+            int count = buffer.Length;
+            int offset = 0;
 
             if (count == 0)
             {
@@ -793,7 +813,7 @@ namespace FastHashes
                 }
             }
 
-Finalize:
+        Finalize:
 
             return ToByteArray64(hash1, hash2);
         }

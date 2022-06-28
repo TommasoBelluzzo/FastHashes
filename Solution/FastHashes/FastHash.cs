@@ -56,18 +56,20 @@ namespace FastHashes
         protected abstract Byte[] GetHash(UInt64 hashData);
 
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<byte> buffer)
         {
             UInt64 hash = m_Seed;
+
+            int count = buffer.Length;
 
             if (count == 0)
                 goto Finalize;
 
-            hash ^= (UInt64)count * M;
+            hash ^= (UInt64)buffer.Length * M;
 
             unsafe
             {
-                fixed (Byte* pin = &buffer[offset])
+                fixed (Byte* pin = &buffer[0])
                 {
                     Byte* pointer = pin;
 
@@ -95,7 +97,7 @@ namespace FastHashes
                 }
             }
 
-Finalize:
+        Finalize:
 
             hash ^= hash >> 23;
             hash *= N;

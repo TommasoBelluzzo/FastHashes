@@ -64,9 +64,9 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<byte> buffer)
         {
-            return m_Engine.ComputeHash(buffer, offset, count);
+            return m_Engine.ComputeHash(buffer);
         }
 
         /// <inheritdoc/>
@@ -156,7 +156,7 @@ namespace FastHashes
                 return v1;
             }
             
-            public abstract Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length);
+            public abstract Byte[] ComputeHash(ReadOnlySpan<byte> data);
             #endregion
         }
 
@@ -183,8 +183,11 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
+            public override Byte[] ComputeHash(ReadOnlySpan<byte> data)
             {
+                int offset = 0;
+                int length = data.Length;
+
                 UInt64 hash = (m_Seed + K2) * K0;
 
                 if (length == 0)
@@ -287,8 +290,11 @@ Finalize:
             #endregion
 
             #region Methods
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
+            public override Byte[] ComputeHash(ReadOnlySpan<byte> data)
             {
+                int offset = 0;
+                int length = data.Length;
+
                 UInt64 hash = (m_Seed + K2) * K0;
 
                 if (length == 0)
@@ -428,9 +434,9 @@ Finalize:
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<byte> buffer)
         {
-            return m_Engine.ComputeHash(buffer, offset, count);
+            return m_Engine.ComputeHash(buffer);
         }
 
         /// <inheritdoc/>
@@ -512,7 +518,7 @@ Finalize:
                 return (v1 ^ RotateRight(((v2 + v3) * k1) + v4, r) * k2);
             }
 
-            public abstract Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length);
+            public abstract Byte[] ComputeHash(ReadOnlySpan<byte> data);
             #endregion
         }
 
@@ -539,8 +545,11 @@ Finalize:
             #endregion
 
             #region Methods
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
+            public override Byte[] ComputeHash(ReadOnlySpan<byte> data)
             {
+                int offset = 0;
+                int length = data.Length;
+
                 UInt64 hash1 = (m_Seed - K0) * K3;
                 UInt64 hash2 = (m_Seed + K1) * K2;
 
@@ -637,8 +646,11 @@ Finalize:
             #endregion
 
             #region Methods
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
+            public override Byte[] ComputeHash(ReadOnlySpan<byte> data)
             {
+                int offset = 0;
+                int length = data.Length;
+
                 UInt64 hash1 = (m_Seed - K0) * K3;
                 UInt64 hash2 = (m_Seed + K1) * K2;
 

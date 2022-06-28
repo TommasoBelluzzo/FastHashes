@@ -76,8 +76,11 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<byte> buffer)
         {
+            int offset = 0;
+            int count = buffer.Length;
+
             UInt64 hash = Mum(m_Seed + (UInt64)count, BSP);
 
             if (count == 0)

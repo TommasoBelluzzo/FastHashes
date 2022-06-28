@@ -74,9 +74,9 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<byte> buffer)
         {
-            return m_Engine.ComputeHash(buffer, offset, count);
+            return m_Engine.ComputeHash(buffer);
         }
 
         /// <inheritdoc/>
@@ -139,7 +139,7 @@ namespace FastHashes
                 h = (a * c) + (adbc >> 32) + (carry << 32) + ((l < bd) ? 1ul : 0ul);
             }
 
-            public abstract Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length);
+            public abstract Byte[] ComputeHash(ReadOnlySpan<byte> data);
             #endregion
         }
 
@@ -190,8 +190,11 @@ namespace FastHashes
                 v2 += (UInt32)(l >> 32);
             }
 
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
+            public override Byte[] ComputeHash(ReadOnlySpan<byte> data)
             {
+                int length = data.Length;
+                int offset = 0;
+
                 UInt32 unsignedLength = (UInt32)length;
                 UInt32 a = RotateRight(unsignedLength, 17) + (UInt32)m_Seed;
                 UInt32 b = unsignedLength ^ (UInt32)(m_Seed >> 32);
@@ -325,8 +328,11 @@ Finalize:
                 return l ^ h;
             }
 
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
+            public override Byte[] ComputeHash(ReadOnlySpan<byte> data)
             {
+                int length = data.Length;
+                int offset = 0;
+
                 UInt64 unsignedLength = (UInt64)length;
                 UInt64 a = m_Seed;
                 UInt64 b = unsignedLength;
@@ -471,8 +477,10 @@ Finalize:
                 v2 += h;              
             }
 
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
+            public override Byte[] ComputeHash(ReadOnlySpan<byte> data)
             {
+                int length = data.Length;
+                int offset = 0;
                 UInt64 unsignedLength = (UInt64)length;
                 UInt64 a = m_Seed;
                 UInt64 b = unsignedLength;

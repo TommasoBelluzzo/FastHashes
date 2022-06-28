@@ -153,8 +153,11 @@ namespace FastHashes
         protected abstract Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1);
 
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<byte> buffer)
         {
+            int offset = 0;
+            int count = buffer.Length;
+
             UInt64[] m0 = { M00, M01, M02, M03 };
             UInt64[] m1 = { M10, M11, M12, M13 };
 

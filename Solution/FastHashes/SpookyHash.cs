@@ -103,16 +103,24 @@ namespace FastHashes
             }
         }
 
-        private Byte[] ComputeHashLong(Byte[] data, Int32 index, Int32 length)
+        private Byte[] ComputeHashLong(ReadOnlySpan<byte> data)
         {
+            int length = data.Length;
+            //int index = 0;
+
             Int32 blocks = length / 96;
             Int32 blocksBytes = blocks * 96;
 
             Int32 finalLength = (blocks + 1) * 96;
             Byte[] dataFinal = new Byte[finalLength];
+            var dataFinalS = new Span<byte>(dataFinal);
+            
+            data.Slice(0, blocksBytes).CopyTo(dataFinalS);
+            data.Slice(blocksBytes, length - blocksBytes).CopyTo(dataFinalS.Slice(blocksBytes));
 
-            UnsafeBuffer.BlockCopy(data, index, dataFinal, 0, blocksBytes);
-            UnsafeBuffer.BlockCopy(data, blocksBytes, dataFinal, blocksBytes, length - blocksBytes);
+            //UnsafeBuffer.BlockCopy(data, index, dataFinal, 0, blocksBytes);
+            //UnsafeBuffer.BlockCopy(data, blocksBytes, dataFinal, blocksBytes, length - blocksBytes);
+
             dataFinal[finalLength - 1] = (Byte)(length % 96);
 
             UInt64[] hash = new UInt64[12];
@@ -157,77 +165,90 @@ namespace FastHashes
             return GetHash(hash);
         }
 
-        private Byte[] ComputeHashShort(Byte[] data, Int32 index, Int32 length)
+        private Byte[] ComputeHashShort(ReadOnlySpan<byte> data)
         {
+            int length = data.Length;
+            int index = 0;
+
             UInt64[] hash = { m_Seed1, m_Seed2, C, C };
 
-            unsafe
+            if (length == 0)
             {
-                fixed (Byte* pin = &data[index])
+                hash[3] = (UInt64)length << 56;
+                hash[2] += C;
+                hash[3] += C;
+            }
+            else
+            {
+
+
+                unsafe
                 {
-                    Byte* pointer = pin;
-
-                    Int32 remainder = length % 32;
-
-                    if (length > 15)
+                    fixed (Byte* pin = &data[index])
                     {
-                        Int32 blocks = length / 32;
+                        Byte* pointer = pin;
 
-                        while (blocks-- > 0)
+                        Int32 remainder = length % 32;
+
+                        if (length > 15)
                         {
-                            hash[2] += Read64(ref pointer);
-                            hash[3] += Read64(ref pointer);
-                            ShortMix(ref hash);
-                            hash[0] += Read64(ref pointer);
-                            hash[1] += Read64(ref pointer);
+                            Int32 blocks = length / 32;
+
+                            while (blocks-- > 0)
+                            {
+                                hash[2] += Read64(ref pointer);
+                                hash[3] += Read64(ref pointer);
+                                ShortMix(ref hash);
+                                hash[0] += Read64(ref pointer);
+                                hash[1] += Read64(ref pointer);
+                            }
+
+                            if (remainder >= 16)
+                            {
+                                hash[2] += Read64(ref pointer);
+                                hash[3] += Read64(ref pointer);
+                                ShortMix(ref hash);
+
+                                remainder -= 16;
+                            }
                         }
 
-                        if (remainder >= 16)
+                        hash[3] = (UInt64)length << 56;
+
+                        switch (remainder)
                         {
-                            hash[2] += Read64(ref pointer);
-                            hash[3] += Read64(ref pointer);
-                            ShortMix(ref hash);
-
-                            remainder -= 16;
+                            case 15: hash[3] += (UInt64)pointer[14] << 48; goto case 14;
+                            case 14: hash[3] += (UInt64)pointer[13] << 40; goto case 13;
+                            case 13: hash[3] += (UInt64)pointer[12] << 32; goto case 12;
+                            case 12:
+                                hash[2] += Read64(ref pointer);
+                                hash[3] += Read32(ref pointer);
+                                break;
+                            case 11: hash[3] += (UInt64)pointer[10] << 16; goto case 10;
+                            case 10: hash[3] += (UInt64)pointer[9] << 8; goto case 9;
+                            case 9: hash[3] += pointer[8]; goto case 8;
+                            case 8:
+                                hash[2] += Read64(ref pointer);
+                                break;
+                            case 7: hash[2] += (UInt64)pointer[6] << 48; goto case 6;
+                            case 6: hash[2] += (UInt64)pointer[5] << 40; goto case 5;
+                            case 5: hash[2] += (UInt64)pointer[4] << 32; goto case 4;
+                            case 4:
+                                hash[2] += Read32(ref pointer);
+                                break;
+                            case 3: hash[2] += (UInt64)pointer[2] << 16; goto case 2;
+                            case 2: hash[2] += (UInt64)pointer[1] << 8; goto case 1;
+                            case 1:
+                                hash[2] += pointer[0];
+                                break;
+                            case 0:
+                                hash[2] += C;
+                                hash[3] += C;
+                                break;
                         }
-                    }
-
-                    hash[3] = (UInt64)length << 56;
-
-                    switch (remainder)
-                    {
-                        case 15: hash[3] += (UInt64)pointer[14] << 48; goto case 14;
-                        case 14: hash[3] += (UInt64)pointer[13] << 40; goto case 13;
-                        case 13: hash[3] += (UInt64)pointer[12] << 32; goto case 12;
-                        case 12:
-                            hash[2] += Read64(ref pointer);
-                            hash[3] += Read32(ref pointer);
-                            break;
-                        case 11: hash[3] += (UInt64)pointer[10] << 16; goto case 10;
-                        case 10: hash[3] += (UInt64)pointer[9] << 8; goto case 9;
-                        case 9: hash[3] += pointer[8]; goto case 8;
-                        case 8:
-                            hash[2] += Read64(ref pointer);
-                            break;
-                        case 7: hash[2] += (UInt64)pointer[6] << 48; goto case 6;
-                        case 6: hash[2] += (UInt64)pointer[5] << 40; goto case 5;
-                        case 5: hash[2] += (UInt64)pointer[4] << 32; goto case 4;
-                        case 4:
-                            hash[2] += Read32(ref pointer);
-                            break;
-                        case 3: hash[2] += (UInt64)pointer[2] << 16; goto case 2;
-                        case 2: hash[2] += (UInt64)pointer[1] << 8;  goto case 1;
-                        case 1:
-                            hash[2] += pointer[0];
-                            break;
-                        case 0:
-                            hash[2] += C;
-                            hash[3] += C;
-                            break;
                     }
                 }
             }
-
             ShortEnd(ref hash);
 
             return GetHash(hash);
@@ -239,12 +260,14 @@ namespace FastHashes
         protected abstract Byte[] GetHash(UInt64[] hashData);
 
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<byte> buffer)
         {
-            if (count < 192)
-                return ComputeHashShort(buffer, offset, count);
+            int count = buffer.Length;
 
-            return ComputeHashLong(buffer, offset, count);
+            if (count < 192)
+                return ComputeHashShort(buffer);
+
+            return ComputeHashLong(buffer);
         }
         #endregion
     }
