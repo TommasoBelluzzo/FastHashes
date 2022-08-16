@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <Description>A .NET implementation of several non-cryptographic hashes.</Description>
+    <Description>A suite of .NET non-cryptographic hash functions.</Description>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>FastHashes.snk</AssemblyOriginatorKeyFile>
     <IsPackable>true</IsPackable>
@@ -14,11 +14,11 @@
     <PackageTags>algorithm hash</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Debug\</OutputPath>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile></DocumentationFile>
@@ -29,7 +29,6 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Debug-x64\</OutputPath>
     <PlatformTarget>x64</PlatformTarget>
 	  <DocumentationFile></DocumentationFile>
@@ -40,7 +39,6 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Debug-x86\</OutputPath>
     <PlatformTarget>x86</PlatformTarget>
 	  <DocumentationFile></DocumentationFile>
@@ -52,7 +50,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Release\</OutputPath>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -65,7 +62,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Release-x64\</OutputPath>
     <PlatformTarget>x64</PlatformTarget>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -78,7 +74,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Release-x86\</OutputPath>
     <PlatformTarget>x86</PlatformTarget>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -88,14 +83,26 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="" />
-  </ItemGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
 
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="System.Memory" Version="4.5.0" />
+  </ItemGroup>
   
   <ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">

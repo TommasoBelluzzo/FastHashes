@@ -52,12 +52,12 @@ namespace FastHashes
         {
             for (Int32 j = 0; j < 12; ++j)
             {
-                Int32 idxA = (j + 11) % 12;
-                Int32 idxB = (j + 1) % 12;
+                Int32 index1 = (j + 11) % 12;
+                Int32 index2 = (j + 1) % 12;
 
-                hash[idxA] += hash[idxB]; 
-                hash[(j + 2) % 12] ^= hash[idxA]; 
-                hash[idxB] = RotateLeft(hash[idxB], LRE[j]);
+                hash[index1] += hash[index2]; 
+                hash[(j + 2) % 12] ^= hash[index1]; 
+                hash[index2] = BinaryOperations.RotateLeft(hash[index2], LRE[j]);
             }
         }
 
@@ -66,13 +66,13 @@ namespace FastHashes
         {
             for (Int32 i = 0; i < 12; ++i)
             {
-                Int32 idx = (i + 11) % 12;
+                Int32 index = (i + 11) % 12;
 
                 hash[i] += v[i]; 
                 hash[(i + 2) % 12] ^= hash[(i + 10) % 12]; 
-                hash[idx] ^= hash[i];
-                hash[i] = RotateLeft(hash[i], LRM[i]); 
-                hash[idx] += hash[(i + 1) % 12];
+                hash[index] ^= hash[i];
+                hash[i] = BinaryOperations.RotateLeft(hash[i], LRM[i]); 
+                hash[index] += hash[(i + 1) % 12];
             }
         }
 
@@ -81,12 +81,12 @@ namespace FastHashes
         {
             for (Int32 i = 0; i < 11; ++i)
             {
-                Int32 idxA = (i + 2) % 4;
-                Int32 idxB = (i + 3) % 4;
+                Int32 index1 = (i + 2) % 4;
+                Int32 index2 = (i + 3) % 4;
 
-                hash[idxB] ^= hash[idxA];
-                hash[idxA] = RotateLeft(hash[idxA], SRE[i]);
-                hash[idxB] += hash[idxA];
+                hash[index2] ^= hash[index1];
+                hash[index1] = BinaryOperations.RotateLeft(hash[index1], SRE[i]);
+                hash[index2] += hash[index1];
             }
         }
 
@@ -95,25 +95,164 @@ namespace FastHashes
         {
             for (Int32 i = 0; i < 12; ++i)
             {
-                Int32 idx = (i + 2) % 4;
+                Int32 index = (i + 2) % 4;
 
-                hash[idx] = RotateLeft(hash[idx], SRM[i]);
-                hash[idx] += hash[(i + 3) % 4];
-                hash[i % 4] ^= hash[idx];
+                hash[index] = BinaryOperations.RotateLeft(hash[index], SRM[i]);
+                hash[index] += hash[(i + 3) % 4];
+                hash[i % 4] ^= hash[index];
             }
         }
 
-        private Byte[] ComputeHashLong(Byte[] data, Int32 index, Int32 length)
+        /// <summary>Finalizes any partial computation and returns the hash code.</summary>
+        /// <param name="hashData">The <see cref="T:System.UInt64"/>[] representing the hash data.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
+        protected abstract Byte[] GetHash(UInt64[] hashData);
+        #endregion
+
+
+        #region Pointer/Span Fork
+		#if NETSTANDARD2_1_OR_GREATER
+        private Byte[] ComputeHashLong(ReadOnlySpan<Byte> buffer)
         {
-            Int32 blocks = length / 96;
+            Int32 offset = 0;
+            Int32 count = buffer.Length;
+
+            Int32 blocks = count / 96;
             Int32 blocksBytes = blocks * 96;
 
-            Int32 finalLength = (blocks + 1) * 96;
-            Byte[] dataFinal = new Byte[finalLength];
+            Int32 dataLength = (blocks + 1) * 96;
+            Span<Byte> data = new Span<Byte>(new Byte[dataLength]);
 
-            UnsafeBuffer.BlockCopy(data, index, dataFinal, 0, blocksBytes);
-            UnsafeBuffer.BlockCopy(data, blocksBytes, dataFinal, blocksBytes, length - blocksBytes);
-            dataFinal[finalLength - 1] = (Byte)(length % 96);
+            buffer.Slice(0, blocksBytes).CopyTo(data);
+            buffer[blocksBytes..count].CopyTo(data[blocksBytes..]);
+            data[dataLength - 1] = (Byte)(count % 96);
+
+            UInt64[] hash = new UInt64[12];
+            hash[0] = hash[3] = hash[6] = hash[9] = m_Seed1;
+            hash[1] = hash[4] = hash[7] = hash[10] = m_Seed2;
+            hash[2] = hash[5] = hash[8] = hash[11] = C;
+
+            while (blocks-- > 0)
+            {
+                UInt64[] vb = BinaryOperations.ReadArray64(data, offset, 12);
+                offset += 96;
+
+                LongMix(ref hash, vb);
+            }
+
+            UInt64[] vr = BinaryOperations.ReadArray64(data, offset, 12);
+
+            LongMix(ref hash, vr);
+
+            for (Int32 i = 0; i < 3; ++i)
+                LongEnd(ref hash);
+
+            return GetHash(hash);
+        }
+
+        private Byte[] ComputeHashShort(ReadOnlySpan<Byte> buffer)
+        {
+            Int32 offset = 0;
+            Int32 count = buffer.Length;
+
+            UInt64[] hash = { m_Seed1, m_Seed2, C, C };
+
+            Int32 remainder = count % 32;
+
+            if (count > 15)
+            {
+                Int32 blocks = count / 32;
+
+                while (blocks-- > 0)
+                {
+                    hash[2] += BinaryOperations.Read64(buffer, offset);
+                    offset += 8;
+                    hash[3] += BinaryOperations.Read64(buffer, offset);
+                    offset += 8;
+
+                    ShortMix(ref hash);
+
+                    hash[0] += BinaryOperations.Read64(buffer, offset);
+                    offset += 8;
+                    hash[1] += BinaryOperations.Read64(buffer, offset);
+                    offset += 8;
+                }
+
+                if (remainder >= 16)
+                {
+                    hash[2] += BinaryOperations.Read64(buffer, offset);
+                    offset += 8;
+                    hash[3] += BinaryOperations.Read64(buffer, offset);
+                    offset += 8;
+
+                    ShortMix(ref hash);
+
+                    remainder -= 16;
+                }
+            }
+
+            hash[3] = (UInt64)count << 56;
+
+            switch (remainder)
+            {
+                case 15: hash[3] += (UInt64)buffer[offset + 14] << 48; goto case 14;
+                case 14: hash[3] += (UInt64)buffer[offset + 13] << 40; goto case 13;
+                case 13: hash[3] += (UInt64)buffer[offset + 12] << 32; goto case 12;
+                case 12:
+                    hash[2] += BinaryOperations.Read64(buffer, offset);
+                    offset += 8;
+                    hash[3] += BinaryOperations.Read32(buffer, offset);
+                    break;
+                case 11: hash[3] += (UInt64)buffer[offset + 10] << 16; goto case 10;
+                case 10: hash[3] += (UInt64)buffer[offset + 9] << 8; goto case 9;
+                case 9: hash[3] += buffer[offset + 8]; goto case 8;
+                case 8:
+                    hash[2] += BinaryOperations.Read64(buffer, offset);
+                    break;
+                case 7: hash[2] += (UInt64)buffer[offset + 6] << 48; goto case 6;
+                case 6: hash[2] += (UInt64)buffer[offset + 5] << 40; goto case 5;
+                case 5: hash[2] += (UInt64)buffer[offset + 4] << 32; goto case 4;
+                case 4:
+                    hash[2] += BinaryOperations.Read32(buffer, offset);
+                    break;
+                case 3: hash[2] += (UInt64)buffer[offset + 2] << 16; goto case 2;
+                case 2: hash[2] += (UInt64)buffer[offset + 1] << 8;  goto case 1;
+                case 1:
+                    hash[2] += buffer[offset];
+                    break;
+                case 0:
+                    hash[2] += C;
+                    hash[3] += C;
+                    break;
+            }
+
+            ShortEnd(ref hash);
+
+            Byte[] result = GetHash(hash);
+
+            return result;
+        }
+
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        {
+            if (buffer.Length < 192)
+                return ComputeHashShort(buffer);
+
+            return ComputeHashLong(buffer);
+        }
+		#else
+        private Byte[] ComputeHashLong(Byte[] buffer, Int32 offset, Int32 count)
+        {
+            Int32 blocks = count / 96;
+            Int32 blocksBytes = blocks * 96;
+
+            Int32 dataLength = (blocks + 1) * 96;
+            Byte[] data = new Byte[dataLength];
+
+            BinaryOperations.BlockCopy(buffer, offset, data, 0, blocksBytes);
+            BinaryOperations.BlockCopy(buffer, blocksBytes, data, blocksBytes, count - blocksBytes);
+            data[dataLength - 1] = (Byte)(count % 96);
 
             UInt64[] hash = new UInt64[12];
             hash[0] = hash[3] = hash[6] = hash[9] = m_Seed1;
@@ -122,30 +261,20 @@ namespace FastHashes
 
             unsafe
             {
-                fixed (Byte* pin = dataFinal)
+                fixed (Byte* pin = data)
                 {
                     Byte* pointer = pin;
 
                     while (blocks-- > 0)
                     {
-                        UInt64[] vb =
-                        {
-                            Read64(ref pointer), Read64(ref pointer), Read64(ref pointer),
-                            Read64(ref pointer), Read64(ref pointer), Read64(ref pointer),
-                            Read64(ref pointer), Read64(ref pointer), Read64(ref pointer),
-                            Read64(ref pointer), Read64(ref pointer), Read64(ref pointer)
-                        };
+                        UInt64[] vb = BinaryOperations.ReadArray64(pointer, 12);
+                        pointer += 96;
 
                         LongMix(ref hash, vb);
                     }
 
-                    UInt64[] vr =
-                    {
-                        Read64(ref pointer), Read64(ref pointer), Read64(ref pointer),
-                        Read64(ref pointer), Read64(ref pointer), Read64(ref pointer),
-                        Read64(ref pointer), Read64(ref pointer), Read64(ref pointer),
-                        Read64(ref pointer), Read64(ref pointer), Read64(ref pointer)
-                    };
+                    UInt64[] vr = BinaryOperations.ReadArray64(pointer, 12);
+                    pointer += 96;
 
                     LongMix(ref hash, vr);
                 }
@@ -157,42 +286,51 @@ namespace FastHashes
             return GetHash(hash);
         }
 
-        private Byte[] ComputeHashShort(Byte[] data, Int32 index, Int32 length)
+        private Byte[] ComputeHashShort(Byte[] buffer, Int32 offset, Int32 count)
         {
             UInt64[] hash = { m_Seed1, m_Seed2, C, C };
 
             unsafe
             {
-                fixed (Byte* pin = &data[index])
+                fixed (Byte* pin = &buffer[offset])
                 {
                     Byte* pointer = pin;
 
-                    Int32 remainder = length % 32;
+                    Int32 remainder = count % 32;
 
-                    if (length > 15)
+                    if (count > 15)
                     {
-                        Int32 blocks = length / 32;
+                        Int32 blocks = count / 32;
 
                         while (blocks-- > 0)
                         {
-                            hash[2] += Read64(ref pointer);
-                            hash[3] += Read64(ref pointer);
+                            hash[2] += BinaryOperations.Read64(pointer);
+                            pointer += 8;
+                            hash[3] += BinaryOperations.Read64(pointer);
+                            pointer += 8;
+
                             ShortMix(ref hash);
-                            hash[0] += Read64(ref pointer);
-                            hash[1] += Read64(ref pointer);
+
+                            hash[0] += BinaryOperations.Read64(pointer);
+                            pointer += 8;
+                            hash[1] += BinaryOperations.Read64(pointer);
+                            pointer += 8;
                         }
 
                         if (remainder >= 16)
                         {
-                            hash[2] += Read64(ref pointer);
-                            hash[3] += Read64(ref pointer);
+                            hash[2] += BinaryOperations.Read64(pointer);
+                            pointer += 8;
+                            hash[3] += BinaryOperations.Read64(pointer);
+                            pointer += 8;
+
                             ShortMix(ref hash);
 
                             remainder -= 16;
                         }
                     }
 
-                    hash[3] = (UInt64)length << 56;
+                    hash[3] = (UInt64)count << 56;
 
                     switch (remainder)
                     {
@@ -200,20 +338,24 @@ namespace FastHashes
                         case 14: hash[3] += (UInt64)pointer[13] << 40; goto case 13;
                         case 13: hash[3] += (UInt64)pointer[12] << 32; goto case 12;
                         case 12:
-                            hash[2] += Read64(ref pointer);
-                            hash[3] += Read32(ref pointer);
+                            hash[2] += BinaryOperations.Read64(pointer);
+                            pointer += 8;
+                            hash[3] += BinaryOperations.Read32(pointer);
+                            pointer += 4;
                             break;
                         case 11: hash[3] += (UInt64)pointer[10] << 16; goto case 10;
                         case 10: hash[3] += (UInt64)pointer[9] << 8; goto case 9;
                         case 9: hash[3] += pointer[8]; goto case 8;
                         case 8:
-                            hash[2] += Read64(ref pointer);
+                            hash[2] += BinaryOperations.Read64(pointer);
+                            pointer += 8;
                             break;
                         case 7: hash[2] += (UInt64)pointer[6] << 48; goto case 6;
                         case 6: hash[2] += (UInt64)pointer[5] << 40; goto case 5;
                         case 5: hash[2] += (UInt64)pointer[4] << 32; goto case 4;
                         case 4:
-                            hash[2] += Read32(ref pointer);
+                            hash[2] += BinaryOperations.Read32(pointer);
+                            pointer += 4;
                             break;
                         case 3: hash[2] += (UInt64)pointer[2] << 16; goto case 2;
                         case 2: hash[2] += (UInt64)pointer[1] << 8;  goto case 1;
@@ -230,13 +372,10 @@ namespace FastHashes
 
             ShortEnd(ref hash);
 
-            return GetHash(hash);
-        }
+            Byte[] result = GetHash(hash);
 
-        /// <summary>Finalizes any partial computation and returns the hash code.</summary>
-        /// <param name="hashData">The <see cref="T:System.UInt64"/>[] representing the hash data.</param>
-        /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
-        protected abstract Byte[] GetHash(UInt64[] hashData);
+            return result;
+        }
 
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
@@ -246,6 +385,7 @@ namespace FastHashes
 
             return ComputeHashLong(buffer, offset, count);
         }
+		#endif
         #endregion
     }
 
@@ -280,8 +420,9 @@ namespace FastHashes
         protected override Byte[] GetHash(UInt64[] hashData)
         {
             UInt64 hash = hashData[0];
+            Byte[] result = BinaryOperations.ToArray32(hash);
 
-            return ToByteArray32(hash);
+            return result;
         }
         #endregion
     }
@@ -317,8 +458,9 @@ namespace FastHashes
         protected override Byte[] GetHash(UInt64[] hashData)
         {
             UInt64 hash = hashData[0];
+            Byte[] result = BinaryOperations.ToArray64(hash);
 
-            return ToByteArray64(hash);
+            return result;
         }
         #endregion
     }
@@ -353,7 +495,9 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] hashData)
         {
-            return ToByteArray64(hashData);
+            Byte[] result = BinaryOperations.ToArray64(hashData);
+
+            return result;
         }
         #endregion
     }

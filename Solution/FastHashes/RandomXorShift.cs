@@ -51,42 +51,6 @@ namespace FastHashes
         #endregion
 
         #region Methods
-        private unsafe void NextBytes(Byte* pointer, Int32 length)
-        {
-            Int32 offset = 0;
-
-            while ((m_Bytes.Count > 0) && (offset < length))
-                pointer[offset++] = m_Bytes.Dequeue();
-
-            Int32 blocks = (length - offset) / 4;
-
-            if (blocks > 0)
-            {
-                UInt32* start = (UInt32*)(pointer + offset);
-                UInt32* end = start + blocks;
-
-                while (start < end)
-                    *(start++) = NextValue();
-
-                offset += blocks * 4;
-            }
-
-            while (offset < length)
-            {
-                if (m_Bytes.Count == 0)
-                {
-                    UInt32 value = NextValue();
- 
-                    m_Bytes.Enqueue((Byte)(value & 0x000000FFu));
-                    m_Bytes.Enqueue((Byte)((value >> 8) & 0x000000FFu));
-                    m_Bytes.Enqueue((Byte)((value >> 16) & 0x000000FFu));
-                    m_Bytes.Enqueue((Byte)((value >> 24) & 0x000000FFu));
-                }
- 
-                pointer[offset++] = m_Bytes.Dequeue();
-            }
-        }
-
         /// <inheritdoc/>
         [ExcludeFromCodeCoverage]
         public override String ToString()
@@ -154,14 +118,81 @@ namespace FastHashes
             if (count > (buffer.Length - offset))
                 throw new ArgumentException("The block defined by offset and count parameters must be within the bounds of the array.");
 
+            #if NETSTANDARD2_1_OR_GREATER
+            Int32 index = 0;
+
+            while ((m_Bytes.Count > 0) && (index < count))
+                buffer[offset + index++] = m_Bytes.Dequeue();
+
+            Int32 blocks = (count - index) / 4;
+
+            if (blocks > 0)
+            {
+                Int32 end = index + blocks;
+
+                while (index < end)
+                {
+                    UInt32 value = NextValue();
+                    Byte[] valueBytes = BitConverter.GetBytes(value);
+
+                    Buffer.BlockCopy(valueBytes, 0, buffer, offset + index, valueBytes.Length);
+                    index += 4;
+                }
+            }
+
+            while (index < count)
+            {
+                if (m_Bytes.Count == 0)
+                {
+                    UInt32 value = NextValue();
+                    Byte[] valueBytes = BitConverter.GetBytes(value);
+
+                    for (Int32 i = 0; i < valueBytes.Length; ++i)
+                        m_Bytes.Enqueue(valueBytes[i]);
+                }
+
+                buffer[offset + index++] = m_Bytes.Dequeue();
+            }
+            #else
             unsafe
             {
                 fixed (Byte* pin = &buffer[offset])
                 {
                     Byte* pointer = pin;
-                    NextBytes(pointer, count);
+                    Int32 index = 0;
+
+                    while ((m_Bytes.Count > 0) && (index < count))
+                        pointer[index++] = m_Bytes.Dequeue();
+
+                    Int32 blocks = (count - index) / 4;
+
+                    if (blocks > 0)
+                    {
+                        UInt32* start = (UInt32*)(pointer + index);
+                        UInt32* end = start + blocks;
+
+                        while (start < end)
+                            *(start++) = NextValue();
+
+                        index += blocks * 4;
+                    }
+
+                    while (index < count)
+                    {
+                        if (m_Bytes.Count == 0)
+                        {
+                            UInt32 value = NextValue();
+                            Byte[] valueBytes = BitConverter.GetBytes(value);
+
+                            for (Int32 i = 0; i < valueBytes.Length; ++i)
+                                m_Bytes.Enqueue(valueBytes[i]);
+                        }
+
+                        pointer[index++] = m_Bytes.Dequeue();
+                    }
                 }
             }
+            #endif
         }
         #endregion
     }

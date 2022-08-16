@@ -50,9 +50,12 @@ namespace FastHashes
                     m_Engine = new EngineV1(seed);
                     break;
 
-                default:
+                case FastPositiveHashVariant.V2:
                     m_Engine = new EngineV2(seed);
                     break;
+
+                default:
+                    goto case FastPositiveHashVariant.V2;
             }
         }
 
@@ -74,17 +77,27 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
-        {
-            return m_Engine.ComputeHash(buffer, offset, count);
-        }
-
-        /// <inheritdoc/>
         [ExcludeFromCodeCoverage]
         public override String ToString()
         {
             return $"{GetType().Name}-{m_Engine.Name}";
         }
+        #endregion
+
+        #region Pointer/Span Fork
+		#if NETSTANDARD2_1_OR_GREATER
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        {
+            return m_Engine.ComputeHash(buffer);
+        }
+		#else
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        {
+            return m_Engine.ComputeHash(buffer, offset, count);
+        }
+		#endif
         #endregion
 
         #region Nested Classes
@@ -138,8 +151,300 @@ namespace FastHashes
                 l = bd + (adbc << 32);
                 h = (a * c) + (adbc >> 32) + (carry << 32) + ((l < bd) ? 1ul : 0ul);
             }
+            #endregion
 
-            public abstract Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length);
+            #region Pointer/Span Fork
+            #if NETSTANDARD2_1_OR_GREATER
+            protected static UInt32 ExtractTail32(ReadOnlySpan<Byte> buffer, Int32 offset, Int32 remainder)
+            {
+                UInt32 t = 0u;
+
+                if (BitConverter.IsLittleEndian)
+                {
+                    switch (remainder & 3)
+                    {
+                        case 0:
+                            t = BinaryOperations.Read32(buffer, offset);
+                            break;
+
+                        case 1:
+                            t = buffer[offset];
+                            break;
+
+                        case 2:
+                            t += BinaryOperations.Read16(buffer, offset);
+                            break;
+
+                        case 3:
+                            t = (UInt32)buffer[offset + 2] << 16;
+                            goto case 2;
+                    }
+                }
+                else
+                {
+                    switch (remainder & 3)
+                    {
+                        case 0:
+                            t += buffer[offset + 3];
+                            t <<= 8;
+                            goto case 3;
+
+                        case 1:
+                            t += buffer[offset];
+                            break;
+
+                        case 2:
+                            t += buffer[offset + 1];
+                            t <<= 8;
+                            goto case 1;
+
+                        case 3:
+                            t += buffer[offset + 2];
+                            t <<= 8;
+                            goto case 2;
+                    }
+                }
+
+                return t;
+            }
+
+            protected static UInt64 ExtractTail64(ReadOnlySpan<Byte> buffer, Int32 offset, Int32 remainder)
+            {
+                UInt64 t = 0ul;
+
+                if (BitConverter.IsLittleEndian)
+                {
+                    switch (remainder & 7)
+                    {
+                        case 0:
+                            t = BinaryOperations.Read64(buffer, offset);
+                            break;
+
+                        case 7:
+                            t = (UInt64)buffer[offset + 6] << 8;
+                            goto case 6;
+
+                        case 6:
+                            t += buffer[offset + 5];
+                            t <<= 8;
+                            goto case 5;
+
+                        case 5:
+                            t += buffer[offset + 4];
+                            t <<= 32;
+                            goto case 4;
+
+                        case 4:
+                            t += BinaryOperations.Read32(buffer, offset);
+                            break;
+
+                        case 3:
+                            t = (UInt64)buffer[offset + 2] << 16;
+                            goto case 2;
+
+                        case 2:
+                            t += BinaryOperations.Read16(buffer, offset);
+                            break;
+
+                        case 1:
+                            t = buffer[offset];
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (remainder & 7)
+                    {
+                        case 0:
+                            t = (UInt64)buffer[offset + 7] << 8;
+                            goto case 7;
+
+                        case 7:
+                            t += buffer[offset + 6];
+                            t <<= 8;
+                            goto case 6;
+
+                        case 6:
+                            t += buffer[offset + 5];
+                            t <<= 8;
+                            goto case 5;
+
+                        case 5:
+                            t += buffer[offset + 4];
+                            t <<= 8;
+                            goto case 4;
+
+                        case 4:
+                            t += buffer[offset + 3];
+                            t <<= 8;
+                            goto case 3;
+
+                        case 3:
+                            t += buffer[offset + 2];
+                            t <<= 8;
+                            goto case 2;
+
+                        case 2:
+                            t += buffer[offset + 1];
+                            t <<= 8;
+                            goto case 1;
+                        
+                        case 1:
+                            t += buffer[offset];
+                            break;
+                    }
+                }
+
+                return t;
+            }
+
+            public abstract Byte[] ComputeHash(ReadOnlySpan<Byte> buffer);
+            #else
+            protected static unsafe UInt32 ExtractTail32(Byte* pointer, Int32 remainder)
+            {
+                UInt32 t = 0u;
+
+                if (BitConverter.IsLittleEndian)
+                {
+                    switch (remainder & 3)
+                    {
+                        case 0:
+                            t = BinaryOperations.Read32(pointer);
+                            break;
+
+                        case 3:
+                            t = (UInt32)pointer[2] << 16;
+                            goto case 2;
+
+                        case 2:
+                            t += BinaryOperations.Read16(pointer);
+                            break;
+
+                        case 1:
+                            t = pointer[0];
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (remainder & 3)
+                    {
+                        case 0:
+                            t += pointer[3];
+                            t <<= 8;
+                            goto case 3;
+
+                        case 3:
+                            t += pointer[2];
+                            t <<= 8;
+                            goto case 2;
+
+                        case 2:
+                            t += pointer[1];
+                            t <<= 8;
+                            goto case 1;
+
+                        case 1:
+                            t += pointer[0];
+                            break;
+                    }
+                }
+
+                return t;
+            }
+
+            protected static unsafe UInt64 ExtractTail64(Byte* pointer, Int32 remainder)
+            {
+                UInt64 t = 0ul;
+
+                if (BitConverter.IsLittleEndian)
+                {
+                    switch (remainder & 7)
+                    {
+                        case 0:
+                            t = BinaryOperations.Read64(pointer);
+                            break;
+
+                        case 7:
+                            t = (UInt64)pointer[6] << 8;
+                            goto case 6;
+
+                        case 6:
+                            t += pointer[5];
+                            t <<= 8;
+                            goto case 5;
+
+                        case 5:
+                            t += pointer[4];
+                            t <<= 32;
+                            goto case 4;
+
+                        case 4:
+                            t += BinaryOperations.Read32(pointer);
+                            break;
+
+                        case 3:
+                            t = (UInt64)pointer[2] << 16;
+                            goto case 2;
+
+                        case 2:
+                            t += BinaryOperations.Read16(pointer);
+                            break;
+
+                        case 1:
+                            t = pointer[0];
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (remainder & 7)
+                    {
+                        case 0:
+                            t = (UInt64)pointer[7] << 8;
+                            goto case 7;
+
+                        case 7:
+                            t += pointer[6];
+                            t <<= 8;
+                            goto case 6;
+
+                        case 6:
+                            t += pointer[5];
+                            t <<= 8;
+                            goto case 5;
+
+                        case 5:
+                            t += pointer[4];
+                            t <<= 8;
+                            goto case 4;
+
+                        case 4:
+                            t += pointer[3];
+                            t <<= 8;
+                            goto case 3;
+
+                        case 3:
+                            t += pointer[2];
+                            t <<= 8;
+                            goto case 2;
+
+                        case 2:
+                            t += pointer[1];
+                            t <<= 8;
+                            goto case 1;
+                        
+                        case 1:
+                            t += pointer[0];
+                            break;
+                    }
+                }
+
+                return t;
+            }
+
+            public abstract Byte[] ComputeHash(Byte[] buffer, Int32 offset, Int32 count);
+		    #endif
             #endregion
         }
 
@@ -172,11 +477,11 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void MixB(ref UInt32 a, ref UInt32 b, ref UInt32 c, ref UInt32 d, UInt32[] w)
             {
-                UInt32 d13 = w[1] + RotateRight(w[3] + d, 17);
-                UInt32 c02 = w[0] ^ RotateRight(w[2] + c, 11);
+                UInt32 d13 = w[1] + BinaryOperations.RotateRight(w[3] + d, 17);
+                UInt32 c02 = w[0] ^ BinaryOperations.RotateRight(w[2] + c, 11);
 
-                d ^= RotateRight(a + w[0], 3);
-                c ^= RotateRight(b + w[1], 7);
+                d ^= BinaryOperations.RotateRight(a + w[0], 3);
+                c ^= BinaryOperations.RotateRight(b + w[1], 7);
                 b = P321 * (c02 + w[3]);
                 a = P320 * (d13 ^ w[2]);
             }
@@ -189,57 +494,149 @@ namespace FastHashes
                 v1 ^= (UInt32)l;
                 v2 += (UInt32)(l >> 32);
             }
+            #endregion
 
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
+            #region Pointer/Span Fork
+            #if NETSTANDARD2_1_OR_GREATER
+            public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
             {
-                UInt32 unsignedLength = (UInt32)length;
-                UInt32 a = RotateRight(unsignedLength, 17) + (UInt32)m_Seed;
-                UInt32 b = unsignedLength ^ (UInt32)(m_Seed >> 32);
+                Int32 offset = 0;
+                Int32 count = buffer.Length;
 
-                if (length == 0)
+                UInt32 length = (UInt32)count;
+                UInt32 a = BinaryOperations.RotateRight(length, 17) + (UInt32)m_Seed;
+                UInt32 b = length ^ (UInt32)(m_Seed >> 32);
+
+                if (count == 0)
+                    goto Finalize;
+
+                Int32 blocks, remainder;
+
+                if (count > 16)
+                {
+                    blocks = count / 16;
+                    remainder = count & 15;
+                }
+                else
+                {
+                    blocks = 0;
+                    remainder = count;
+                }
+
+                if (blocks > 0)
+                {
+                    UInt32 c = ~a;
+                    UInt32 d = BinaryOperations.RotateRight(b, 5);
+
+                    while (blocks-- > 0)
+                    {
+                        UInt32[] w = BinaryOperations.ReadArray32(buffer, offset, 4);
+                        offset += 16;
+
+                        MixB(ref a, ref b, ref c, ref d, w);
+                    }
+
+                    c += a;
+                    d += b;
+                    a ^= P326 * (BinaryOperations.RotateRight(c, 16) + d);
+                    b ^= P325 * (c + BinaryOperations.RotateRight(d, 16));
+                }
+
+                switch (remainder)
+                {
+                    case 16:
+                    case 15:
+                    case 14:
+                    case 13:
+                        MixT(ref a, ref b, BinaryOperations.Read32(buffer, offset), P324);
+                        offset += 4;
+                        goto case 9;
+
+                    case 12:
+                    case 11:
+                    case 10:
+                    case 9:
+                        MixT(ref b, ref a, BinaryOperations.Read32(buffer, offset), P323);
+                        offset += 4;
+                        goto case 5;
+
+                    case 8:
+                    case 7:
+                    case 6:
+                    case 5:
+                        MixT(ref a, ref b, BinaryOperations.Read32(buffer, offset), P322);
+                        offset += 4;
+                        goto case 1;
+
+                    case 4:
+                    case 3:
+                    case 2:
+                    case 1:
+                        UInt32 t = ExtractTail32(buffer, offset, remainder);
+                        UInt32 v = t & (~0u >> (((4 - remainder) & 3) << 3));
+                        MixT(ref b, ref a, v, P321);
+                        break;
+                }
+
+                Finalize:
+
+                UInt64 hash = (b ^ BinaryOperations.RotateRight(a, 13)) | ((UInt64)a << 32);
+                hash *= P640;
+                hash ^= hash >> 41;
+                hash *= P644;
+                hash ^= hash >> 47;
+                hash *= P646;
+
+                Byte[] result = BinaryOperations.ToArray64(hash);
+
+                return result;
+            }
+            #else
+            public override Byte[] ComputeHash(Byte[] buffer, Int32 offset, Int32 count)
+            {
+                UInt32 length = (UInt32)count;
+                UInt32 a = BinaryOperations.RotateRight(length, 17) + (UInt32)m_Seed;
+                UInt32 b = length ^ (UInt32)(m_Seed >> 32);
+
+                if (count == 0)
                     goto Finalize;
 
                 unsafe
                 {
-                    fixed (Byte* pin = &data[offset])
+                    fixed (Byte* pin = &buffer[offset])
                     {
                         Byte* pointer = pin;
 
                         Int32 blocks, remainder;
 
-                        if (length > 16)
+                        if (count > 16)
                         {
-                            blocks = length / 16;
-                            remainder = length & 15;
+                            blocks = count / 16;
+                            remainder = count & 15;
                         }
                         else
                         {
                             blocks = 0;
-                            remainder = length;
+                            remainder = count;
                         }
 
                         if (blocks > 0)
                         {
                             UInt32 c = ~a;
-                            UInt32 d = RotateRight(b, 5);
+                            UInt32 d = BinaryOperations.RotateRight(b, 5);
 
                             while (blocks-- > 0)
                             {
-                                UInt32[] w =
-                                {
-                                    Read32(ref pointer),
-                                    Read32(ref pointer),
-                                    Read32(ref pointer),
-                                    Read32(ref pointer)
-                                };
+                                UInt32[] w = BinaryOperations.ReadArray32(pointer, 4);
+                                pointer += 16;
 
                                 MixB(ref a, ref b, ref c, ref d, w);
                             }
 
                             c += a;
                             d += b;
-                            a ^= P326 * (RotateRight(c, 16) + d);
-                            b ^= P325 * (c + RotateRight(d, 16));
+                            a ^= P326 * (BinaryOperations.RotateRight(c, 16) + d);
+                            b ^= P325 * (c + BinaryOperations.RotateRight(d, 16));
                         }
 
                         switch (remainder)
@@ -248,45 +645,52 @@ namespace FastHashes
                             case 15:
                             case 14:
                             case 13:
-                                MixT(ref a, ref b, Read32(ref pointer), P324);
+                                MixT(ref a, ref b, BinaryOperations.Read32(pointer), P324);
+                                pointer += 4;
                                 goto case 9;
 
                             case 12:
                             case 11:
                             case 10:
                             case 9:
-                                MixT(ref b, ref a, Read32(ref pointer), P323);
+                                MixT(ref b, ref a, BinaryOperations.Read32(pointer), P323);
+                                pointer += 4;
                                 goto case 5;
 
                             case 8:
                             case 7:
                             case 6:
                             case 5:
-                                MixT(ref a, ref b, Read32(ref pointer), P322);
+                                MixT(ref a, ref b, BinaryOperations.Read32(pointer), P322);
+                                pointer += 4;
                                 goto case 1;
 
                             case 4:
                             case 3:
                             case 2:
                             case 1:
-                                UInt32 v = Read32(ref pointer) & (~0u >> (((4 - remainder) & 3) << 3));
+                                UInt32 t = ExtractTail32(pointer, remainder);
+                                UInt32 v = t & (~0u >> (((4 - remainder) & 3) << 3));
                                 MixT(ref b, ref a, v, P321);
                                 break;
                         }
                     }
                 }
 
-Finalize:
+                Finalize:
 
-                UInt64 hash = (b ^ RotateRight(a, 13)) | ((UInt64)a << 32);
+                UInt64 hash = (b ^ BinaryOperations.RotateRight(a, 13)) | ((UInt64)a << 32);
                 hash *= P640;
                 hash ^= hash >> 41;
                 hash *= P644;
                 hash ^= hash >> 47;
                 hash *= P646;
 
-                return ToByteArray64(hash);
+                Byte[] result = BinaryOperations.ToArray64(hash);
+
+                return result;
             }
+		    #endif
             #endregion
         }
 
@@ -309,11 +713,11 @@ Finalize:
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void MixB(ref UInt64 a, ref UInt64 b, ref UInt64 c, ref UInt64 d, UInt64[] w)
             {
-                UInt64 d02 = w[0] ^ RotateRight(w[2] + d, 17);
-                UInt64 c13 = w[1] ^ RotateRight(w[3] + c, 17);
+                UInt64 d02 = w[0] ^ BinaryOperations.RotateRight(w[2] + d, 17);
+                UInt64 c13 = w[1] ^ BinaryOperations.RotateRight(w[3] + c, 17);
 
-                d -= b ^ RotateRight(w[1], 31);
-                c += a ^ RotateRight(w[0], 41);
+                d -= b ^ BinaryOperations.RotateRight(w[1], 31);
+                c += a ^ BinaryOperations.RotateRight(w[0], 41);
                 b ^= P640 * (c13 + w[2]);
                 a ^= P641 * (d02 + w[3]);
             }
@@ -324,55 +728,157 @@ Finalize:
                 Mux(out UInt64 l, out UInt64 h, v, p);
                 return l ^ h;
             }
+            #endregion
 
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
+            #region Pointer/Span Fork
+            #if NETSTANDARD2_1_OR_GREATER
+            public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
             {
-                UInt64 unsignedLength = (UInt64)length;
-                UInt64 a = m_Seed;
-                UInt64 b = unsignedLength;
+                Int32 offset = 0;
+                Int32 count = buffer.Length;
 
-                if (length == 0)
+                UInt64 length = (UInt64)count;
+                UInt64 a = m_Seed;
+                UInt64 b = length;
+
+                if (count == 0)
+                    goto Finalize;
+
+                Int32 blocks, remainder;
+
+                if (count > 32)
+                {
+                    blocks = count / 32;
+                    remainder = count & 31;
+                }
+                else
+                {
+                    blocks = 0;
+                    remainder = count;
+                }
+
+                if (blocks > 0)
+                {
+                    UInt64 c = BinaryOperations.RotateRight(length, 17) + m_Seed;
+                    UInt64 d = length ^ BinaryOperations.RotateRight(m_Seed, 17);
+
+                    while (blocks-- > 0)
+                    {
+                        UInt64[] w = BinaryOperations.ReadArray64(buffer, offset, 4);
+                        offset += 32;
+
+                        MixB(ref a, ref b, ref c, ref d, w);
+                    }
+
+                    a ^= P646 * (BinaryOperations.RotateRight(c, 17) + d);
+                    b ^= P645 * (c + BinaryOperations.RotateRight(d, 17));
+                }
+
+                switch (remainder)
+                {
+                    case 32:
+                    case 31:
+                    case 30:
+                    case 29:
+                    case 28:
+                    case 27:
+                    case 26:
+                    case 25:
+                        b += MixT(BinaryOperations.Read64(buffer, offset), P644);
+                        offset += 8;
+                        goto case 17;
+
+                    case 24:
+                    case 23:
+                    case 22:
+                    case 21:
+                    case 20:
+                    case 19:
+                    case 18:
+                    case 17:
+                        a += MixT(BinaryOperations.Read64(buffer, offset), P643);
+                        offset += 8;
+                        goto case 9;
+    
+                    case 16:
+                    case 15:
+                    case 14:
+                    case 13:
+                    case 12:
+                    case 11:
+                    case 10:
+                    case 9:
+                        b += MixT(BinaryOperations.Read64(buffer, offset), P642);
+                        offset += 8;
+                        goto case 1;
+
+                    case 8:
+                    case 7:
+                    case 6:
+                    case 5:
+                    case 4:
+                    case 3:
+                    case 2:
+                    case 1:
+                        UInt64 t = ExtractTail64(buffer, offset, remainder);
+                        UInt64 v = t & (~0ul >> (((8 - remainder) & 7) << 3));
+                        a += MixT(v, P641);
+                        break;
+                }
+
+                Finalize:
+
+                UInt64 h0 = (a ^ b) * P640;
+
+                UInt64 hash = MixT(BinaryOperations.RotateRight(a + b, 17), P644) + (h0 ^ BinaryOperations.RotateRight(h0, 41));
+                Byte[] result = BinaryOperations.ToArray64(hash);
+
+                return result;
+            }
+            #else
+            public override Byte[] ComputeHash(Byte[] buffer, Int32 offset, Int32 count)
+            {
+                UInt64 length = (UInt64)count;
+                UInt64 a = m_Seed;
+                UInt64 b = length;
+
+                if (count == 0)
                     goto Finalize;
 
                 unsafe
                 {
-                    fixed (Byte* pin = &data[offset])
+                    fixed (Byte* pin = &buffer[offset])
                     {
                         Byte* pointer = pin;
 
                         Int32 blocks, remainder;
 
-                        if (length > 32)
+                        if (count > 32)
                         {
-                            blocks = length / 32;
-                            remainder = length & 31;
+                            blocks = count / 32;
+                            remainder = count & 31;
                         }
                         else
                         {
                             blocks = 0;
-                            remainder = length;
+                            remainder = count;
                         }
 
                         if (blocks > 0)
                         {
-                            UInt64 c = RotateRight(unsignedLength, 17) + m_Seed;
-                            UInt64 d = unsignedLength ^ RotateRight(m_Seed, 17);
+                            UInt64 c = BinaryOperations.RotateRight(length, 17) + m_Seed;
+                            UInt64 d = length ^ BinaryOperations.RotateRight(m_Seed, 17);
 
                             while (blocks-- > 0)
                             {
-                                UInt64[] w =
-                                {
-                                    Read64(ref pointer),
-                                    Read64(ref pointer),
-                                    Read64(ref pointer),
-                                    Read64(ref pointer)
-                                };
+                                UInt64[] w = BinaryOperations.ReadArray64(pointer, 4);
+                                pointer += 32;
 
                                 MixB(ref a, ref b, ref c, ref d, w);
                             }
 
-                            a ^= P646 * (RotateRight(c, 17) + d);
-                            b ^= P645 * (c + RotateRight(d, 17));
+                            a ^= P646 * (BinaryOperations.RotateRight(c, 17) + d);
+                            b ^= P645 * (c + BinaryOperations.RotateRight(d, 17));
                         }
 
                         switch (remainder)
@@ -385,7 +891,8 @@ Finalize:
                             case 27:
                             case 26:
                             case 25:
-                                b += MixT(Read64(ref pointer), P644);
+                                b += MixT(BinaryOperations.Read64(pointer), P644);
+                                pointer += 8;
                                 goto case 17;
 
                             case 24:
@@ -396,7 +903,8 @@ Finalize:
                             case 19:
                             case 18:
                             case 17:
-                                a += MixT(Read64(ref pointer), P643);
+                                a += MixT(BinaryOperations.Read64(pointer), P643);
+                                pointer += 8;
                                 goto case 9;
     
                             case 16:
@@ -407,7 +915,8 @@ Finalize:
                             case 11:
                             case 10:
                             case 9:
-                                b += MixT(Read64(ref pointer), P642);
+                                b += MixT(BinaryOperations.Read64(pointer), P642);
+                                pointer += 8;
                                 goto case 1;
 
                             case 8:
@@ -418,20 +927,24 @@ Finalize:
                             case 3:
                             case 2:
                             case 1:
-                                UInt64 v = Read64(ref pointer) & (~0ul >> (((8 - remainder) & 7) << 3));
+                                UInt64 t = ExtractTail64(pointer, remainder);
+                                UInt64 v = t & (~0ul >> (((8 - remainder) & 7) << 3));
                                 a += MixT(v, P641);
                                 break;
                         }
                     }
                 }
 
-Finalize:
+                Finalize:
 
                 UInt64 h0 = (a ^ b) * P640;
-                UInt64 hash = MixT(RotateRight(a + b, 17), P644) + (h0 ^ RotateRight(h0, 41));
 
-                return ToByteArray64(hash);
+                UInt64 hash = MixT(BinaryOperations.RotateRight(a + b, 17), P644) + (h0 ^ BinaryOperations.RotateRight(h0, 41));
+                Byte[] result = BinaryOperations.ToArray64(hash);
+
+                return result;
             }
+		    #endif
             #endregion
         }
 
@@ -454,11 +967,11 @@ Finalize:
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void MixB(ref UInt64 a, ref UInt64 b, ref UInt64 c, ref UInt64 d, UInt64[] w)
             {
-                UInt64 d02 = w[0] + RotateRight(w[2] + d, 56);
-                UInt64 c13 = w[1] + RotateRight(w[3] + c, 19);
+                UInt64 d02 = w[0] + BinaryOperations.RotateRight(w[2] + d, 56);
+                UInt64 c13 = w[1] + BinaryOperations.RotateRight(w[3] + c, 19);
 
-                d ^= b + RotateRight(w[1], 38);                
-                c ^= a + RotateRight(w[0], 57);                
+                d ^= b + BinaryOperations.RotateRight(w[1], 38);                
+                c ^= a + BinaryOperations.RotateRight(w[0], 57);                
                 b ^= P646 * (c13 + w[2]);                  
                 a ^= P645 * (d02 + w[3]);                  
             }
@@ -470,55 +983,159 @@ Finalize:
                 v1 ^= l;
                 v2 += h;              
             }
+            #endregion
 
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 length)
+            #region Pointer/Span Fork
+		    #if NETSTANDARD2_1_OR_GREATER
+            public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
             {
-                UInt64 unsignedLength = (UInt64)length;
-                UInt64 a = m_Seed;
-                UInt64 b = unsignedLength;
+                Int32 offset = 0;
+                Int32 count = buffer.Length;
 
-                if (length == 0)
+                UInt64 length = (UInt64)count;
+                UInt64 a = m_Seed;
+                UInt64 b = length;
+
+                if (count == 0)
+                    goto Finalize;
+
+                Int32 blocks, remainder;
+
+                if (count > 32)
+                {
+                    blocks = count / 32;
+                    remainder = count & 31;
+                }
+                else
+                {
+                    blocks = 0;
+                    remainder = count;
+                }
+
+                if (blocks > 0)
+                {
+                    UInt64 c = BinaryOperations.RotateRight(length, 23) + ~m_Seed;
+                    UInt64 d = ~length + BinaryOperations.RotateRight(m_Seed, 19);
+
+                    while (blocks-- > 0)
+                    {
+                        UInt64[] w = BinaryOperations.ReadArray64(buffer, offset, 4);
+                        offset += 32;
+
+                        MixB(ref a, ref b, ref c, ref d, w);
+                    }
+
+                    a ^= P646 * (c + BinaryOperations.RotateRight(d, 23));
+                    b ^= P645 * (BinaryOperations.RotateRight(c, 19) + d);
+                }
+
+                switch (remainder)
+                {
+                    case 32:
+                    case 31:
+                    case 30:
+                    case 29:
+                    case 28:
+                    case 27:
+                    case 26:
+                    case 25:
+                        MixT(ref a, ref b, BinaryOperations.Read64(buffer, offset), P644);
+                        offset += 8;
+                        goto case 17;
+
+                    case 24:
+                    case 23:
+                    case 22:
+                    case 21:
+                    case 20:
+                    case 19:
+                    case 18:
+                    case 17:
+                        MixT(ref b, ref a, BinaryOperations.Read64(buffer, offset), P643);
+                        offset += 8;
+                        goto case 9;
+    
+                    case 16:
+                    case 15:
+                    case 14:
+                    case 13:
+                    case 12:
+                    case 11:
+                    case 10:
+                    case 9:
+                        MixT(ref a, ref b, BinaryOperations.Read64(buffer, offset), P642);
+                        offset += 8;
+                        goto case 1;
+
+                    case 8:
+                    case 7:
+                    case 6:
+                    case 5:
+                    case 4:
+                    case 3:
+                    case 2:
+                    case 1:
+                        UInt64 t = ExtractTail64(buffer, offset, remainder);
+                        UInt64 v = t & (~0ul >> (((8 - remainder) & 7) << 3));
+                        MixT(ref b, ref a, v, P641);
+                        break;
+                }
+
+                Finalize:
+
+                UInt64 h0 = (a + BinaryOperations.RotateRight(b, 41)) * P640;
+                UInt64 h1 = (BinaryOperations.RotateRight(a, 23) + b) * P646;
+                Mux(out UInt64 l, out UInt64 h, h0 ^ h1, P645);
+
+                UInt64 hash = l ^ h;
+                Byte[] result = BinaryOperations.ToArray64(hash);
+
+                return result;
+            }
+            #else
+            public override Byte[] ComputeHash(Byte[] buffer, Int32 offset, Int32 count)
+            {
+                UInt64 length = (UInt64)count;
+                UInt64 a = m_Seed;
+                UInt64 b = length;
+
+                if (count == 0)
                     goto Finalize;
 
                 unsafe
                 {
-                    fixed (Byte* pin = &data[offset])
+                    fixed (Byte* pin = &buffer[offset])
                     {
                         Byte* pointer = pin;
 
                         Int32 blocks, remainder;
 
-                        if (length > 32)
+                        if (count > 32)
                         {
-                            blocks = length / 32;
-                            remainder = length & 31;
+                            blocks = count / 32;
+                            remainder = count & 31;
                         }
                         else
                         {
                             blocks = 0;
-                            remainder = length;
+                            remainder = count;
                         }
 
                         if (blocks > 0)
                         {
-                            UInt64 c = RotateRight(unsignedLength, 23) + ~m_Seed;
-                            UInt64 d = ~unsignedLength + RotateRight(m_Seed, 19);
+                            UInt64 c = BinaryOperations.RotateRight(length, 23) + ~m_Seed;
+                            UInt64 d = ~length + BinaryOperations.RotateRight(m_Seed, 19);
 
                             while (blocks-- > 0)
                             {
-                                UInt64[] w =
-                                {
-                                    Read64(ref pointer),
-                                    Read64(ref pointer),
-                                    Read64(ref pointer),
-                                    Read64(ref pointer)
-                                };
+                                UInt64[] w = BinaryOperations.ReadArray64(pointer, 4);
+                                pointer += 32;
 
                                 MixB(ref a, ref b, ref c, ref d, w);
                             }
 
-                            a ^= P646 * (c + RotateRight(d, 23));
-                            b ^= P645 * (RotateRight(c, 19) + d);
+                            a ^= P646 * (c + BinaryOperations.RotateRight(d, 23));
+                            b ^= P645 * (BinaryOperations.RotateRight(c, 19) + d);
                         }
 
                         switch (remainder)
@@ -531,7 +1148,8 @@ Finalize:
                             case 27:
                             case 26:
                             case 25:
-                                MixT(ref a, ref b, Read64(ref pointer), P644);
+                                MixT(ref a, ref b, BinaryOperations.Read64(pointer), P644);
+                                pointer += 8;
                                 goto case 17;
 
                             case 24:
@@ -542,7 +1160,8 @@ Finalize:
                             case 19:
                             case 18:
                             case 17:
-                                MixT(ref b, ref a, Read64(ref pointer), P643);
+                                MixT(ref b, ref a, BinaryOperations.Read64(pointer), P643);
+                                pointer += 8;
                                 goto case 9;
     
                             case 16:
@@ -553,7 +1172,8 @@ Finalize:
                             case 11:
                             case 10:
                             case 9:
-                                MixT(ref a, ref b, Read64(ref pointer), P642);
+                                MixT(ref a, ref b, BinaryOperations.Read64(pointer), P642);
+                                pointer += 8;
                                 goto case 1;
 
                             case 8:
@@ -564,23 +1184,26 @@ Finalize:
                             case 3:
                             case 2:
                             case 1:
-                                UInt64 v = Read64(ref pointer) & (~0ul >> (((8 - remainder) & 7) << 3));
+                                UInt64 t = ExtractTail64(pointer, remainder);
+                                UInt64 v = t & (~0ul >> (((8 - remainder) & 7) << 3));
                                 MixT(ref b, ref a, v, P641);
                                 break;
                         }
                     }
                 }
 
-Finalize:
+                Finalize:
 
-                UInt64 h0 = (a + RotateRight(b, 41)) * P640;
-                UInt64 h1 = (RotateRight(a, 23) + b) * P646;
+                UInt64 h0 = (a + BinaryOperations.RotateRight(b, 41)) * P640;
+                UInt64 h1 = (BinaryOperations.RotateRight(a, 23) + b) * P646;
                 Mux(out UInt64 l, out UInt64 h, h0 ^ h1, P645);
 
                 UInt64 hash = l ^ h;
+                Byte[] result = BinaryOperations.ToArray64(hash);
 
-                return ToByteArray64(hash);
+                return result;
             }
+            #endif
             #endregion
         }
         #endregion

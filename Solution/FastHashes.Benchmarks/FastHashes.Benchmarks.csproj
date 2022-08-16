@@ -1,12 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFrameworks>netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <Description>Benchmarks for the FastHashes library.</Description>
     <OutputType>Exe</OutputType>
     <StartupObject>FastHashes.Benchmarks.Program</StartupObject>
     <IsPackable>false</IsPackable>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <IsMacOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsMacOS>
     <IsUnix Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsUnix>
     <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
@@ -94,7 +96,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FastHashes\FastHashes.csproj" />
+    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
+      <SetTargetFramework>TargetFramework=netstandard2.0</SetTargetFramework>
+    </ProjectReference>
+    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+      <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

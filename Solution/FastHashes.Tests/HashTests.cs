@@ -94,7 +94,12 @@ namespace FastHashes.Tests
 
                 Byte[] buffer = new Byte[lineBytes.Length + 5];
                 Utilities.FillBuffer(buffer, filler);
-                UnsafeBuffer.BlockCopy(lineBytes, 0, buffer, 0, lineBytes.Length);
+
+                #if NETCOREAPP3_1_OR_GREATER
+                Buffer.BlockCopy(lineBytes, 0, buffer, 0, lineBytes.Length);
+                #else
+                BinaryOperations.BlockCopy(lineBytes, 0, buffer, 0, lineBytes.Length);
+                #endif
 
                 for (Int32 j = 0; j <= 5; ++j)
                     hashes.Add(hash.ComputeHash(buffer, 0, lineBytesLength + j));
@@ -124,7 +129,11 @@ namespace FastHashes.Tests
                 Hash hashi = hashInitializer((UInt32)(256 - i));
                 Byte[] hi = hashi.ComputeHash(buffer, 0, i);
         
-                UnsafeBuffer.BlockCopy(hi, 0, bufferFinal, i * hashBytes, hashBytes);
+                #if NETCOREAPP3_1_OR_GREATER
+                Buffer.BlockCopy(hi, 0, bufferFinal, i * hashBytes, hashBytes);
+                #else
+                BinaryOperations.BlockCopy(hi, 0, bufferFinal, i * hashBytes, hashBytes);
+                #endif
             }
         
             Byte[] h0 = hash0.ComputeHash(bufferFinal);   
@@ -158,8 +167,10 @@ namespace FastHashes.Tests
                 if (String.IsNullOrWhiteSpace(hashName))
                     throw new ArgumentException("Invalid hash name specified.", nameof(hashName));
 
+                // ReSharper disable JoinNullCheckWithUsage
                 if (hashInitializer == null)
                     throw new ArgumentException("Invalid hash initializer specified.", nameof(hashInitializer));
+                // ReSharper restore JoinNullCheckWithUsage
 
                 if (String.IsNullOrWhiteSpace(hashName))
                     throw new ArgumentException("Invalid expected value specified.", nameof(expectedValue));

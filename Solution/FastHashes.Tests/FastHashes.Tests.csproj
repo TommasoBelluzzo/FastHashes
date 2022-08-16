@@ -1,10 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFrameworks>netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <Description>Unit tests for the FastHashes library.</Description>
     <IsPackable>false</IsPackable>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <IsMacOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsMacOS>
+    <IsUnix Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsUnix>
+    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -76,6 +81,18 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(IsMacOS)' == 'true'">
+    <DefineConstants>MACOS</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsUnix)' == 'true'">
+    <DefineConstants>UNIX</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsWindows)' == 'true'">
+    <DefineConstants>WINDOWS</DefineConstants>
+  </PropertyGroup>
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
@@ -90,9 +107,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FastHashes\FastHashes.csproj" />
+    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
+      <SetTargetFramework>TargetFramework=netstandard2.0</SetTargetFramework>
+    </ProjectReference>
+    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+      <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
+    </ProjectReference>
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+    <Compile Remove="..\FastHashes.Tests\UnsafeBufferTests.cs" />
+  </ItemGroup>
+  
   <ItemGroup>
     <None Update="Data\Words.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

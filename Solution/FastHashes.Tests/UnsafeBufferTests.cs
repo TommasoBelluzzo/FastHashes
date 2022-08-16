@@ -76,7 +76,7 @@ namespace FastHashes.Tests
 
             try
             {
-                UnsafeBuffer.BlockCopy(source, sourceOffset, destination, destinationOffset, count);
+                BinaryOperations.BlockCopy(source, sourceOffset, destination, destinationOffset, count);
                 actualResult = destination;
             }
             catch (Exception e)

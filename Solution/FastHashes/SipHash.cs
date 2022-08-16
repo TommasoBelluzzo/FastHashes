@@ -61,33 +61,83 @@ namespace FastHashes
         private static void Mix(ref UInt32[] v)
         {
             v[0] += v[1];
-            v[1] = RotateLeft(v[1], 5);
+            v[1] = BinaryOperations.RotateLeft(v[1], 5);
             v[1] ^= v[0];
-            v[0] = RotateLeft(v[0], 16);
+            v[0] = BinaryOperations.RotateLeft(v[0], 16);
             v[2] += v[3];    
-            v[3] = RotateLeft(v[3], 8);
+            v[3] = BinaryOperations.RotateLeft(v[3], 8);
             v[3] ^= v[2];
             v[0] += v[3];
-            v[3] = RotateLeft(v[3], 7);
+            v[3] = BinaryOperations.RotateLeft(v[3], 7);
             v[3] ^= v[0];
             v[2] += v[1];
-            v[1] = RotateLeft(v[1], 13);
+            v[1] = BinaryOperations.RotateLeft(v[1], 13);
             v[1] ^= v[2];
-            v[2] = RotateLeft(v[2], 16);
+            v[2] = BinaryOperations.RotateLeft(v[2], 16);
         }
+        #endregion
 
+        #region Pointer/Span Fork
+        #if NETSTANDARD2_1_OR_GREATER
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        {
+            Int32 offset = 0;
+            Int32 count = buffer.Length;
+
+            UInt32 b = (UInt32)count << 24;
+            UInt32[] v = { m_Seed1, m_Seed2, I0 ^ m_Seed1, I1 ^ m_Seed2 };
+
+            if (count == 0)
+                goto Finalize;
+
+            Int32 blocks = count / 4;
+            Int32 remainder = count & 3;
+
+            while (blocks-- > 0)
+            {
+                UInt32 m = BinaryOperations.Read32(buffer, offset);
+                offset += 4;
+
+                v[3] ^= m;
+
+                for (Int32 i = 0; i < 2; ++i)
+                    Mix(ref v);
+
+                v[0] ^= m;
+            }
+
+            switch (remainder)
+            {
+                case 3: b |= (UInt32)buffer[offset + 2] << 16; goto case 2;
+                case 2: b |= (UInt32)buffer[offset + 1] << 8; goto case 1;
+                case 1: b |= buffer[offset]; break;
+            }
+
+            Finalize:
+
+            v[3] ^= b;
+
+            for (Int32 i = 0; i < 2; ++i)
+                Mix(ref v);
+
+            v[0] ^= b;
+            v[2] ^= 0x000000FFu;
+
+            for (Int32 i = 0; i < 4; ++i)
+                Mix(ref v);
+
+            UInt32 hash = v[1] ^ v[3];
+            Byte[] result = BinaryOperations.ToArray32(hash);
+
+            return result;
+        }
+        #else
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
             UInt32 b = (UInt32)count << 24;
-
-            UInt32[] v =
-            {
-                m_Seed1,
-                m_Seed2,
-                I0 ^ m_Seed1,
-                I1 ^ m_Seed2
-            };
+            UInt32[] v = { m_Seed1, m_Seed2, I0 ^ m_Seed1, I1 ^ m_Seed2 };
 
             if (count == 0)
                 goto Finalize;
@@ -103,7 +153,8 @@ namespace FastHashes
 
                     while (blocks-- > 0)
                     {
-                        UInt32 m = Read32(ref pointer);
+                        UInt32 m = BinaryOperations.Read32(pointer);
+                        pointer += 4;
 
                         v[3] ^= m;
 
@@ -122,7 +173,7 @@ namespace FastHashes
                 }
             }
 
-Finalize:
+            Finalize:
 
             v[3] ^= b;
 
@@ -136,9 +187,11 @@ Finalize:
                 Mix(ref v);
 
             UInt32 hash = v[1] ^ v[3];
+            Byte[] result = BinaryOperations.ToArray32(hash);
 
-            return ToByteArray32(hash);
+            return result;
         }
+        #endif
         #endregion
     }
 
@@ -244,32 +297,93 @@ Finalize:
         {
             v[0] += v[1];
             v[2] += v[3];
-            v[1] = RotateLeft(v[1], 13);
-            v[3] = RotateLeft(v[3], 16);
+            v[1] = BinaryOperations.RotateLeft(v[1], 13);
+            v[3] = BinaryOperations.RotateLeft(v[3], 16);
             v[1] ^= v[0];
             v[3] ^= v[2];
-            v[0] = RotateLeft(v[0], 32);
+            v[0] = BinaryOperations.RotateLeft(v[0], 32);
             v[2] += v[1];
             v[0] += v[3];
-            v[1] = RotateLeft(v[1], 17);
-            v[3] = RotateLeft(v[3], 21);
+            v[1] = BinaryOperations.RotateLeft(v[1], 17);
+            v[3] = BinaryOperations.RotateLeft(v[3], 21);
             v[1] ^= v[2];
             v[3] ^= v[0];
-            v[2] = RotateLeft(v[2], 32);
+            v[2] = BinaryOperations.RotateLeft(v[2], 32);
         }
 
+        /// <inheritdoc/>
+        [ExcludeFromCodeCoverage]
+        public override String ToString()
+        {
+            return $"{GetType().Name}-{((m_Variant == SipHashVariant.V13) ? "-13" : "-24")}";
+        }
+        #endregion
+
+        #region Pointer/Span Fork
+        #if NETSTANDARD2_1_OR_GREATER
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        {
+            Int32 offset = 0;
+            Int32 count = buffer.Length;
+
+            UInt64 b = (UInt64)(count & 0x000000FF) << 56;
+            UInt64[] v = { m_Seed1 ^ K0, m_Seed2 ^ K1, m_Seed1 ^ K2, m_Seed2 ^ K3 };
+
+            if (count == 0)
+                goto Finalize;
+
+            Int32 blocks = count / 8;
+            Int32 remainder = count & 7;
+
+            while (blocks-- > 0)
+            {
+                UInt64 m = BinaryOperations.Read64(buffer, offset);
+                offset += 8;
+
+                v[3] ^= m;
+
+                for (Int32 i = 0; i < m_R1; ++i)
+                    Mix(ref v);
+
+                v[0] ^= m;
+            }
+
+            switch (remainder)
+            {
+                case 7: b |= (UInt64)buffer[offset + 6] << 48; goto case 6;
+                case 6: b |= (UInt64)buffer[offset + 5] << 40; goto case 5;
+                case 5: b |= (UInt64)buffer[offset + 4] << 32; goto case 4;
+                case 4: b |= (UInt64)buffer[offset + 3] << 24; goto case 3;
+                case 3: b |= (UInt64)buffer[offset + 2] << 16; goto case 2;
+                case 2: b |= (UInt64)buffer[offset + 1] << 8; goto case 1;
+                case 1: b |= buffer[offset]; break;
+            }
+
+            Finalize:
+
+            v[3] ^= b;
+
+            for (Int32 i = 0; i < m_R1; ++i)
+                Mix(ref v);
+
+            v[0] ^= b;
+            v[2] ^= 0x000000000000000000FFul;
+
+            for (Int32 i = 0; i < m_R2; ++i)
+                Mix(ref v);
+
+            UInt64 hash = v[0] ^ v[1] ^ v[2] ^ v[3];
+            Byte[] result = BinaryOperations.ToArray64(hash);
+
+            return result;
+        }
+        #else
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
             UInt64 b = (UInt64)(count & 0x000000FF) << 56;
-
-            UInt64[] v =
-            {
-                m_Seed1 ^ K0,
-                m_Seed2 ^ K1,
-                m_Seed1 ^ K2,
-                m_Seed2 ^ K3
-            };
+            UInt64[] v = { m_Seed1 ^ K0, m_Seed2 ^ K1, m_Seed1 ^ K2, m_Seed2 ^ K3 };
 
             if (count == 0)
                 goto Finalize;
@@ -285,7 +399,8 @@ Finalize:
 
                     while (blocks-- > 0)
                     {
-                        UInt64 m = Read64(ref pointer);
+                        UInt64 m = BinaryOperations.Read64(pointer);
+                        pointer += 8;
 
                         v[3] ^= m;
 
@@ -308,7 +423,7 @@ Finalize:
                 }
             }
 
-Finalize:
+            Finalize:
 
             v[3] ^= b;
 
@@ -322,16 +437,11 @@ Finalize:
                 Mix(ref v);
 
             UInt64 hash = v[0] ^ v[1] ^ v[2] ^ v[3];
+            Byte[] result = BinaryOperations.ToArray64(hash);
 
-            return ToByteArray64(hash);
+            return result;
         }
-
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override String ToString()
-        {
-            return $"{GetType().Name}-{((m_Variant == SipHashVariant.V13) ? "-13" : "-24")}";
-        }
+        #endif
         #endregion
     }
 }

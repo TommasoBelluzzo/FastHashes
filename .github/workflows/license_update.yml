@@ -32,4 +32,4 @@ jobs:
         git config --local user.email "${{ secrets.BOT_EMAIL }}"
         git add --a
         git diff-index --quiet HEAD || git commit -m "License $CURRENT_YEAR"
-        git push
+        git push 

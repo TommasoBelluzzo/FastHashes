@@ -54,7 +54,59 @@ namespace FastHashes
         /// <param name="hashData">The <see cref="T:System.UInt64"/> value representing the hash data.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
         protected abstract Byte[] GetHash(UInt64 hashData);
+        #endregion
 
+        #region Fork
+        #if NETSTANDARD2_1_OR_GREATER
+        /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        {
+            Int32 offset = 0;
+            Int32 count = buffer.Length;
+
+            UInt64 hash = m_Seed;
+
+            if (count == 0)
+                goto Finalize;
+
+            hash ^= (UInt64)count * M;
+
+            Int32 blocks = count / 8;
+            Int32 remainder = count & 7;
+
+            while (blocks-- > 0)
+            {
+                hash = Mix(hash, BinaryOperations.Read64(buffer, offset));
+                offset += 8;
+            }
+
+            UInt64 v = 0u;
+
+            switch (remainder)
+            {
+                case 7: v ^= (UInt64)buffer[offset + 6] << 48; goto case 6;
+                case 6: v ^= (UInt64)buffer[offset + 5] << 40; goto case 5;
+                case 5: v ^= (UInt64)buffer[offset + 4] << 32; goto case 4;
+                case 4: v ^= (UInt64)buffer[offset + 3] << 24; goto case 3;
+                case 3: v ^= (UInt64)buffer[offset + 2] << 16; goto case 2;
+                case 2: v ^= (UInt64)buffer[offset + 1] << 8; goto case 1;
+                case 1:
+                    v ^= buffer[offset];
+                    hash = Mix(hash, v);
+                    break;
+            }
+
+            Finalize:
+
+            hash ^= hash >> 23;
+            hash *= N;
+            hash ^= hash >> 47;
+
+            Byte[] result = GetHash(hash);
+
+            return result;
+        }
+        #else
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
         {
@@ -75,7 +127,10 @@ namespace FastHashes
                     Int32 remainder = count & 7;
 
                     while (blocks-- > 0)
-                        hash = Mix(hash, Read64(ref pointer));
+                    {
+                        hash = Mix(hash, BinaryOperations.Read64(pointer));
+                        pointer += 8;
+                    }
 
                     UInt64 v = 0u;
 
@@ -95,14 +150,17 @@ namespace FastHashes
                 }
             }
 
-Finalize:
+            Finalize:
 
             hash ^= hash >> 23;
             hash *= N;
             hash ^= hash >> 47;
 
-            return GetHash(hash);
+            Byte[] result = GetHash(hash);
+
+            return result;
         }
+        #endif
         #endregion
     }
 
@@ -130,9 +188,10 @@ Finalize:
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64 hashData)
         {
-            hashData -= (hashData >> 32);
+            UInt64 hash = hashData - (hashData >> 32);
+            Byte[] result = BinaryOperations.ToArray32(hash);
 
-            return ToByteArray32(hashData);
+            return result;
         }
         #endregion
     }
@@ -161,7 +220,10 @@ Finalize:
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64 hashData)
         {
-            return ToByteArray64(hashData);
+            UInt64 hash = hashData;
+            Byte[] result = BinaryOperations.ToArray64(hash);
+
+            return result;
         }
         #endregion
     }
