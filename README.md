@@ -88,12 +88,8 @@ The library includes the following non-cryptographic hashes:
  
 The following `Target Frameworks` are defined:
 
- * Library: `.NET Standard 2.0`
- * Auxiliary Projects: `.NET Core 2.1`
- 
-The following `NuGet` packages are required for building the library:
-
-* [Microsoft.SourceLink.GitHub](https://www.nuget.org/packages/Microsoft.SourceLink.GitHub)
+ * Library: `.NET Standard 2.0` or `.NET Standard 2.1`
+ * Auxiliary Projects: `.NET Core 2.1` or `.NET Core 3.1`
  
 The following `NuGet` packages are required for performing unit tests:
 
