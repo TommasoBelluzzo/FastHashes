@@ -98,6 +98,8 @@ namespace FastHashes
         #else
         /// <summary>Represents the core hashing function of the algorithm.</summary>
         /// <param name="buffer">The <see cref="T:System.Byte"/>[] whose hash must be computed.</param>
+        /// <param name="offset">The offset into the byte array from which to begin using data.</param>
+        /// <param name="count">The number of bytes in the array to use for hash computation.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
         protected abstract Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count);
 
