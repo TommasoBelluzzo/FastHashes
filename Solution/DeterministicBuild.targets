@@ -5,7 +5,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <EmbeddedFiles Include="$(GeneratedAssemblyInfoFile)"/>
+    <EmbeddedFiles Include="$(GeneratedAssemblyInfoFile)" Condition="'$(DebugType)' != 'none'"/>
   </ItemGroup>
   
   <ItemGroup>
