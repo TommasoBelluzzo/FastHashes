@@ -39,7 +39,7 @@ FashHashes is a suite of .NET non-cryptographic hash functions.
  * `Allocation Free`: all the internal functions follow a zero-allocation approach, only primitive types and/or arrays of primitive types are used by the algorithms.
  * `Endian-Agnostic`: all the hashes provide consistent results regardless of the machine byte order, while only moderately affecting the overall performance of the computations.
  * `Platform-Agnostic`: the code has been developed under `.NET Standard` framework and both `x86` and `x64` environments are fully supported.
- * `Fully Managed`: since version `3.0.0`, which supports `.NET Standard 2.1 / .NET Core 3.1` and above, unsafe code using pointers has been removed.
+ * `Fully Managed`: since version `3.0.0`, which has been developed under `.NET Standard 2.1 / .NET Core 3.1` and above, pointers requiring unsafe code have been removed.
 
  ## Hashes
 
