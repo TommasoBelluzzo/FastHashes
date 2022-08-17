@@ -38,7 +38,7 @@ jobs:
       shell: bash
       run: printf Solution/Coverage/coverage.*.info
     - name: Coverage Paths 2
-      id: get_coverage_paths
+      id: get_coverage_paths_2
       shell: bash
       run: cat Solution/Coverage/coverage.netcoreapp3.1.info
     - name: Coverage
