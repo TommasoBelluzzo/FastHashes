@@ -6,11 +6,10 @@
   
   <ItemGroup>
     <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
-	<SourceRoot Include="$([MSBuild]::EnsureTrailingSlash($(NuGetPackageRoot)))" Condition="'$(NuGetPackageRoot)' != ''" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedFiles Include="$(GeneratedAssemblyInfoFile)"/>
+    <EmbeddedFiles Condition="'$(DebugType)' != 'none'" Include="$(GeneratedAssemblyInfoFile)"/>
   </ItemGroup>
 
   <Target Condition="'$(DeterministicSourcePaths)' == 'true'" Name="CoverletGetPathMap" DependsOnTargets="InitializeSourceRootMappedPaths" Returns="@(_LocalTopLevelSourceRoot)">
