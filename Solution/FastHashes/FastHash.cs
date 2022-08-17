@@ -56,7 +56,7 @@ namespace FastHashes
         protected abstract Byte[] GetHash(UInt64 hashData);
         #endregion
 
-        #region Fork
+        #region Pointer/Span Fork
         #if NETSTANDARD2_1_OR_GREATER
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
