@@ -40,12 +40,7 @@ jobs:
     - name: Coverage Paths 2
       id: get_coverage_paths_2
       shell: bash
-      run: |
-        fnames=`ls -ltR **/*`
-        for fname in $fnames
-          do
-            echo $fname
-        done
+      run: ls -ltR **/*
     - name: Coverage
       uses: coverallsapp/github-action@master
       with:
