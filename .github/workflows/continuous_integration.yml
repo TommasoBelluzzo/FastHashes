@@ -32,7 +32,7 @@ jobs:
       run: dotnet build FastHashes.sln --verbosity normal --configuration Release --no-restore --no-incremental
     - name: Test
       working-directory: Solution/
-      run: dotnet test FastHashes.sln --verbosity normal --configuration Release --no-restore --no-build /p:CollectCoverage=true /p:CoverletOutput=../Coverage/ /p:CoverletOutputFormat=lcov /p:MergeWith=../Coverage/lcov.info
+      run: dotnet test FastHashes.sln --verbosity normal --configuration Release --no-restore --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput="../Coverage/" /p:MergeWith="../Coverage/coverage.info" /p:IncludeTestAssembly=true
     - name: Coverage Paths 2
       id: get_coverage_paths_2
       shell: bash
@@ -41,4 +41,4 @@ jobs:
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: Solution/Coverage/lcov.info
+        path-to-lcov: Solution/Coverage/coverage.info
