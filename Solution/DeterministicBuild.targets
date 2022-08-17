@@ -12,9 +12,9 @@
     <EmbeddedFiles Include="$(GeneratedAssemblyInfoFile)" Condition="'$(DebugType)' != 'none'"/>
   </ItemGroup>
 
-  <Target Condition="'$(DeterministicSourcePaths)' == 'true' And '%(SourceRoot.NestedRoot)' == ''" Name="CoverletGetPathMap" DependsOnTargets="InitializeSourceRootMappedPaths" Returns="@(_LocalTopLevelSourceRoot)">
+  <Target Condition="'$(DeterministicSourcePaths)' == 'true'" Name="CoverletGetPathMap" DependsOnTargets="InitializeSourceRootMappedPaths" Returns="@(_LocalTopLevelSourceRoot)">
     <ItemGroup>
-      <_LocalTopLevelSourceRoot Include="@(SourceRoot)"/>
+      <_LocalTopLevelSourceRoot Include="@(SourceRoot)" Condition="'%(SourceRoot.NestedRoot)' == ''"/>
     </ItemGroup>
   </Target>
 
