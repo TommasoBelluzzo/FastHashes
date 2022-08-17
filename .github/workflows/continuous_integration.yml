@@ -33,12 +33,8 @@ jobs:
     - name: Test
       working-directory: Solution/
       run: dotnet test FastHashes.sln --verbosity normal --configuration Release --no-restore --no-build /p:CollectCoverage=true /p:CoverletOutput=../Coverage/ /p:CoverletOutputFormat=lcov
-    - name: Coverage Paths
-      id: get_coverage_paths
-      shell: bash
-      run: printf '::set-output name=coverage_paths::%s\n' Solution/Coverage/coverage.*.info
     - name: Coverage
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ${{ steps.get_coverage_paths.outputs.coverage_paths }}
+        path-to-lcov: Solution/Coverage/coverage.netcoreapp3.1.info
