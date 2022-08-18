@@ -12,6 +12,10 @@
     <FileVersion>2.5.0.0</FileVersion>
   </PropertyGroup>
   
+  <ItemGroup>
+    <SourceRoot Include="$([MSBuild]::EnsureTrailingSlash($(MSBuildThisFileDirectory)))"/>
+  </ItemGroup>
+  
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <Deterministic>true</Deterministic>
