@@ -74,10 +74,7 @@ namespace FastHashes
 
             return hi + lo;
         }
-        #endregion
 
-        #region Pointer/Span Fork
-        #if NETSTANDARD2_1_OR_GREATER
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
         {
@@ -167,103 +164,6 @@ namespace FastHashes
 
             return result;
         }
-        #else
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
-        {
-            UInt64 hash = Mum(m_Seed + (UInt64)count, BSP);
-
-            if (count == 0)
-                goto Finalize;
-
-            unsafe
-            {
-                fixed (Byte* pin = &buffer[offset])
-                {
-                    Byte* pointer = pin;
-
-                    while (count > 32)
-                    {
-                        for (Int32 i = 0; i < 4; ++i)
-                        {
-                            hash ^= Mum(BinaryOperations.Read64(pointer), P[i]);
-                            pointer += 8;
-                        }
-
-                        hash = Mum(hash, UP);
-
-                        count -= 32;
-                    }
-
-                    Int32 blocks = count / 8;
-                    Int32 remainder = count & 7;
-
-                    for (Int32 i = 0; i < blocks; ++i)
-                    {
-                        hash ^= Mum(BinaryOperations.Read64(pointer), P[i]);
-                        pointer += 8;
-                    }
-
-                    UInt64 v = 0ul;
-
-                    switch (remainder)
-                    {
-                        case 7:
-                            v = BinaryOperations.Read32(pointer);
-                            pointer += 4;
-                            v |= (UInt64)pointer[2] << 48;
-                            v |= (UInt64)pointer[1] << 40;
-                            v |= (UInt64)pointer[0] << 32;
-                            break;
-
-                        case 6:
-                            v = BinaryOperations.Read32(pointer);
-                            pointer += 4;
-                            v |= (UInt64)pointer[1] << 40;
-                            v |= (UInt64)pointer[0] << 32;
-                            break;
-
-                        case 5:
-                            v = BinaryOperations.Read32(pointer);
-                            pointer += 4;
-                            v |= (UInt64)pointer[0] << 32;
-                            break;
-
-                        case 4:
-                            v = BinaryOperations.Read32(pointer);
-                            pointer += 4;
-                            break;
-
-                        case 3:
-                            v = pointer[0];
-                            v |= (UInt64)pointer[2] << 16;
-                            v |= (UInt64)pointer[1] << 8;
-                            break;
-
-                        case 2:
-                            v = pointer[0];
-                            v |= (UInt64)pointer[1] << 8;
-                            break;
-
-                        case 1:
-                            v = pointer[0];
-                            break;
-                    }
-
-                    hash ^= Mum(v, TP);
-                }
-            }
-
-            Finalize:
-
-            hash ^= Mum(hash, FP1);
-            hash ^= Mum(hash, FP2);
-
-            Byte[] result = BinaryOperations.ToArray64(hash);
-
-            return result;
-        }
-        #endif
         #endregion
     }
 }

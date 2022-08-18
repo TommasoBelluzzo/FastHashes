@@ -118,7 +118,6 @@ namespace FastHashes
             if (count > (buffer.Length - offset))
                 throw new ArgumentException("The block defined by offset and count parameters must be within the bounds of the array.");
 
-            #if NETSTANDARD2_1_OR_GREATER
             Int32 index = 0;
 
             while ((m_Bytes.Count > 0) && (index < count))
@@ -153,46 +152,6 @@ namespace FastHashes
 
                 buffer[offset + index++] = m_Bytes.Dequeue();
             }
-            #else
-            unsafe
-            {
-                fixed (Byte* pin = &buffer[offset])
-                {
-                    Byte* pointer = pin;
-                    Int32 index = 0;
-
-                    while ((m_Bytes.Count > 0) && (index < count))
-                        pointer[index++] = m_Bytes.Dequeue();
-
-                    Int32 blocks = (count - index) / 4;
-
-                    if (blocks > 0)
-                    {
-                        UInt32* start = (UInt32*)(pointer + index);
-                        UInt32* end = start + blocks;
-
-                        while (start < end)
-                            *(start++) = NextValue();
-
-                        index += blocks * 4;
-                    }
-
-                    while (index < count)
-                    {
-                        if (m_Bytes.Count == 0)
-                        {
-                            UInt32 value = NextValue();
-                            Byte[] valueBytes = BitConverter.GetBytes(value);
-
-                            for (Int32 i = 0; i < valueBytes.Length; ++i)
-                                m_Bytes.Enqueue(valueBytes[i]);
-                        }
-
-                        pointer[index++] = m_Bytes.Dequeue();
-                    }
-                }
-            }
-            #endif
         }
         #endregion
     }

@@ -151,10 +151,7 @@ namespace FastHashes
         /// <param name="v1">The <see cref="T:System.UInt64"/>[] representing the hash data V1.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
         protected abstract Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1);
-        #endregion
 
-        #region Pointer/Span Fork
-		#if NETSTANDARD2_1_OR_GREATER
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
         {
@@ -187,7 +184,7 @@ namespace FastHashes
 
                 for (Int32 i = 0; i < 4; ++i)
                 {
-                    v0[i]  += increment;
+                    v0[i] += increment;
                     v1[i] = Mix(v1[i], remainder);
                 }
 
@@ -238,100 +235,6 @@ namespace FastHashes
 
             return result;
         }
-		#else
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
-        {
-            UInt64[] m0 = { M00, M01, M02, M03 };
-            UInt64[] m1 = { M10, M11, M12, M13 };
-
-            UInt64[] v0 = { M00 ^ m_Seed1, M01 ^ m_Seed2, M02 ^ m_Seed3, M03 ^ m_Seed4 };
-            UInt64[] v1 = { M10 ^ ((m_Seed1 >> 32) | (m_Seed1 << 32)), M11 ^ ((m_Seed2 >> 32) | (m_Seed2 << 32)), M12 ^ ((m_Seed3 >> 32) | (m_Seed3 << 32)), M13 ^ ((m_Seed4 >> 32) | (m_Seed4 << 32)) };
-
-            if (count == 0)
-                goto Finalize;
-
-            unsafe
-            {
-                fixed (Byte* pin = &buffer[offset])
-                {
-                    Byte* pointer = pin;
-
-                    Int32 blocks = count / 32;
-                    Int32 remainder = count & 31;
-
-                    while (blocks-- > 0)
-                    {
-                        UInt64[] k = BinaryOperations.ReadArray64(pointer, 4);
-                        pointer += 32;
-
-                        Update(ref m0, ref m1, ref v0, ref v1, k);
-                    }
-
-                    if (remainder > 0)
-                    {
-                        UInt64 increment = ((UInt64)remainder << 32) + (UInt64)remainder;
-
-                        for (Int32 i = 0; i < 4; ++i)
-                        {
-                            v0[i]  += increment;
-                            v1[i] = Mix(v1[i], remainder);
-                        }
-
-                        Int32 diff4 = remainder & ~3;
-                        Int32 mod4 = remainder & 3;
-
-                        Byte[] packet = new Byte[32];
-
-                        if (diff4 > 0)
-                        {
-                            BinaryOperations.BlockCopy(buffer, (Int32)(pointer - pin), packet, 0, diff4);
-                            pointer += diff4;
-                        }
-
-                        if ((remainder & 16) > 0)
-                        {
-                            for (Int32 i = 0; i < 4; ++i)
-                                packet[28 + i] = pointer[i + mod4 - 4];
-                        }
-                        else if (mod4 > 0)
-                        {
-                            packet[16] = pointer[0];
-                            packet[17] = pointer[mod4 >> 1];
-                            packet[18] = pointer[mod4 - 1];
-                        }
-
-                        fixed (Byte* packetPin = &packet[0])
-                        {
-                            Byte* packetPointer = packetPin;
-                            UInt64[] k = BinaryOperations.ReadArray64(packetPointer, 4);
-
-                            Update(ref m0, ref m1, ref v0, ref v1, k);
-                        }
-                    }
-                }
-            }
-
-            Finalize:
-
-            for (UInt32 i = 0; i < P; ++i)
-            {
-                UInt64[] k =
-                {
-                    (v0[2] >> 32) | (v0[2] << 32),
-                    (v0[3] >> 32) | (v0[3] << 32),
-                    (v0[0] >> 32) | (v0[0] << 32),
-                    (v0[1] >> 32) | (v0[1] << 32)
-                };
-
-                Update(ref m0, ref m1, ref v0, ref v1, k);
-            }
-
-            Byte[] result = GetHash(m0, m1, v0, v1);
-
-            return result;
-        }
-		#endif
         #endregion
     }
 

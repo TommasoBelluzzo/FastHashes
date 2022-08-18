@@ -64,27 +64,17 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        {
+            return m_Engine.ComputeHash(buffer);
+        }
+
+        /// <inheritdoc/>
         [ExcludeFromCodeCoverage]
         public override String ToString()
         {
             return $"{GetType().Name}-{m_Engine.Name}";
         }
-        #endregion
-
-        #region Pointer/Span Fork
-		#if NETSTANDARD2_1_OR_GREATER
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
-        {
-            return m_Engine.ComputeHash(buffer);
-        }
-		#else
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
-        {
-            return m_Engine.ComputeHash(buffer, offset, count);
-        }
-		#endif
         #endregion
 
         #region Nested Classes
@@ -168,11 +158,7 @@ namespace FastHashes
             #endregion
 
             #region Pointer/Span Fork
-			#if NETSTANDARD2_1_OR_GREATER
             public abstract Byte[] ComputeHash(ReadOnlySpan<Byte> buffer);
-			#else
-            public abstract Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 count);
-			#endif
             #endregion
         }
 
@@ -198,8 +184,7 @@ namespace FastHashes
             public Engine1(UInt32 seed) : base(seed) { }
             #endregion
 
-            #region Pointer/Span Fork
-			#if NETSTANDARD2_1_OR_GREATER
+            #region Methods
             public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
@@ -233,7 +218,7 @@ namespace FastHashes
                         v1 = Mix256(v1, z1, v3, 29, K0);
                         v2 = Mix256(v2, z2, v4, 29, K1);
                         v3 = Mix256(v3, z3, v1, 29, K2);
-                        v4 = Mix256(v4, z4, v2, 29, K3);         
+                        v4 = Mix256(v4, z4, v2, 29, K3);
                     }
                     while ((count - 32) >= offset);
 
@@ -301,115 +286,6 @@ namespace FastHashes
 
                 return result;
             }
-			#else
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 count)
-            {
-                UInt64 hash = (m_Seed + K2) * K0;
-
-                if (count == 0)
-                    goto Finalize;
-
-                hash += (UInt64)count;
-
-                unsafe
-                {
-                    fixed (Byte* buffer = &data[offset])
-                    {
-                        Byte* pointer = buffer;
-                        Byte* limit = pointer + count;
-
-                        if (count >= 32)
-                        {
-                            UInt64 v1 = hash;
-                            UInt64 v2 = hash;
-                            UInt64 v3 = hash;
-                            UInt64 v4 = hash;
-
-                            do
-                            {
-                                UInt64 z1 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-                                UInt64 z2 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-                                UInt64 z3 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-                                UInt64 z4 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-
-                                v1 = Mix256(v1, z1, v3, 29, K0);
-                                v2 = Mix256(v2, z2, v4, 29, K1);
-                                v3 = Mix256(v3, z3, v1, 29, K2);
-                                v4 = Mix256(v4, z4, v2, 29, K3);         
-                            }
-                            while ((limit - 32) >= pointer);
-
-                            v3 ^= BinaryOperations.RotateRight(((v1 + v4) * K0) + v2, 33) * K1;
-                            v4 ^= BinaryOperations.RotateRight(((v2 + v3) * K1) + v1, 33) * K0;
-                            v1 ^= BinaryOperations.RotateRight(((v1 + v3) * K0) + v4, 33) * K1;
-                            v2 ^= BinaryOperations.RotateRight(((v2 + v4) * K1) + v3, 33) * K0;
-
-                            hash += v1 ^ v2;
-                        }
-
-                        if ((limit - pointer) >= 16)
-                        {
-                            UInt64 z1 = BinaryOperations.Read64(pointer);
-                            pointer += 8;
-                            UInt64 z2 = BinaryOperations.Read64(pointer);
-                            pointer += 8;
-
-                            UInt64 v1 = hash;
-                            UInt64 v2 = hash;
-
-                            v1 = Mix128(v1, z1, 33, K0, K1);
-                            v2 = Mix128(v2, z2, 33, K1, K2);
-
-                            v1 ^= BinaryOperations.RotateRight(v1 * K0, 35) + v2;
-                            v2 ^= BinaryOperations.RotateRight(v2 * K3, 35) + v1;
-
-                            hash += v2;
-                        }
-
-                        if ((limit - pointer) >= 8)
-                        {
-                            UInt64 z = BinaryOperations.Read64(pointer);
-                            pointer += 8;
-
-                            hash = Mix64(hash, z, 33, K3, K1);
-                        }    
-
-                        if ((limit - pointer) >= 4)
-                        {
-                            UInt32 z = BinaryOperations.Read32(pointer);
-                            pointer += 4;
-
-                            hash = Mix32(hash, z, 15, K3, K1);
-                        }
-
-                        if ((limit - pointer) >= 2)
-                        {
-                            UInt16 z = BinaryOperations.Read16(pointer);
-                            pointer += 2;
-
-                            hash = Mix16(hash, z, 13, K3, K1);
-                        }
-
-                        if ((limit - pointer) >= 1)
-                            hash = Mix8(hash, pointer[0], 25, K3, K1);
-                    }
-                }
-
-                Finalize:
-
-                hash ^= BinaryOperations.RotateRight(hash, 33);
-                hash *= K0;
-                hash ^= BinaryOperations.RotateRight(hash, 33);
-
-                Byte[] result = BinaryOperations.ToArray64(hash);
-
-                return result;
-            }
-			#endif
             #endregion
         }
 
@@ -435,8 +311,7 @@ namespace FastHashes
             public Engine2(UInt32 seed) : base(seed) { }
             #endregion
 
-            #region Pointer/Span Fork
-			#if NETSTANDARD2_1_OR_GREATER
+            #region Methods
             public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
@@ -470,7 +345,7 @@ namespace FastHashes
                         v1 = Mix256(v1, z1, v3, 29, K0);
                         v2 = Mix256(v2, z2, v4, 29, K1);
                         v3 = Mix256(v3, z3, v1, 29, K2);
-                        v4 = Mix256(v4, z4, v2, 29, K3);         
+                        v4 = Mix256(v4, z4, v2, 29, K3);
                     }
                     while ((count - 32) >= offset);
 
@@ -507,7 +382,7 @@ namespace FastHashes
                     offset += 8;
 
                     hash = Mix64(hash, z, 36, K3, K1);
-                } 
+                }
 
                 if ((count - offset) >= 4)
                 {
@@ -515,7 +390,7 @@ namespace FastHashes
                     offset += 4;
 
                     hash = Mix32(hash, z, 15, K3, K1);
-                } 
+                }
 
                 if ((count - offset) >= 2)
                 {
@@ -538,115 +413,6 @@ namespace FastHashes
 
                 return result;
             }
-			#else
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 count)
-            {
-                UInt64 hash = (m_Seed + K2) * K0;
-
-                if (count == 0)
-                    goto Finalize;
-
-                hash += (UInt64)count;
-
-                unsafe
-                {
-                    fixed (Byte* buffer = &data[offset])
-                    {
-                        Byte* pointer = buffer;
-                        Byte* limit = pointer + count;
-
-                        if (count >= 32)
-                        {
-                            UInt64 v1 = hash;
-                            UInt64 v2 = hash;
-                            UInt64 v3 = hash;
-                            UInt64 v4 = hash;
-
-                            do
-                            {
-                                UInt64 z1 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-                                UInt64 z2 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-                                UInt64 z3 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-                                UInt64 z4 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-
-                                v1 = Mix256(v1, z1, v3, 29, K0);
-                                v2 = Mix256(v2, z2, v4, 29, K1);
-                                v3 = Mix256(v3, z3, v1, 29, K2);
-                                v4 = Mix256(v4, z4, v2, 29, K3);         
-                            }
-                            while ((limit - 32) >= pointer);
-
-                            v3 ^= BinaryOperations.RotateRight(((v1 + v4) * K0) + v2, 30) * K1;
-                            v4 ^= BinaryOperations.RotateRight(((v2 + v3) * K1) + v1, 30) * K0;
-                            v1 ^= BinaryOperations.RotateRight(((v1 + v3) * K0) + v4, 30) * K1;
-                            v2 ^= BinaryOperations.RotateRight(((v2 + v4) * K1) + v3, 30) * K0;
-
-                            hash += v1 ^ v2;
-                        }
-
-                        if ((limit - pointer) >= 16)
-                        {
-                            UInt64 z1 = BinaryOperations.Read64(pointer);
-                            pointer += 8;
-                            UInt64 z2 = BinaryOperations.Read64(pointer);
-                            pointer += 8;
-
-                            UInt64 v1 = hash;
-                            UInt64 v2 = hash;
-
-                            v1 = Mix128(v1, z1, 29, K2, K3);
-                            v2 = Mix128(v2, z2, 29, K2, K3);
-
-                            v1 ^= BinaryOperations.RotateRight(v1 * K0, 34) + v2;
-                            v2 ^= BinaryOperations.RotateRight(v2 * K3, 34) + v1;
-
-                            hash += v2;
-                        }
-
-                        if ((limit - pointer) >= 8)
-                        {
-                            UInt64 z = BinaryOperations.Read64(pointer);
-                            pointer += 8;
-
-                            hash = Mix64(hash, z, 36, K3, K1);
-                        } 
-
-                        if ((limit - pointer) >= 4)
-                        {
-                            UInt32 z = BinaryOperations.Read32(pointer);
-                            pointer += 4;
-
-                            hash = Mix32(hash, z, 15, K3, K1);
-                        } 
-
-                        if ((limit - pointer) >= 2)
-                        {
-                            UInt16 z = BinaryOperations.Read16(pointer);
-                            pointer += 2;
-
-                            hash = Mix16(hash, z, 15, K3, K1);
-                        }
-
-                        if ((limit - pointer) >= 1)
-                            hash = Mix8(hash, pointer[0], 23, K3, K1);
-                    }
-                }
-
-                Finalize:
-
-                hash ^= BinaryOperations.RotateRight(hash, 28);
-                hash *= K0;
-                hash ^= BinaryOperations.RotateRight(hash, 29);
-
-                Byte[] result = BinaryOperations.ToArray64(hash);
-
-                return result;
-            }
-			#endif
             #endregion
         }
         #endregion
@@ -710,27 +476,17 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        {
+            return m_Engine.ComputeHash(buffer);
+        }
+
+        /// <inheritdoc/>
         [ExcludeFromCodeCoverage]
         public override String ToString()
         {
             return $"{GetType().Name}-{m_Engine.Name}";
         }
-        #endregion
-
-        #region Pointer/Span Fork
-		#if NETSTANDARD2_1_OR_GREATER
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
-        {
-            return m_Engine.ComputeHash(buffer);
-        }
-		#else
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
-        {
-            return m_Engine.ComputeHash(buffer, offset, count);
-        }
-		#endif
         #endregion
 
         #region Nested Classes
@@ -803,14 +559,8 @@ namespace FastHashes
             {
                 return (v1 ^ BinaryOperations.RotateRight(((v2 + v3) * k1) + v4, r) * k2);
             }
-            #endregion
 
-            #region Pointer/Span Fork
-			#if NETSTANDARD2_1_OR_GREATER
             public abstract Byte[] ComputeHash(ReadOnlySpan<Byte> buffer);
-			#else
-            public abstract Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 count);
-			#endif
             #endregion
         }
 
@@ -836,8 +586,7 @@ namespace FastHashes
             public Engine1(UInt32 seed) : base(seed) { }
             #endregion
 
-            #region Pointer/Span Fork
-			#if NETSTANDARD2_1_OR_GREATER
+            #region Methods
             public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
@@ -870,9 +619,9 @@ namespace FastHashes
                         offset += 8;
 
                         hash1 = Mix256(hash1, v1, z1, K0);
-                        hash2 = Mix256(hash2, v2, z2, K1);      
+                        hash2 = Mix256(hash2, v2, z2, K1);
                         v1 = Mix256(v1, hash1, z3, K2);
-                        v2 = Mix256(v2, hash2, z4, K3);        
+                        v2 = Mix256(v2, hash2, z4, K3);
                     }
                     while ((count - 32) >= offset);
 
@@ -909,7 +658,7 @@ namespace FastHashes
                     offset += 4;
 
                     hash2 = Mix(hash2, hash1, z, 33, 18, K2, K3, K3, K0);
-                }  
+                }
 
                 if ((count - offset) >= 2)
                 {
@@ -933,109 +682,6 @@ namespace FastHashes
 
                 return result;
             }
-			#else
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 count)
-            {
-                UInt64 hash1 = (m_Seed - K0) * K3;
-                UInt64 hash2 = (m_Seed + K1) * K2;
-
-                if (count == 0)
-                    goto Finalize;
-
-                UInt64 length = (UInt64)count;
-                hash1 += length;
-                hash2 += length;
-
-                unsafe
-                {
-                    fixed (Byte* buffer = &data[offset])
-                    {
-                        Byte* pointer = buffer;
-                        Byte* limit = pointer + count;
-
-                        if (count >= 32)
-                        {
-                            UInt64 v1 = ((m_Seed + K0) * K2) + length;
-                            UInt64 v2 = ((m_Seed - K1) * K3) + length;
-
-                            do
-                            {
-                                UInt64 z1 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-                                UInt64 z2 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-                                UInt64 z3 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-                                UInt64 z4 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-
-                                hash1 = Mix256(hash1, v1, z1, K0);
-                                hash2 = Mix256(hash2, v2, z2, K1);      
-                                v1 = Mix256(v1, hash1, z3, K2);
-                                v2 = Mix256(v2, hash2, z4, K3);        
-                            }
-                            while ((limit - 32) >= pointer);
-
-                            v1 = Xor256(v1, hash1, v2, hash2, 26, K0, K1);
-                            v2 = Xor256(v2, hash2, v1, hash1, 26, K1, K0);
-                            hash1 = Xor256(hash1, hash1, v1, v2, 26, K0, K1);
-                            hash2 = Xor256(hash2, hash2, v2, v1, 30, K1, K0);
-                        }
-
-                        if ((limit - pointer) >= 16)
-                        {
-                            UInt64 z1 = BinaryOperations.Read64(pointer);
-                            pointer += 8;
-                            UInt64 z2 = BinaryOperations.Read64(pointer);
-                            pointer += 8;
-
-                            hash1 = Mix128(hash1, z1, 33, K2, K3);
-                            hash2 = Mix128(hash2, z2, 33, K2, K3);
-                            hash1 = Xor128(hash1, hash2, 17, K2, K1);
-                            hash2 = Xor128(hash2, hash1, 17, K3, K0);
-                        }
-
-                        if ((limit - pointer) >= 8)
-                        {
-                            UInt64 z = BinaryOperations.Read64(pointer);
-                            pointer += 8;
-
-                            hash1 = Mix(hash1, hash2, z, 33, 20, K2, K3, K2, K1);
-                        }
-
-                        if ((limit - pointer) >= 4)
-                        {
-                            UInt32 z = BinaryOperations.Read32(pointer);
-                            pointer += 4;
-
-                            hash2 = Mix(hash2, hash1, z, 33, 18, K2, K3, K3, K0);
-                        }  
-
-                        if ((limit - pointer) >= 2)
-                        {
-                            UInt16 z = BinaryOperations.Read16(pointer);
-                            pointer += 2;
-
-                            hash1 = Mix(hash1, hash2, z, 33, 24, K2, K3, K2, K1);
-                        }
-
-                        if ((limit - pointer) >= 1)
-                            hash2 = Mix(hash2, hash1, pointer[0], 33, 24, K2, K3, K3, K0);
-                    }
-                }
-
-                Finalize:
-
-                hash1 = Fin(hash1, hash2, 13, K0);
-                hash2 = Fin(hash2, hash1, 37, K1);
-                hash1 = Fin(hash1, hash2, 13, K2);
-                hash2 = Fin(hash2, hash1, 37, K3);
-
-                Byte[] result = BinaryOperations.ToArray64(hash1, hash2);
-
-                return result;
-            }
-			#endif
             #endregion
         }
 
@@ -1061,8 +707,7 @@ namespace FastHashes
             public Engine2(UInt32 seed) : base(seed) { }
             #endregion
 
-            #region Pointer/Span Fork
-			#if NETSTANDARD2_1_OR_GREATER
+            #region Methods
             public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
@@ -1095,9 +740,9 @@ namespace FastHashes
                         offset += 8;
 
                         hash1 = Mix256(hash1, v1, z1, K0);
-                        hash2 = Mix256(hash2, v2, z2, K1);      
+                        hash2 = Mix256(hash2, v2, z2, K1);
                         v1 = Mix256(v1, hash1, z3, K2);
-                        v2 = Mix256(v2, hash2, z4, K3);        
+                        v2 = Mix256(v2, hash2, z4, K3);
                     }
                     while ((count - 32) >= offset);
 
@@ -1115,7 +760,7 @@ namespace FastHashes
                     offset += 8;
 
                     hash1 = Mix128(hash1, z1, 29, K2, K3);
-                    hash2 = Mix128(hash2, z2, 29, K2, K3);                  
+                    hash2 = Mix128(hash2, z2, 29, K2, K3);
                     hash1 = Xor128(hash1, hash2, 29, K2, K1);
                     hash2 = Xor128(hash2, hash1, 29, K3, K0);
                 }
@@ -1158,109 +803,6 @@ namespace FastHashes
 
                 return result;
             }
-			#else
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 count)
-            {
-                UInt64 hash1 = (m_Seed - K0) * K3;
-                UInt64 hash2 = (m_Seed + K1) * K2;
-
-                if (count == 0)
-                    goto Finalize;
-
-                UInt64 length = (UInt64)count;
-                hash1 += length;
-                hash2 += length;
-
-                unsafe
-                {
-                    fixed (Byte* buffer = &data[offset])
-                    {
-                        Byte* pointer = buffer;
-                        Byte* limit = pointer + count;
-
-                        if (count >= 32)
-                        {
-                            UInt64 v1 = ((m_Seed + K0) * K2) + length;
-                            UInt64 v2 = ((m_Seed - K1) * K3) + length;
-
-                            do
-                            {
-                                UInt64 z1 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-                                UInt64 z2 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-                                UInt64 z3 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-                                UInt64 z4 = BinaryOperations.Read64(pointer);
-                                pointer += 8;
-
-                                hash1 = Mix256(hash1, v1, z1, K0);
-                                hash2 = Mix256(hash2, v2, z2, K1);      
-                                v1 = Mix256(v1, hash1, z3, K2);
-                                v2 = Mix256(v2, hash2, z4, K3);        
-                            }
-                            while ((limit - 32) >= pointer);
-
-                            v1 = Xor256(v1, hash1, v2, hash2, 33, K0, K1);
-                            v2 = Xor256(v2, hash2, v1, hash1, 33, K1, K0);
-                            hash1 = Xor256(hash1, hash1, v1, v2, 33, K0, K1);
-                            hash2 = Xor256(hash2, hash2, v2, v1, 33, K1, K0);
-                        }
-
-                        if ((limit - pointer) >= 16)
-                        {
-                            UInt64 z1 = BinaryOperations.Read64(pointer);
-                            pointer += 8;
-                            UInt64 z2 = BinaryOperations.Read64(pointer);
-                            pointer += 8;
-
-                            hash1 = Mix128(hash1, z1, 29, K2, K3);
-                            hash2 = Mix128(hash2, z2, 29, K2, K3);                  
-                            hash1 = Xor128(hash1, hash2, 29, K2, K1);
-                            hash2 = Xor128(hash2, hash1, 29, K3, K0);
-                        }
-
-                        if ((limit - pointer) >= 8)
-                        {
-                            UInt64 z = BinaryOperations.Read64(pointer);
-                            pointer += 8;
-
-                            hash1 = Mix(hash1, hash2, z, 29, 29, K2, K3, K2, K1);
-                        }
-
-                        if ((limit - pointer) >= 4)
-                        {
-                            UInt32 z = BinaryOperations.Read32(pointer);
-                            pointer += 4;
-
-                            hash2 = Mix(hash2, hash1, z, 29, 25, K2, K3, K3, K0);
-                        }
-
-                        if ((limit - pointer) >= 2)
-                        {
-                            UInt16 z = BinaryOperations.Read16(pointer);
-                            pointer += 2;
-
-                            hash1 = Mix(hash1, hash2, z, 29, 30, K2, K3, K2, K1);
-                        }
-
-                        if ((limit - pointer) >= 1)
-                            hash2 = Mix(hash2, hash1, pointer[0], 29, 18, K2, K3, K3, K0);
-                    }
-                }
-
-                Finalize:
-
-                hash1 = Fin(hash1, hash2, 33, K0);
-                hash2 = Fin(hash2, hash1, 33, K1);
-                hash1 = Fin(hash1, hash2, 33, K2);
-                hash2 = Fin(hash2, hash1, 33, K3);
-
-                Byte[] result = BinaryOperations.ToArray64(hash1, hash2);
-
-                return result;
-            }
-			#endif
             #endregion
         }
         #endregion

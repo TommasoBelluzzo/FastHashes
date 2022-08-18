@@ -19,6 +19,7 @@
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <OutputPath>..\Output\Debug\</OutputPath>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile></DocumentationFile>
@@ -29,6 +30,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <OutputPath>..\Output\Debug-x64\</OutputPath>
     <PlatformTarget>x64</PlatformTarget>
 	  <DocumentationFile></DocumentationFile>
@@ -39,6 +41,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <OutputPath>..\Output\Debug-x86\</OutputPath>
     <PlatformTarget>x86</PlatformTarget>
 	  <DocumentationFile></DocumentationFile>
@@ -48,10 +51,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsAsErrors />
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <OutputPath>..\Output\Release\</OutputPath>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>..\Output\Release\FastHashes.xml</DocumentationFile>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
@@ -60,10 +64,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsAsErrors />
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <OutputPath>..\Output\Release-x64\</OutputPath>
     <PlatformTarget>x64</PlatformTarget>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>..\Output\Release-x64\FastHashes.xml</DocumentationFile>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
@@ -72,10 +77,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsAsErrors />
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <OutputPath>..\Output\Release-x86\</OutputPath>
     <PlatformTarget>x86</PlatformTarget>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>..\Output\Release-x86\FastHashes.xml</DocumentationFile>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
@@ -83,25 +89,13 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-	<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="" />
-  </ItemGroup>
   
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Memory" Version="4.5.5" />
   </ItemGroup>
   
@@ -110,6 +104,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>

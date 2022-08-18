@@ -54,10 +54,7 @@ namespace FastHashes
         /// <param name="hashData">The <see cref="T:System.UInt64"/> value representing the hash data.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
         protected abstract Byte[] GetHash(UInt64 hashData);
-        #endregion
 
-        #region Pointer/Span Fork
-        #if NETSTANDARD2_1_OR_GREATER
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
         {
@@ -106,61 +103,6 @@ namespace FastHashes
 
             return result;
         }
-        #else
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
-        {
-            UInt64 hash = m_Seed;
-
-            if (count == 0)
-                goto Finalize;
-
-            hash ^= (UInt64)count * M;
-
-            unsafe
-            {
-                fixed (Byte* pin = &buffer[offset])
-                {
-                    Byte* pointer = pin;
-
-                    Int32 blocks = count / 8;
-                    Int32 remainder = count & 7;
-
-                    while (blocks-- > 0)
-                    {
-                        hash = Mix(hash, BinaryOperations.Read64(pointer));
-                        pointer += 8;
-                    }
-
-                    UInt64 v = 0u;
-
-                    switch (remainder)
-                    {
-                        case 7: v ^= (UInt64)pointer[6] << 48; goto case 6;
-                        case 6: v ^= (UInt64)pointer[5] << 40; goto case 5;
-                        case 5: v ^= (UInt64)pointer[4] << 32; goto case 4;
-                        case 4: v ^= (UInt64)pointer[3] << 24; goto case 3;
-                        case 3: v ^= (UInt64)pointer[2] << 16; goto case 2;
-                        case 2: v ^= (UInt64)pointer[1] << 8; goto case 1;
-                        case 1:
-                            v ^= pointer[0];
-                            hash = Mix(hash, v);
-                            break;
-                    }
-                }
-            }
-
-            Finalize:
-
-            hash ^= hash >> 23;
-            hash *= N;
-            hash ^= hash >> 47;
-
-            Byte[] result = GetHash(hash);
-
-            return result;
-        }
-        #endif
         #endregion
     }
 

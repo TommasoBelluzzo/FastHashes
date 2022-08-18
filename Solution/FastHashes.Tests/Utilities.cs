@@ -10,75 +10,62 @@ namespace FastHashes.Tests
         #region Methods
         private static Boolean SequencesEqual(Byte[] array1, Byte[] array2)
         {
+            if (ReferenceEquals(array1, null))
+                return ReferenceEquals(array2, null);
+
             if (ReferenceEquals(array1, array2))
                 return true;
 
-            if ((array1 == null) || (array2 == null) || (array1.Length != array2.Length))
+            Int32 length1 = array1.Length;
+            Int32 length2 = array2.Length;
+
+            if (length1 != length2)
                 return false;
 
-            Int32 n = array1.Length;
+            Int32 n = Math.Max(length1, length2);
 
-            unsafe
+            for (Int32 i = 0; i < n; ++i)
             {
-                fixed (Byte* pin1 = array1, pin2 = array2)
-                {
-                    Byte* pointer1 = pin1;
-                    Byte* pointer2 = pin2;
-
-                    while (n-- > 0)
-                    {
-                        if (*pointer1 != *pointer2)
-                            return false;
-
-                        ++pointer1;
-                        ++pointer2;
-                    }
-
-                    return true;
-                }  
+                if (array1[i] != array2[i])
+                    return false;
             }
+
+            return true;
         }
 
         private static Int32 CompareSequences(Byte[] array1, Byte[] array2)
         {
+            if (ReferenceEquals(array1, null))
+                return ReferenceEquals(array2, null) ? 0 : 1;
+
+            if (ReferenceEquals(array2, null))
+                return ReferenceEquals(array1, null) ? 0 : -1;
+
             if (ReferenceEquals(array1, array2))
                 return 0;
 
-            if (array1 == null)
-                return 1;
+            Int32 length1 = array1.Length;
+            Int32 length2 = array2.Length;
 
-            if (array2 == null)
-                return -1;
+            if (length1 != length2)
+                return -Math.Min(Math.Max(length1 - length2, -1), 1);
 
-            if (array1.Length != array2.Length)
-                return -Math.Min(Math.Max(array1.Length - array2.Length, -1), 1);
+            Int32 n = Math.Max(length1, length2);
+            Int32 diff = 0;
 
-            Int32 n = array1.Length;
-
-            unsafe
+            for (Int32 i = 0; i < n; ++i)
             {
-                fixed (Byte* pin1 = array1, pin2 = array2)
+                Byte value1 = array1[i];
+                Byte value2 = array2[i];
+
+                if (value1 != value2)
                 {
-                    Byte* pointer1 = pin1;
-                    Byte* pointer2 = pin2;
-
-                    Int32 diff = 0;
-
-                    while (n-- > 0)
-                    {
-                        if (*pointer1 != *pointer2)
-                        {
-                            diff = *pointer1 - *pointer2;
-                            break;
-                        }
-
-                        ++pointer1;
-                        ++pointer2;
-                    }
-
-                    return -Math.Min(Math.Max(diff, -1), 1);
-                }  
+                    diff = value1 - value2;
+                    break;
+                }
             }
+
+            return -Math.Min(Math.Max(diff, -1), 1);
         }
 
         public static Boolean CollisionsThresholdExceeded(List<Byte[]> hashes, Int32 hashBytes)
@@ -108,26 +95,6 @@ namespace FastHashes.Tests
                 return true;
 
             return false;
-        }
-
-        public static void FillBuffer(Byte[] buffer, Byte filler)
-        {
-            if (buffer == null)
-                throw new ArgumentNullException(nameof(buffer));
-
-            if (buffer.Length == 0)
-                return;
-
-            unsafe
-            {
-                fixed (Byte* pin = buffer)
-                {
-                    Byte* pointer = pin;
-
-                    for (Int32 i = 0; i < buffer.Length; ++i)
-                        *(pointer + i) = filler;
-                }
-            }
         }
         #endregion
     }

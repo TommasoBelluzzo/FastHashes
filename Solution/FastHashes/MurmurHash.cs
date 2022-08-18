@@ -70,27 +70,17 @@ namespace FastHashes
         protected abstract Byte[] GetHash(Byte[] hashData);
 
         /// <inheritdoc/>
+        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        {
+            return GetHash(m_Engine.ComputeHash(buffer));
+        }
+
+        /// <inheritdoc/>
         [ExcludeFromCodeCoverage]
         public override String ToString()
         {
             return $"{GetType().Name}-{m_Engine.Name}";
         }
-        #endregion
-
-        #region Pointer/Span Fork
-        #if NETSTANDARD2_1_OR_GREATER
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
-        {
-            return GetHash(m_Engine.ComputeHash(buffer));
-        }
-		#else
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
-        {
-            return GetHash(m_Engine.ComputeHash(buffer, offset, count));
-        }
-		#endif
         #endregion
 
         #region Nested Classes
@@ -117,12 +107,8 @@ namespace FastHashes
             }
             #endregion
 
-            #region Pointer/Span Fork
-			#if NETSTANDARD2_1_OR_GREATER
+            #region Methods
             public abstract Byte[] ComputeHash(ReadOnlySpan<Byte> buffer);
-			#else
-            public abstract Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 count);
-			#endif
             #endregion
         }
 
@@ -192,10 +178,7 @@ namespace FastHashes
 
                 return v1;
             }
-            #endregion
 
-            #region Pointer/Span Fork
-			#if NETSTANDARD2_1_OR_GREATER
             public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
@@ -272,88 +255,6 @@ namespace FastHashes
 
                 return result;
             }
-            #else
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 count)
-            {
-                UInt64 hash1 = m_Seed1;
-                UInt64 hash2 = m_Seed2;
-
-                if (count == 0)
-                    goto Finalize;
-
-                unsafe
-                {
-                    fixed (Byte* pin = &data[offset])
-                    {
-                        Byte* pointer = pin;
-
-                        Int32 blocks = count / 16;
-                        Int32 remainder = count & 15;
-
-                        while (blocks-- > 0)
-                        {
-                            UInt64 k1 = BinaryOperations.Read64(pointer);
-                            pointer += 8;
-                            UInt64 k2 = BinaryOperations.Read64(pointer);
-                            pointer += 8;
-
-                            UInt64 v = Mix(k1, C1, C2, 31);
-                            hash1 = Mur(hash1, hash2, v, 27, N1);
-
-                            v = Mix(k2, C2, C1, 33);
-                            hash2 = Mur(hash2, hash1, v, 31, N2);
-                        }
-
-                        UInt64 v1 = 0ul;
-                        UInt64 v2 = 0ul;
-
-                        switch (remainder)
-                        {
-                            case 15: v2 ^= (UInt64)pointer[14] << 48; goto case 14;
-                            case 14: v2 ^= (UInt64)pointer[13] << 40; goto case 13;
-                            case 13: v2 ^= (UInt64)pointer[12] << 32; goto case 12;
-                            case 12: v2 ^= (UInt64)pointer[11] << 24; goto case 11;
-                            case 11: v2 ^= (UInt64)pointer[10] << 16; goto case 10;
-                            case 10: v2 ^= (UInt64)pointer[9] << 8; goto case 9;
-                            case 9:
-                                v2 ^= pointer[8];
-                                hash2 ^= Mix(v2, C2, C1, 33);
-                                goto case 8;
-                            case 8: v1 ^= (UInt64)pointer[7] << 56; goto case 7;
-                            case 7: v1 ^= (UInt64)pointer[6] << 48; goto case 6;
-                            case 6: v1 ^= (UInt64)pointer[5] << 40; goto case 5;
-                            case 5: v1 ^= (UInt64)pointer[4] << 32; goto case 4;
-                            case 4: v1 ^= (UInt64)pointer[3] << 24; goto case 3;
-                            case 3: v1 ^= (UInt64)pointer[2] << 16; goto case 2;
-                            case 2: v1 ^= (UInt64)pointer[1] << 8; goto case 1;
-                            case 1:
-                                v1 ^= pointer[0];
-                                hash1 ^= Mix(v1, C1, C2, 31);
-                                break;
-                        }
-                    }
-                }
-
-                Finalize:
-
-                UInt64 length = (UInt64)count;
-                hash1 ^= length;
-                hash2 ^= length;
-
-                hash1 += hash2;
-                hash2 += hash1;
-
-                hash1 = Fin(hash1);
-                hash2 = Fin(hash2);
-
-                hash1 += hash2;
-                hash2 += hash1;
-
-                Byte[] result = BinaryOperations.ToArray64(hash1, hash2);
-
-                return result;
-            }
-            #endif
             #endregion
         }
 
@@ -431,10 +332,7 @@ namespace FastHashes
 
                 return v1;
             }
-            #endregion
 
-            #region Pointer/Span Fork
-            #if NETSTANDARD2_1_OR_GREATER
             public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
@@ -538,116 +436,6 @@ namespace FastHashes
 
                 return result;
             }
-			#else
-            public override Byte[] ComputeHash(Byte[] data, Int32 offset, Int32 count)
-            {
-                UInt32 hash1 = m_Seed1;
-                UInt32 hash2 = m_Seed2;
-                UInt32 hash3 = m_Seed3;
-                UInt32 hash4 = m_Seed4;
-
-                if (count == 0)
-                    goto Finalize;
-
-                unsafe
-                {
-                    fixed (Byte* pin = &data[offset])
-                    {
-                        Byte* pointer = pin;
-
-                        Int32 blocks = count / 16;
-                        Int32 remainder = count & 15;
-
-                        while (blocks-- > 0)
-                        {
-                            UInt32 k1 = BinaryOperations.Read32(pointer);
-                            pointer += 4;
-                            UInt32 k2 = BinaryOperations.Read32(pointer);
-                            pointer += 4;
-                            UInt32 k3 = BinaryOperations.Read32(pointer);
-                            pointer += 4;
-                            UInt32 k4 = BinaryOperations.Read32(pointer);
-                            pointer += 4;
-
-                            UInt32 v = Mix(k1, C1, C2, 15);
-                            hash1 = Mur(hash1, hash2, v, 19, N1);
-
-                            v = Mix(k2, C2, C3, 16);
-                            hash2 = Mur(hash2, hash3, v, 17, N2);
-
-                            v = Mix(k3, C3, C4, 17);
-                            hash3 = Mur(hash3, hash4, v, 15, N3);
-
-                            v = Mix(k4, C4, C1, 18);
-                            hash4 = Mur(hash4, hash1, v, 13, N4);
-                        }
-
-                        UInt32 v1 = 0u;
-                        UInt32 v2 = 0u;
-                        UInt32 v3 = 0u;
-                        UInt32 v4 = 0u;
-
-                        switch (remainder)
-                        {
-                            case 15: v4 ^= (UInt32)pointer[14] << 16; goto case 14;
-                            case 14: v4 ^= (UInt32)pointer[13] << 8; goto case 13;
-                            case 13:
-                                v4 ^= pointer[12];
-                                hash4 ^= Mix(v4, C4, C1, 18);
-                                goto case 12;
-                            case 12: v3 ^= (UInt32)pointer[11] << 24; goto case 11;
-                            case 11: v3 ^= (UInt32)pointer[10] << 16; goto case 10;
-                            case 10: v3 ^= (UInt32)pointer[9] << 8; goto case 9;
-                            case 9:
-                                v3 ^= pointer[8];
-                                hash3 ^= Mix(v3, C3, C4, 17);
-                                goto case 8;
-                            case 8: v2 ^= (UInt32)pointer[7] << 24; goto case 7;
-                            case 7: v2 ^= (UInt32)pointer[6] << 16; goto case 6;
-                            case 6: v2 ^= (UInt32)pointer[5] << 8; goto case 5;
-                            case 5:
-                                v2 ^= pointer[4];
-                                hash2 ^= Mix(v2, C2, C3, 16);
-                                goto case 4;
-                            case 4: v1 ^= (UInt32)pointer[3] << 24; goto case 3;
-                            case 3: v1 ^= (UInt32)pointer[2] << 16; goto case 2;
-                            case 2: v1 ^= (UInt32)pointer[1] << 8; goto case 1;
-                            case 1:
-                                v1 ^= pointer[0];
-                                hash1 ^= Mix(v1, C1, C2, 15);
-                                break;
-                        }
-                    }
-                }
-
-                Finalize:
-
-                UInt32 length = (UInt32)count;
-                hash1 ^= length;
-                hash2 ^= length;
-                hash3 ^= length;
-                hash4 ^= length;
-
-                hash1 += hash2 + hash3 + hash4;
-                hash2 += hash1;
-                hash3 += hash1;
-                hash4 += hash1;
-
-                hash1 = Fin(hash1);
-                hash2 = Fin(hash2);
-                hash3 = Fin(hash3);
-                hash4 = Fin(hash4);
-
-                hash1 += hash2 + hash3 + hash4;
-                hash2 += hash1;
-                hash3 += hash1;
-                hash4 += hash1;
-
-                Byte[] result = BinaryOperations.ToArray32(hash1, hash2, hash3, hash4);
-
-                return result;
-            }
-			#endif
             #endregion
         }
         #endregion
@@ -713,10 +501,7 @@ namespace FastHashes
 
             return v1;
         }
-        #endregion
 
-        #region Pointer/Span Fork
-		#if NETSTANDARD2_1_OR_GREATER
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
         {
@@ -762,58 +547,6 @@ namespace FastHashes
 
             return result;
         }
-		#else
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
-        {
-            UInt32 hash = m_Seed;
-
-            if (count == 0)
-                goto Finalize;
-
-            unsafe
-            {
-                fixed (Byte* pin = &buffer[offset])
-                {
-                    Byte* pointer = pin;
-
-                    Int32 blocks = count / 4;
-                    Int32 remainder = count & 3;
-
-                    while (blocks-- > 0)
-                    {
-                        hash = Mur(hash, BinaryOperations.Read32(pointer));
-                        pointer += 4;
-                    }
-
-                    UInt32 v = 0u;
-
-                    switch (remainder)
-                    {
-                        case 3: v ^= (UInt32)pointer[2] << 16; goto case 2;
-                        case 2: v ^= (UInt32)pointer[1] << 8; goto case 1;
-                        case 1:
-                            v ^= pointer[0];
-                            hash ^= Mix(v);
-                            break;
-                    }
-                }
-            }
-
-            Finalize:
-
-            hash ^= (UInt32)count;
-            hash ^= hash >> 16;
-            hash *= F1;
-            hash ^= hash >> 13;
-            hash *= F2;
-            hash ^= hash >> 16;
-
-            Byte[] result = BinaryOperations.ToArray32(hash);
-
-            return result;
-        }
-		#endif
         #endregion
     }
 
@@ -849,8 +582,7 @@ namespace FastHashes
         public MurmurHash64(MurmurHashEngine engine, UInt32 seed) : base(engine, seed) {}
         #endregion
 
-        #region Pointer/Span Fork
-        #if NETSTANDARD2_1_OR_GREATER
+        #region Methods
         /// <inheritdoc/>
         protected override Byte[] GetHash(Byte[] hashData)
         {
@@ -859,16 +591,6 @@ namespace FastHashes
 
             return hash;
         }
-        #else
-        /// <inheritdoc/>
-        protected override Byte[] GetHash(Byte[] hashData)
-        {
-            Byte[] hash = new Byte[8];
-            BinaryOperations.BlockCopy(hashData, 0, hash, 0, 8);
-
-            return hash;
-        }
-        #endif
         #endregion
     }
 

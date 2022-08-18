@@ -93,13 +93,12 @@ namespace FastHashes.Tests
                 Int32 lineBytesLength = lineBytes.Length;
 
                 Byte[] buffer = new Byte[lineBytes.Length + 5];
-                Utilities.FillBuffer(buffer, filler);
+                Int32 bufferLength = buffer.Length;
 
-                #if NETCOREAPP3_1_OR_GREATER
-                Buffer.BlockCopy(lineBytes, 0, buffer, 0, lineBytes.Length);
-                #else
-                BinaryOperations.BlockCopy(lineBytes, 0, buffer, 0, lineBytes.Length);
-                #endif
+                for (Int32 i = 0; i < bufferLength; ++i)
+                    buffer[i] = filler;
+
+                Buffer.BlockCopy(lineBytes, 0, buffer, 0, lineBytesLength);
 
                 for (Int32 j = 0; j <= 5; ++j)
                     hashes.Add(hash.ComputeHash(buffer, 0, lineBytesLength + j));
@@ -128,12 +127,8 @@ namespace FastHashes.Tests
         
                 Hash hashi = hashInitializer((UInt32)(256 - i));
                 Byte[] hi = hashi.ComputeHash(buffer, 0, i);
-        
-                #if NETCOREAPP3_1_OR_GREATER
+
                 Buffer.BlockCopy(hi, 0, bufferFinal, i * hashBytes, hashBytes);
-                #else
-                BinaryOperations.BlockCopy(hi, 0, bufferFinal, i * hashBytes, hashBytes);
-                #endif
             }
         
             Byte[] h0 = hash0.ComputeHash(bufferFinal);   

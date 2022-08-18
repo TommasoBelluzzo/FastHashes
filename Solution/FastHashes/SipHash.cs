@@ -75,10 +75,7 @@ namespace FastHashes
             v[1] ^= v[2];
             v[2] = BinaryOperations.RotateLeft(v[2], 16);
         }
-        #endregion
 
-        #region Pointer/Span Fork
-        #if NETSTANDARD2_1_OR_GREATER
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
         {
@@ -132,66 +129,6 @@ namespace FastHashes
 
             return result;
         }
-        #else
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
-        {
-            UInt32 b = (UInt32)count << 24;
-            UInt32[] v = { m_Seed1, m_Seed2, I0 ^ m_Seed1, I1 ^ m_Seed2 };
-
-            if (count == 0)
-                goto Finalize;
-
-            unsafe
-            {
-                fixed (Byte* pin = &buffer[offset])
-                {
-                    Byte* pointer = pin;
-
-                    Int32 blocks = count / 4;
-                    Int32 remainder = count & 3;
-
-                    while (blocks-- > 0)
-                    {
-                        UInt32 m = BinaryOperations.Read32(pointer);
-                        pointer += 4;
-
-                        v[3] ^= m;
-
-                        for (Int32 i = 0; i < 2; ++i)
-                            Mix(ref v);
-
-                        v[0] ^= m;
-                    }
-
-                    switch (remainder)
-                    {
-                        case 3: b |= (UInt32)pointer[2] << 16; goto case 2;
-                        case 2: b |= (UInt32)pointer[1] << 8; goto case 1;
-                        case 1: b |= pointer[0]; break;
-                    }
-                }
-            }
-
-            Finalize:
-
-            v[3] ^= b;
-
-            for (Int32 i = 0; i < 2; ++i)
-                Mix(ref v);
-
-            v[0] ^= b;
-            v[2] ^= 0x000000FFu;
-
-            for (Int32 i = 0; i < 4; ++i)
-                Mix(ref v);
-
-            UInt32 hash = v[1] ^ v[3];
-            Byte[] result = BinaryOperations.ToArray32(hash);
-
-            return result;
-        }
-        #endif
         #endregion
     }
 
@@ -312,16 +249,6 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override String ToString()
-        {
-            return $"{GetType().Name}-{((m_Variant == SipHashVariant.V13) ? "-13" : "-24")}";
-        }
-        #endregion
-
-        #region Pointer/Span Fork
-        #if NETSTANDARD2_1_OR_GREATER
-        /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
@@ -378,70 +305,13 @@ namespace FastHashes
 
             return result;
         }
-        #else
+
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(Byte[] buffer, Int32 offset, Int32 count)
+        [ExcludeFromCodeCoverage]
+        public override String ToString()
         {
-            UInt64 b = (UInt64)(count & 0x000000FF) << 56;
-            UInt64[] v = { m_Seed1 ^ K0, m_Seed2 ^ K1, m_Seed1 ^ K2, m_Seed2 ^ K3 };
-
-            if (count == 0)
-                goto Finalize;
-
-            unsafe
-            {
-                fixed (Byte* pin = &buffer[offset])
-                {
-                    Byte* pointer = pin;
-
-                    Int32 blocks = count / 8;
-                    Int32 remainder = count & 7;
-
-                    while (blocks-- > 0)
-                    {
-                        UInt64 m = BinaryOperations.Read64(pointer);
-                        pointer += 8;
-
-                        v[3] ^= m;
-
-                        for (Int32 i = 0; i < m_R1; ++i)
-                            Mix(ref v);
-
-                        v[0] ^= m;
-                    }
-
-                    switch (remainder)
-                    {
-                        case 7: b |= (UInt64)pointer[6] << 48; goto case 6;
-                        case 6: b |= (UInt64)pointer[5] << 40; goto case 5;
-                        case 5: b |= (UInt64)pointer[4] << 32; goto case 4;
-                        case 4: b |= (UInt64)pointer[3] << 24; goto case 3;
-                        case 3: b |= (UInt64)pointer[2] << 16; goto case 2;
-                        case 2: b |= (UInt64)pointer[1] << 8; goto case 1;
-                        case 1: b |= pointer[0]; break;
-                    }
-                }
-            }
-
-            Finalize:
-
-            v[3] ^= b;
-
-            for (Int32 i = 0; i < m_R1; ++i)
-                Mix(ref v);
-
-            v[0] ^= b;
-            v[2] ^= 0x000000000000000000FFul;
-
-            for (Int32 i = 0; i < m_R2; ++i)
-                Mix(ref v);
-
-            UInt64 hash = v[0] ^ v[1] ^ v[2] ^ v[3];
-            Byte[] result = BinaryOperations.ToArray64(hash);
-
-            return result;
+            return $"{GetType().Name}-{((m_Variant == SipHashVariant.V13) ? "-13" : "-24")}";
         }
-        #endif
         #endregion
     }
 }
