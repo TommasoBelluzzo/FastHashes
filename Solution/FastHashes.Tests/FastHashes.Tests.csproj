@@ -114,7 +114,7 @@
       <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
     </ProjectReference>
   </ItemGroup>
-
+  
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
     <Compile Remove="..\FastHashes.Tests\UnsafeBufferTests.cs" />
   </ItemGroup>
