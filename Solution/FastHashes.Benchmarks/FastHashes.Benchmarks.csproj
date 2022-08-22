@@ -9,9 +9,9 @@
     <StartupObject>FastHashes.Benchmarks.Program</StartupObject>
     <IsPackable>false</IsPackable>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <IsMacOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsMacOS>
-    <IsUnix Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsUnix>
-    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
+    <IsMacOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'=='true'">true</IsMacOS>
+    <IsUnix Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'=='true'">true</IsUnix>
+    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))'=='true'">true</IsWindows>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -55,8 +55,8 @@
     <WarningsAsErrors />
     <DocumentationFile></DocumentationFile>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
-    <DebugType>portable</DebugType>
-    <DebugSymbols>true</DebugSymbols>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -67,8 +67,8 @@
     <WarningsAsErrors />
     <DocumentationFile></DocumentationFile>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
-    <DebugType>portable</DebugType>
-    <DebugSymbols>true</DebugSymbols>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
@@ -79,33 +79,33 @@
     <WarningsAsErrors />
     <DocumentationFile></DocumentationFile>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
-    <DebugType>portable</DebugType>
-    <DebugSymbols>true</DebugSymbols>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(IsMacOS)' == 'true'">
+  <PropertyGroup Condition="'$(IsMacOS)'=='true'">
     <DefineConstants>MACOS</DefineConstants>
   </PropertyGroup>
   
-  <PropertyGroup Condition="'$(IsUnix)' == 'true'">
+  <PropertyGroup Condition="'$(IsUnix)'=='true'">
     <DefineConstants>UNIX</DefineConstants>
   </PropertyGroup>
   
-  <PropertyGroup Condition="'$(IsWindows)' == 'true'">
+  <PropertyGroup Condition="'$(IsWindows)'=='true'">
     <DefineConstants>WINDOWS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
+    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)'=='netcoreapp2.1'">
       <SetTargetFramework>TargetFramework=netstandard2.0</SetTargetFramework>
     </ProjectReference>
-    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)'=='netcoreapp3.1'">
       <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
     </ProjectReference>
-    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)' == 'net5.0'">
+    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)'=='net5.0'">
       <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
     </ProjectReference>
-    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)' == 'net6.0'">
+    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)'=='net6.0'">
       <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
     </ProjectReference>
   </ItemGroup>

@@ -4,8 +4,12 @@
     <TargetFrameworkMonikerAssemblyAttributesPath>$([System.IO.Path]::Combine('$(IntermediateOutputPath)','$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)'))</TargetFrameworkMonikerAssemblyAttributesPath>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(DebugType)'!='none'">
     <EmbeddedFiles Include="$(GeneratedAssemblyInfoFile)"/>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(GITHUB_ACTIONS)'=='true' AND '$(SourceRoot)'==''">
+    <SourceRoot Include="$([MSBuild]::EnsureTrailingSlash($(MSBuildThisFileDirectory)))"/>
   </ItemGroup>
 
 </Project>

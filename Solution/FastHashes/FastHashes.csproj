@@ -90,7 +90,7 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
     <PackageReference Include="System.Memory" Version="4.5.5" />
   </ItemGroup>
 
@@ -98,14 +98,14 @@
     <None Include="..\..\README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
+  <ItemGroup Condition="'$(GITHUB_ACTIONS)'=='true'">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)'=='true'">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedAllSources>true</EmbedAllSources>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
