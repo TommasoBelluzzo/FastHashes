@@ -17,5 +17,9 @@
     <Deterministic>true</Deterministic>
     <DeterministicSourcePaths>true</DeterministicSourcePaths>
   </PropertyGroup>
+  
+  <ItemGroup Condition="'$(DebugType)'!='none'">
+    <EmbeddedFiles Include="$(GeneratedAssemblyInfoFile)"/>
+  </ItemGroup>
 
 </Project>

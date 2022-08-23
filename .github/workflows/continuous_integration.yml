@@ -32,7 +32,7 @@ jobs:
       run: dotnet build FastHashes.sln --verbosity normal --configuration Release --no-restore --no-incremental
     - name: Test
       working-directory: Solution/
-      run: dotnet test FastHashes.sln --verbosity normal --configuration Release --no-restore --no-build /p:CollectCoverage=true /p:CoverletOutputFormat="lcov" /p:CoverletOutput="../Coverage/" /p:MergeWith="../Coverage/coverage.info"
+      run: dotnet test FastHashes.sln --verbosity normal --configuration Release --no-restore --no-build /p:AltCover=true /p:AltCoverForce=true /p:AltCoverSingle=true /p:AltCoverReportFormat=OpenCover /p:AltCoverReport="..\Coverage\coverage.xml" /p:AltCoverLocalSource=true /p:AltCoverAttributeFilter="ExcludeFromCodeCoverage"
     - name: Coverage
       uses: coverallsapp/github-action@master
       with:
