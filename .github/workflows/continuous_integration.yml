@@ -23,6 +23,7 @@ jobs:
         dotnet-version: |
           2.1.x
           3.1.x
+          5.0.x
           6.0.x
     - name: Restore
       working-directory: Solution/
@@ -33,8 +34,15 @@ jobs:
     - name: Test
       working-directory: Solution/
       run: dotnet test --verbosity normal --configuration Release --no-restore --no-build --collect "XPlat Code Coverage" --settings Coverage.runsettings --results-directory Coverage\
+    - name: Coverage Report Creation
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.1.9
+      with:
+        reports: 'Coverage\*\coverage.info'
+        reporttypes: 'lcov'
+        targetdir: 'Coverage\'
+        verbosity: 'Info'
     - name: Coverage
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: Solution/Coverage/coverage.info 
+        path-to-lcov: Solution/Coverage/coverage.info
