@@ -4,10 +4,11 @@
     <DataCollectors>
       <DataCollector friendlyName="XPlat Code Coverage">
         <Configuration>
+          <Format>lcov</Format>
           <UseSourceLink>true</UseSourceLink>
-          <Format>lcov</Format>          
           <SingleHit>false</SingleHit>
           <SkipAutoProps>true</SkipAutoProps>
+          <ExcludeByAttribute>CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute,GeneratedCodeAttribute</ExcludeByAttribute>
           <IncludeTestAssembly>false</IncludeTestAssembly>
           <DeterministicReport>false</DeterministicReport>
         </Configuration>

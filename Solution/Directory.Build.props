@@ -11,15 +11,27 @@
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.5.0.0</FileVersion>
   </PropertyGroup>
+
+  <ItemGroup Condition="'$(GITHUB_ACTIONS)'=='true'">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
   
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)'=='true'">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <Deterministic>true</Deterministic>
     <DeterministicSourcePaths>true</DeterministicSourcePaths>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedAllSources>true</EmbedAllSources>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
-  
-  <ItemGroup Condition="'$(DebugType)'!='none'">
-    <EmbeddedFiles Include="$(GeneratedAssemblyInfoFile)"/>
-  </ItemGroup>
+
+  <Target Name="CoverletGetPathMap" DependsOnTargets="InitializeSourceRootMappedPaths" Returns="@(_LocalTopLevelSourceRoot)" Condition="'$(DeterministicSourcePaths)'=='true'">
+    <ItemGroup>
+      <_LocalTopLevelSourceRoot Include="@(SourceRoot)" Condition="'%(SourceRoot.NestedRoot)'==''"/>
+    </ItemGroup>
+  </Target>
 
 </Project>
