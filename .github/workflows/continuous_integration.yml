@@ -34,10 +34,6 @@ jobs:
     - name: Test
       working-directory: Solution/
       run: dotnet test --verbosity normal --configuration Release --no-restore --no-build --collect "XPlat Code Coverage" --settings Coverage.runsettings --results-directory ../Coverage
-    - name: Run script file
-      run: |
-        pwd
-      shell: bash
     - name: Coverage Report Creation
       uses: danielpalme/ReportGenerator-GitHub-Action@5.1.9
       with:
@@ -45,6 +41,10 @@ jobs:
         reporttypes: 'lcov'
         targetdir: 'Coverage'
         verbosity: 'Info'
+    - name: Run script file
+      run: |
+        ls -LT
+      shell: bash
     - name: Coverage
       uses: coverallsapp/github-action@master
       with:
