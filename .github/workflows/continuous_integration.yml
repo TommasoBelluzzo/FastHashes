@@ -33,17 +33,17 @@ jobs:
       run: dotnet build --verbosity normal --configuration Release --no-restore --no-incremental
     - name: Test
       working-directory: Solution/
-      run: dotnet test --verbosity normal --configuration Release --no-restore --no-build --collect "XPlat Code Coverage" --settings Coverage.runsettings --results-directory ../Coverage
+      run: dotnet test --verbosity normal --configuration Release --no-restore --no-build --collect "XPlat Code Coverage" --settings Coverage.runsettings --results-directory Coverage
     - name: Coverage Report Creation
       uses: danielpalme/ReportGenerator-GitHub-Action@5.1.9
       with:
-        reports: 'Coverage/*/coverage.info'
+        reports: 'Solution/Coverage/*/coverage.info'
         reporttypes: 'lcov'
-        targetdir: 'Coverage'
+        targetdir: 'Solution/Coverage'
         verbosity: 'Info'
     - name: Run script file
       run: |
-        ls -LR
+        ls -LRlh
       shell: bash
     - name: Coverage
       uses: coverallsapp/github-action@master
