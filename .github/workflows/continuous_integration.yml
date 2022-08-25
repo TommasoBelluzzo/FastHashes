@@ -43,7 +43,7 @@ jobs:
         verbosity: 'Info'
     - name: Run script file
       run: |
-        ls -LT
+        ls -LR
       shell: bash
     - name: Coverage
       uses: coverallsapp/github-action@master
