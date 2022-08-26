@@ -33,7 +33,7 @@ jobs:
       run: dotnet build --verbosity normal --configuration Release --no-restore --no-incremental
     - name: Test
       working-directory: Solution/
-      run: dotnet test --verbosity normal --configuration Release --no-restore --no-build --collect "XPlat Code Coverage" --settings Coverage.runsettings --results-directory Coverage
+      run: dotnet test --verbosity diagnostic --configuration Release --no-restore --no-build --collect "XPlat Code Coverage" --settings Coverage.runsettings --results-directory Coverage
     - name: Coverage Report Creation
       uses: danielpalme/ReportGenerator-GitHub-Action@5.1.9
       with:
