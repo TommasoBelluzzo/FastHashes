@@ -7,7 +7,6 @@ on:
     branches: [ master ]
     
 env:
-  VSTEST_HOST_DEBUG: 1
   COVERLET_ENABLETRACKERLOG: 1
 
 jobs:
