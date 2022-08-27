@@ -47,7 +47,7 @@ jobs:
     - name: Coverage Report Artifact
       uses: actions/upload-artifact@v3
       with:
-        name: coverage-artifact
+        name: Coverage Artifact (${{ matrix.os }})
         path: Solution/Coverage/
     - name: Coverage Report Upload
       uses: coverallsapp/github-action@master
