@@ -15,4 +15,14 @@
       </DataCollector>
     </DataCollectors>
   </DataCollectionRunSettings>
+  <InProcDataCollectionRunSettings>
+    <InProcDataCollectors>
+      <InProcDataCollector
+        friendlyName="XPlat Code Coverage"
+        assemblyQualifiedName="Coverlet.Collector.DataCollection.CoverletInProcDataCollector, coverlet.collector, Version=3.1.2.0, Culture=neutral, PublicKeyToken=null"
+        codebase="coverlet.collector.dll"
+        enabled="True"
+      />
+    </InProcDataCollectors>
+  </InProcDataCollectionRunSettings>
 </RunSettings>
