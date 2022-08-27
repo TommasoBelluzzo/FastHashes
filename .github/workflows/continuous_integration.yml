@@ -44,11 +44,12 @@ jobs:
         reporttypes: 'lcov'
         targetdir: 'Solution/Coverage'
         verbosity: 'Info'
-    - name: Run script file
-      run: |
-        ls -LRlh
-      shell: bash
-    - name: Coverage
+    - name: Coverage Report Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-artifact
+        path: Solution/Coverage/
+    - name: Coverage Report Upload
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
