@@ -5,6 +5,11 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+    
+env:
+  VSTEST_HOST_DEBUG: 1
+  COVERLET_ENABLETRACKERLOG: 1
+  COVERLET_DATACOLLECTOR_OUTOFPROC_DEBUG : 1
 
 jobs:
   continuous_integration:
@@ -33,7 +38,7 @@ jobs:
       run: dotnet build --verbosity normal --configuration Release --no-restore --no-incremental
     - name: Test
       working-directory: Solution/
-      run: dotnet test --verbosity diagnostic --configuration Release --no-restore --no-build --collect "XPlat Code Coverage" --settings Coverage.runsettings --results-directory Coverage
+      run: dotnet test --verbosity detailed --configuration Release --no-restore --no-build --collect "XPlat Code Coverage" --settings Coverage.runsettings --results-directory Coverage
     - name: Coverage Report Creation
       uses: danielpalme/ReportGenerator-GitHub-Action@5.1.9
       with:
