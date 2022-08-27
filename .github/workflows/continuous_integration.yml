@@ -9,7 +9,6 @@ on:
 env:
   VSTEST_HOST_DEBUG: 1
   COVERLET_ENABLETRACKERLOG: 1
-  COVERLET_DATACOLLECTOR_OUTOFPROC_DEBUG : 1
 
 jobs:
   continuous_integration:
