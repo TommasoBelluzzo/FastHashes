@@ -5,7 +5,7 @@
       <DataCollector friendlyName="XPlat Code Coverage">
         <Configuration>
           <Format>lcov</Format>
-          <UseSourceLink>true</UseSourceLink>
+          <UseSourceLink>false</UseSourceLink>
           <SingleHit>false</SingleHit>
           <SkipAutoProps>true</SkipAutoProps>
           <ExcludeByAttribute>CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute,GeneratedCodeAttribute</ExcludeByAttribute>
