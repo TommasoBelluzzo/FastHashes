@@ -5,11 +5,9 @@
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <Description>Unit tests for the FastHashes library.</Description>
-    <IsPackable>false</IsPackable>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <IsMacOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'=='true'">true</IsMacOS>
-    <IsUnix Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'=='true'">true</IsUnix>
-    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))'=='true'">true</IsWindows>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -81,15 +79,15 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(IsMacOS)' == 'true'">
+  <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'=='true'">
     <DefineConstants>MACOS</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(IsUnix)' == 'true'">
+  <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'=='true'">
     <DefineConstants>UNIX</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(IsWindows)' == 'true'">
+  <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))'=='true'">
     <DefineConstants>WINDOWS</DefineConstants>
   </PropertyGroup>
   
@@ -100,38 +98,32 @@
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.0" />
     <PackageReference Include="xunit" Version="2.4.2" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3" Condition="'$(TargetFramework)'=='netcoreapp2.1'">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5" Condition="'$(TargetFramework)'=='netcoreapp3.1'">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5" Condition="'$(TargetFramework)'=='net5.0'">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5" Condition="'$(TargetFramework)'=='net6.0'">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)'=='netcoreapp2.1'">
-      <SetTargetFramework>TargetFramework=netstandard2.0</SetTargetFramework>
-    </ProjectReference>
-    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)'=='netcoreapp3.1'">
-      <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
-    </ProjectReference>
-    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)'=='net5.0'">
-      <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
-    </ProjectReference>
-    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)'=='net6.0'">
-      <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
-    </ProjectReference>
-  </ItemGroup>
+  <Choose>
+    <When Condition="'$(TargetFramework)'=='netcoreapp2.1'">
+      <ItemGroup>
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
+        <ProjectReference Include="..\FastHashes\FastHashes.csproj">
+          <SetTargetFramework>TargetFramework=netstandard2.0</SetTargetFramework>
+        </ProjectReference>
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
+        <ProjectReference Include="..\FastHashes\FastHashes.csproj">
+          <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
+        </ProjectReference>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
   
   <ItemGroup>
     <None Update="Data\Words.txt">

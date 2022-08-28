@@ -7,11 +7,8 @@
     <Description>Benchmarks for the FastHashes library.</Description>
     <OutputType>Exe</OutputType>
     <StartupObject>FastHashes.Benchmarks.Program</StartupObject>
-    <IsPackable>false</IsPackable>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <IsMacOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'=='true'">true</IsMacOS>
-    <IsUnix Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'=='true'">true</IsUnix>
-    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))'=='true'">true</IsWindows>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -83,31 +80,33 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(IsMacOS)'=='true'">
+  <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'=='true'">
     <DefineConstants>MACOS</DefineConstants>
   </PropertyGroup>
   
-  <PropertyGroup Condition="'$(IsUnix)'=='true'">
+  <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'=='true'">
     <DefineConstants>UNIX</DefineConstants>
   </PropertyGroup>
   
-  <PropertyGroup Condition="'$(IsWindows)'=='true'">
+  <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))'=='true'">
     <DefineConstants>WINDOWS</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)'=='netcoreapp2.1'">
-      <SetTargetFramework>TargetFramework=netstandard2.0</SetTargetFramework>
-    </ProjectReference>
-    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)'=='netcoreapp3.1'">
-      <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
-    </ProjectReference>
-    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)'=='net5.0'">
-      <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
-    </ProjectReference>
-    <ProjectReference Include="..\FastHashes\FastHashes.csproj" Condition="'$(TargetFramework)'=='net6.0'">
-      <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
-    </ProjectReference>
-  </ItemGroup>
+  <Choose>
+    <When Condition="'$(TargetFramework)'=='netcoreapp2.1'">
+      <ItemGroup>
+        <ProjectReference Include="..\FastHashes\FastHashes.csproj">
+          <SetTargetFramework>TargetFramework=netstandard2.0</SetTargetFramework>
+        </ProjectReference>
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <ProjectReference Include="..\FastHashes\FastHashes.csproj">
+          <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
+        </ProjectReference>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
 
 </Project>

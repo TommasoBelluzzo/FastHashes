@@ -6,6 +6,7 @@
     <Description>A suite of .NET non-cryptographic hash functions.</Description>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>FastHashes.snk</AssemblyOriginatorKeyFile>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <IsPackable>true</IsPackable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>$(AssemblyName)</PackageId>
@@ -15,7 +16,6 @@
     <PackageTags>algorithm hash</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -101,7 +101,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(DebugType)'!='none'">
-    <EmbeddedFiles Include="$(GeneratedAssemblyInfoFile)"/>
+    <EmbeddedFiles Include="$(GeneratedAssemblyInfoFile)" />
   </ItemGroup>
 
   <ItemGroup>

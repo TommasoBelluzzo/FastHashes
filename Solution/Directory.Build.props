@@ -13,8 +13,8 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)'=='true'">
-    <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
-    <Deterministic>false</Deterministic>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <Deterministic>true</Deterministic>
     <DeterministicSourcePaths>false</DeterministicSourcePaths>
   </PropertyGroup>
 
