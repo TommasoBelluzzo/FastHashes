@@ -1,14 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
-    <CheckEolTargetFramework>false</CheckEolTargetFramework>
-    <Platforms>AnyCPU;x64;x86</Platforms>
     <Description>Benchmarks for the FastHashes library.</Description>
+    <TargetFrameworks>netcoreapp2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
     <StartupObject>FastHashes.Benchmarks.Program</StartupObject>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -78,18 +76,6 @@
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'=='true'">
-    <DefineConstants>MACOS</DefineConstants>
-  </PropertyGroup>
-  
-  <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'=='true'">
-    <DefineConstants>UNIX</DefineConstants>
-  </PropertyGroup>
-  
-  <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))'=='true'">
-    <DefineConstants>WINDOWS</DefineConstants>
   </PropertyGroup>
 
   <Choose>

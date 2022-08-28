@@ -10,6 +10,11 @@
     <Version>2.5.0</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.5.0.0</FileVersion>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <IsMacOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'=='true'">true</IsMacOS>
+    <IsUnix Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'=='true'">true</IsUnix>
+    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))'=='true'">true</IsWindows>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)'=='true'">
@@ -24,5 +29,17 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+
+  <PropertyGroup Condition="'$(IsMacOS)'=='true'">
+    <DefineConstants>MACOS</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsUnix)'=='true'">
+    <DefineConstants>UNIX</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsWindows)'=='true'">
+    <DefineConstants>WINDOWS</DefineConstants>
+  </PropertyGroup>
 
 </Project>

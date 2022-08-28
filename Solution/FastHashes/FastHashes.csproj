@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Description>A suite of .NET non-cryptographic hash functions.</Description>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <Description>A suite of .NET non-cryptographic hash functions.</Description>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>FastHashes.snk</AssemblyOriginatorKeyFile>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <IsPackable>true</IsPackable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>$(AssemblyName)</PackageId>
