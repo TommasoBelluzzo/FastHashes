@@ -6,9 +6,9 @@ using System.Security;
 
 namespace FastHashes.Benchmarks
 {
-#if !NETCOREAPP1_0 && !NETCOREAPP1_1
+    #if !NETCOREAPP1_0 && !NETCOREAPP1_1
     [SuppressUnmanagedCodeSecurity]
-#endif
+    #endif
     internal static class NativeMethods
     {
         #region Imports
@@ -28,12 +28,12 @@ namespace FastHashes.Benchmarks
         #endregion
 
         #region Methods
-#if WINDOWS
+        #if WINDOWS
         public static IntPtr SetThreadAffinity(IntPtr affinity)
         {
             return ((affinity == IntPtr.Zero) ? IntPtr.Zero : SetThreadAffinityMask(GetCurrentThread(), affinity));
         }
-#else
+        #else
         public static IntPtr SetThreadAffinity(IntPtr affinity)
         {
             if (affinity == IntPtr.Zero)
@@ -51,7 +51,7 @@ namespace FastHashes.Benchmarks
 
             return new IntPtr((Int64)affinityMaskCurrent);
         }
-#endif
+        #endif
         #endregion
     }
 }

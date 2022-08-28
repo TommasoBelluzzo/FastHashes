@@ -54,8 +54,14 @@ namespace FastHashes.Benchmarks
         public AffinityOptimizer()
         {
             m_Process = Process.GetCurrentProcess();
+
+            #if !NET5_0_OR_GREATER || !MACOS
+            m_ProcessAffinity = IntPtr.Zero;
+            m_ThreadAffinity = IntPtr.Zero;
+            #else
             m_ProcessAffinity = m_Process.ProcessorAffinity;
             m_ThreadAffinity = IntPtr.Zero;
+            #endif
 
             Initialization();
         }
@@ -79,10 +85,14 @@ namespace FastHashes.Benchmarks
 
         protected override void Finalization()
         {
+            #if !MACOS && !NETCOREAPP1_0 && !NETCOREAPP1_1
             NativeMethods.SetThreadAffinity(m_ThreadAffinity);
             Thread.EndThreadAffinity();
+            #endif
 
+            #if !NET5_0_OR_GREATER || !MACOS
             m_Process.ProcessorAffinity = m_ProcessAffinity;
+            #endif
         }
         #endregion
     }
