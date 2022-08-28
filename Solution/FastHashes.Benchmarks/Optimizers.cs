@@ -66,7 +66,10 @@ namespace FastHashes.Benchmarks
         private void Initialization()
         {
             IntPtr affinity = (IntPtr)(1 << (Environment.ProcessorCount - 1));
+
+            #if !NET5_0_OR_GREATER || !MACOS
             m_Process.ProcessorAffinity = affinity;
+            #endif
 
             #if !MACOS && !NETCOREAPP1_0 && !NETCOREAPP1_1
             Thread.BeginThreadAffinity();
