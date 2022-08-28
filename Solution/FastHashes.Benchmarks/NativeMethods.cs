@@ -45,7 +45,7 @@ namespace FastHashes.Benchmarks
 
             if (NativeMethods.GetThreadAffinityMask(0, affinitySize, ref affinityMaskCurrent) == 0)
             {
-                if (NativeMethods.SetThreadAffinityMask(0, affinitySize, ref affinityMask) != 0)
+                if (NativeMethods.SetThreadAffinityMask(0, affinitySize, ref affinityMask) == 0)
                     returnValue = new IntPtr((Int64)affinityMaskCurrent);
             }
             #endif
