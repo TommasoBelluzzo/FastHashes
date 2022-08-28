@@ -45,52 +45,38 @@ namespace FastHashes.Benchmarks
     public sealed class AffinityOptimizer : Optimizer
     {
         #region Members
+        #if !MACOS && (NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2 || NETCOREAPP3_0 || NETCOREAPP3_1)
         private readonly IntPtr m_ProcessAffinity;
         private readonly Process m_Process;
-        private IntPtr m_ThreadAffinity; 
+        private readonly IntPtr m_ThreadAffinity;
+        #endif
         #endregion
 
         #region Constructors
         public AffinityOptimizer()
         {
+            #if !MACOS && (NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2 || NETCOREAPP3_0 || NETCOREAPP3_1)
             m_Process = Process.GetCurrentProcess();
-
-            #if NET6_0_OR_GREATER || (NET5_0_OR_GREATER && MACOS)
-            m_ProcessAffinity = IntPtr.Zero;
-            m_ThreadAffinity = IntPtr.Zero;
-            #else
             m_ProcessAffinity = m_Process.ProcessorAffinity;
             m_ThreadAffinity = IntPtr.Zero;
-            #endif
 
-            Initialization();
-        }
-        #endregion
-
-        #region Methods
-        
-        private void Initialization()
-        {
             IntPtr affinity = (IntPtr)(1 << (Environment.ProcessorCount - 1));
 
-            #if !NET6_0_OR_GREATER && (!NET5_0_OR_GREATER || !MACOS)
             m_Process.ProcessorAffinity = affinity;
-            #endif
 
-            #if !MACOS && !NETCOREAPP1_0 && !NETCOREAPP1_1
             Thread.BeginThreadAffinity();
             m_ThreadAffinity = NativeMethods.SetThreadAffinity(affinity);
             #endif
         }
+        #endregion
 
+        #region Methods
         protected override void Finalization()
         {
-            #if !MACOS && !NETCOREAPP1_0 && !NETCOREAPP1_1
+            #if !MACOS && (NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2 || NETCOREAPP3_0 || NETCOREAPP3_1)
             NativeMethods.SetThreadAffinity(m_ThreadAffinity);
             Thread.EndThreadAffinity();
-            #endif
 
-            #if !NET6_0_OR_GREATER && (!NET5_0_OR_GREATER || !MACOS)
             m_Process.ProcessorAffinity = m_ProcessAffinity;
             #endif
         }
@@ -100,10 +86,10 @@ namespace FastHashes.Benchmarks
     public sealed class SpeedOptimizer : Optimizer
     {
         #region Members
+        private readonly Boolean m_RestorePriority;
         private readonly Process m_Process; 
         private readonly ProcessPriorityClass m_PriorityClass; 
         private readonly GCLatencyMode m_LatencyMode; 
-        private Boolean m_RestorePriority; 
         #endregion
 
         #region Constructors
@@ -114,13 +100,6 @@ namespace FastHashes.Benchmarks
             m_LatencyMode = GCSettings.LatencyMode;
             m_RestorePriority = false;
 
-            Initialization();
-        }
-        #endregion
-
-        #region Methods
-        private void Initialization()
-        {
             try
             {
                 m_Process.PriorityClass = ProcessPriorityClass.RealTime;
@@ -146,7 +125,9 @@ namespace FastHashes.Benchmarks
 
             GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
         }
+        #endregion
 
+        #region Methods
         protected override void Finalization()
         {
             GCSettings.LatencyMode = m_LatencyMode;
