@@ -6,3 +6,8 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Style", "IDE0016:Use 'throw' expression", Justification = "<Pending>", Scope = "member", Target = "~M:FastHashes.Tests.HashTests.TestCase.#ctor(System.String,System.Func{System.UInt32,FastHashes.Hash},System.String)")]
+[assembly: SuppressMessage("Performance", "CA1825:Avoid zero-length array allocations", Justification = "<Pending>", Scope = "member", Target = "~F:FastHashes.Tests.RandomTests.s_TestCasesBuffer")]
+[assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~F:FastHashes.Tests.RandomTests.s_TestCasesBuffer")]
+[assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~F:FastHashes.Tests.RandomTests.s_TestCasesValue")]
+[assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~M:FastHashes.Tests.RandomTests.BufferTest(System.UInt32,System.Nullable{System.Int32},System.Int32,System.Int32,System.Object)")]
+[assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~M:FastHashes.Tests.RandomTests.ValueTest(System.UInt32,System.UInt32)")]

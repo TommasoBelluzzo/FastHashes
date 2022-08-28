@@ -75,12 +75,10 @@ namespace FastHashes
         /// <summary>Fills a byte array with random numbers.</summary>
         /// <param name="buffer">The <see cref="T:System.Byte"/>[] to fill.</param>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
+        [ExcludeFromCodeCoverage]
         public void NextBytes(Byte[] buffer)
         {
-            if (buffer == null)
-                throw new ArgumentNullException(nameof(buffer));
-
-            NextBytes(buffer, 0, buffer.Length);
+            NextBytes(buffer, 0, ((buffer == null) ? 0 : buffer.Length));
         }
 
         /// <summary>Fills the specified number of elements of a byte array with random numbers, starting at the first element.</summary>
@@ -89,6 +87,7 @@ namespace FastHashes
         /// <exception cref="T:System.ArgumentException">Thrown when the number of bytes in <paramref name="buffer">buffer</paramref> is less than <paramref name="count">count</paramref>.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="count">count</paramref> is less than <c>0</c>.</exception>
+        [ExcludeFromCodeCoverage]
         public void NextBytes(Byte[] buffer, Int32 count)
         {
             NextBytes(buffer, 0, count);

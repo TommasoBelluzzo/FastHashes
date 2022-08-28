@@ -22,6 +22,8 @@ namespace FastHashes.Tests
             new TestCaseBuffer(0u, null, 0, 10, typeof(ArgumentNullException)),
             new TestCaseBuffer(0u, 10, -1, 4, typeof(ArgumentOutOfRangeException)),
             new TestCaseBuffer(0u, 10, 15, 1, typeof(ArgumentOutOfRangeException)),
+            new TestCaseBuffer(0u, 10, 2, -1, typeof(ArgumentOutOfRangeException)),
+            new TestCaseBuffer(0u, 10, 2, 12, typeof(ArgumentOutOfRangeException)),
             new TestCaseBuffer(0u, 10, 5, 9, typeof(ArgumentException))
         };
 
