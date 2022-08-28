@@ -8,9 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Repository Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: .NET Setup
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 3.1.x
     - name: Restore
@@ -18,7 +18,7 @@ jobs:
       run: dotnet restore --force-evaluate
     - name: Build
       working-directory: Solution/
-      run: dotnet build FastHashes.sln --configuration Release --no-restore --no-incremental --verbosity normal
+      run: dotnet build --verbosity normal --configuration Release --no-restore --no-incremental
     - name: Run
       working-directory: Solution/
-      run: dotnet run --project FastHashes.Benchmarks/FastHashes.Benchmarks.csproj --configuration Release --no-restore --no-build --verbosity normal
+      run: dotnet run --project FastHashes.Benchmarks/FastHashes.Benchmarks.csproj --verbosity normal --configuration Release --no-restore --no-build

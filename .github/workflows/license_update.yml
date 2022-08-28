@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Repository Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Year Replacement
       env:
         LICENSE_REGEX: 2017-\d{4}
@@ -23,7 +23,7 @@ jobs:
           grep -P "$LICENSE_REGEX" "$FILE"
           FILES=$((FILES+1))
         done < <(grep -P "$LICENSE_REGEX" -Rl .)
-        if [[ "$FILES" -ne 4 ]]; then
+        if [[ "$FILES" -ne 2 ]]; then
           echo "NO FILES CHANGED"
           exit 1
         fi

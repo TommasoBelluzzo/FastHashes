@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Repository Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: .NET Setup
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 2.1.x
     - name: Version Bump
@@ -65,7 +65,7 @@ jobs:
       run: dotnet restore --force-evaluate
     - name: Build
       working-directory: Solution/
-      run: dotnet build FastHashes/FastHashes.csproj --verbosity normal --configuration Release --no-restore --no-incremental
+      run: dotnet build --verbosity normal --configuration Release --no-restore --no-incremental
     - name: Pack
       working-directory: Solution/
       run: dotnet pack FastHashes/FastHashes.csproj --verbosity normal --configuration Release --no-restore --no-build --output ../Package/
