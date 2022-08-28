@@ -36,7 +36,7 @@ jobs:
       run: dotnet build --verbosity normal --configuration Release --no-restore --no-incremental
     - name: Test
       working-directory: Solution/
-      run: dotnet test --verbosity detailed --configuration Release --no-restore --no-build --collect "XPlat Code Coverage" --settings Coverage.runsettings --diag Coverage/log.txt --results-directory Coverage
+      run: dotnet test --verbosity normal --configuration Release --no-restore --no-build --collect "XPlat Code Coverage" --settings Coverage.runsettings --diag Coverage/log.txt --results-directory Coverage
     - name: Coverage Report Creation
       uses: danielpalme/ReportGenerator-GitHub-Action@5.1.9
       with:
@@ -53,4 +53,4 @@ jobs:
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: Solution/Coverage/coverage.info
+        path-to-lcov: Solution/Coverage/lcov.info
