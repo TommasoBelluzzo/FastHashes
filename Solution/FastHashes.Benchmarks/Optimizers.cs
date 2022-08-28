@@ -55,7 +55,7 @@ namespace FastHashes.Benchmarks
         {
             m_Process = Process.GetCurrentProcess();
 
-            #if !NET5_0_OR_GREATER || !MACOS
+            #if NET6_0_OR_GREATER || (NET5_0_OR_GREATER && MACOS)
             m_ProcessAffinity = IntPtr.Zero;
             m_ThreadAffinity = IntPtr.Zero;
             #else
@@ -73,7 +73,7 @@ namespace FastHashes.Benchmarks
         {
             IntPtr affinity = (IntPtr)(1 << (Environment.ProcessorCount - 1));
 
-            #if !NET5_0_OR_GREATER || !MACOS
+            #if !NET6_0_OR_GREATER && (!NET5_0_OR_GREATER || !MACOS)
             m_Process.ProcessorAffinity = affinity;
             #endif
 
@@ -90,7 +90,7 @@ namespace FastHashes.Benchmarks
             Thread.EndThreadAffinity();
             #endif
 
-            #if !NET5_0_OR_GREATER || !MACOS
+            #if !NET6_0_OR_GREATER && (!NET5_0_OR_GREATER || !MACOS)
             m_Process.ProcessorAffinity = m_ProcessAffinity;
             #endif
         }
