@@ -27,12 +27,6 @@ namespace FastHashes.Benchmarks
         #endif
         #endregion
 
-                [DllImport("libc", CallingConvention=CallingConvention.Cdecl, EntryPoint="sched_getaffinity", SetLastError=true)]
-        private static extern Int32 GetThreadAffinityMask(Int32 processId, IntPtr affinitySize, ref UInt64 affinity);
-
-        [DllImport("libc", CallingConvention=CallingConvention.Cdecl, EntryPoint="sched_setaffinity", SetLastError=true)]
-        private static extern Int32 SetThreadAffinityMask(Int32 processId, IntPtr affinitySize, ref UInt64 affinity);
-
         #region Methods
         public static IntPtr SetThreadAffinity(IntPtr affinity)
         {
