@@ -62,23 +62,17 @@ namespace FastHashes.Benchmarks
         #endregion
 
         #region Methods
-#if MACOS || NETCOREAPP1_0 || NETCOREAPP1_1
+        
         private void Initialization()
         {
             IntPtr affinity = (IntPtr)(1 << (Environment.ProcessorCount - 1));
             m_Process.ProcessorAffinity = affinity;
-        }
-#else
-        private void Initialization()
-        {
-            IntPtr affinity = (IntPtr)(1 << (Environment.ProcessorCount - 1));
 
-            m_Process.ProcessorAffinity = affinity;
-
+            #if !MACOS && !NETCOREAPP1_0 && !NETCOREAPP1_1
             Thread.BeginThreadAffinity();
             m_ThreadAffinity = NativeMethods.SetThreadAffinity(affinity);
+            #endif
         }
-#endif
 
         protected override void Finalization()
         {
