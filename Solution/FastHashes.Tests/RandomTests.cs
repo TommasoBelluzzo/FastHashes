@@ -13,7 +13,7 @@ namespace FastHashes.Tests
         #region Test Cases
         private static readonly List<TestCaseBuffer> s_TestCasesBuffer = new List<TestCaseBuffer>
         {
-            new TestCaseBuffer(9u, 0, 0, 0, new Byte[0]),
+            new TestCaseBuffer(9u, 0, 0, 0, Array.Empty<Byte>()),
             new TestCaseBuffer(266u, 10, 0, 3, new Byte[] { 193, 74, 65, 0, 0, 0, 0, 0, 0, 0 }),
             new TestCaseBuffer(148077u, 10, 0, 10, new Byte[] { 221, 40, 74, 23, 172, 98, 184, 208, 157, 36 }),
             new TestCaseBuffer(8018u, 10, 1, 5, new Byte[] { 0, 71, 102, 179, 5, 105, 0, 0, 0, 0 }),

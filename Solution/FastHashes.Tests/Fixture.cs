@@ -19,24 +19,23 @@ namespace FastHashes.Tests
         #region Constructors
         public Fixture()
         {
-#if NETCOREAPP1_0 || NETCOREAPP1_1
+            #if NETCOREAPP1_0 || NETCOREAPP1_1
             String fileDirectory = AppContext.BaseDirectory;
-#else
+            #else
             String fileDirectory = AppDomain.CurrentDomain.BaseDirectory;
-#endif
+            #endif
 
             if (String.IsNullOrWhiteSpace(fileDirectory))
             {
-                m_Words = new String[0];
+                m_Words = Array.Empty<String>();
                 return;
             }
 
             String filePath = Path.Combine(fileDirectory, "Data", "Words.txt");
-            
 
             if (!File.Exists(filePath))
             {
-                m_Words = new String[0];
+                m_Words = Array.Empty<String>();
                 return;
             }
 
