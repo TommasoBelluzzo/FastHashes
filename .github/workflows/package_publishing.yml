@@ -72,9 +72,10 @@ jobs:
       run: dotnet build --verbosity normal --configuration Release --no-restore --no-incremental
     - name: Pack
       working-directory: Solution/
-      run: dotnet pack FastHashes/FastHashes.csproj --verbosity normal --configuration Release --no-restore --no-build --output ../Package/
+      run: dotnet pack FastHashes/FastHashes.csproj --verbosity normal --configuration Release --no-restore --no-build --output ../Package/ /p:DeterministicSourcePaths=true
     - name: Package Artifact
       uses: actions/upload-artifact@v3
       with:
         name: Package Artifact
         path: Package/
+
