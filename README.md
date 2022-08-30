@@ -39,7 +39,7 @@ FashHashes is a suite of .NET non-cryptographic hash functions.
  * `Allocation Free`: all the internal functions follow a zero-allocation approach, only primitive types and/or arrays of primitive types are used by the algorithms.
  * `Endian-Agnostic`: all the hashes provide consistent results regardless of the machine byte order, while only moderately affecting the overall performance of the computations.
  * `Platform-Agnostic`: the code has been developed under `.NET Standard` framework and both `x86` and `x64` environments are fully supported.
- * `Fully Managed`: since version `3.0.0`, which has been developed under `.NET Standard 2.1 / .NET Core 3.1` and above, pointers requiring unsafe code have been removed.
+ * `Fully Managed`: since version `3.0.0`, pointers requiring unsafe memory access contexts have been completely removed and the library is now fully managed.
 
  ## Hashes
 
@@ -66,6 +66,9 @@ The library includes the following non-cryptographic hashes:
    * 64/128 Bits Output
    * 0/1 Variants
    * Reference Implementation: [https://github.com/jandrewrogers/MetroHash](https://github.com/jandrewrogers/MetroHash)
+ * `MirHash`
+   * 64 Bits Output
+   * Reference Implementation: [https://github.com/vnmakarov/mir](https://github.com/vnmakarov/mir)
  * `MumHash`
    * 64 Bits Output
    * Reference Implementation: [https://github.com/vnmakarov/mum-hash](https://github.com/vnmakarov/mum-hash)
@@ -73,6 +76,10 @@ The library includes the following non-cryptographic hashes:
    * 32/64/128 Bits Output
    * x86/x64 Variants
    * Reference Implementation: [https://github.com/aappleby/smhasher](https://github.com/aappleby/smhasher)
+ * `PengyHash`
+   * 64 Bits Output
+   * Strict Variant
+   * Reference Implementation: [https://github.com/tinypeng/pengyhash](https://github.com/tinypeng/pengyhash)
  * `SipHash`
    * 64 Bits Output
    * 1-3/2-4 Variants
@@ -86,10 +93,10 @@ The library includes the following non-cryptographic hashes:
 
 ## Requirements
  
-The following `Target Frameworks` are defined:
+The following `Frameworks` are supported:
 
- * Library: `.NET Standard 2.0` or `.NET Standard 2.1`
- * Auxiliary Projects: `.NET Core 2.1` or `.NET Core 3.1`
+ * Library: `.NET Standard 2.0`, `.NET Standard 2.1`
+ * Auxiliary Projects: `.NET Core 2.1`, `.NET Core 3.1`, `.NET 5.0`, `.NET 6.0`
  
 The following `NuGet` packages are required for performing unit tests:
 

@@ -18,7 +18,11 @@ jobs:
     - name: .NET Setup
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: 2.1.x
+        dotnet-version: |
+          2.1.x
+          3.1.x
+          5.0.x
+          6.0.x
     - name: Version Bump
       id: bump
       env:
@@ -69,18 +73,3 @@ jobs:
     - name: Pack
       working-directory: Solution/
       run: dotnet pack FastHashes/FastHashes.csproj --verbosity normal --configuration Release --no-restore --no-build --output ../Package/
-    - name: Publish
-      env:
-        VERSION: ${{ steps.bump.outputs.version }}
-      working-directory: Solution/
-      run: dotnet nuget push Package/FastHashes.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_TOKEN }}
-    - name: Version Commit
-      env:
-        VERSION: ${{ steps.bump.outputs.version }}
-      run: |
-        git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
-        git config --local user.name "${{ secrets.BOT_USERNAME }}"
-        git config --local user.email "${{ secrets.BOT_EMAIL }}"
-        git add --a
-        git commit -m "Release $VERSION"  
-        git push
