@@ -73,3 +73,8 @@ jobs:
     - name: Pack
       working-directory: Solution/
       run: dotnet pack FastHashes/FastHashes.csproj --verbosity normal --configuration Release --no-restore --no-build --output ../Package/
+    - name: Package Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Package Artifact
+        path: Package/
