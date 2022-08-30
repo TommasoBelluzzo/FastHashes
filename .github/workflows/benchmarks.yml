@@ -25,5 +25,5 @@ jobs:
       run: dotnet build --verbosity normal --configuration Release --no-restore --no-incremental
     - name: Run
       working-directory: Solution/
-      run: dotnet run --project FastHashes.Benchmarks/FastHashes.Benchmarks.csproj --verbosity normal --framework netcoreapp3.1 --configuration Release --no-restore --no-build
+      run: dotnet run --project FastHashes.Benchmarks/FastHashes.Benchmarks.csproj --framework netcoreapp3.1 --verbosity normal --configuration Release --no-restore --no-build
  

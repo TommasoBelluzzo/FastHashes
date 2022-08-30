@@ -6,7 +6,7 @@ using System.Security;
 
 namespace FastHashes.Benchmarks
 {
-    #if NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2 || NETCOREAPP3_0 || NETCOREAPP3_1
+    #if !NETCOREAPP1_0 && !NETCOREAPP1_1
     [SuppressUnmanagedCodeSecurity]
     #endif
     internal static class NativeMethods
@@ -30,7 +30,7 @@ namespace FastHashes.Benchmarks
         #region Methods
         public static IntPtr SetThreadAffinity(IntPtr affinity)
         {
-            if (affinity == IntPtr.Zero)
+            if (affinity == IntPtr.Zero) 
                 return IntPtr.Zero;
 
             IntPtr returnValue = IntPtr.Zero;

@@ -44,8 +44,8 @@ namespace FastHashes.Benchmarks
             new BenchmarkCase("xxHash64", seed => new XxHash64(seed))
         };
 
-        private const Int32 BST_KEYSLENGTH = 256 * 1024;
-        private const Int32 BST_REPETITIONS = 5000;
+        private const Int32 BULK_KEYS_LENGTH = 256 * 1024;
+        private const Int32 BULK_REPETITIONS = 5000;
         private const Int32 CLOCK_MAXIMUM_IDLE_TIME = 10;
         private const Int32 WARMUP_ITERATIONS = 3;
 
@@ -64,17 +64,20 @@ namespace FastHashes.Benchmarks
         {
             if (!Clock.IsHighResolution)
             {
-                Console.WriteLine("The clock doesn't support high resolution.");
+                Console.WriteLine("The clock doesn't support high resolution measurements.");
                 Environment.Exit(1);
             }
+
+            List<BenchmarkResult> results = new List<BenchmarkResult>(s_BenchmarkCases.Count);
 
             using (new AffinityOptimizer())
             {
                 for (Int32 i = 0; i < s_BenchmarkCases.Count; ++i)
                 {
                     BenchmarkCase benchmarkCase = s_BenchmarkCases[i];
+                    String hashName = benchmarkCase.HashName;
 
-                    String title = $"# HASH: {benchmarkCase.HashName} #";
+                    String title = $"# HASH: {hashName} #";
                     String frame = new String('#', title.Length);
 
                     Console.WriteLine(frame);
@@ -82,18 +85,63 @@ namespace FastHashes.Benchmarks
                     Console.WriteLine(frame);
 
                     Console.WriteLine();
-                    BulkSpeedTest(benchmarkCase.HashInitializer);
+                    (Double bulkAverageSpeed, String bulkAverageSpeedFormatted) = BulkSpeedTest(benchmarkCase.HashInitializer);
 
                     Console.WriteLine();
-                    ChunksSpeedTest(benchmarkCase.HashInitializer);
+                    (Double chunkAverageSpeed, String chunkAverageSpeedFormatted) = ChunksSpeedTest(benchmarkCase.HashInitializer);
 
-                    if (i != (s_BenchmarkCases.Count - 1))
-                    {
-                        Console.WriteLine();
-                        Console.WriteLine();
-                    }
+                    results.Add(new BenchmarkResult(hashName, bulkAverageSpeed, bulkAverageSpeedFormatted, chunkAverageSpeed, chunkAverageSpeedFormatted));
+
+                    Console.WriteLine();
+                    Console.WriteLine();
                 }
             }
+
+            results = results
+                .OrderBy(x => x.BulkAverageSpeed)
+                .ThenBy(x => x.HashName)
+                .ToList();
+
+            Int32 rankPadding = results.Count.ToString().Length;
+            Int32 hashNamePadding = 0;
+            Int32 bulkAverageSpeedPadding = 0;
+            Int32 chunkAverageSpeedPadding = 0;
+
+            foreach (BenchmarkResult result in results)
+            {
+                Int32 hashNameLength = result.HashName.Length;
+
+                if (hashNameLength > hashNamePadding)
+                    hashNamePadding = hashNameLength;
+
+                Int32 bulkAverageSpeedLength = result.BulkAverageSpeedFormatted.Length;
+
+                if (bulkAverageSpeedLength > bulkAverageSpeedPadding)
+                    bulkAverageSpeedPadding = bulkAverageSpeedLength;
+
+                Int32 chunkAverageSpeedLength = result.ChunkAverageSpeedFormatted.Length;
+
+                if (chunkAverageSpeedLength > chunkAverageSpeedPadding)
+                    chunkAverageSpeedPadding = chunkAverageSpeedLength;
+            }
+
+            Console.WriteLine("###########");
+            Console.WriteLine("# SUMMARY #");
+            Console.WriteLine("###########");
+            Console.WriteLine();
+
+            for (Int32 i = 0; i < results.Count; ++i)
+            {
+                BenchmarkResult result = results[i];
+                String rank = (i + 1).ToString().PadLeft(rankPadding);
+                String hashName = result.HashName.PadRight(hashNamePadding);
+                String bulkAverageSpeed = result.BulkAverageSpeedFormatted.PadRight(bulkAverageSpeedPadding);
+                String chunkAverageSpeed = result.ChunkAverageSpeedFormatted.PadRight(chunkAverageSpeedPadding);
+
+                Console.WriteLine($"{rank}) {hashName} {bulkAverageSpeed} {chunkAverageSpeed}");
+            }
+
+            Environment.Exit(0);
         }
         #endregion
 
@@ -147,32 +195,35 @@ namespace FastHashes.Benchmarks
             }
         }
 
-        private static void BulkSpeedTest(Func<UInt32,Hash> hashInitializer)
+        private static (Double, String) BulkSpeedTest(Func<UInt32,Hash> hashInitializer)
         {
             Console.WriteLine("[BULK SPEED TEST]");
-            Console.WriteLine($"Keys Length: {BST_KEYSLENGTH} Bytes");
-            Console.WriteLine($"Repetitions: {BST_REPETITIONS}");
+            Console.WriteLine($"Keys Length: {BULK_KEYS_LENGTH} Bytes");
+            Console.WriteLine($"Repetitions: {BULK_REPETITIONS}");
 
             using (new SpeedOptimizer())
             {
                 for (Int32 i = 0; i < WARMUP_ITERATIONS; ++i)
-                    GetAverageSpeed(hashInitializer, BST_KEYSLENGTH, BST_REPETITIONS, 0);
+                    GetAverageSpeed(hashInitializer, BULK_KEYS_LENGTH, BULK_REPETITIONS, 0);
 
                 Double[] speed = new Double[8];
 
                 for (Int32 align = 0; align < 8; ++align)
                 {
-                    speed[align] = GetAverageSpeed(hashInitializer, BST_KEYSLENGTH, BST_REPETITIONS, align);
+                    speed[align] = GetAverageSpeed(hashInitializer, BULK_KEYS_LENGTH, BULK_REPETITIONS, align);
                     Console.WriteLine($" - Average Speed Alignment {align}: {Utilities.FormatSpeed(speed[align])}");
                 }
 
                 Double averageSpeed = MathUtilities.Mean(speed);
+                String averageSpeedFormatted = Utilities.FormatSpeed(averageSpeed);
 
-                Console.WriteLine($" - Average Speed Overall: {Utilities.FormatSpeed(averageSpeed)}");
+                Console.WriteLine($" - Average Speed Overall: {averageSpeedFormatted}");
+
+                return (averageSpeed, averageSpeedFormatted);
             }
         }
 
-        private static void ChunksSpeedTest(Func<UInt32,Hash> hashInitializer)
+        private static (Double, String) ChunksSpeedTest(Func<UInt32,Hash> hashInitializer)
         {
             Console.WriteLine("[CHUNKS SPEED TEST]");
             Console.WriteLine($"Keys Length Span: 0-{s_ChunkParameters.Max(x => x.KeySize)} Bytes");
@@ -181,7 +232,7 @@ namespace FastHashes.Benchmarks
             using (new SpeedOptimizer())
             {
                 for (Int32 i = 0; i < WARMUP_ITERATIONS; ++i)
-                    GetAverageSpeed(hashInitializer, BST_KEYSLENGTH, BST_REPETITIONS, 0);
+                    GetAverageSpeed(hashInitializer, BULK_KEYS_LENGTH, BULK_REPETITIONS, 0);
 
                 Double totalSpeed = 0.0d;
                 Int32 totalCount = 0;
@@ -213,8 +264,11 @@ namespace FastHashes.Benchmarks
                 }
 
                 Double averageSpeed = totalSpeed / totalCount;
+                String averageSpeedFormatted = Utilities.FormatSpeed(averageSpeed);
 
-                Console.WriteLine($" - Average Speed Overall: {Utilities.FormatSpeed(averageSpeed)}");
+                Console.WriteLine($" - Average Speed Overall: {averageSpeedFormatted}");
+
+                return (averageSpeed, averageSpeedFormatted);
             }
         }
         #endregion
