@@ -12,7 +12,11 @@ jobs:
     - name: .NET Setup
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: |
+          2.1.x
+          3.1.x
+          5.0.x
+          6.0.x
     - name: Restore
       working-directory: Solution/
       run: dotnet restore --force-evaluate
@@ -21,4 +25,5 @@ jobs:
       run: dotnet build --verbosity normal --configuration Release --no-restore --no-incremental
     - name: Run
       working-directory: Solution/
-      run: dotnet run --project FastHashes.Benchmarks/FastHashes.Benchmarks.csproj --verbosity normal --configuration Release --no-restore --no-build
+      run: dotnet run --project FastHashes.Benchmarks/FastHashes.Benchmarks.csproj --verbosity normal --framework netcoreapp3.1 --configuration Release --no-restore --no-build
+ 
