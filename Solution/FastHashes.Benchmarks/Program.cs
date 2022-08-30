@@ -87,20 +87,38 @@ namespace FastHashes.Benchmarks
                     Console.WriteLine(frame);
 
                     Console.WriteLine();
-                    (Double bulkAverageSpeed, String bulkAverageSpeedFormatted) = BulkSpeedTest(benchmarkCase.HashInitializer);
+                    Console.WriteLine("[BULK SPEED TEST]");
+                    Console.WriteLine($"Keys Length: {BULK_KEYS_LENGTH} Bytes");
+                    Console.WriteLine($"Repetitions: {BULK_REPETITIONS}");
+
+                    (Double[] bulkAlignSpeeds, Double bulkAverageSpeed, String bulkAverageSpeedFormatted) = BulkSpeedTest(benchmarkCase.HashInitializer);
+
+                    for (Int32 j = 0; j < bulkAlignSpeeds.Length; ++j)
+                        Console.WriteLine($" - Average Speed Alignment {j}: {Utilities.FormatSpeed(bulkAlignSpeeds[j])}");
+
+                    Console.WriteLine($" - Average Speed Overall: {bulkAverageSpeedFormatted}");
 
                     Console.WriteLine();
-                    (Double chunkAverageSpeed, String chunkAverageSpeedFormatted) = ChunksSpeedTest(benchmarkCase.HashInitializer);
+                    Console.WriteLine("[CHUNKS SPEED TEST]");
+                    Console.WriteLine($"Keys Length Span: 0-{s_ChunkParameters.Max(x => x.KeySize)} Bytes");
+                    Console.WriteLine($"Repetitions Span: {s_ChunkParameters.Min(x => x.Repetitions)}-{s_ChunkParameters.Max(x => x.Repetitions)}");
+
+                    (List<(Int32,Int32,Double)> chunkSpeeds, Double chunkAverageSpeed, String chunkAverageSpeedFormatted) = ChunksSpeedTest(benchmarkCase.HashInitializer);
+
+                    foreach ((Int32 chunkOffsetStart, Int32 chunkOffsetEnd, Double chunkSpeed) in chunkSpeeds)
+                        Console.WriteLine($" - Average Speed {chunkOffsetStart}-{chunkOffsetEnd} Bytes: {Utilities.FormatSpeed(chunkSpeed)}");
+
+                    Console.WriteLine($" - Average Speed Overall: {chunkAverageSpeedFormatted}");
+
+                    Console.WriteLine();
+                    Console.WriteLine();
 
                     results.Add(new BenchmarkResult(hashName, bulkAverageSpeed, bulkAverageSpeedFormatted, chunkAverageSpeed, chunkAverageSpeedFormatted));
-
-                    Console.WriteLine();
-                    Console.WriteLine();
                 }
             }
 
             results = results
-                .OrderBy(x => x.BulkAverageSpeed)
+                .OrderByDescending(x => x.BulkAverageSpeed)
                 .ThenBy(x => x.HashName)
                 .ToList();
 
@@ -131,17 +149,17 @@ namespace FastHashes.Benchmarks
             Console.WriteLine("# SUMMARY #");
             Console.WriteLine("###########");
             Console.WriteLine();
-            Console.WriteLine($"{"RANK".PadLeft(rankPadding)} {"HASH".PadLeft(hashNamePadding)} {"BULK".PadLeft(bulkAverageSpeedPadding)} {"CHUNK".PadLeft(chunkAverageSpeedPadding)}");
+            Console.WriteLine($"{"RANK".PadRight(rankPadding)} | {"HASH".PadRight(hashNamePadding)} | {"BULK".PadRight(bulkAverageSpeedPadding)} | {"CHUNK".PadRight(chunkAverageSpeedPadding)}");
 
             for (Int32 i = 0; i < results.Count; ++i)
             {
                 BenchmarkResult result = results[i];
-                String rank = (i + 1).ToString().PadLeft(rankPadding);
+                String rank = (i + 1).ToString().PadRight(rankPadding);
                 String hashName = result.HashName.PadRight(hashNamePadding);
                 String bulkAverageSpeed = result.BulkAverageSpeedFormatted.PadRight(bulkAverageSpeedPadding);
                 String chunkAverageSpeed = result.ChunkAverageSpeedFormatted.PadRight(chunkAverageSpeedPadding);
 
-                Console.WriteLine($"{rank}) {hashName} {bulkAverageSpeed} {chunkAverageSpeed}");
+                Console.WriteLine($"{rank} | {hashName} | {bulkAverageSpeed} | {chunkAverageSpeed}");
             }
 
             Environment.Exit(0);
@@ -198,40 +216,27 @@ namespace FastHashes.Benchmarks
             }
         }
 
-        private static (Double, String) BulkSpeedTest(Func<UInt32,Hash> hashInitializer)
+        private static (Double[], Double, String) BulkSpeedTest(Func<UInt32,Hash> hashInitializer)
         {
-            Console.WriteLine("[BULK SPEED TEST]");
-            Console.WriteLine($"Keys Length: {BULK_KEYS_LENGTH} Bytes");
-            Console.WriteLine($"Repetitions: {BULK_REPETITIONS}");
-
             using (new SpeedOptimizer())
             {
                 for (Int32 i = 0; i < WARMUP_ITERATIONS; ++i)
                     GetAverageSpeed(hashInitializer, BULK_KEYS_LENGTH, BULK_REPETITIONS, 0);
 
-                Double[] speed = new Double[8];
+                Double[] alignSpeeds = new Double[8];
 
                 for (Int32 align = 0; align < 8; ++align)
-                {
-                    speed[align] = GetAverageSpeed(hashInitializer, BULK_KEYS_LENGTH, BULK_REPETITIONS, align);
-                    Console.WriteLine($" - Average Speed Alignment {align}: {Utilities.FormatSpeed(speed[align])}");
-                }
+                    alignSpeeds[align] = GetAverageSpeed(hashInitializer, BULK_KEYS_LENGTH, BULK_REPETITIONS, align);
 
-                Double averageSpeed = MathUtilities.Mean(speed);
+                Double averageSpeed = MathUtilities.Mean(alignSpeeds);
                 String averageSpeedFormatted = Utilities.FormatSpeed(averageSpeed);
 
-                Console.WriteLine($" - Average Speed Overall: {averageSpeedFormatted}");
-
-                return (averageSpeed, averageSpeedFormatted);
+                return (alignSpeeds, averageSpeed, averageSpeedFormatted);
             }
         }
 
-        private static (Double, String) ChunksSpeedTest(Func<UInt32,Hash> hashInitializer)
+        private static (List<(Int32,Int32,Double)>, Double, String) ChunksSpeedTest(Func<UInt32,Hash> hashInitializer)
         {
-            Console.WriteLine("[CHUNKS SPEED TEST]");
-            Console.WriteLine($"Keys Length Span: 0-{s_ChunkParameters.Max(x => x.KeySize)} Bytes");
-            Console.WriteLine($"Repetitions Span: {s_ChunkParameters.Min(x => x.Repetitions)}-{s_ChunkParameters.Max(x => x.Repetitions)}");
-
             using (new SpeedOptimizer())
             {
                 for (Int32 i = 0; i < WARMUP_ITERATIONS; ++i)
@@ -240,6 +245,8 @@ namespace FastHashes.Benchmarks
                 Double totalSpeed = 0.0d;
                 Int32 totalCount = 0;
                 Int32 offset = 0;
+
+                List<(Int32,Int32,Double)> chunkSpeeds = new List<(Int32,Int32,Double)>(s_ChunkParameters.Count);
 
                 foreach (ChunkParameter chunkParameter in s_ChunkParameters)
                 {
@@ -263,15 +270,13 @@ namespace FastHashes.Benchmarks
                     totalCount += count;
                     offset = keySize;
 
-                    Console.WriteLine($" - Average Speed {offsetStart}-{offset - 1} Bytes: {Utilities.FormatSpeed(speed / count)}");
+                    chunkSpeeds.Add((offsetStart, offset - 1, speed / count));
                 }
 
                 Double averageSpeed = totalSpeed / totalCount;
                 String averageSpeedFormatted = Utilities.FormatSpeed(averageSpeed);
 
-                Console.WriteLine($" - Average Speed Overall: {averageSpeedFormatted}");
-
-                return (averageSpeed, averageSpeedFormatted);
+                return (chunkSpeeds, averageSpeed, averageSpeedFormatted);
             }
         }
         #endregion
