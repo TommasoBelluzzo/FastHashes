@@ -104,10 +104,10 @@ namespace FastHashes.Benchmarks
                 .ThenBy(x => x.HashName)
                 .ToList();
 
-            Int32 rankPadding = results.Count.ToString().Length;
-            Int32 hashNamePadding = 0;
-            Int32 bulkAverageSpeedPadding = 0;
-            Int32 chunkAverageSpeedPadding = 0;
+            Int32 rankPadding = Math.Max(4, results.Count.ToString().Length);
+            Int32 hashNamePadding = 4;
+            Int32 bulkAverageSpeedPadding = 4;
+            Int32 chunkAverageSpeedPadding = 5;
 
             foreach (BenchmarkResult result in results)
             {
@@ -131,6 +131,7 @@ namespace FastHashes.Benchmarks
             Console.WriteLine("# SUMMARY #");
             Console.WriteLine("###########");
             Console.WriteLine();
+            Console.WriteLine($"{"RANK".PadLeft(rankPadding)} {"HASH".PadLeft(hashNamePadding)} {"BULK".PadLeft(bulkAverageSpeedPadding)} {"CHUNK".PadLeft(chunkAverageSpeedPadding)}");
 
             for (Int32 i = 0; i < results.Count; ++i)
             {
