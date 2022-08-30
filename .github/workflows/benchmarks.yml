@@ -12,7 +12,7 @@ jobs:
     - name: .NET Setup
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: 3.1.x
+        dotnet-version: 6.0.x
     - name: Restore
       working-directory: Solution/
       run: dotnet restore --force-evaluate
