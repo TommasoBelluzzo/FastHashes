@@ -90,3 +90,4 @@ jobs:
         git config --local user.name "${{ secrets.BOT_USERNAME }}"
         git config --local user.email "${{ secrets.BOT_EMAIL }}"
         git checkout -- README.md
+        echo $(cat README.md)
