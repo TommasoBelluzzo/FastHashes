@@ -2,6 +2,37 @@
 
 FashHashes is a suite of .NET non-cryptographic hash functions.
 
+<table>
+  <tr>
+    <td align="right">Status:</td>
+    <td align="left">
+      <a href="https://github.com/TommasoBelluzzo/FastHashes/actions/workflows/continuous_integration.yml"><img alt="Build" src="https://img.shields.io/github/workflow/status/TommasoBelluzzo/FastHashes/Continuous%20Integration?style=flat&label=Build&color=1081C2"/></a>
+      <a href="https://coveralls.io/github/TommasoBelluzzo/FastHashes?branch=master"><img alt="Coverage" src="https://img.shields.io/coveralls/github/TommasoBelluzzo/FastHashes?style=flat&label=Coverage&color=1081C2"/></a>
+    </td>
+  </tr>
+  <tr>
+    <td align="right">Info:</td>
+    <td align="left">
+      <a href="#"><img alt="License" src="https://img.shields.io/github/license/TommasoBelluzzo/FastHashes?style=flat&label=License&color=1081C2"/></a>
+      <a href="#"><img alt="Lines" src="https://img.shields.io/tokei/lines/github/TommasoBelluzzo/FastHashes?style=flat&label=Lines&color=1081C2"/></a>
+      <a href="#"><img alt="Size" src="https://img.shields.io/github/repo-size/TommasoBelluzzo/FastHashes?style=flat&label=Size&color=1081C2"/></a>
+    </td>
+  </tr>
+  <tr>
+    <td align="right">NuGet:</td>
+    <td align="left">
+      <a href="https://www.nuget.org/packages/FastHashes/"><img alt="Version" src="https://img.shields.io/nuget/v/FastHashes?style=flat&label=Version"/></a>
+      <a href="https://www.nuget.org/packages/FastHashes/"><img alt="Downloads" src="https://img.shields.io/nuget/dt/FastHashes?style=flat&label=Downloads&color=1081C2"/></a>
+    </td>
+  </tr>
+  <tr>
+    <td align="right">Donation:</td>
+    <td align="left">
+      <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T8X35C2FED9SU"><img alt="PayPal" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif"/></a>
+    </td>
+  </tr>
+</table>
+
 ## Main Features
 
  * `High Performing`: deeply-optimized code makes extensive use of method inlining and unsafe memory pointers in order to speed up the computations.
