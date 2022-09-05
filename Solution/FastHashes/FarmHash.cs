@@ -341,7 +341,7 @@ namespace FastHashes
                     hash = Hash24ToEnd(buffer, offset, count);
             }
 
-            Byte[] result = BinaryOperations.ToArray64(hash);
+            Byte[] result = BinaryOperations.ToArray32(hash);
 
             return result;
         }

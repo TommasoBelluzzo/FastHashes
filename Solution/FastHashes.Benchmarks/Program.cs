@@ -25,6 +25,7 @@ namespace FastHashes.Benchmarks
             new BenchmarkCase("HighwayHash64", seed => new HighwayHash64(seed)),
             new BenchmarkCase("HighwayHash128", seed => new HighwayHash128(seed)),
             new BenchmarkCase("HighwayHash256", seed => new HighwayHash256(seed)),
+            new BenchmarkCase("KomiHash", seed => new KomiHash(seed)),
             new BenchmarkCase("MetroHash64-V1", seed => new MetroHash64(MetroHashVariant.V1, seed)),
             new BenchmarkCase("MetroHash64-V2", seed => new MetroHash64(MetroHashVariant.V2, seed)),
             new BenchmarkCase("MetroHash128-V1", seed => new MetroHash128(MetroHashVariant.V1, seed)),
@@ -36,12 +37,15 @@ namespace FastHashes.Benchmarks
             new BenchmarkCase("MurmurHash128-x86", seed => new MurmurHash128(MurmurHashEngine.x86, seed)),
             new BenchmarkCase("MurmurHash128-x64", seed => new MurmurHash128(MurmurHashEngine.x64, seed)),
             new BenchmarkCase("MumHash", seed => new MumHash(seed)),
+            new BenchmarkCase("Mx3Hash", seed => new Mx3Hash(seed)),
             new BenchmarkCase("PengyHash", seed => new PengyHash(seed)),
             new BenchmarkCase("SipHash-13", seed => new SipHash(SipHashVariant.V13, seed)),
             new BenchmarkCase("SipHash-24", seed => new SipHash(SipHashVariant.V24, seed)),
             new BenchmarkCase("SpookyHash32", seed => new SpookyHash32(seed)),
             new BenchmarkCase("SpookyHash64", seed => new SpookyHash64(seed)),
             new BenchmarkCase("SpookyHash128", seed => new SpookyHash128(seed)),
+            new BenchmarkCase("WyHash32", seed => new WyHash32(seed)),
+            new BenchmarkCase("WyHash64", seed => new WyHash64(seed)),
             new BenchmarkCase("xxHash32", seed => new XxHash32(seed)),
             new BenchmarkCase("xxHash64", seed => new XxHash64(seed))
         };

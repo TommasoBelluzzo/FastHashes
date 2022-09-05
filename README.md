@@ -62,6 +62,9 @@ The library includes the following non-cryptographic hashes:
  * `HighwayHash`
    * 64/128/256 Bits Output
    * Reference Implementation: [https://github.com/google/highwayhash](https://github.com/google/highwayhash)
+ * `KomiHash`
+   * 64 Bits Output
+   * Reference Implementation: [https://github.com/avaneev/komihash](https://github.com/avaneev/komihash)
  * `MetroHash`
    * 64/128 Bits Output
    * 0/1 Variants
@@ -72,10 +75,13 @@ The library includes the following non-cryptographic hashes:
  * `MumHash`
    * 64 Bits Output
    * Reference Implementation: [https://github.com/vnmakarov/mum-hash](https://github.com/vnmakarov/mum-hash)
- * `MurmurHash (v3)`
+ * `MurmurHash`
    * 32/64/128 Bits Output
    * x86/x64 Variants
    * Reference Implementation: [https://github.com/aappleby/smhasher](https://github.com/aappleby/smhasher)
+ * `Mx3Hash`
+   * 64 Bits Output
+   * Reference Implementation: [https://github.com/jonmaiga/mx3](https://github.com/jonmaiga/mx3)
  * `PengyHash`
    * 64 Bits Output
    * Strict Variant
@@ -100,8 +106,8 @@ The following `Frameworks` are supported:
  
 The following `NuGet` packages are required for performing unit tests:
 
-* [Microsoft.NET.Test.Sdk](https://www.nuget.org/packages/Microsoft.NET.Test.Sdk/)
-* [xunit](https://www.nuget.org/packages/xunit/)
+* [Microsoft.NET.Test.Sdk](https://www.nuget.org/packages/Microsoft.NET.Test.Sdk)
+* [xunit](https://www.nuget.org/packages/xunit)
 
 ## Performance Benchmarks
 

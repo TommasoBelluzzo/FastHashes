@@ -1,6 +1,7 @@
 ﻿#region Using Directives
 using System;
 using System.Collections.Generic;
+using System.Linq;
 #endregion
 
 namespace FastHashes.Tests
@@ -33,8 +34,11 @@ namespace FastHashes.Tests
             return true;
         }
 
-        private static Int32 CompareSequences(Byte[] array1, Byte[] array2)
+        private static Int32 CompareSequences((String,Byte[]) element1, (String,Byte[]) element2)
         {
+            Byte[] array1 = element1.Item2;
+            Byte[] array2 = element2.Item2;
+
             if (ReferenceEquals(array1, null))
                 return ReferenceEquals(array2, null) ? 0 : 1;
 
@@ -68,7 +72,7 @@ namespace FastHashes.Tests
             return -Math.Min(Math.Max(diff, -1), 1);
         }
 
-        public static Boolean CollisionsThresholdExceeded(List<Byte[]> hashes, Int32 hashBytes)
+        public static Boolean CollisionsThresholdExceeded(List<(String,Byte[])> hashes, Int32 hashBytes)
         {
             if (hashes == null)
                 throw new ArgumentNullException(nameof(hashes));
@@ -84,7 +88,7 @@ namespace FastHashes.Tests
 
             for (Int32 i = 1; i < hashesCount; ++i)
             {
-                if (SequencesEqual(hashes[i], hashes[i - 1]))
+                if (SequencesEqual(hashes[i].Item2, hashes[i - 1].Item2))
                     ++actualCollisions;
             }
 

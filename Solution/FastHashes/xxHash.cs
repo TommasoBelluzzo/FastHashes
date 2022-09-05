@@ -133,7 +133,7 @@ namespace FastHashes
             hash *= P3;
             hash ^= hash >> 16;
 
-            Byte[] result = BinaryOperations.ToArray64(hash);
+            Byte[] result = BinaryOperations.ToArray32(hash);
 
             return result;
         }
