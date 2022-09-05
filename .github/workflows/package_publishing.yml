@@ -66,8 +66,8 @@ jobs:
         echo "::set-output name=version::$VERSION"
     - name: Readme Formatting Pre
       run: |
-        sed -e $'/<table>/,/<\/table>/d' README.md | sed 's/\r$//' | tr '\n' '~' | sed 's/\~\~\~/\~\~/' | tr '~' '\n' > README.md
-        cat README.md
+        sed -e $'/<table>/,/<\/table>/d' README.md | sed 's/\r$//' | tr '\n' '~' | sed 's/\~\~\~/\~\~/' | tr '~' '\n' | cat > README.md
+        echo $(cat README.md)
     - name: Restore
       working-directory: Solution/
       run: dotnet restore --force-evaluate
@@ -82,4 +82,18 @@ jobs:
       with:
         name: Package Artifact
         path: Package/
-
+    - name: Publish
+      env:
+        VERSION: ${{ steps.bump.outputs.version }}
+      working-directory: Package/
+      run: dotnet nuget push FastHashes.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_TOKEN }}
+    - name: Version Commit
+      env:
+        VERSION: ${{ steps.bump.outputs.version }}
+      run: |
+        git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+        git config --local user.name "${{ secrets.BOT_USERNAME }}"
+        git config --local user.email "${{ secrets.BOT_EMAIL }}"
+        git add --a
+        git commit -m "Release $VERSION"  
+        git push
