@@ -67,7 +67,8 @@ jobs:
     - name: Readme Formatting Pre
       run: |
         sed -e $'/<table>/,/<\/table>/d' README.md | sed 's/\r$//' | tr '\n' '~' | sed 's/\~\~\~/\~\~/' | tr '~' '\n' | cat > README.md
-        echo $(cat README.md)
+        RME=$(cat README.md)
+        echo "$RME"
     - name: Restore
       working-directory: Solution/
       run: dotnet restore --force-evaluate
@@ -90,4 +91,5 @@ jobs:
         git config --local user.name "${{ secrets.BOT_USERNAME }}"
         git config --local user.email "${{ secrets.BOT_EMAIL }}"
         git checkout -- README.md
-        echo $(cat README.md)
+        RME=$(cat README.md)
+        echo "$RME"
