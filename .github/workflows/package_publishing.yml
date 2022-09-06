@@ -1,4 +1,4 @@
-name: Package Publishing
+name: "Package Publishing"
 
 on:
   workflow_dispatch:
@@ -9,8 +9,8 @@ on:
         default: 'MINOR'
 
 jobs:
-  task:
-    name: Task
+  package_publishing:
+    name: Package Publishing
     runs-on: ubuntu-latest
     steps:
     - name: Repository Checkout
