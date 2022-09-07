@@ -149,7 +149,7 @@ namespace FastHashes.Tests
         #endregion
 
         #region Nested Classes
-        public sealed class TestCase
+        private sealed class TestCase
         {
             #region Members
             private readonly Func<UInt32,Hash> m_HashInitializer;

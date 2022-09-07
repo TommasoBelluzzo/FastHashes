@@ -153,10 +153,11 @@ namespace FastHashes
 
 				do
 				{
-					Kh128(s1 ^ BinaryOperations.Read64(buffer, offset), s5 ^ BinaryOperations.Read64(buffer, offset + 8), ref r1l, ref r1h);
-					Kh128(s2 ^ BinaryOperations.Read64(buffer, offset + 16), s6 ^ BinaryOperations.Read64(buffer, offset + 24), ref r2l, ref r2h);
-					Kh128(s3 ^ BinaryOperations.Read64(buffer, offset + 32), s7 ^ BinaryOperations.Read64(buffer, offset + 40), ref r3l, ref r3h);
-					Kh128(s4 ^ BinaryOperations.Read64(buffer, offset + 48), s8 ^ BinaryOperations.Read64(buffer, offset + 56), ref r4l, ref r4h);
+					UInt64[] k = BinaryOperations.ReadArray64(buffer, offset, 8);
+					Kh128(s1 ^ k[0], s5 ^ k[1], ref r1l, ref r1h);
+					Kh128(s2 ^ k[2], s6 ^ k[3], ref r2l, ref r2h);
+					Kh128(s3 ^ k[4], s7 ^ k[5], ref r3l, ref r3h);
+					Kh128(s4 ^ k[6], s8 ^ k[7], ref r4l, ref r4h);
 
 					s5 += r1h;
 					s6 += r2h;
@@ -179,15 +180,9 @@ namespace FastHashes
 
 			if (count >= 32)
 			{
-				UInt64 k1, k2;
-
-				k1 = BinaryOperations.Read64(buffer, offset);
-				k2 = BinaryOperations.Read64(buffer, offset + 8);
-				Kh16(k1, k2, ref s1, ref s5, ref r1l, ref r1h);
-
-				k1 = BinaryOperations.Read64(buffer, offset + 16);
-				k2 = BinaryOperations.Read64(buffer, offset + 24);
-				Kh16(k1, k2, ref s1, ref s5, ref r1l, ref r1h);
+				UInt64[] k = BinaryOperations.ReadArray64(buffer, offset, 4);
+				Kh16(k[0], k[1], ref s1, ref s5, ref r1l, ref r1h);
+				Kh16(k[2], k[3], ref s1, ref s5, ref r1l, ref r1h);
 
 				count -= 32;
 				offset += 32;
@@ -195,11 +190,8 @@ namespace FastHashes
 
 			if (count >= 16)
 			{
-				UInt64 k1, k2;
-
-				k1 = BinaryOperations.Read64(buffer, offset);
-				k2 = BinaryOperations.Read64(buffer, offset + 8);
-				Kh16(k1, k2, ref s1, ref s5, ref r1l, ref r1h);
+				UInt64[] k = BinaryOperations.ReadArray64(buffer, offset, 2);
+				Kh16(k[0], k[1], ref s1, ref s5, ref r1l, ref r1h);
 
 				count -= 16;
 				offset += 16;

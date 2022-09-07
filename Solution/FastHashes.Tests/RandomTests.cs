@@ -68,7 +68,7 @@ namespace FastHashes.Tests
         #region Methods
         [Theory]
         [MemberData(nameof(DataBuffer))]
-        public void BufferTest(UInt32 seed, Int32? bufferLength, Int32 offset, Int32 count, Object expectedResult)
+        public void BufferTest(UInt32 seed, Int32? bufferLength, Int32 offset, Int32 count, dynamic expectedResult)
         {
             RandomXorShift random = new RandomXorShift(seed);
             Byte[] buffer = bufferLength.HasValue ? new Byte[bufferLength.Value] : null;
@@ -86,19 +86,19 @@ namespace FastHashes.Tests
             }
 
             if (expectedResult is Byte[] expectedBytes)
-                m_Output.WriteLine($"EXPECTED={{ {String.Join(", ", expectedBytes.Select(x => x.ToString()))} }}");
+                m_Output.WriteLine($"EXPECTED: {{ {String.Join(", ", expectedBytes.Select(x => x.ToString()))} }}");
             else
             {
                 Type expectedType = (Type)expectedResult;
-                m_Output.WriteLine($"EXPECTED={((expectedType == null) ? String.Empty : expectedType.Name)}");
+                m_Output.WriteLine($"EXPECTED: {((expectedType == null) ? String.Empty : expectedType.Name)}");
             }
 
             if (actualResult is Byte[] actualBytes)
-                m_Output.WriteLine($"ACTUAL={{ {String.Join(", ", actualBytes.Select(x => x.ToString()))} }}");
+                m_Output.WriteLine($"ACTUAL: {{ {String.Join(", ", actualBytes.Select(x => x.ToString()))} }}");
             else
             {
                 Type actualType = (Type)actualResult;
-                m_Output.WriteLine($"ACTUAL={((actualType == null) ? String.Empty : actualType.Name)}");
+                m_Output.WriteLine($"ACTUAL: {((actualType == null) ? String.Empty : actualType.Name)}");
             }
 
             Assert.Equal(expectedResult, actualResult);
@@ -111,34 +111,34 @@ namespace FastHashes.Tests
             RandomXorShift random = new RandomXorShift(seed);
             UInt32 actualValue = random.NextValue();
 
-            m_Output.WriteLine($"EXPECTED={expectedValue}");
-            m_Output.WriteLine($"ACTUAL={actualValue}");
+            m_Output.WriteLine($"EXPECTED: {expectedValue}");
+            m_Output.WriteLine($"ACTUAL: {actualValue}");
 
             Assert.Equal(expectedValue, actualValue);
         }
         #endregion
 
         #region Nested Classes
-        public sealed class TestCaseBuffer
+        private sealed class TestCaseBuffer
         {
             #region Members
             private readonly Int32 m_Count;
             private readonly Int32 m_Offset;
             private readonly Int32? m_BufferLegth;
-            private readonly Object m_ExpectedResult;
             private readonly UInt32 m_Seed;
+            private readonly dynamic m_ExpectedResult;
             #endregion
 
             #region Properties
             public Int32 Count => m_Count;
             public Int32 Offset => m_Offset;
             public Int32? BufferLegth => m_BufferLegth;
-            public Object ExpectedResult => m_ExpectedResult;
             public UInt32 Seed => m_Seed;
+            public dynamic ExpectedResult => m_ExpectedResult;
             #endregion
 
             #region Constructors
-            public TestCaseBuffer(UInt32 seed, Int32? bufferLegth, Int32 offset, Int32 count, Object expectedResult)
+            public TestCaseBuffer(UInt32 seed, Int32? bufferLegth, Int32 offset, Int32 count, dynamic expectedResult)
             {
                 if (bufferLegth.HasValue && (bufferLegth.Value < 0))
                     throw new ArgumentException("Invalid buffer legth specified.", nameof(bufferLegth));
@@ -146,16 +146,16 @@ namespace FastHashes.Tests
                 if (expectedResult == null)
                     throw new ArgumentNullException(nameof(expectedResult));
 
-                String resultType = expectedResult.GetType().Name;
+                String expectedResultType = expectedResult.GetType().Name;
 
-                if (!String.Equals(resultType, "Byte[]") && !String.Equals(resultType, "RuntimeType"))
+                if (!String.Equals(expectedResultType, "Byte[]") && !String.Equals(expectedResultType, "RuntimeType"))
                     throw new ArgumentException("Invalid expected result specified.", nameof(expectedResult));
 
                 m_BufferLegth = bufferLegth;
                 m_Count = count;
                 m_Offset = offset;
-                m_ExpectedResult = expectedResult;
                 m_Seed = seed;
+                m_ExpectedResult = expectedResult;
             }
             #endregion
 
@@ -170,7 +170,7 @@ namespace FastHashes.Tests
             #endregion
         }
 
-        public sealed class TestCaseValue
+        private sealed class TestCaseValue
         {
             #region Members
             private readonly UInt32 m_ExpectedValue;

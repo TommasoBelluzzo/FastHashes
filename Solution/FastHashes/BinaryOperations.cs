@@ -193,6 +193,17 @@ namespace FastHashes
             return array;
         }
 
+        /// <summary>Rotates a 2-bytes unsigned integer left by the specified number of bits.</summary>
+        /// <param name="value">The <see cref="T:System.UInt16"/> to rotate.</param>
+        /// <param name="rotation">The number of bits to rotate.</param>
+        /// <returns>An <see cref="T:System.UInt16"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static UInt16 RotateLeft(UInt16 value, Int32 rotation)
+        {
+            rotation &= 0x0F;
+            return (UInt16)((value << rotation) | (value >> (16 - rotation)));
+        }
+
         /// <summary>Rotates a 4-bytes unsigned integer left by the specified number of bits.</summary>
         /// <param name="value">The <see cref="T:System.UInt32"/> to rotate.</param>
         /// <param name="rotation">The number of bits to rotate.</param>
@@ -213,6 +224,17 @@ namespace FastHashes
         {
             rotation &= 0x3F;
             return (value << rotation) | (value >> (64 - rotation));
+        }
+
+        /// <summary>Rotates a 2-bytes unsigned integer right by the specified number of bits.</summary>
+        /// <param name="value">The <see cref="T:System.UInt16"/> to rotate.</param>
+        /// <param name="rotation">The number of bits to rotate.</param>
+        /// <returns>An <see cref="T:System.UInt16"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static UInt16 RotateRight(UInt16 value, Int32 rotation)
+        {
+            rotation &= 0x0F;
+            return (UInt16)((value >> rotation) | (value << (16 - rotation)));
         }
 
         /// <summary>Rotates a 4-bytes unsigned integer right by the specified number of bits.</summary>

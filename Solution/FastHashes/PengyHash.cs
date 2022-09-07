@@ -71,11 +71,7 @@ namespace FastHashes
 
             while ((count - offset) >= 32)
             {
-                b[0] = BinaryOperations.Read64(buffer, offset);
-                b[1] = BinaryOperations.Read64(buffer, offset + 8);
-                b[2] = BinaryOperations.Read64(buffer, offset + 16);
-                b[3] = BinaryOperations.Read64(buffer, offset + 24);
-
+                b = BinaryOperations.ReadArray64(buffer, offset, 4);
                 Pengy(0ul, b, ref s);
 
                 offset += 32;
@@ -84,10 +80,7 @@ namespace FastHashes
             Span<Byte> remainder = new Span<Byte>(BinaryOperations.ToArray64(b));
             buffer.Slice(offset).CopyTo(remainder);
 
-            b[0] = BinaryOperations.Read64(remainder, 0);
-            b[1] = BinaryOperations.Read64(remainder, 8);
-            b[2] = BinaryOperations.Read64(remainder, 16);
-            b[3] = BinaryOperations.Read64(remainder, 24);
+            b = BinaryOperations.ReadArray64(remainder, 0, 4);
 
             for (Int32 i = 0; i < 6; ++i)
                 Pengy(seed, b, ref s);

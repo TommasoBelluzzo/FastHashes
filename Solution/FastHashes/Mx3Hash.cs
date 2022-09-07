@@ -104,19 +104,9 @@ namespace FastHashes
 
 			while (count >= 64)
 			{
-				UInt64 a, b, c, d;
-
-				a = BinaryOperations.Read64(buffer, offset);
-				b = BinaryOperations.Read64(buffer, offset + 8);
-				c = BinaryOperations.Read64(buffer, offset + 16);
-				d = BinaryOperations.Read64(buffer, offset + 24);
-				hash = MixStream(hash, a, b, c, d);
-
-				a = BinaryOperations.Read64(buffer, offset + 32);
-				b = BinaryOperations.Read64(buffer, offset + 40);
-				c = BinaryOperations.Read64(buffer, offset + 48);
-				d = BinaryOperations.Read64(buffer, offset + 56);
-				hash = MixStream(hash, a, b, c, d);
+				UInt64[] k = BinaryOperations.ReadArray64(buffer, offset, 8);
+				hash = MixStream(hash, k[0], k[1], k[2], k[3]);
+				hash = MixStream(hash, k[4], k[5], k[6], k[7]);
 
 				offset += 64;
 				count -= 64;
@@ -124,8 +114,8 @@ namespace FastHashes
 
 			while (count >= 8)
 			{
-				UInt64 x = BinaryOperations.Read64(buffer, offset);
-				hash = MixStream(hash, x);
+				UInt64 k = BinaryOperations.Read64(buffer, offset);
+				hash = MixStream(hash, k);
 
 				offset += 8;
 				count -= 8;

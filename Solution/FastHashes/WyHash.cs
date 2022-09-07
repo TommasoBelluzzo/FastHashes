@@ -225,9 +225,10 @@ namespace FastHashes
 
                     do
                     {
-                        seed = WyMix(BinaryOperations.Read64(buffer, offset) ^ m_Secret[1], BinaryOperations.Read64(buffer, offset + 8) ^ seed);
-                        s1 = WyMix(BinaryOperations.Read64(buffer, offset + 16) ^ m_Secret[2], BinaryOperations.Read64(buffer, offset + 24) ^ s1);
-                        s2 = WyMix(BinaryOperations.Read64(buffer, offset + 32) ^ m_Secret[3], BinaryOperations.Read64(buffer, offset + 40) ^ s2);
+                        UInt64[] k = BinaryOperations.ReadArray64(buffer, offset, 6);
+                        seed = WyMix(k[0] ^ m_Secret[1], k[1] ^ seed);
+                        s1 = WyMix(k[2] ^ m_Secret[2], k[3] ^ s1);
+                        s2 = WyMix(k[4] ^ m_Secret[3], k[5] ^ s2);
 
                         i -= 48;
                         offset += 48;
@@ -239,7 +240,8 @@ namespace FastHashes
 
                 while (i > 16)
                 {
-                    seed = WyMix(BinaryOperations.Read64(buffer, offset) ^ m_Secret[1], BinaryOperations.Read64(buffer, offset + 8) ^ seed);
+                    UInt64[] k = BinaryOperations.ReadArray64(buffer, offset, 2);
+                    seed = WyMix(k[0] ^ m_Secret[1], k[1] ^ seed);
 
                     i -= 16;
                     offset += 16;

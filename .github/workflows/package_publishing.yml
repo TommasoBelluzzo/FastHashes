@@ -64,7 +64,7 @@ jobs:
           grep -P "<Assembly$VERSION_REGEX" "$VERSION_FILE"
         fi
         echo "::set-output name=version::$VERSION"
-    - name: Readme Formatting Pre
+    - name: Readme Formatting
       run: |
         sed -e $'/<table>/,/<\/table>/d' README.md | sed 's/\r$//' | tr '\n' '~' | sed 's/\~\~\~/\~\~/' | tr '~' '\n' | cat > README.md
     - name: Restore
