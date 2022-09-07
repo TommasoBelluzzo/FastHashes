@@ -1,0 +1,27 @@
+name: "Multiarch"
+
+on: workflow_dispatch
+
+jobs:
+  one:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Multiarch Setup
+      run: |
+        docker run --rm --privileged multiarch/qemu-user-static:register --reset
+    - name: Multiarch Tests
+      uses: docker://multiarch/ubuntu-core:s390x-focal
+      with:
+        args: >
+          bash -c
+          "uname -a &&
+          lscpu | grep Endian &&
+          apt-get -y update &&
+          apt-get -y install dotnet6 &&
+          dotnet --version &&
+          git clone https://github.com/TommasoBelluzzo/FastHashes &&
+          cd FastHashes/Solution/ &&
+          dotnet restore --force-evaluate &&
+          dotnet build --verbosity normal --configuration Release --no-restore --no-incremental &&
+          dotnet test --verbosity normal --configuration Release --no-restore --no-build
+          "
