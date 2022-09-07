@@ -8,15 +8,13 @@ namespace FastHashes.Tests
     public static class Utilities
     {
         #region Methods
-        public static Boolean IsNumericType(Type type)
+        private static Boolean IsUnsignedPrimitive(Type type)
         {
+            if (!type.IsPrimitive)
+                return false;
+
             switch (Type.GetTypeCode(type))
             {
-                case TypeCode.Byte:
-                case TypeCode.SByte:
-                case TypeCode.Int16:
-                case TypeCode.Int32:
-                case TypeCode.Int64:
                 case TypeCode.UInt16:
                 case TypeCode.UInt32:
                 case TypeCode.UInt64:
@@ -119,22 +117,14 @@ namespace FastHashes.Tests
             return false;
         }
 
-        public static String FormatNumericArray(Object obj)
+        public static String FormatNumericArray<T>(T[] array) where T : struct, IComparable, IConvertible, IFormattable
         {
-            if (obj == null)
+            if (!IsUnsignedPrimitive(typeof(T)))
+                return "UNDEFINED";
+
+            if (array == null)
                 return "NULL";
 
-            Type type = obj.GetType();
-
-            if (!type.IsArray)
-                return "NOT ARRAY";
-
-            Type elementType = type.GetElementType();
-
-            if (!IsNumericType(elementType))
-                return "NOT NUMERIC ARRAY";
-
-            dynamic array = obj;
             Int32 arrayLength = array.Length;
 
             String result;

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Description>Benchmarks for the FastHashes library.</Description>
-    <TargetFrameworks>netcoreapp2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;netcoreapp3.1;net5.0</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
