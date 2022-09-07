@@ -17,7 +17,7 @@ jobs:
           "uname -a &&
           lscpu | grep Endian &&
           apt-get -y update &&
-          apt-get -y install dotnet6 &&
+          apt-get -y install dotnet-sdk-6.0 &&
           dotnet --version &&
           git clone https://github.com/TommasoBelluzzo/FastHashes &&
           cd FastHashes/Solution/ &&
