@@ -3,28 +3,28 @@ name: "Multiarch"
 on: workflow_dispatch
 
 jobs:
-  one:
-    runs-on: ubuntu-latest
+  multiarch:
+    runs-on: ubuntu-20.04
+    name: Commands
     steps:
-    - name: Multiarch Setup
-      run: |
-        docker run --rm --privileged multiarch/qemu-user-static:register --reset
-    - name: Multiarch Tests
-      uses: docker://multiarch/ubuntu-core:s390x-focal
-      with:
-        args: >
-          bash -c
-          "uname -a &&
-          lscpu | grep Endian &&
-          apt-get update &&
-          apt-get install -y wget &&
-          wget -q https://dot.net/v1/dotnet-install.sh &&
-          chmod +x dotnet-install.sh &&
-          ./dotnet-install.sh -c 6.0 &&
-          dotnet --version &&
-          git clone https://github.com/TommasoBelluzzo/FastHashes &&
-          cd FastHashes/Solution/ &&
-          dotnet restore --force-evaluate &&
-          dotnet build --verbosity normal --configuration Release --no-restore --no-incremental &&
-          dotnet test --verbosity normal --configuration Release --no-restore --no-build
-          "
+      - uses: actions/checkout@v2.1.0
+      - uses: uraimo/run-on-arch-action@v2
+        name: Commands
+        id: runcmd
+        with:
+          arch: s390x
+          distro: ubuntu20.04
+          run: |
+            uname -a
+            lscpu | grep Endian
+            apt-get update
+            apt-get install -y wget
+            wget -q https://dot.net/v1/dotnet-install.sh &&
+            chmod +x dotnet-install.sh &&
+            ./dotnet-install.sh -c 6.0 &&
+            dotnet --version &&
+            git clone https://github.com/TommasoBelluzzo/FastHashes &&
+            cd FastHashes/Solution/ &&
+            dotnet restore --force-evaluate &&
+            dotnet build --verbosity normal --configuration Release --no-restore --no-incremental &&
+            dotnet test --verbosity normal --configuration Release --no-restore --no-build
