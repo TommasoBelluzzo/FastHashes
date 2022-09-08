@@ -20,7 +20,7 @@ jobs:
           apt-get install -y wget &&
           wget -q https://dot.net/v1/dotnet-install.sh &&
           chmod +x dotnet-install.sh &&
-          ./dotnet-install.sh -c 5.0 &&
+          ./dotnet-install.sh -c 6.0 &&
           dotnet --version &&
           git clone https://github.com/TommasoBelluzzo/FastHashes &&
           cd FastHashes/Solution/ &&
