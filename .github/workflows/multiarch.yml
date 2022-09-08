@@ -17,6 +17,7 @@ jobs:
           "uname -a &&
           lscpu | grep Endian &&
           apt-get update &&
+          apt list dotnet &&
           apt-get install -y wget &&
           apt-get install -y apt-transport-https &&
           wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb &&
