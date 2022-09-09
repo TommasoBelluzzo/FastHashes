@@ -15,13 +15,7 @@ namespace FastHashes.Tests
             new TestCaseBuffer(148077u, 10, 0, 10, new Byte[] { 221, 40, 74, 23, 172, 98, 184, 208, 157, 36 }),
             new TestCaseBuffer(8018u, 10, 1, 5, new Byte[] { 0, 71, 102, 179, 5, 105, 0, 0, 0, 0 }),
             new TestCaseBuffer(5946u, 10, 3, 2, new Byte[] { 0, 0, 0, 103, 109, 0, 0, 0, 0, 0 }),
-            new TestCaseBuffer(139u, 10, 7, 1, new Byte[] { 0, 0, 0, 0, 0, 0, 0, 73, 0, 0 }),
-            new TestCaseBuffer(0u, null, 0, 10, typeof(ArgumentNullException)),
-            new TestCaseBuffer(0u, 10, -1, 4, typeof(ArgumentOutOfRangeException)),
-            new TestCaseBuffer(0u, 10, 15, 1, typeof(ArgumentOutOfRangeException)),
-            new TestCaseBuffer(0u, 10, 2, -1, typeof(ArgumentOutOfRangeException)),
-            new TestCaseBuffer(0u, 10, 2, 12, typeof(ArgumentOutOfRangeException)),
-            new TestCaseBuffer(0u, 10, 5, 9, typeof(ArgumentException))
+            new TestCaseBuffer(139u, 10, 7, 1, new Byte[] { 0, 0, 0, 0, 0, 0, 0, 73, 0, 0 })
         };
 
         private static readonly List<TestCaseValue> s_TestCasesValue = new List<TestCaseValue>
@@ -41,7 +35,7 @@ namespace FastHashes.Tests
         public static IEnumerable<Object[]> DataBuffer()
         {
             foreach (TestCaseBuffer testCase in s_TestCasesBuffer)
-                yield return (new Object[] { testCase.Seed, testCase.BufferLegth, testCase.Offset, testCase.Count, testCase.ExpectedResult });
+                yield return (new Object[] { testCase.Seed, testCase.BufferLegth, testCase.Offset, testCase.Count, testCase.ExpectedValue });
         }
 
         public static IEnumerable<Object[]> DataValue()
@@ -55,50 +49,42 @@ namespace FastHashes.Tests
         private sealed class TestCaseBuffer
         {
             #region Members
+            private readonly Byte[] m_ExpectedValue;
             private readonly Int32 m_Count;
             private readonly Int32 m_Offset;
-            private readonly Int32? m_BufferLegth;
+            private readonly Int32 m_BufferLegth;
             private readonly UInt32 m_Seed;
-            private readonly dynamic m_ExpectedResult;
             #endregion
 
             #region Properties
+            public Byte[] ExpectedValue => m_ExpectedValue;
             public Int32 Count => m_Count;
             public Int32 Offset => m_Offset;
             public Int32? BufferLegth => m_BufferLegth;
             public UInt32 Seed => m_Seed;
-            public dynamic ExpectedResult => m_ExpectedResult;
             #endregion
 
             #region Constructors
-            public TestCaseBuffer(UInt32 seed, Int32? bufferLegth, Int32 offset, Int32 count, dynamic expectedResult)
+            public TestCaseBuffer(UInt32 seed, Int32 bufferLegth, Int32 offset, Int32 count, Byte[] expectedValue)
             {
-                if (bufferLegth.HasValue && (bufferLegth.Value < 0))
+                if (bufferLegth < 0)
                     throw new ArgumentException("Invalid buffer legth specified.", nameof(bufferLegth));
 
-                if (expectedResult == null)
-                    throw new ArgumentNullException(nameof(expectedResult));
+                if (expectedValue == null)
+                    throw new ArgumentNullException(nameof(expectedValue));
 
-                String expectedResultType = expectedResult.GetType().Name;
-
-                if (!String.Equals(expectedResultType, "Byte[]") && !String.Equals(expectedResultType, "RuntimeType"))
-                    throw new ArgumentException("Invalid expected result specified.", nameof(expectedResult));
-
+                m_ExpectedValue = expectedValue;
                 m_BufferLegth = bufferLegth;
                 m_Count = count;
                 m_Offset = offset;
                 m_Seed = seed;
-                m_ExpectedResult = expectedResult;
             }
             #endregion
 
             #region Methods
             public override String ToString()
             {
-                String bufferLength = m_BufferLegth.HasValue ? m_BufferLegth.Value.ToString() : "NULL";
-                String expectedResult = m_ExpectedResult.GetType().Name;
-
-                return $"{GetType().Name}: {nameof(Seed)}={m_Seed} {nameof(BufferLegth)}={bufferLength} {nameof(Offset)}={m_Offset} {nameof(Count)}={m_Count} {nameof(ExpectedResult)}={expectedResult}";
+                return $"{GetType().Name}: {nameof(Seed)}={m_Seed} {nameof(BufferLegth)}={m_BufferLegth} {nameof(Offset)}={m_Offset} {nameof(Count)}={m_Count} {nameof(ExpectedValue)}={Utilities.FormatNumericArray(m_ExpectedValue)}";
             }
             #endregion
         }

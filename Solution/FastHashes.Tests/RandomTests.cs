@@ -1,6 +1,5 @@
 ﻿#region Using Directives
 using System;
-using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 #endregion
@@ -23,40 +22,47 @@ namespace FastHashes.Tests
         #region Methods
         [Theory]
         [MemberData(nameof(RandomTestsCases.DataBuffer), MemberType=typeof(RandomTestsCases))]
-        public void BufferTest(UInt32 seed, Int32? bufferLength, Int32 offset, Int32 count, dynamic expectedResult)
+        public void BufferTest(UInt32 seed, Int32 bufferLength, Int32 offset, Int32 count, Byte[] expectedValue)
         {
+            Byte[] actualValue = new Byte[bufferLength];
+
             RandomXorShift random = new RandomXorShift(seed);
-            Byte[] buffer = bufferLength.HasValue ? new Byte[bufferLength.Value] : null;
+            random.NextBytes(actualValue, offset, count);
 
-            Object actualResult;
+            m_Output.WriteLine($"EXPECTED: {Utilities.FormatNumericArray(expectedValue)}");
+            m_Output.WriteLine($"ACTUAL: {Utilities.FormatNumericArray(actualValue)}");
 
-            try
-            {
-                random.NextBytes(buffer, offset, count);
-                actualResult = buffer;
-            }
-            catch (Exception e)
-            {
-                actualResult = e.GetType();
-            }
+            Assert.Equal(expectedValue, actualValue);
+        }
 
-            if (expectedResult is Byte[] expectedBytes)
-                m_Output.WriteLine($"EXPECTED: {{ {String.Join(", ", expectedBytes.Select(x => x.ToString()))} }}");
-            else
-            {
-                Type expectedType = (Type)expectedResult;
-                m_Output.WriteLine($"EXPECTED: {((expectedType == null) ? String.Empty : expectedType.Name)}");
-            }
+        [Fact]
+        public void ExceptionTest()
+        {
+            RandomXorShift random = new RandomXorShift(0u);
 
-            if (actualResult is Byte[] actualBytes)
-                m_Output.WriteLine($"ACTUAL: {{ {String.Join(", ", actualBytes.Select(x => x.ToString()))} }}");
-            else
-            {
-                Type actualType = (Type)actualResult;
-                m_Output.WriteLine($"ACTUAL: {((actualType == null) ? String.Empty : actualType.Name)}");
-            }
+            Assert.Throws<ArgumentNullException>(() => { Byte[] buffer = null; random.NextBytes(buffer, 0, 10); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; random.NextBytes(buffer, -1, 4); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; random.NextBytes(buffer, 15, 1); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; random.NextBytes(buffer, 2, -1); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; random.NextBytes(buffer, 2, 12); });
+            Assert.Throws<ArgumentException>(() => { Byte[] buffer = new Byte[10]; random.NextBytes(buffer, 5, 9); });
+        }
 
-            Assert.Equal(expectedResult, actualResult);
+        [Fact]
+        public void QueueTest()
+        {
+            RandomXorShift random = new RandomXorShift(0u);
+
+            Byte[] buffer1 = new Byte[7];
+            random.NextBytes(buffer1, 0, 7);
+
+            Byte[] buffer2 = new Byte[7];
+            random.NextBytes(buffer2, 0, 7);
+
+            m_Output.WriteLine($"EXPECTED: {false}");
+            m_Output.WriteLine($"ACTUAL: {random.EmptyQueue}");
+
+            Assert.False(random.EmptyQueue);
         }
 
         [Theory]

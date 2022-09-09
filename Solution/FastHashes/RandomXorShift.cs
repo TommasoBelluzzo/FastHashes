@@ -25,6 +25,11 @@ namespace FastHashes
         #endregion
 
         #region Properties
+        /// <summary>A value indicating whether the internal bytes queue is empty.</summary>
+        /// <value>An <see cref="T:System.Boolean"/> value.</value>
+        [ExcludeFromCodeCoverage]
+        public Boolean EmptyQueue => m_Bytes.Count == 0;
+
         /// <summary>The seed used by the pseudorandom numbers generator.</summary>
         /// <value>An <see cref="T:System.UInt32"/> value.</value>
         [ExcludeFromCodeCoverage] 
@@ -124,32 +129,29 @@ namespace FastHashes
 
             Int32 blocks = (count - index) / 4;
 
-            if (blocks > 0)
+            while (blocks > 0)
             {
-                Int32 end = index + blocks;
+                UInt32 value = NextValue();
+                Byte[] valueBytes = BitConverter.GetBytes(value);
 
-                while (index < end)
-                {
-                    UInt32 value = NextValue();
-                    Byte[] valueBytes = BitConverter.GetBytes(value);
+                Buffer.BlockCopy(valueBytes, 0, buffer, offset + index, 4);
+                index += 4;
 
-                    Buffer.BlockCopy(valueBytes, 0, buffer, offset + index, valueBytes.Length);
-                    index += 4;
-                }
+                --blocks;
             }
 
-            while (index < count)
+            Int32 remainder = (count - index) & 3;
+
+            if (remainder > 0)
             {
-                if (m_Bytes.Count == 0)
-                {
-                    UInt32 value = NextValue();
-                    Byte[] valueBytes = BitConverter.GetBytes(value);
+                UInt32 value = NextValue();
+                Byte[] valueBytes = BitConverter.GetBytes(value);
 
-                    for (Int32 i = 0; i < valueBytes.Length; ++i)
-                        m_Bytes.Enqueue(valueBytes[i]);
-                }
+                for (Int32 i = 0; i < 4; ++i)
+                    m_Bytes.Enqueue(valueBytes[i]);
 
-                buffer[offset + index++] = m_Bytes.Dequeue();
+                while (index < count)
+                    buffer[offset + index++] = m_Bytes.Dequeue();
             }
         }
         #endregion

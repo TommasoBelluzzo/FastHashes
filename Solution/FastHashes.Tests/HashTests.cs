@@ -64,6 +64,20 @@ namespace FastHashes.Tests
             Assert.False(cte, "Collisions Threshold Exceeded");
         }
 
+        [Fact]
+        public void ExceptionTest()
+        {
+            Hash hash = new FarmHash128();
+
+            Assert.Throws<ArgumentNullException>(() => { Byte[] buffer = null; hash.ComputeHash(buffer); });
+            Assert.Throws<ArgumentNullException>(() => { Byte[] buffer = null; hash.ComputeHash(buffer, 0, 10); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; hash.ComputeHash(buffer, -1, 10); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; hash.ComputeHash(buffer, 12, 10); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; hash.ComputeHash(buffer, 0, -1); });
+            Assert.Throws<ArgumentException>(() => { Byte[] buffer = new Byte[10]; hash.ComputeHash(buffer, 8, 5); });
+            Assert.Throws<ArgumentNullException>(() => { ReadOnlySpan<Byte> buffer = null; hash.ComputeHash(buffer); });
+        }
+
         [Theory]
         [MemberData(nameof(HashTestsCases.DataValidation), MemberType=typeof(HashTestsCases))]
         public void ValidationTest(String hashName, Func<UInt32,Hash> hashInitializer, String expectedValue)
