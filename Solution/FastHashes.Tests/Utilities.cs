@@ -1,6 +1,7 @@
 ﻿#region Using Directives
 using System;
 using System.Collections.Generic;
+using System.Text;
 #endregion
 
 namespace FastHashes.Tests
@@ -133,12 +134,14 @@ namespace FastHashes.Tests
                 result = "[]";
             else
             {
-                result = "[";
+                StringBuilder builder = new StringBuilder("[");
 
                 for (Int32 i = 0; i < arrayLength - 1; ++i)
-                    result += $"{array[i]}, ";
+                    builder.Append($"{array[i]}, ");
 
-                result += $"{array[arrayLength - 1]}]";
+                builder.Append($"{array[arrayLength - 1]}]");
+
+                result = builder.ToString();
             }
 
             return result;

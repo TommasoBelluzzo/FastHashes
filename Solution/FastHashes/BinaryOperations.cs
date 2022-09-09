@@ -20,7 +20,12 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Byte[] ToArray32(UInt32 value)
         {
-            return BitConverter.GetBytes(value);
+            Byte[] valueBytes = BitConverter.GetBytes(value);
+
+            if (!s_IsLittleEndian)
+                Array.Reverse(valueBytes);
+
+            return valueBytes;
         }
 
         /// <summary>Converts a 8-bytes unsigned integer to a 4-bytes array.</summary>
@@ -31,6 +36,9 @@ namespace FastHashes
         {
             Byte[] array = new Byte[4];
             Byte[] valueBytes = BitConverter.GetBytes(value);
+
+            if (!s_IsLittleEndian)
+                Array.Reverse(valueBytes);
 
             Buffer.BlockCopy(valueBytes, 0, array, 0, 4);
 
@@ -46,10 +54,22 @@ namespace FastHashes
             Int32 length = values.Length;
             Byte[] array = new Byte[4 * length];
 
-            for (Int32 i = 0; i < length; ++i)
+            if (s_IsLittleEndian)
             {
-                Byte[] valueBytes = BitConverter.GetBytes(values[i]);
-                Buffer.BlockCopy(valueBytes, 0, array, i * 4, valueBytes.Length);
+                for (Int32 i = 0; i < length; ++i)
+                {
+                    Byte[] valueBytes = BitConverter.GetBytes(values[i]);
+                    Buffer.BlockCopy(valueBytes, 0, array, i * 4, valueBytes.Length);
+                }
+            }
+            else
+            {
+                for (Int32 i = 0; i < length; ++i)
+                {
+                    Byte[] valueBytes = BitConverter.GetBytes(values[i]);
+                    Array.Reverse(valueBytes);
+                    Buffer.BlockCopy(valueBytes, 0, array, i * 4, valueBytes.Length);
+                }
             }
 
             return array;
@@ -64,6 +84,9 @@ namespace FastHashes
             Byte[] array = new Byte[8];
             Byte[] valueBytes = BitConverter.GetBytes(value);
 
+            if (!s_IsLittleEndian)
+                Array.Reverse(valueBytes);
+
             Buffer.BlockCopy(valueBytes, 0, array, 0, 4);
 
             return array;
@@ -75,7 +98,12 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Byte[] ToArray64(UInt64 value)
         {
-            return BitConverter.GetBytes(value);
+            Byte[] valueBytes = BitConverter.GetBytes(value);
+
+            if (!s_IsLittleEndian)
+                Array.Reverse(valueBytes);
+
+            return valueBytes;
         }
 
         /// <summary>Converts an array of a 8-bytes unsigned integers to a byte array.</summary>
@@ -87,10 +115,22 @@ namespace FastHashes
             Int32 length = values.Length;
             Byte[] array = new Byte[8 * length];
 
-            for (Int32 i = 0; i < length; ++i)
+            if (s_IsLittleEndian)
             {
-                Byte[] valueBytes = BitConverter.GetBytes(values[i]);
-                Buffer.BlockCopy(valueBytes, 0, array, i * 8, valueBytes.Length);
+                for (Int32 i = 0; i < length; ++i)
+                {
+                    Byte[] valueBytes = BitConverter.GetBytes(values[i]);
+                    Buffer.BlockCopy(valueBytes, 0, array, i * 8, valueBytes.Length);
+                }
+            }
+            else
+            {
+                for (Int32 i = 0; i < length; ++i)
+                {
+                    Byte[] valueBytes = BitConverter.GetBytes(values[i]);
+                    Array.Reverse(valueBytes);
+                    Buffer.BlockCopy(valueBytes, 0, array, i * 8, valueBytes.Length);
+                }
             }
 
             return array;
