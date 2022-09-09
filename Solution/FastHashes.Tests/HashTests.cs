@@ -67,15 +67,31 @@ namespace FastHashes.Tests
         [Fact]
         public void ExceptionTest()
         {
-            Hash hash = new FarmHash128();
+            FarmHash128 fh = new FarmHash128();
 
-            Assert.Throws<ArgumentNullException>(() => { Byte[] buffer = null; hash.ComputeHash(buffer); });
-            Assert.Throws<ArgumentNullException>(() => { Byte[] buffer = null; hash.ComputeHash(buffer, 0, 10); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; hash.ComputeHash(buffer, -1, 10); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; hash.ComputeHash(buffer, 12, 10); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; hash.ComputeHash(buffer, 0, -1); });
-            Assert.Throws<ArgumentException>(() => { Byte[] buffer = new Byte[10]; hash.ComputeHash(buffer, 8, 5); });
-            Assert.Throws<ArgumentNullException>(() => { ReadOnlySpan<Byte> buffer = null; hash.ComputeHash(buffer); });
+            Assert.Throws<ArgumentNullException>(() => { Byte[] buffer = null; fh.ComputeHash(buffer); });
+            Assert.Throws<ArgumentNullException>(() => { Byte[] buffer = null; fh.ComputeHash(buffer, 0, 10); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; fh.ComputeHash(buffer, -1, 10); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; fh.ComputeHash(buffer, 12, 10); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; fh.ComputeHash(buffer, 0, -1); });
+            Assert.Throws<ArgumentException>(() => { Byte[] buffer = new Byte[10]; fh.ComputeHash(buffer, 8, 5); });
+            Assert.Throws<ArgumentNullException>(() => { ReadOnlySpan<Byte> buffer = null; fh.ComputeHash(buffer); });
+        }
+
+        [Fact]
+        public void OutputTest()
+        {
+            Byte[] buffer = new Byte[] { 23, 134, 0, 237, 0, 81, 64, 64, 39, 5 };
+
+            FarmHash128 fh = new FarmHash128();
+            Byte[] hash1 = fh.ComputeHash(buffer);
+            Byte[] hash2 = fh.ComputeHash(buffer, buffer.Length);
+            Byte[] hash3 = fh.ComputeHash(buffer, 0, buffer.Length);
+            Byte[] hash4 = fh.ComputeHash(new ReadOnlySpan<Byte>(buffer));
+
+            Assert.Equal(hash1, hash2);
+            Assert.Equal(hash1, hash3);
+            Assert.Equal(hash1, hash4);
         }
 
         [Theory]
