@@ -81,10 +81,8 @@ namespace FastHashes.Tests
                 if (String.IsNullOrWhiteSpace(hashName))
                     throw new ArgumentException("Invalid hash name specified.", nameof(hashName));
 
-                // ReSharper disable JoinNullCheckWithUsage
                 if (hashInitializer == null)
                     throw new ArgumentException("Invalid hash initializer specified.", nameof(hashInitializer));
-                // ReSharper restore JoinNullCheckWithUsage
 
                 if (String.IsNullOrWhiteSpace(hashName))
                     throw new ArgumentException("Invalid expected value specified.", nameof(expectedValue));

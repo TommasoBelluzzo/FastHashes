@@ -21,10 +21,8 @@ namespace FastHashes.Benchmarks
         #region Constructors
         public ChunkParameter(Func<Int32,Int32> increment, Int32 keySize, Int32 repetitions)
         {
-            // ReSharper disable JoinNullCheckWithUsage
             if (increment == null)
                 throw new ArgumentException("Invalid increment specified.", nameof(increment));
-            // ReSharper restore JoinNullCheckWithUsage
 
             if (keySize == 0)
                 throw new ArgumentException("Invalid key size specified.", nameof(keySize));

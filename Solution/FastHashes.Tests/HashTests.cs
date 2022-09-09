@@ -67,7 +67,7 @@ namespace FastHashes.Tests
         [Fact]
         public void ExceptionTest()
         {
-            FarmHash128 fh = new FarmHash128();
+            FarmHash32 fh = new FarmHash32();
 
             Assert.Throws<ArgumentNullException>(() => { Byte[] buffer = null; fh.ComputeHash(buffer); });
             Assert.Throws<ArgumentNullException>(() => { Byte[] buffer = null; fh.ComputeHash(buffer, 0, 10); });
@@ -83,7 +83,7 @@ namespace FastHashes.Tests
         {
             Byte[] buffer = new Byte[] { 23, 134, 0, 237, 0, 81, 64, 64, 39, 5 };
 
-            FarmHash128 fh = new FarmHash128();
+            FarmHash32 fh = new FarmHash32();
             Byte[] hash1 = fh.ComputeHash(buffer);
             Byte[] hash2 = fh.ComputeHash(buffer, buffer.Length);
             Byte[] hash3 = fh.ComputeHash(buffer, 0, buffer.Length);
