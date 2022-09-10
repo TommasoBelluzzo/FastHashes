@@ -20,7 +20,7 @@ jobs:
             apt-get update -y &&
             apt-get install -y git python3 &&
             git clone https://github.com/TommasoBelluzzo/FastHashes &&
-            python3 FastHashes/FastHashes/Solution/FastHashes.Tests/endianness_tests.py
+            python3 FastHashes/Solution/FastHashes.Tests/endianness_tests.py
           "
   little_endian:
     name: Little Endian
