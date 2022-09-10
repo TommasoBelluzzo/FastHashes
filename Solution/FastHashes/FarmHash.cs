@@ -612,9 +612,9 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Hash8To16(out UInt64 hash1, out UInt64 hash2, ReadOnlySpan<Byte> buffer, Int32 offset, Int32 count, UInt64 seed1, UInt64 seed2)
         {
-            UInt64 lengthUnsigned = (UInt64)count;
+            UInt64 length = (UInt64)count;
 
-            UInt64 v0 = K2 + (lengthUnsigned * 2ul);
+            UInt64 v0 = K2 + (length * 2ul);
             UInt64 v1 = BinaryOperations.Read64(buffer, offset) + K2;
             UInt64 v2 = BinaryOperations.Read64(buffer, offset + count - 8);
             UInt64 v3 = (BinaryOperations.RotateRight(v2, 37) * v0) + v1;

@@ -129,15 +129,13 @@ namespace FastHashes
 
             Int32 blocks = (count - index) / 4;
 
-            while (blocks > 0)
+            while (blocks-- > 0)
             {
                 UInt32 value = NextValue();
                 Byte[] valueBytes = BitConverter.GetBytes(value);
 
                 Buffer.BlockCopy(valueBytes, 0, buffer, offset + index, 4);
                 index += 4;
-
-                --blocks;
             }
 
             Int32 remainder = (count - index) & 3;

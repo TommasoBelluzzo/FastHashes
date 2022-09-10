@@ -66,7 +66,9 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
         {
-            return m_Engine.ComputeHash(buffer);
+            Byte[] hash = m_Engine.ComputeHash(buffer);
+
+            return hash;
         }
 
         /// <inheritdoc/>

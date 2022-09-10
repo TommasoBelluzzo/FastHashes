@@ -1,0 +1,27 @@
+name: "Endianness Tests"
+
+on: workflow_dispatch
+
+jobs:
+  big_endian:
+    name: Big Endian
+    runs-on: ubuntu-latest
+    steps:
+    - name: Multiarch Setup
+      run: |
+        docker run --rm --privileged multiarch/qemu-user-static:register --reset -
+    - name: Tests
+      uses: docker://multiarch/ubuntu-core:s390x-focal
+      with:
+        args: >
+          bash -c
+          "uname -a &&
+          apt-get update -y &&
+          apt-get install -y python3 python3.8-venv git &&
+          python3 -c 'import sys; print(sys.byteorder)' &&
+          python3 --version &&
+          python3 -m venv venv &&
+          source venv/bin/activate &&
+          git clone https://github.com/TommasoBelluzzo/FastHashes &&
+          python3 FastHashes/FastHashes/Solution/FastHashes.Tests/endianness_tests.py
+          "

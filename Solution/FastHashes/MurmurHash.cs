@@ -72,7 +72,10 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
         {
-            return GetHash(m_Engine.ComputeHash(buffer));
+            Byte[] hashData = m_Engine.ComputeHash(buffer);
+            Byte[] hash = GetHash(hashData);
+
+            return hash;
         }
 
         /// <inheritdoc/>

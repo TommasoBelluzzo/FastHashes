@@ -154,17 +154,17 @@ namespace FastHashes
                             t = BinaryOperations.Read32(buffer, offset);
                             break;
 
-                        case 1:
-                            t = buffer[offset];
-                            break;
+                        case 3:
+                            t = (UInt32)buffer[offset + 2] << 16;
+                            goto case 2;
 
                         case 2:
                             t += BinaryOperations.Read16(buffer, offset);
                             break;
 
-                        case 3:
-                            t = (UInt32)buffer[offset + 2] << 16;
-                            goto case 2;
+                        case 1:
+                            t = buffer[offset];
+                            break;
                     }
                 }
                 else
@@ -176,19 +176,19 @@ namespace FastHashes
                             t <<= 8;
                             goto case 3;
 
-                        case 1:
-                            t += buffer[offset];
-                            break;
+                        case 3:
+                            t += buffer[offset + 2];
+                            t <<= 8;
+                            goto case 2;
 
                         case 2:
                             t += buffer[offset + 1];
                             t <<= 8;
                             goto case 1;
 
-                        case 3:
-                            t += buffer[offset + 2];
-                            t <<= 8;
-                            goto case 2;
+                        case 1:
+                            t += buffer[offset];
+                            break;
                     }
                 }
 

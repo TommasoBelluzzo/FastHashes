@@ -234,12 +234,12 @@ namespace FastHashes
 			x = (UInt32)ab;
 			y = (UInt32)(cd >> 32);
 			UInt64 adbc = ad + (x * (UInt64)y);
-			UInt64 carry = !!(adbc < ad) ? 1ul : 0ul;
+			UInt64 carry = (adbc < ad) ? 1ul : 0ul;
 
 			x = (UInt32)(ab >> 32);
 			y = (UInt32)(cd >> 32);
 			UInt64 lo = bd + (adbc << 32);
-			UInt64 hi = (x * (UInt64)y) + (adbc >> 32) + (carry << 32) + (!!(lo < bd) ? 1ul : 0ul);
+			UInt64 hi = (x * (UInt64)y) + (adbc >> 32) + (carry << 32) + ((lo < bd) ? 1ul : 0ul);
 
 			rl = lo;
             rh = hi;

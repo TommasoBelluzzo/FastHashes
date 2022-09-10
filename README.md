@@ -137,7 +137,7 @@ The following `NuGet` packages are required for performing unit tests:
 | 17        | FastPositiveHash-V1     | 4.10 GB/s                 | 386.51 MB/s               |
 | 18        | MurmurHash128-x86       | 4.05 GB/s                 | 383.60 MB/s               |
 | 19        | MurmurHash64-x86        | 4.01 GB/s                 | 374.73 MB/s               |
-| 20        | FastPositiveHash_V2     | 3.99 GB/s                 | 386.33 MB/s               |
+| 20        | FastPositiveHash-V2     | 3.99 GB/s                 | 386.33 MB/s               |
 | 21        | MurmurHash32            | 2.82 GB/s                 | 332.35 MB/s               |
 | 22        | MumHash                 | 2.44 GB/s                 | 312.24 MB/s               |
 | 23        | WyHash64                | 2.39 GB/s                 | 340.13 MB/s               |

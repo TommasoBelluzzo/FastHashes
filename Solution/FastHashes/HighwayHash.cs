@@ -125,17 +125,14 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ZMA(ref UInt64 v1, ref UInt64 v2, UInt64 v3, UInt64 v4)
         {
-            v1 += (((v4 & 0x00000000FF000000ul)
-                | (v3 & 0x000000FF00000000ul)) >> 24)
-                | (((v4 & 0x0000FF0000000000ul)
-                | (v3 & 0x00FF000000000000ul)) >> 16)
+            v1 += (((v4 & 0x00000000FF000000ul) | (v3 & 0x000000FF00000000ul)) >> 24)
+                | (((v4 & 0x0000FF0000000000ul) | (v3 & 0x00FF000000000000ul)) >> 16)
                 | (v4 & 0x0000000000FF0000ul)
                 | ((v4 & 0x000000000000FF00ul) << 32)
                 | ((v3 & 0xFF00000000000000ul) >> 8)
                 | (v4 << 56);
 
-            v2 += (((v3 & 0x00000000FF000000ul)
-                | (v4 & 0x000000FF00000000ul)) >> 24)
+            v2 += (((v3 & 0x00000000FF000000ul) | (v4 & 0x000000FF00000000ul)) >> 24)
                 | (v3 & 0x0000000000FF0000ul)
                 | ((v3 & 0x0000FF0000000000ul) >> 16)
                 | ((v3 & 0x000000000000FF00ul) << 24)
