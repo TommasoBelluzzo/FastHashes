@@ -20,8 +20,13 @@ jobs:
             apt-get update -y &&
             apt-get install -y git python3 &&
             git clone https://github.com/TommasoBelluzzo/FastHashes &&
-            python3 FastHashes/Solution/FastHashes.Tests/endianness_tests.py
+            python3 FastHashes/Solution/FastHashes.Tests/endianness_tests.py > output.txt
           "
+    - name: Package Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Big Endian Artifact
+        path: output.txt
   little_endian:
     name: Little Endian
     runs-on: ubuntu-latest
@@ -31,5 +36,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y git python3
         git clone https://github.com/TommasoBelluzzo/FastHashes
-        ls -lt
-        python3 FastHashes/FastHashes/Solution/FastHashes.Tests/endianness_tests.py
+        python3 FastHashes/Solution/FastHashes.Tests/endianness_tests.py > output.txt
+    - name: Package Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Little Endian Artifact
+        path: output.txt
