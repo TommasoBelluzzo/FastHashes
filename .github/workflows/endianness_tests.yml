@@ -28,7 +28,7 @@ jobs:
     steps:
     - name: Tests
       run: |
-        apt-get update
-        apt-get install -y git python3
+        sudo apt-get update
+        sudo apt-get install -y git python3
         git clone https://github.com/TommasoBelluzzo/FastHashes
         python3 FastHashes/FastHashes/Solution/FastHashes.Tests/endianness_tests.py
