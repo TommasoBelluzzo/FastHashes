@@ -1,5 +1,15 @@
 ﻿#!/usr/bin/env python3
 
+from sys import byteorder
+
+header = f'# {byteorder.upper()}-ENDIAN TESTS #'
+header_length = len(header)
+
+print('#' * header_length)
+print(f'# {byteorder.upper()}-ENDIAN TESTS #')
+print('#' * header_length)
+print()
+
 ############
 # FastHash #
 ############
@@ -15,4 +25,4 @@ tail ^= buffer[2] << 16
 tail ^= buffer[1] << 8
 tail ^= buffer[0]
 
-print('FastHash:', tail)
+print(f'FastHash: {tail}')
