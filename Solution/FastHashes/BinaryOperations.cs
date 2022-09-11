@@ -21,12 +21,17 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UInt16 Read16(ReadOnlySpan<Byte> buffer, Int32 offset)
         {
+            ReadOnlySpan<Byte> slice = buffer.Slice(offset, 2);
+
             UInt16 v;
 
             if (s_IsLittleEndian)
-                v = BinaryPrimitives.ReadUInt16LittleEndian(buffer.Slice(offset, 2));
+                v = BinaryPrimitives.ReadUInt16LittleEndian(slice);
             else
-                v = BinaryPrimitives.ReadUInt16BigEndian(buffer.Slice(offset, 2));
+            {
+                v = BinaryPrimitives.ReadUInt16BigEndian(slice);
+                v = BinaryPrimitives.ReverseEndianness(v);
+            }
 
             return v;
         }
@@ -38,12 +43,17 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UInt32 Read32(ReadOnlySpan<Byte> buffer, Int32 offset)
         {
+            ReadOnlySpan<Byte> slice = buffer.Slice(offset, 4);
+
             UInt32 v;
 
             if (s_IsLittleEndian)
-                v = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Slice(offset, 4));
+                v = BinaryPrimitives.ReadUInt32LittleEndian(slice);
             else
-                v = BinaryPrimitives.ReadUInt32BigEndian(buffer.Slice(offset, 4));
+            {
+                v = BinaryPrimitives.ReadUInt32BigEndian(slice);
+                v = BinaryPrimitives.ReverseEndianness(v);
+            }
 
             return v;
         }
@@ -55,12 +65,17 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UInt64 Read64(ReadOnlySpan<Byte> buffer, Int32 offset)
         {
+            ReadOnlySpan<Byte> slice = buffer.Slice(offset, 8);
+
             UInt64 v;
 
             if (s_IsLittleEndian)
-                v = BinaryPrimitives.ReadUInt64LittleEndian(buffer.Slice(offset, 8));
+                v = BinaryPrimitives.ReadUInt64LittleEndian(slice);
             else
-                v = BinaryPrimitives.ReadUInt64BigEndian(buffer.Slice(offset, 8));
+            {
+                v = BinaryPrimitives.ReadUInt64BigEndian(slice);
+                v = BinaryPrimitives.ReverseEndianness(v);
+            }
 
             return v;
         }
@@ -311,7 +326,7 @@ namespace FastHashes
                 for (Int32 i = 0; i < length; ++i)
                 {
                     Byte[] valueBytes = BitConverter.GetBytes(values[i]);
-                    Buffer.BlockCopy(valueBytes, 0, array, i * 4, valueBytes.Length);
+                    Buffer.BlockCopy(valueBytes, 0, array, i * 4, 4);
                 }
             }
             else
@@ -320,7 +335,7 @@ namespace FastHashes
                 {
                     Byte[] valueBytes = BitConverter.GetBytes(values[i]);
                     Array.Reverse(valueBytes);
-                    Buffer.BlockCopy(valueBytes, 0, array, i * 4, valueBytes.Length);
+                    Buffer.BlockCopy(valueBytes, 0, array, i * 4, 4);
                 }
             }
 
@@ -372,7 +387,7 @@ namespace FastHashes
                 for (Int32 i = 0; i < length; ++i)
                 {
                     Byte[] valueBytes = BitConverter.GetBytes(values[i]);
-                    Buffer.BlockCopy(valueBytes, 0, array, i * 8, valueBytes.Length);
+                    Buffer.BlockCopy(valueBytes, 0, array, i * 8, 8);
                 }
             }
             else
@@ -381,7 +396,7 @@ namespace FastHashes
                 {
                     Byte[] valueBytes = BitConverter.GetBytes(values[i]);
                     Array.Reverse(valueBytes);
-                    Buffer.BlockCopy(valueBytes, 0, array, i * 8, valueBytes.Length);
+                    Buffer.BlockCopy(valueBytes, 0, array, i * 8, 8);
                 }
             }
 
