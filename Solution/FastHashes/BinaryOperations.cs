@@ -22,16 +22,7 @@ namespace FastHashes
         public static UInt16 Read16(ReadOnlySpan<Byte> buffer, Int32 offset)
         {
             ReadOnlySpan<Byte> slice = buffer.Slice(offset, 2);
-
-            UInt16 v;
-
-            if (s_IsLittleEndian)
-                v = BinaryPrimitives.ReadUInt16LittleEndian(slice);
-            else
-            {
-                v = BinaryPrimitives.ReadUInt16BigEndian(slice);
-                v = BinaryPrimitives.ReverseEndianness(v);
-            }
+            UInt16 v = BinaryPrimitives.ReadUInt16LittleEndian(slice);
 
             return v;
         }
@@ -44,16 +35,7 @@ namespace FastHashes
         public static UInt32 Read32(ReadOnlySpan<Byte> buffer, Int32 offset)
         {
             ReadOnlySpan<Byte> slice = buffer.Slice(offset, 4);
-
-            UInt32 v;
-
-            if (s_IsLittleEndian)
-                v = BinaryPrimitives.ReadUInt32LittleEndian(slice);
-            else
-            {
-                v = BinaryPrimitives.ReadUInt32BigEndian(slice);
-                v = BinaryPrimitives.ReverseEndianness(v);
-            }
+            UInt32 v = BinaryPrimitives.ReadUInt32LittleEndian(slice);
 
             return v;
         }
@@ -66,16 +48,7 @@ namespace FastHashes
         public static UInt64 Read64(ReadOnlySpan<Byte> buffer, Int32 offset)
         {
             ReadOnlySpan<Byte> slice = buffer.Slice(offset, 8);
-
-            UInt64 v;
-
-            if (s_IsLittleEndian)
-                v = BinaryPrimitives.ReadUInt64LittleEndian(slice);
-            else
-            {
-                v = BinaryPrimitives.ReadUInt64BigEndian(slice);
-                v = BinaryPrimitives.ReverseEndianness(v);
-            }
+            UInt64 v = BinaryPrimitives.ReadUInt64LittleEndian(slice);
 
             return v;
         }
