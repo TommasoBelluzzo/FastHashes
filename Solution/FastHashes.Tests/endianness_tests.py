@@ -6,7 +6,7 @@ header = f'# {byteorder.upper()}-ENDIAN TESTS #'
 header_length = len(header)
 
 print('#' * header_length)
-print(f'# {byteorder.upper()}-ENDIAN TESTS #')
+print(header)
 print('#' * header_length)
 print()
 
@@ -26,3 +26,61 @@ tail ^= buffer[1] << 8
 tail ^= buffer[0]
 
 print(f'FastHash: {tail}')
+
+###############
+# HighwayHash #
+###############
+
+buffer = (210, 83, 73, 5, 227, 27, 187, 194, 146, 95, 250, 101, 181, 13, 103, 1, 136, 25, 255, 78, 183, 0, 0, 84, 122, 180, 25, 202, 41, 2, 73)
+
+offset = 0
+remainder = len(buffer) & 31
+
+diff4 = remainder & ~3
+mod4 = remainder & 3
+packet = [0] * 32
+
+if diff4 > 0:
+    packet[0:diff4] = buffer[offset:diff4]
+    offset += diff4
+
+if (remainder & 16) > 0:
+    for i in range(4):
+        packet[28 + i] = buffer[offset + (i + mod4 - 4)]
+elif mod4 > 0:
+    packet[16] = buffer[offset]
+    packet[17] = buffer[offset + (mod4 >> 1)]
+    packet[18] = buffer[offset + (mod4 - 1)]
+
+k = []
+
+for i in range(0,remainder,8):
+    k.append(int.from_bytes(packet[i:i+8], byteorder, signed=False))
+
+print(f'HighwayHash: {k}')
+
+###########
+# MirHash #
+###########
+
+buffer = (87, 0, 133, 53, 12)
+tail = 0
+
+for i in range(len(buffer)):
+    tail = (tail >> 8) | (buffer[i] << 56)
+
+print(f'MirHash: {tail}')
+
+###########
+# MumHash #
+###########
+
+buffer = (16, 205, 33, 39, 6, 142, 199)
+tail = 0
+
+tail += int.from_bytes(buffer[0:4], byteorder, signed=False)
+tail |= buffer[6] << 48
+tail |= buffer[5] << 40
+tail |= buffer[4] << 32
+
+print(f'MumHash: {tail}')

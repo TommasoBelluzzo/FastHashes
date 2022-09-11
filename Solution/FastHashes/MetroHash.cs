@@ -157,9 +157,7 @@ namespace FastHashes
 
                 return v1;
             }
-            #endregion
 
-            #region Pointer/Span Fork
             public abstract Byte[] ComputeHash(ReadOnlySpan<Byte> buffer);
             #endregion
         }

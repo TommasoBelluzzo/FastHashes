@@ -100,7 +100,6 @@ namespace FastHashes
             }
 
             Int32 blocks = count / 8;
-            Int32 remainder = count & 7;
 
             for (Int32 i = 0; i < blocks; ++i)
             {
@@ -108,51 +107,7 @@ namespace FastHashes
                 offset += 8;
             }
 
-            UInt64 v = 0ul;
-
-            switch (remainder)
-            {
-                case 7:
-                    v = BinaryOperations.Read32(buffer, offset);
-                    offset += 4;
-                    v |= (UInt64)buffer[offset + 2] << 48;
-                    v |= (UInt64)buffer[offset + 1] << 40;
-                    v |= (UInt64)buffer[offset] << 32;
-                    break;
-
-                case 6:
-                    v = BinaryOperations.Read32(buffer, offset);
-                    offset += 4;
-                    v |= (UInt64)buffer[offset + 1] << 40;
-                    v |= (UInt64)buffer[offset] << 32;
-                    break;
-
-                case 5:
-                    v = BinaryOperations.Read32(buffer, offset);
-                    offset += 4;
-                    v |= (UInt64)buffer[offset] << 32;
-                    break;
-
-                case 4:
-                    v = BinaryOperations.Read32(buffer, offset);
-                    break;
-
-                case 3:
-                    v = buffer[offset];
-                    v |= (UInt64)buffer[offset + 2] << 16;
-                    v |= (UInt64)buffer[offset + 1] << 8;
-                    break;
-
-                case 2:
-                    v = buffer[offset];
-                    v |= (UInt64)buffer[offset + 1] << 8;
-                    break;
-
-                case 1:
-                    v = buffer[offset];
-                    break;
-            }
-
+            UInt64 v = BinaryOperations.ReadTail64(buffer, offset);
             hash ^= Mum(v, TP);
 
             Finalize:

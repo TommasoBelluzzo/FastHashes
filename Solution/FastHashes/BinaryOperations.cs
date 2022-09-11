@@ -14,6 +14,258 @@ namespace FastHashes
         #endregion
 
         #region Methods
+        /// <summary>Reads a 2-bytes unsigned integer from the specified byte span.</summary>
+        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
+        /// <param name="offset">The buffer start offset.</param>
+        /// <returns>An <see cref="T:System.UInt16"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static UInt16 Read16(ReadOnlySpan<Byte> buffer, Int32 offset)
+        {
+            UInt16 v;
+
+            if (s_IsLittleEndian)
+                v = BinaryPrimitives.ReadUInt16LittleEndian(buffer.Slice(offset, 2));
+            else
+                v = BinaryPrimitives.ReadUInt16BigEndian(buffer.Slice(offset, 2));
+
+            return v;
+        }
+
+        /// <summary>Reads a 4-bytes unsigned integer from the specified byte span.</summary>
+        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
+        /// <param name="offset">The buffer start offset.</param>
+        /// <returns>An <see cref="T:System.UInt32"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static UInt32 Read32(ReadOnlySpan<Byte> buffer, Int32 offset)
+        {
+            UInt32 v;
+
+            if (s_IsLittleEndian)
+                v = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Slice(offset, 4));
+            else
+                v = BinaryPrimitives.ReadUInt32BigEndian(buffer.Slice(offset, 4));
+
+            return v;
+        }
+
+        /// <summary>Reads a 8-bytes unsigned integer from the specified byte span.</summary>
+        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
+        /// <param name="offset">The span start offset.</param>
+        /// <returns>An <see cref="T:System.UInt64"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static UInt64 Read64(ReadOnlySpan<Byte> buffer, Int32 offset)
+        {
+            UInt64 v;
+
+            if (s_IsLittleEndian)
+                v = BinaryPrimitives.ReadUInt64LittleEndian(buffer.Slice(offset, 8));
+            else
+                v = BinaryPrimitives.ReadUInt64BigEndian(buffer.Slice(offset, 8));
+
+            return v;
+        }
+
+        /// <summary>Reads an array of 2-bytes unsigned integers from the specified byte pointer.</summary>
+        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
+        /// <param name="offset">The span start offset.</param>
+        /// <param name="count">The number of values to read.</param>
+        /// <returns>An array of <see cref="T:System.UInt16"/> values.</returns>
+        public static UInt16[] ReadArray16(ReadOnlySpan<Byte> buffer, Int32 offset, Int32 count)
+        {
+            UInt16[] array = new UInt16[count];
+
+            for (Int32 i = 0; i < count; ++i)
+                array[i] = Read16(buffer, offset + (i * 2));
+
+            return array;
+        }
+
+        /// <summary>Reads an array of 4-bytes unsigned integers from the specified byte span.</summary>
+        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
+        /// <param name="offset">The span start offset.</param>
+        /// <param name="count">The number of values to read.</param>
+        /// <returns>An array of <see cref="T:System.UInt32"/> values.</returns>
+        public static UInt32[] ReadArray32(ReadOnlySpan<Byte> buffer, Int32 offset, Int32 count)
+        {
+            UInt32[] array = new UInt32[count];
+
+            for (Int32 i = 0; i < count; ++i)
+                array[i] = Read32(buffer, offset + (i * 4));
+
+            return array;
+        }
+
+        /// <summary>Reads an array of 8-bytes unsigned integers from the specified byte span.</summary>
+        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
+        /// <param name="offset">The span start offset.</param>
+        /// <param name="count">The number of values to read.</param>
+        /// <returns>An array of <see cref="T:System.UInt64"/> values.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static UInt64[] ReadArray64(ReadOnlySpan<Byte> buffer, Int32 offset, Int32 count)
+        {
+            UInt64[] array = new UInt64[count];
+
+            for (Int32 i = 0; i < count; ++i)
+                array[i] = Read64(buffer, offset + (i * 8));
+
+            return array;
+        }
+
+        /// <summary>Reads a 4-bytes unsigned integer from the tail of the byte span.</summary>
+        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
+        /// <param name="offset">The buffer start offset.</param>
+        /// <returns>An <see cref="T:System.UInt32"/> value.</returns>
+        public static uint ReadTail32(ReadOnlySpan<Byte> buffer, Int32 offset)
+        {
+            ReadOnlySpan<Byte> slice = buffer.Slice(offset);
+
+            UInt32 v;
+
+            switch (slice.Length)
+            {
+                case 4:
+                    v = Read32(slice, 0);
+                    break;
+
+                case 3:
+                    v = slice[0] | ((UInt32)Read16(slice, 1) << 8);
+                    break;
+
+                case 2:
+                    v = Read16(slice, 0);
+                    break;
+
+                case 1:
+                    v = slice[0];
+                    break;
+
+                default:
+                    v = 0u;
+                    break;
+            }
+
+            return v;
+        }
+
+        /// <summary>Reads a 8-bytes unsigned integer from the tail of the byte span.</summary>
+        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
+        /// <param name="offset">The buffer start offset.</param>
+        /// <returns>An <see cref="T:System.UInt64"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static UInt64 ReadTail64(ReadOnlySpan<Byte> buffer, Int32 offset)
+        {
+            ReadOnlySpan<Byte> slice = buffer.Slice(offset);
+
+            UInt64 v;
+
+            switch (slice.Length)
+            {
+                case 8:
+                    v = Read64(slice, 0);
+                    break;
+
+                case 7:
+                    v = Read32(slice, 0) | ((UInt64)Read16(slice, 4) << 32) | ((UInt64)slice[6] << 48);
+                    break;
+
+                case 6:
+                    v = Read32(slice, 0) | ((UInt64)Read16(slice, 4) << 32);
+                    break;
+
+                case 5:
+                    v = Read32(slice, 0) | ((UInt64)slice[4] << 32);
+                    break;
+
+                case 4:
+                    v = Read32(slice, 0);
+                    break;
+
+                case 3:
+                    v = slice[0] | ((UInt32)Read16(slice, 1) << 8);
+                    break;
+
+                case 2:
+                    v = Read16(slice, 0);
+                    break;
+
+                case 1:
+                    v = slice[0];
+                    break;
+
+                default:
+                    v = 0ul;
+                    break;
+            }
+
+            return v;
+        }
+
+        /// <summary>Rotates a 2-bytes unsigned integer left by the specified number of bits.</summary>
+        /// <param name="value">The <see cref="T:System.UInt16"/> to rotate.</param>
+        /// <param name="rotation">The number of bits to rotate.</param>
+        /// <returns>An <see cref="T:System.UInt16"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static UInt16 RotateLeft(UInt16 value, Int32 rotation)
+        {
+            rotation &= 0x0F;
+            return (UInt16)((value << rotation) | (value >> (16 - rotation)));
+        }
+
+        /// <summary>Rotates a 4-bytes unsigned integer left by the specified number of bits.</summary>
+        /// <param name="value">The <see cref="T:System.UInt32"/> to rotate.</param>
+        /// <param name="rotation">The number of bits to rotate.</param>
+        /// <returns>An <see cref="T:System.UInt32"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static UInt32 RotateLeft(UInt32 value, Int32 rotation)
+        {
+            rotation &= 0x1F;
+            return (value << rotation) | (value >> (32 - rotation));
+        }
+
+        /// <summary>Rotates a 8-bytes unsigned integer left by the specified number of bits.</summary>
+        /// <param name="value">The <see cref="T:System.UInt64"/> to rotate.</param>
+        /// <param name="rotation">The number of bits to rotate.</param>
+        /// <returns>An <see cref="T:System.UInt64"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static UInt64 RotateLeft(UInt64 value, Int32 rotation)
+        {
+            rotation &= 0x3F;
+            return (value << rotation) | (value >> (64 - rotation));
+        }
+
+        /// <summary>Rotates a 2-bytes unsigned integer right by the specified number of bits.</summary>
+        /// <param name="value">The <see cref="T:System.UInt16"/> to rotate.</param>
+        /// <param name="rotation">The number of bits to rotate.</param>
+        /// <returns>An <see cref="T:System.UInt16"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static UInt16 RotateRight(UInt16 value, Int32 rotation)
+        {
+            rotation &= 0x0F;
+            return (UInt16)((value >> rotation) | (value << (16 - rotation)));
+        }
+
+        /// <summary>Rotates a 4-bytes unsigned integer right by the specified number of bits.</summary>
+        /// <param name="value">The <see cref="T:System.UInt32"/> to rotate.</param>
+        /// <param name="rotation">The number of bits to rotate.</param>
+        /// <returns>An <see cref="T:System.UInt32"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static UInt32 RotateRight(UInt32 value, Int32 rotation)
+        {
+            rotation &= 0x1F;
+            return (value >> rotation) | (value << (32 - rotation));
+        }
+
+        /// <summary>Rotates a 8-bytes unsigned integer right by the specified number of bits.</summary>
+        /// <param name="value">The <see cref="T:System.UInt64"/> to rotate.</param>
+        /// <param name="rotation">The number of bits to rotate.</param>
+        /// <returns>An <see cref="T:System.UInt64"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static UInt64 RotateRight(UInt64 value, Int32 rotation)
+        {
+            rotation &= 0x3F;
+            return (value >> rotation) | (value << (64 - rotation));
+        }
+
         /// <summary>Converts a 4-bytes unsigned integer to a byte array.</summary>
         /// <param name="value">The <see cref="T:System.UInt32"/> to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
@@ -134,169 +386,6 @@ namespace FastHashes
             }
 
             return array;
-        }
-
-        /// <summary>Reads a 2-bytes unsigned integer from the specified byte span.</summary>
-        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
-        /// <param name="offset">The buffer start offset.</param>
-        /// <returns>An <see cref="T:System.UInt16"/> value.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt16 Read16(ReadOnlySpan<Byte> buffer, Int32 offset)
-        {
-            UInt16 v;
-
-            if (s_IsLittleEndian)
-                v = BinaryPrimitives.ReadUInt16LittleEndian(buffer.Slice(offset, 2));
-            else
-                v = BinaryPrimitives.ReadUInt16BigEndian(buffer.Slice(offset, 2));
-
-            return v;
-        }
-
-        /// <summary>Reads a 4-bytes unsigned integer from the specified byte span.</summary>
-        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
-        /// <param name="offset">The buffer start offset.</param>
-        /// <returns>An <see cref="T:System.UInt32"/> value.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt32 Read32(ReadOnlySpan<Byte> buffer, Int32 offset)
-        {
-            UInt32 v;
-
-            if (s_IsLittleEndian)
-                v = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Slice(offset, 4));
-            else
-                v = BinaryPrimitives.ReadUInt32BigEndian(buffer.Slice(offset, 4));
-
-            return v;
-        }
-
-        /// <summary>Reads a 8-bytes unsigned integer from the specified byte span.</summary>
-        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
-        /// <param name="offset">The span start offset.</param>
-        /// <returns>An <see cref="T:System.UInt64"/> value.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt64 Read64(ReadOnlySpan<Byte> buffer, Int32 offset)
-        {
-            UInt64 v;
-
-            if (s_IsLittleEndian)
-                v = BinaryPrimitives.ReadUInt64LittleEndian(buffer.Slice(offset, 8));
-            else
-                v = BinaryPrimitives.ReadUInt64BigEndian(buffer.Slice(offset, 8));
-
-            return v;
-        }
-
-        /// <summary>Reads an array of 2-bytes unsigned integers from the specified byte pointer.</summary>
-        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
-        /// <param name="offset">The span start offset.</param>
-        /// <param name="count">The number of values to read.</param>
-        /// <returns>An array of <see cref="T:System.UInt16"/> values.</returns>
-        public static UInt16[] ReadArray16(ReadOnlySpan<Byte> buffer, Int32 offset, Int32 count)
-        {
-            UInt16[] array = new UInt16[count];
-
-            for (Int32 i = 0; i < count; ++i)
-                array[i] = Read16(buffer, offset + (i * 2));
-
-            return array;
-        }
-
-        /// <summary>Reads an array of 4-bytes unsigned integers from the specified byte span.</summary>
-        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
-        /// <param name="offset">The span start offset.</param>
-        /// <param name="count">The number of values to read.</param>
-        /// <returns>An array of <see cref="T:System.UInt32"/> values.</returns>
-        public static UInt32[] ReadArray32(ReadOnlySpan<Byte> buffer, Int32 offset, Int32 count)
-        {
-            UInt32[] array = new UInt32[count];
-
-            for (Int32 i = 0; i < count; ++i)
-                array[i] = Read32(buffer, offset + (i * 4));
-
-            return array;
-        }
-
-        /// <summary>Reads an array of 8-bytes unsigned integers from the specified byte span.</summary>
-        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
-        /// <param name="offset">The span start offset.</param>
-        /// <param name="count">The number of values to read.</param>
-        /// <returns>An array of <see cref="T:System.UInt64"/> values.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt64[] ReadArray64(ReadOnlySpan<Byte> buffer, Int32 offset, Int32 count)
-        {
-            UInt64[] array = new UInt64[count];
-
-            for (Int32 i = 0; i < count; ++i)
-                array[i] = Read64(buffer, offset + (i * 8));
-
-            return array;
-        }
-
-        /// <summary>Rotates a 2-bytes unsigned integer left by the specified number of bits.</summary>
-        /// <param name="value">The <see cref="T:System.UInt16"/> to rotate.</param>
-        /// <param name="rotation">The number of bits to rotate.</param>
-        /// <returns>An <see cref="T:System.UInt16"/> value.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt16 RotateLeft(UInt16 value, Int32 rotation)
-        {
-            rotation &= 0x0F;
-            return (UInt16)((value << rotation) | (value >> (16 - rotation)));
-        }
-
-        /// <summary>Rotates a 4-bytes unsigned integer left by the specified number of bits.</summary>
-        /// <param name="value">The <see cref="T:System.UInt32"/> to rotate.</param>
-        /// <param name="rotation">The number of bits to rotate.</param>
-        /// <returns>An <see cref="T:System.UInt32"/> value.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt32 RotateLeft(UInt32 value, Int32 rotation)
-        {
-            rotation &= 0x1F;
-            return (value << rotation) | (value >> (32 - rotation));
-        }
-
-        /// <summary>Rotates a 8-bytes unsigned integer left by the specified number of bits.</summary>
-        /// <param name="value">The <see cref="T:System.UInt64"/> to rotate.</param>
-        /// <param name="rotation">The number of bits to rotate.</param>
-        /// <returns>An <see cref="T:System.UInt64"/> value.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt64 RotateLeft(UInt64 value, Int32 rotation)
-        {
-            rotation &= 0x3F;
-            return (value << rotation) | (value >> (64 - rotation));
-        }
-
-        /// <summary>Rotates a 2-bytes unsigned integer right by the specified number of bits.</summary>
-        /// <param name="value">The <see cref="T:System.UInt16"/> to rotate.</param>
-        /// <param name="rotation">The number of bits to rotate.</param>
-        /// <returns>An <see cref="T:System.UInt16"/> value.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt16 RotateRight(UInt16 value, Int32 rotation)
-        {
-            rotation &= 0x0F;
-            return (UInt16)((value >> rotation) | (value << (16 - rotation)));
-        }
-
-        /// <summary>Rotates a 4-bytes unsigned integer right by the specified number of bits.</summary>
-        /// <param name="value">The <see cref="T:System.UInt32"/> to rotate.</param>
-        /// <param name="rotation">The number of bits to rotate.</param>
-        /// <returns>An <see cref="T:System.UInt32"/> value.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt32 RotateRight(UInt32 value, Int32 rotation)
-        {
-            rotation &= 0x1F;
-            return (value >> rotation) | (value << (32 - rotation));
-        }
-
-        /// <summary>Rotates a 8-bytes unsigned integer right by the specified number of bits.</summary>
-        /// <param name="value">The <see cref="T:System.UInt64"/> to rotate.</param>
-        /// <param name="rotation">The number of bits to rotate.</param>
-        /// <returns>An <see cref="T:System.UInt64"/> value.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UInt64 RotateRight(UInt64 value, Int32 rotation)
-        {
-            rotation &= 0x3F;
-            return (value >> rotation) | (value << (64 - rotation));
         }
 
         /// <summary>Swaps the value of two 2-bytes unsigned integers.</summary>

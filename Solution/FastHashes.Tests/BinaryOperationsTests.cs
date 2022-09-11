@@ -45,6 +45,18 @@ namespace FastHashes.Tests
         }
 
         [Theory]
+        [MemberData(nameof(BinaryOperationsTestsCases.DataReadTail), MemberType=typeof(BinaryOperationsTestsCases))]
+        public void ReadTailTest<T>(Func<T> method, T expectedValue) where T : struct, IComparable, IConvertible, IFormattable
+        {
+            T actualValue = method();
+
+            m_Output.WriteLine($"EXPECTED: {expectedValue}");
+            m_Output.WriteLine($"ACTUAL: {actualValue}");
+
+            Assert.Equal(expectedValue, actualValue);
+        }
+
+        [Theory]
         [MemberData(nameof(BinaryOperationsTestsCases.DataRotation), MemberType=typeof(BinaryOperationsTestsCases))]
         public void RotationTest<T>(Func<T> method, T expectedValue)
         {

@@ -56,7 +56,7 @@ namespace FastHashes.Tests
                     hashes.Add((Encoding.UTF8.GetString(buffer, 0, lineBytesLength + j), hash.ComputeHash(buffer, 0, lineBytesLength + j)));
             }
 
-            Boolean cte = Utilities.CollisionsThresholdExceeded(hashes, hashBytes);
+            Boolean cte = MathUtilities.CollisionsThresholdExceeded(hashes, hashBytes);
 
             m_Output.WriteLine($"NAME: {hashName}");
             m_Output.WriteLine($"RESULT: {(cte ? "FAILURE" : "SUCCESS")}");

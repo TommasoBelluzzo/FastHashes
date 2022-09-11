@@ -82,7 +82,6 @@ namespace FastHashes
             }
 
             Int32 blocks = count / 16;
-            Int32 remainder = count & 15;
 
             if (blocks > 0)
             {
@@ -109,6 +108,8 @@ namespace FastHashes
                 hash += P5;
 
             hash += (UInt32)count;
+
+            Int32 remainder = count & 15;
 
             if (remainder > 0)
             {
@@ -267,7 +268,6 @@ namespace FastHashes
             }
 
             Int32 blocks = count / 32;
-            Int32 remainder = count & 31;
 
             if (blocks > 0)
             {
@@ -299,6 +299,8 @@ namespace FastHashes
                 hash += P5;
 
             hash += (UInt64)count;
+
+            Int32 remainder = count & 31;
 
             if (remainder > 0)
             {

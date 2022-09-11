@@ -77,10 +77,9 @@ namespace FastHashes
                 offset += 32;
             }
 
-            Span<Byte> remainder = new Span<Byte>(BinaryOperations.ToArray64(b));
-            buffer.Slice(offset).CopyTo(remainder);
-
-            b = BinaryOperations.ReadArray64(remainder, 0, 4);
+            Span<Byte> residue = new Span<Byte>(BinaryOperations.ToArray64(b));
+            buffer.Slice(offset).CopyTo(residue);
+            b = BinaryOperations.ReadArray64(residue, 0, 4);
 
             for (Int32 i = 0; i < 6; ++i)
                 Pengy(seed, b, ref s);

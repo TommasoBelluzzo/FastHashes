@@ -194,7 +194,6 @@ namespace FastHashes
                     goto Finalize;
 
                 Int32 blocks = count / 16;
-                Int32 remainder = count & 15;
 
                 while (blocks-- > 0)
                 {
@@ -211,6 +210,7 @@ namespace FastHashes
                     hash2 = Mur(hash2, hash1, v, 31, N2);
                 }
 
+                Int32 remainder = count & 15;
                 UInt64 v1 = 0ul;
                 UInt64 v2 = 0ul;
 
@@ -350,7 +350,6 @@ namespace FastHashes
                     goto Finalize;
 
                 Int32 blocks = count / 16;
-                Int32 remainder = count & 15;
 
                 while (blocks-- > 0)
                 {
@@ -376,6 +375,7 @@ namespace FastHashes
                     hash4 = Mur(hash4, hash1, v, 13, N4);
                 }
 
+                Int32 remainder = count & 15;
                 UInt32 v1 = 0u;
                 UInt32 v2 = 0u;
                 UInt32 v3 = 0u;
@@ -517,7 +517,6 @@ namespace FastHashes
                 goto Finalize;
 
             Int32 blocks = count / 4;
-            Int32 remainder = count & 3;
 
             while (blocks-- > 0)
             {
@@ -525,16 +524,12 @@ namespace FastHashes
                 offset += 4;
             }
 
-            UInt32 v = 0u;
+            Int32 remainder = count & 3;
 
-            switch (remainder)
+            if (remainder > 0)
             {
-                case 3: v ^= (UInt32)buffer[offset + 2] << 16; goto case 2;
-                case 2: v ^= (UInt32)buffer[offset + 1] << 8; goto case 1;
-                case 1:
-                    v ^= buffer[offset];
-                    hash ^= Mix(v);
-                    break;
+                UInt32 v = BinaryOperations.ReadTail32(buffer, offset);
+                hash ^= Mix(v);
             }
 
             Finalize:

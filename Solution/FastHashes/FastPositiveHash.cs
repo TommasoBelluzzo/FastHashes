@@ -142,149 +142,6 @@ namespace FastHashes
                 h = (a * c) + (adbc >> 32) + (carry << 32) + ((l < bd) ? 1ul : 0ul);
             }
 
-            protected static UInt32 ExtractTail32(ReadOnlySpan<Byte> buffer, Int32 offset, Int32 remainder)
-            {
-                UInt32 t = 0u;
-
-                if (BitConverter.IsLittleEndian)
-                {
-                    switch (remainder & 3)
-                    {
-                        case 0:
-                            t = BinaryOperations.Read32(buffer, offset);
-                            break;
-
-                        case 3:
-                            t = (UInt32)buffer[offset + 2] << 16;
-                            goto case 2;
-
-                        case 2:
-                            t += BinaryOperations.Read16(buffer, offset);
-                            break;
-
-                        case 1:
-                            t = buffer[offset];
-                            break;
-                    }
-                }
-                else
-                {
-                    switch (remainder & 3)
-                    {
-                        case 0:
-                            t += buffer[offset + 3];
-                            t <<= 8;
-                            goto case 3;
-
-                        case 3:
-                            t += buffer[offset + 2];
-                            t <<= 8;
-                            goto case 2;
-
-                        case 2:
-                            t += buffer[offset + 1];
-                            t <<= 8;
-                            goto case 1;
-
-                        case 1:
-                            t += buffer[offset];
-                            break;
-                    }
-                }
-
-                return t;
-            }
-
-            protected static UInt64 ExtractTail64(ReadOnlySpan<Byte> buffer, Int32 offset, Int32 remainder)
-            {
-                UInt64 t = 0ul;
-
-                if (BitConverter.IsLittleEndian)
-                {
-                    switch (remainder & 7)
-                    {
-                        case 0:
-                            t = BinaryOperations.Read64(buffer, offset);
-                            break;
-
-                        case 7:
-                            t = (UInt64)buffer[offset + 6] << 8;
-                            goto case 6;
-
-                        case 6:
-                            t += buffer[offset + 5];
-                            t <<= 8;
-                            goto case 5;
-
-                        case 5:
-                            t += buffer[offset + 4];
-                            t <<= 32;
-                            goto case 4;
-
-                        case 4:
-                            t += BinaryOperations.Read32(buffer, offset);
-                            break;
-
-                        case 3:
-                            t = (UInt64)buffer[offset + 2] << 16;
-                            goto case 2;
-
-                        case 2:
-                            t += BinaryOperations.Read16(buffer, offset);
-                            break;
-
-                        case 1:
-                            t = buffer[offset];
-                            break;
-                    }
-                }
-                else
-                {
-                    switch (remainder & 7)
-                    {
-                        case 0:
-                            t = (UInt64)buffer[offset + 7] << 8;
-                            goto case 7;
-
-                        case 7:
-                            t += buffer[offset + 6];
-                            t <<= 8;
-                            goto case 6;
-
-                        case 6:
-                            t += buffer[offset + 5];
-                            t <<= 8;
-                            goto case 5;
-
-                        case 5:
-                            t += buffer[offset + 4];
-                            t <<= 8;
-                            goto case 4;
-
-                        case 4:
-                            t += buffer[offset + 3];
-                            t <<= 8;
-                            goto case 3;
-
-                        case 3:
-                            t += buffer[offset + 2];
-                            t <<= 8;
-                            goto case 2;
-
-                        case 2:
-                            t += buffer[offset + 1];
-                            t <<= 8;
-                            goto case 1;
-
-                        case 1:
-                            t += buffer[offset];
-                            break;
-                    }
-                }
-
-                return t;
-            }
-
             public abstract Byte[] ComputeHash(ReadOnlySpan<Byte> buffer);
             #endregion
         }
@@ -410,9 +267,8 @@ namespace FastHashes
                     case 3:
                     case 2:
                     case 1:
-                        UInt32 t = ExtractTail32(buffer, offset, remainder);
-                        UInt32 v = t & (~0u >> (((4 - remainder) & 3) << 3));
-                        MixT(ref b, ref a, v, P321);
+                        UInt32 t = BinaryOperations.ReadTail32(buffer, offset);
+                        MixT(ref b, ref a, t, P321);
                         break;
                 }
 
@@ -555,9 +411,8 @@ namespace FastHashes
                     case 3:
                     case 2:
                     case 1:
-                        UInt64 t = ExtractTail64(buffer, offset, remainder);
-                        UInt64 v = t & (~0ul >> (((8 - remainder) & 7) << 3));
-                        a += MixT(v, P641);
+                        UInt64 t = BinaryOperations.ReadTail64(buffer, offset);
+                        a += MixT(t, P641);
                         break;
                 }
 
@@ -697,9 +552,8 @@ namespace FastHashes
                     case 3:
                     case 2:
                     case 1:
-                        UInt64 t = ExtractTail64(buffer, offset, remainder);
-                        UInt64 v = t & (~0ul >> (((8 - remainder) & 7) << 3));
-                        MixT(ref b, ref a, v, P641);
+                        UInt64 t = BinaryOperations.ReadTail64(buffer, offset);
+                        MixT(ref b, ref a, t, P641);
                         break;
                 }
 

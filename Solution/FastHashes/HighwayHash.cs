@@ -165,7 +165,6 @@ namespace FastHashes
                 goto Finalize;
 
             Int32 blocks = count / 32;
-            Int32 remainder = count & 31;
 
             while (blocks-- > 0)
             {
@@ -174,6 +173,8 @@ namespace FastHashes
 
                 Update(ref m0, ref m1, ref v0, ref v1, k);
             }
+
+            Int32 remainder = count & 31;
 
             if (remainder > 0)
             {

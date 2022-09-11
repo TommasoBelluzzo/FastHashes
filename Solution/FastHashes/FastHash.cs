@@ -69,7 +69,6 @@ namespace FastHashes
             hash ^= (UInt64)count * M;
 
             Int32 blocks = count / 8;
-            Int32 remainder = count & 7;
 
             while (blocks-- > 0)
             {
@@ -77,20 +76,12 @@ namespace FastHashes
                 offset += 8;
             }
 
-            UInt64 v = 0u;
+            Int32 remainder = count & 7;
 
-            switch (remainder)
+            if (remainder > 0)
             {
-                case 7: v ^= (UInt64)buffer[offset + 6] << 48; goto case 6;
-                case 6: v ^= (UInt64)buffer[offset + 5] << 40; goto case 5;
-                case 5: v ^= (UInt64)buffer[offset + 4] << 32; goto case 4;
-                case 4: v ^= (UInt64)buffer[offset + 3] << 24; goto case 3;
-                case 3: v ^= (UInt64)buffer[offset + 2] << 16; goto case 2;
-                case 2: v ^= (UInt64)buffer[offset + 1] << 8; goto case 1;
-                case 1:
-                    v ^= buffer[offset];
-                    hash = Mix(hash, v);
-                    break;
+                UInt64 v = BinaryOperations.ReadTail64(buffer, offset);
+                hash = Mix(hash, v);
             }
 
             Finalize:

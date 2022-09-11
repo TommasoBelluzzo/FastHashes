@@ -9,7 +9,6 @@ namespace FastHashes.Tests
     {
         #region Test Cases
         private static readonly Byte[] s_Buffer = new Byte[] { 174, 9, 151, 129, 39, 0, 0, 254, 147, 105, 81, 36, 59, 76, 58, 227 };
-        private static readonly String[] s_ValidTypes = new String[] { "UInt16", "UInt32", "UInt64" };
 
         private static readonly List<dynamic> s_TestCasesRead = new List<dynamic>
         {
@@ -29,6 +28,24 @@ namespace FastHashes.Tests
             new TestCaseArray<UInt32>(() => BinaryOperations.ReadArray32(new ReadOnlySpan<Byte>(s_Buffer), 2, 3), new UInt32[] { 2589079, 1771306496, 1278944337 }),
             new TestCaseArray<UInt64>(() => BinaryOperations.ReadArray64(new ReadOnlySpan<Byte>(s_Buffer), 0, 2), new UInt64[] { 18302629055311579566, 16373483212154956179 }),
             new TestCaseArray<UInt64>(() => BinaryOperations.ReadArray64(new ReadOnlySpan<Byte>(s_Buffer), 3, 1), new UInt64[] { 5866382708757768065 })
+        };
+
+        private static readonly List<dynamic> s_TestCasesReadTail = new List<dynamic>
+        {
+            new TestCase<UInt32>(() => BinaryOperations.ReadTail32(new ReadOnlySpan<Byte>(s_Buffer), 0), 0u),
+            new TestCase<UInt32>(() => BinaryOperations.ReadTail32(new ReadOnlySpan<Byte>(s_Buffer), 12), 3812248635u),
+            new TestCase<UInt32>(() => BinaryOperations.ReadTail32(new ReadOnlySpan<Byte>(s_Buffer), 13), 14891596u),
+            new TestCase<UInt32>(() => BinaryOperations.ReadTail32(new ReadOnlySpan<Byte>(s_Buffer), 14), 58170u),
+            new TestCase<UInt32>(() => BinaryOperations.ReadTail32(new ReadOnlySpan<Byte>(s_Buffer), 15), 227u),
+            new TestCase<UInt64>(() => BinaryOperations.ReadTail64(new ReadOnlySpan<Byte>(s_Buffer), 0), 0ul),
+            new TestCase<UInt64>(() => BinaryOperations.ReadTail64(new ReadOnlySpan<Byte>(s_Buffer), 8), 16373483212154956179ul),
+            new TestCase<UInt64>(() => BinaryOperations.ReadTail64(new ReadOnlySpan<Byte>(s_Buffer), 9), 63958918797480297ul),
+            new TestCase<UInt64>(() => BinaryOperations.ReadTail64(new ReadOnlySpan<Byte>(s_Buffer), 10), 249839526552657ul),
+            new TestCase<UInt64>(() => BinaryOperations.ReadTail64(new ReadOnlySpan<Byte>(s_Buffer), 11), 975935650596ul),
+            new TestCase<UInt64>(() => BinaryOperations.ReadTail64(new ReadOnlySpan<Byte>(s_Buffer), 12), 3812248635ul),
+            new TestCase<UInt64>(() => BinaryOperations.ReadTail64(new ReadOnlySpan<Byte>(s_Buffer), 13), 14891596ul),
+            new TestCase<UInt64>(() => BinaryOperations.ReadTail64(new ReadOnlySpan<Byte>(s_Buffer), 14), 58170ul),
+            new TestCase<UInt64>(() => BinaryOperations.ReadTail64(new ReadOnlySpan<Byte>(s_Buffer), 15), 227ul)
         };
 
         private static readonly List<dynamic> s_TestCasesRotation = new List<dynamic>
@@ -63,6 +80,12 @@ namespace FastHashes.Tests
         public static IEnumerable<Object[]> DataReadArray()
         {
             foreach (dynamic testCase in s_TestCasesReadArray)
+                yield return (new Object[] { testCase.Method, testCase.ExpectedValue });
+        }
+
+        public static IEnumerable<Object[]> DataReadTail()
+        {
+            foreach (dynamic testCase in s_TestCasesReadTail)
                 yield return (new Object[] { testCase.Method, testCase.ExpectedValue });
         }
 

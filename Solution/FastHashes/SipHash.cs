@@ -89,7 +89,6 @@ namespace FastHashes
                 goto Finalize;
 
             Int32 blocks = count / 4;
-            Int32 remainder = count & 3;
 
             while (blocks-- > 0)
             {
@@ -104,12 +103,7 @@ namespace FastHashes
                 v[0] ^= m;
             }
 
-            switch (remainder)
-            {
-                case 3: b |= (UInt32)buffer[offset + 2] << 16; goto case 2;
-                case 2: b |= (UInt32)buffer[offset + 1] << 8; goto case 1;
-                case 1: b |= buffer[offset]; break;
-            }
+            b |= BinaryOperations.ReadTail32(buffer, offset);
 
             Finalize:
 
@@ -261,7 +255,6 @@ namespace FastHashes
                 goto Finalize;
 
             Int32 blocks = count / 8;
-            Int32 remainder = count & 7;
 
             while (blocks-- > 0)
             {
@@ -276,16 +269,7 @@ namespace FastHashes
                 v[0] ^= m;
             }
 
-            switch (remainder)
-            {
-                case 7: b |= (UInt64)buffer[offset + 6] << 48; goto case 6;
-                case 6: b |= (UInt64)buffer[offset + 5] << 40; goto case 5;
-                case 5: b |= (UInt64)buffer[offset + 4] << 32; goto case 4;
-                case 4: b |= (UInt64)buffer[offset + 3] << 24; goto case 3;
-                case 3: b |= (UInt64)buffer[offset + 2] << 16; goto case 2;
-                case 2: b |= (UInt64)buffer[offset + 1] << 8; goto case 1;
-                case 1: b |= buffer[offset]; break;
-            }
+            b |= BinaryOperations.ReadTail64(buffer, offset);
 
             Finalize:
 

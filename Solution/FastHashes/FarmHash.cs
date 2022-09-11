@@ -166,7 +166,7 @@ namespace FastHashes
 
             for (Int32 i = 0; i < count; ++i)
             {
-                a = a * C1 + buffer[offset + i];
+                a = (a * C1) + buffer[offset + i];
                 b ^= a;
             }
 
@@ -380,8 +380,9 @@ namespace FastHashes
         {
             UInt32 a = buffer[offset] + ((UInt32)buffer[offset + (count >> 1)] << 8);
             UInt32 b = (UInt32)count + ((UInt32)buffer[offset + (count - 1)] << 2);
+            UInt64 hash = ShiftMix((a * K2) ^ (b * K0)) * K2;
 
-            return ShiftMix(a * K2 ^ b * K0) * K2;
+            return hash;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -393,7 +394,9 @@ namespace FastHashes
             UInt64 a = length + ((UInt64)BinaryOperations.Read32(buffer, offset) << 3);
             UInt64 b = BinaryOperations.Read32(buffer, offset + count - 4);
 
-            return HashLength16(a, b, m);
+            UInt64 hash = HashLength16(a, b, m);
+
+            return hash;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -407,7 +410,9 @@ namespace FastHashes
             UInt64 c = (BinaryOperations.RotateRight(b, 37) * m) + a;
             UInt64 d = (BinaryOperations.RotateRight(a, 25) + b) * m;
 
-            return HashLength16(c, d, m);
+            UInt64 hash = HashLength16(c, d, m);
+
+            return hash;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -422,7 +427,9 @@ namespace FastHashes
             UInt64 e = BinaryOperations.RotateRight(a + b, 43) + BinaryOperations.RotateRight(c, 30) + d;
             UInt64 f = a + BinaryOperations.RotateRight(b + K2, 18) + c;
 
-            return HashLength16(e, f, m);
+            UInt64 hash = HashLength16(e, f, m);
+
+            return hash;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -445,7 +452,9 @@ namespace FastHashes
             UInt64 i = BinaryOperations.RotateRight(e + f, 43) + BinaryOperations.RotateRight(g, 30) + h;
             UInt64 j = e + BinaryOperations.RotateRight(f + a, 18) + g;
 
-            return HashLength16(i, j, m);
+            UInt64 hash = HashLength16(i, j, m);
+
+            return hash;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -490,7 +499,9 @@ namespace FastHashes
             UInt64 a = HashLength16(v0, w0, m) + (ShiftMix(y) * K0) + z;
             UInt64 b = HashLength16(v1, w1, m) + x;
 
-            return HashLength16(a, b, m);
+            UInt64 hash = HashLength16(a, b, m);
+
+            return hash;
         }
 
         /// <inheritdoc/>
