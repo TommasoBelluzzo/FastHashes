@@ -26,6 +26,7 @@ tail ^= buffer[1] << 8
 tail ^= buffer[0]
 
 print(f'FastHash Tail: {tail}')
+print()
 
 ###############
 # HighwayHash #
@@ -54,9 +55,11 @@ elif mod4 > 0:
 
 for i in range(0,32,8):
     pi = packet[i:i+8]
-    ki = int.from_bytes(pi, byteorder, signed=False)
+    ki = int.from_bytes(pi, 'little', signed=False)
     print(f'HighwayHash P{i + 1}: {pi}')
     print(f'HighwayHash K{i + 1}: {ki}')
+
+print()
 
 ###########
 # MirHash #
@@ -69,6 +72,7 @@ for i in range(len(buffer)):
     tail = (tail >> 8) | (buffer[i] << 56)
 
 print(f'MirHash Tail: {tail}')
+print()
 
 ###########
 # MumHash #
@@ -77,9 +81,10 @@ print(f'MirHash Tail: {tail}')
 buffer = (16, 205, 33, 39, 6, 142, 199)
 tail = 0
 
-tail += int.from_bytes(buffer[0:4], byteorder, signed=False)
+tail += int.from_bytes(buffer[0:4], 'little', signed=False)
 tail |= buffer[6] << 48
 tail |= buffer[5] << 40
 tail |= buffer[4] << 32
 
 print(f'MumHash Tail: {tail}')
+print()
