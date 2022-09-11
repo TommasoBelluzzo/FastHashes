@@ -25,7 +25,7 @@ tail ^= buffer[2] << 16
 tail ^= buffer[1] << 8
 tail ^= buffer[0]
 
-print(f'FastHash: {tail}')
+print(f'FastHash Tail: {tail}')
 
 ###############
 # HighwayHash #
@@ -52,12 +52,11 @@ elif mod4 > 0:
     packet[17] = buffer[offset + (mod4 >> 1)]
     packet[18] = buffer[offset + (mod4 - 1)]
 
-k = []
-
-for i in range(0,remainder,8):
-    k.append(int.from_bytes(packet[i:i+8], byteorder, signed=False))
-
-print(f'HighwayHash: {k}')
+for i in range(0,32,8):
+    pi = packet[i:i+8]
+    ki = int.from_bytes(pi, byteorder, signed=False)
+    print(f'HighwayHash P{i + 1}: {pi}')
+    print(f'HighwayHash K{i + 1}: {ki}')
 
 ###########
 # MirHash #
@@ -69,7 +68,7 @@ tail = 0
 for i in range(len(buffer)):
     tail = (tail >> 8) | (buffer[i] << 56)
 
-print(f'MirHash: {tail}')
+print(f'MirHash Tail: {tail}')
 
 ###########
 # MumHash #
@@ -83,4 +82,4 @@ tail |= buffer[6] << 48
 tail |= buffer[5] << 40
 tail |= buffer[4] << 32
 
-print(f'MumHash: {tail}')
+print(f'MumHash Tail: {tail}')
