@@ -59,7 +59,7 @@ namespace FastHashes
 
             Int32 bufferLength = buffer.Length;
 
-            if ((offset < 0) || (offset >= bufferLength))
+            if ((offset < 0) || ((bufferLength > 0) && (offset >= bufferLength)))
                 throw new ArgumentOutOfRangeException(nameof(offset), "The offset parameter must be within the bounds of the data array.");
 
             if (count < 0)

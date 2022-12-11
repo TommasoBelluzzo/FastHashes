@@ -33,7 +33,7 @@ namespace FastHashes.Tests
 
             Assert.False(wordsCount == 0, "Fixture Words Empty");
 
-            Hash hash = hashInitializer((UInt32)(new Random()).Next());
+            Hash hash = hashInitializer((UInt32)((new Random()).Next()));
             Int32 hashBytes = hash.Length / 8;
 
             Byte filler = Convert.ToByte('!');
@@ -67,15 +67,50 @@ namespace FastHashes.Tests
         [Fact]
         public void ExceptionTest()
         {
-            FarmHash32 fh = new FarmHash32();
+            Hash h = new FarmHash32();
 
-            Assert.Throws<ArgumentNullException>(() => { Byte[] buffer = null; fh.ComputeHash(buffer); });
-            Assert.Throws<ArgumentNullException>(() => { Byte[] buffer = null; fh.ComputeHash(buffer, 0, 10); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; fh.ComputeHash(buffer, -1, 10); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; fh.ComputeHash(buffer, 12, 10); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; fh.ComputeHash(buffer, 0, -1); });
-            Assert.Throws<ArgumentException>(() => { Byte[] buffer = new Byte[10]; fh.ComputeHash(buffer, 8, 5); });
-            Assert.Throws<ArgumentNullException>(() => { ReadOnlySpan<Byte> buffer = null; fh.ComputeHash(buffer); });
+            Assert.Throws<ArgumentNullException>(() => { Byte[] buffer = null; h.ComputeHash(buffer); });
+            Assert.Throws<ArgumentNullException>(() => { Byte[] buffer = null; h.ComputeHash(buffer, 0, 10); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; h.ComputeHash(buffer, -1, 10); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; h.ComputeHash(buffer, 12, 10); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { Byte[] buffer = new Byte[10]; h.ComputeHash(buffer, 0, -1); });
+            Assert.Throws<ArgumentException>(() => { Byte[] buffer = new Byte[10]; h.ComputeHash(buffer, 8, 5); });
+            Assert.Throws<ArgumentNullException>(() => { ReadOnlySpan<Byte> buffer = null; h.ComputeHash(buffer); });
+        }
+
+        [Theory]
+        [MemberData(nameof(HashTestsCases.DataLength), MemberType = typeof(HashTestsCases))]
+        public void LengthTest(String hashName, Func<UInt32, Hash> hashInitializer, Int32 maximumLength)
+        {
+            UInt32 seed = (UInt32)((new Random()).Next());
+            Hash hash = hashInitializer(seed);
+            RandomXorShift random = new RandomXorShift(seed);
+
+            List<String> errorLengths = new List<String>();
+
+            for (Int32 i = 0; i <= maximumLength; ++i)
+            {
+                Byte[] buffer = new Byte[i];
+                random.NextBytes(buffer);
+
+                try
+                {
+                    hash.ComputeHash(buffer);
+                }
+                catch
+                {
+                    errorLengths.Add(i.ToString());
+                }
+            }
+
+            m_Output.WriteLine($"NAME: {hashName}");
+
+            if (errorLengths.Count > 0)
+                m_Output.WriteLine($"ERROR LENGTHS: {String.Join(", ", errorLengths)}");
+            else
+                m_Output.WriteLine("NO ERROR LENGTHS");
+
+            Assert.True(errorLengths.Count == 0);
         }
 
         [Fact]
@@ -83,11 +118,11 @@ namespace FastHashes.Tests
         {
             Byte[] buffer = new Byte[] { 23, 134, 0, 237, 0, 81, 64, 64, 39, 5 };
 
-            FarmHash32 fh = new FarmHash32();
-            Byte[] hash1 = fh.ComputeHash(buffer);
-            Byte[] hash2 = fh.ComputeHash(buffer, buffer.Length);
-            Byte[] hash3 = fh.ComputeHash(buffer, 0, buffer.Length);
-            Byte[] hash4 = fh.ComputeHash(new ReadOnlySpan<Byte>(buffer));
+            Hash h = new FarmHash32();
+            Byte[] hash1 = h.ComputeHash(buffer);
+            Byte[] hash2 = h.ComputeHash(buffer, buffer.Length);
+            Byte[] hash3 = h.ComputeHash(buffer, 0, buffer.Length);
+            Byte[] hash4 = h.ComputeHash(new ReadOnlySpan<Byte>(buffer));
 
             Assert.Equal(hash1, hash2);
             Assert.Equal(hash1, hash3);

@@ -7,6 +7,10 @@ namespace FastHashes.Tests
 {
     public static class HashTestsCases
     {
+        #region Constants
+        private const Int32 MAXIMUM_LENGTH = 1024;
+        #endregion
+
         #region Test Cases
         private static readonly List<TestCase> s_TestCases = new List<TestCase>
         {
@@ -51,6 +55,12 @@ namespace FastHashes.Tests
         {
             foreach (TestCase testCase in s_TestCases)
                 yield return (new Object[] { testCase.HashName, testCase.HashInitializer });
+        }
+
+        public static IEnumerable<Object[]> DataLength()
+        {
+            foreach (TestCase testCase in s_TestCases)
+                yield return (new Object[] { testCase.HashName, testCase.HashInitializer, MAXIMUM_LENGTH });
         }
 
         public static IEnumerable<Object[]> DataValidation()
