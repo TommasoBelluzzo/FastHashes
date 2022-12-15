@@ -785,7 +785,9 @@ namespace FastHashes
                 seed2 = m_Seeds[1];
             }
 
-            if (count <= 3)
+            if (count == 0)
+                Hash0(out hash1, out hash2, seed1, seed2);
+            else if (count <= 3)
                 Hash1To3(out hash1, out hash2, buffer, offset, count, seed1, seed2);
             else if (count <= 7)
                 Hash4To7(out hash1, out hash2, buffer, offset, count, seed1, seed2);

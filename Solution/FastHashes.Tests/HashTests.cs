@@ -30,10 +30,11 @@ namespace FastHashes.Tests
         public void CollisionTest(String hashName, Func<UInt32,Hash> hashInitializer)
         {
             Int32 wordsCount = m_Fixture.Words.Count();
+            UInt32 seed = (UInt32)((new Random()).Next());
 
             Assert.False(wordsCount == 0, "Fixture Words Empty");
 
-            Hash hash = hashInitializer((UInt32)((new Random()).Next()));
+            Hash hash = hashInitializer(seed);
             Int32 hashBytes = hash.Length / 8;
 
             Byte filler = Convert.ToByte('!');
@@ -79,13 +80,13 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataLength), MemberType = typeof(HashTestsCases))]
-        public void LengthTest(String hashName, Func<UInt32, Hash> hashInitializer, Int32 maximumLength)
+        [MemberData(nameof(HashTestsCases.DataLength), MemberType=typeof(HashTestsCases))]
+        public void LengthTest(Type hashType, Func<UInt32,Hash> hashInitializer, Int32 maximumLength)
         {
             UInt32 seed = (UInt32)((new Random()).Next());
-            Hash hash = hashInitializer(seed);
             RandomXorShift random = new RandomXorShift(seed);
 
+            Hash hash = (Hash)Activator.CreateInstance(hashType);
             List<String> errorLengths = new List<String>();
 
             for (Int32 i = 0; i <= maximumLength; ++i)
@@ -103,14 +104,39 @@ namespace FastHashes.Tests
                 }
             }
 
-            m_Output.WriteLine($"NAME: {hashName}");
+            m_Output.WriteLine($"NAME: {hashType.Name}");
 
             if (errorLengths.Count > 0)
-                m_Output.WriteLine($"ERROR LENGTHS: {String.Join(", ", errorLengths)}");
+                m_Output.WriteLine($"PLAIN ERROR LENGTHS: {String.Join(", ", errorLengths)}");
             else
-                m_Output.WriteLine("NO ERROR LENGTHS");
+                m_Output.WriteLine("NO PLAIN ERROR LENGTHS");
 
             Assert.True(errorLengths.Count == 0);
+
+            hash = hashInitializer(seed);
+            errorLengths.Clear();
+
+            for (Int32 i = 0; i <= maximumLength; ++i)
+            {
+                Byte[] buffer = new Byte[i];
+                random.NextBytes(buffer);
+
+                try
+                {
+                    hash.ComputeHash(buffer);
+                }
+                catch
+                {
+                    errorLengths.Add(i.ToString());
+                }
+            }
+
+            m_Output.WriteLine($"NAME: {hashType.Name}");
+
+            if (errorLengths.Count > 0)
+                m_Output.WriteLine($"SEED ERROR LENGTHS: {String.Join(", ", errorLengths)}");
+            else
+                m_Output.WriteLine("NO SEED ERROR LENGTHS");
         }
 
         [Fact]
