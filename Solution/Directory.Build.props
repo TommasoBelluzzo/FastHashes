@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Authors>Tommaso Belluzzo</Authors>
     <Company />
-    <Copyright>Copyright ©2017-2023 Tommaso Belluzzo</Copyright>
+    <Copyright>Copyright ©2017-2024 Tommaso Belluzzo</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/TommasoBelluzzo/FastHashes</RepositoryUrl>
