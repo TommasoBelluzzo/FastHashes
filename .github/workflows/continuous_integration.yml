@@ -1,3 +1,4 @@
+
 name: Continuous Integration
 
 on:
@@ -13,18 +14,17 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    working-directory: Solution
-
 jobs:
   continuous_integration:
-    name: Continuous Integration
+    name: Continuous Integration (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
+    defaults:
+      run:
+        working-directory: Solution
     steps:
     - name: Repository Checkout
       uses: actions/checkout@v7
@@ -45,7 +45,7 @@ jobs:
         --no-restore
         --no-incremental
         --verbosity normal
-    - name: Test
+    - name: Test & Coverage Collection
       run: >-
         dotnet run
         --project FastHashes.Tests/FastHashes.Tests.csproj
@@ -57,18 +57,10 @@ jobs:
         --coverlet-output-format lcov
         --coverlet-skip-auto-props
         --results-directory Coverage
-    - name: Coverage Report Creation
-      uses: danielpalme/ReportGenerator-GitHub-Action@5.5.11
-      with:
-        reports: 'Solution/Coverage/**/*.info'
-        reporttypes: 'html;lcov'
-        targetdir: 'Solution/Coverage/Report'
-        verbosity: 'Info'
-    - name: Coverage Report Artifact
-      if: always()
+    - name: Coverage Artifact Upload
       uses: actions/upload-artifact@v4
       with:
-        name: Coverage Artifact (${{ matrix.os }})
+        name: coverage-${{ matrix.os }}
         path: Solution/Coverage/
         if-no-files-found: error
   coverage_publishing:
@@ -76,17 +68,19 @@ jobs:
     needs: continuous_integration
     runs-on: ubuntu-latest
     steps:
+    - name: Repository Checkout
+      uses: actions/checkout@v7
     - name: Coverage Artifacts Download
       uses: actions/download-artifact@v4
       with:
-        pattern: Coverage Artifact (*)
+        pattern: coverage-*
         path: Coverage
         merge-multiple: false
     - name: Coverage Artifacts Validation
       shell: bash
       run: |
         for os in ubuntu-latest windows-latest macos-latest; do
-          directory="Coverage/Coverage Artifact ($os)"
+          directory="Coverage/coverage-$os"
           if [ ! -d "$directory" ]; then
             echo "Missing coverage artifact: $os"
             exit 1
@@ -96,13 +90,18 @@ jobs:
             exit 1
           fi
         done
-    - name: Coverage Report Creation
-      uses: danielpalme/ReportGenerator-GitHub-Action@5.4.24
+    - name: Coverage Reports Generation
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.5.11
       with:
-        reports: 'Coverage/**/*.info'
-        reporttypes: 'Html;lcov'
+        reports: 'Coverage/coverage-*/**/*.info'
+        reporttypes: 'html;lcov'
         targetdir: 'Coverage/Report'
         verbosity: 'Info'
+    - name: Coverage Reports Validation
+      shell: bash
+      run: |
+        test -s Coverage/Report/lcov.info
+        test -s Coverage/Report/index.html
     - name: Coverage Report Upload
       uses: actions/upload-artifact@v4
       with:
