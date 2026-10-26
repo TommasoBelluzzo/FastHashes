@@ -58,7 +58,7 @@ jobs:
         --coverlet-skip-auto-props
         --results-directory Coverage
     - name: Coverage Report Creation
-      uses: danielpalme/ReportGenerator-GitHub-Action@5.4.24
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.5.11
       with:
         reports: 'Solution/Coverage/**/*.info'
         reporttypes: 'html;lcov'
@@ -103,13 +103,13 @@ jobs:
         reporttypes: 'Html;lcov'
         targetdir: 'Coverage/Report'
         verbosity: 'Info'
-    - name: Coverage Report Artifact
+    - name: Coverage Report Upload
       uses: actions/upload-artifact@v4
       with:
         name: Coverage Report
         path: Coverage/Report/
         if-no-files-found: error
-    - name: Coverage Report Upload
+    - name: Coverage Report Submission
       uses: coverallsapp/github-action@v2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
