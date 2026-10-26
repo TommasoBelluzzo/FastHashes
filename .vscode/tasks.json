@@ -35,24 +35,6 @@
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "Debug",
-      "type": "process",
-      "command": "dotnet",
-      "args": [
-        "test",
-        "${workspaceFolder}/Solution/FastHashes.Tests/FastHashes.Tests.csproj",
-        "--configuration",
-        "Debug",
-        "-p:Platform=AnyCPU"
-      ],
-      "options": {
-        "env": {
-          "VSTEST_HOST_DEBUG": "1"
-        }
-      },
-      "problemMatcher": []
-    },
-    {
       "label": "Clean All",
       "type": "shell",
       "command": "Get-ChildItem -LiteralPath '${workspaceFolder}/Solution' -Directory -Recurse -Force -ErrorAction SilentlyContinue | Where-Object { $_.Name -in @('bin','obj') } | Sort-Object FullName -Descending | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue; @('${workspaceFolder}/Solution/Output','${workspaceFolder}/Solution/Coverage','${workspaceFolder}/Solution/TestResults','${workspaceFolder}/Package') | ForEach-Object { Remove-Item -LiteralPath $_ -Recurse -Force -ErrorAction SilentlyContinue }",
@@ -136,10 +118,13 @@
       "type": "process",
       "command": "dotnet",
       "args": [
-        "test",
+        "run",
+        "--project",
         "${workspaceFolder}/Solution/FastHashes.Tests/FastHashes.Tests.csproj",
         "--configuration",
         "Release",
+        "--framework",
+        "net10.0",
         "--no-build",
         "--no-restore",
         "-p:Platform=AnyCPU"
@@ -172,7 +157,11 @@
         "--results-directory",
         "${workspaceFolder}/Solution/Coverage",
         "--coverlet-exclude-by-attribute",
-        "CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute,GeneratedCodeAttribute",
+        "CompilerGeneratedAttribute",
+        "--coverlet-exclude-by-attribute",
+        "ExcludeFromCodeCoverageAttribute",
+        "--coverlet-exclude-by-attribute",
+        "GeneratedCodeAttribute",
         "--coverlet-skip-auto-props"
       ],
       "dependsOn": [

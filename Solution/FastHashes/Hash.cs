@@ -59,13 +59,13 @@ namespace FastHashes
 
             Int32 bufferLength = buffer.Length;
 
-            if ((offset < 0) || ((bufferLength > 0) && (offset >= bufferLength)))
+            if ((offset < 0) || (offset > bufferLength))
                 throw new ArgumentOutOfRangeException(nameof(offset), "The offset parameter must be within the bounds of the data array.");
 
             if (count < 0)
                 throw new ArgumentOutOfRangeException(nameof(count), "The count parameter must be greater than or equal to 0.");
 
-            if ((offset + count) > bufferLength)
+            if (count > (bufferLength - offset))
                 throw new ArgumentException("The block defined by offset and count parameters must be within the bounds of the data array.");
 
             ReadOnlySpan<Byte> span = new ReadOnlySpan<Byte>(buffer, offset, count);
@@ -76,12 +76,8 @@ namespace FastHashes
         /// <summary>Computes the hash of the specified byte span.</summary>
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> whose hash must be computed.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
-        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
         public Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
         {
-            if (buffer == null)
-                throw new ArgumentNullException(nameof(buffer));
-
             return ComputeHashInternal(buffer);
         }
 

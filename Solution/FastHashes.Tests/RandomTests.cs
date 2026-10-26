@@ -1,7 +1,6 @@
 ﻿#region Using Directives
 using System;
 using Xunit;
-using Xunit.Abstractions;
 #endregion
 
 namespace FastHashes.Tests
@@ -33,6 +32,40 @@ namespace FastHashes.Tests
             m_Output.WriteLine($"ACTUAL: {Utilities.FormatNumericArray(actualValue)}");
 
             Assert.Equal(expectedValue, actualValue);
+        }
+
+        [Fact]
+        public void EmptyBufferTest()
+        {
+            RandomXorShift random = new RandomXorShift(0u);
+            RandomXorShift reference = new RandomXorShift(0u);
+
+            Byte[] buffer = Array.Empty<Byte>();
+
+            random.NextBytes(buffer);
+            random.NextBytes(buffer, 0);
+            random.NextBytes(buffer, 0, 0);
+
+            Assert.Empty(buffer);
+            Assert.Equal(reference.NextValue(), random.NextValue());
+        }
+
+        [Theory]
+        [InlineData(-1, 0, typeof(ArgumentOutOfRangeException))]
+        [InlineData(1, 0, typeof(ArgumentOutOfRangeException))]
+        [InlineData(0, -1, typeof(ArgumentOutOfRangeException))]
+        [InlineData(0, 1, typeof(ArgumentOutOfRangeException))]
+        [InlineData(Int32.MaxValue, 0, typeof(ArgumentOutOfRangeException))]
+        [InlineData(0, Int32.MaxValue, typeof(ArgumentOutOfRangeException))]
+        public void EmptyBufferInvalidArgumentsTest(Int32 offset, Int32 count, Type exceptionType)
+        {
+            RandomXorShift random = new RandomXorShift(0u);
+            Byte[] buffer = Array.Empty<Byte>();
+
+            Exception exception = Record.Exception(() => random.NextBytes(buffer, offset, count));
+
+            Assert.NotNull(exception);
+            Assert.Equal(exceptionType, exception.GetType());
         }
 
         [Fact]

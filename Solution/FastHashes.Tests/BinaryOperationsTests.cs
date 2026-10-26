@@ -1,7 +1,6 @@
 ﻿#region Using Directives
 using System;
 using Xunit;
-using Xunit.Abstractions;
 #endregion
 
 namespace FastHashes.Tests

@@ -346,7 +346,7 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] hashData)
         {
-            Byte[] result = BinaryOperations.ToArray64(hashData);
+            Byte[] result = BinaryOperations.ToArray64(hashData[0], hashData[1]);
 
             return result;
         }

@@ -6,8 +6,8 @@
     <Platforms>AnyCPU;x64;x86</Platforms>
     <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
-    <StartupObject>FastHashes.Benchmarks.Program</StartupObject>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <StartupObject>FastHashes.Benchmarks.Program</StartupObject>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

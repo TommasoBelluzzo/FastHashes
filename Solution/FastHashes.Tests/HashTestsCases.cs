@@ -45,7 +45,7 @@ namespace FastHashes.Tests
             new TestCase("SipHash-24", typeof(SipHash), seed => new SipHash(SipHashVariant.V24, seed), "0x92DC31BC9483210F"),
             new TestCase("SpookyHash32", typeof(SpookyHash32), seed => new SpookyHash32(seed), "0xBB8B793F"),
             new TestCase("SpookyHash64", typeof(SpookyHash64), seed => new SpookyHash64(seed), "0xF155F9A7B939EE62"),
-            new TestCase("SpookyHash128", typeof(SpookyHash128), seed => new SpookyHash128(seed), "0x8030268DFD1A1430978CC2342FFEDAAA6D08879F228067F71E74FF83D5903E3DE7D57A67C25848034C46C21EB8361F59B08A199D9B25B73EFF7D4A9233A7C701F54331F2293E674524CD1A9D8550A1270473AE2C1925EAB0DA9F2B641458E626"),
+            new TestCase("SpookyHash128", typeof(SpookyHash128), seed => new SpookyHash128(seed), "0x8030268DFD1A1430978CC2342FFEDAAA"),
             new TestCase("WyHash32", typeof(WyHash32), seed => new WyHash32(seed), "0x6680DE09"),
             new TestCase("WyHash64", typeof(WyHash64), seed => new WyHash64(seed), "0xD7BA2DA80326AF7D"),
             new TestCase("xxHash32", typeof(XxHash32), seed => new XxHash32(seed), "0x43B788BA"),
@@ -62,6 +62,21 @@ namespace FastHashes.Tests
         {
             foreach (var testCase in s_TestCases.Select(x => new { x.HashType, x.HashInitializer }).Distinct())
                 yield return (new Object[] { testCase.HashType, testCase.HashInitializer, MAXIMUM_LENGTH });
+        }
+
+        public static IEnumerable<Object[]> DataLengthExtended()
+        {
+            Int32[] lengths = { 1025, 4095, 4096, 4097, 16383, 16384, 16385, 65535, 65536, 65537 };
+
+            foreach (TestCase testCase in s_TestCases)
+                foreach (Int32 length in lengths)
+                    yield return (new Object[] { testCase.HashName, testCase.HashInitializer, length });
+        }
+
+        public static IEnumerable<Object[]> DataOutput()
+        {
+            foreach (TestCase testCase in s_TestCases)
+                yield return (new Object[] { testCase.HashName, testCase.HashInitializer });
         }
 
         public static IEnumerable<Object[]> DataValidation()
@@ -100,7 +115,7 @@ namespace FastHashes.Tests
                 if (hashInitializer == null)
                     throw new ArgumentException("Invalid hash initializer specified.", nameof(hashInitializer));
 
-                if (String.IsNullOrWhiteSpace(hashName))
+                if (String.IsNullOrWhiteSpace(expectedValue))
                     throw new ArgumentException("Invalid expected value specified.", nameof(expectedValue));
 
                 m_HashInitializer = hashInitializer;

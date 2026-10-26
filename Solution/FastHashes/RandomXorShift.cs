@@ -110,9 +110,6 @@ namespace FastHashes
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
-            if (buffer.Length == 0)
-                return;
-
             if ((offset < 0) || (offset > buffer.Length))
                 throw new ArgumentOutOfRangeException(nameof(offset), "The offset parameter must be within the bounds of the array.");
 
@@ -121,6 +118,9 @@ namespace FastHashes
 
             if (count > (buffer.Length - offset))
                 throw new ArgumentException("The block defined by offset and count parameters must be within the bounds of the array.");
+
+            if (count == 0)
+                return;
 
             Int32 index = 0;
 

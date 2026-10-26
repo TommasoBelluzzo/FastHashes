@@ -1,4 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Description>Unit tests for the FastHashes library.</Description>
@@ -75,19 +76,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="3.1.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.0" />
-    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="xunit.v3.mtp-v2" Version="3.2.1" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="2.2.1" />
+    <PackageReference Include="coverlet.MTP" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
     <ProjectReference Include="..\FastHashes\FastHashes.csproj" />
   </ItemGroup>
 
