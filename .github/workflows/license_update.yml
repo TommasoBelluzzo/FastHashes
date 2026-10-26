@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Repository Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v7
     - name: Year Replacement
       env:
         LICENSE_REGEX: 2017-\d{4}

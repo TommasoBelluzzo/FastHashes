@@ -1,94 +1,145 @@
-name: "Package Publishing"
+name: Package Publishing
 
 on:
   workflow_dispatch:
     inputs:
       target:
+        type: choice
         description: 'Target:'
         required: true
+        options:
+        - MAJOR
+        - MINOR
+        - RELEASE
         default: 'MINOR'
+
+concurrency:
+  group: package-publishing
+  cancel-in-progress: false
 
 jobs:
   package_publishing:
     name: Package Publishing
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
     - name: Repository Checkout
-      uses: actions/checkout@v3
-    - name: .NET Setup
-      uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: |
-          2.1.x
-          3.1.x
-          5.0.x
-          6.0.x
+      uses: actions/checkout@v7
     - name: Version Bump
       id: bump
+      shell: bash
       env:
         TARGET: ${{ github.event.inputs.target }}
-        VERSION_REGEX: Version>\d+\.\d+\.\d+
         VERSION_FILE: Solution/Directory.Build.props
       run: |
-        TARGET="${TARGET^^}"
-        if [[ "$TARGET" != "MAJOR" ]] && [[ "$TARGET" != "MINOR" ]] && [[ "$TARGET" != "BUILD" ]]; then
-          echo "INVALID INPUT"
+        set -euo pipefail
+        VERSION_REGEX='<Version>[0-9]+\.[0-9]+\.[0-9]+</Version>'
+        MATCH_COUNT=$(grep -Ec "$VERSION_REGEX" "$VERSION_FILE" || true)
+        if [[ "$MATCH_COUNT" -ne 1 ]]; then
+          echo "INVALID VERSION DECLARATION ($MATCH_COUNT MATCHES)"
           exit 1
         fi
-        grep -P "<$VERSION_REGEX" "$VERSION_FILE"
-        VERSION=$(grep -P "<$VERSION_REGEX" "$VERSION_FILE" | cut -d ">" -f2)
+        VERSION=$(grep -Po '(?<=<Version>)[0-9]+\.[0-9]+\.[0-9]+(?=</Version>)' "$VERSION_FILE")
         VERSION_MAJOR=$(echo "$VERSION" | cut -d "." -f1)
         VERSION_MINOR=$(echo "$VERSION" | cut -d "." -f2)
-        VERSION_BUILD=$(echo "$VERSION" | cut -d "." -f3)
+        VERSION_RELEASE=$(echo "$VERSION" | cut -d "." -f3)
+        TARGET="${TARGET^^}"
         if [[ "$TARGET" == "MAJOR" ]]; then
-          VERSION_MAJOR=$(($VERSION_MAJOR+1))
+          VERSION_MAJOR=$((VERSION_MAJOR + 1))
           VERSION_MINOR=0
-          VERSION_BUILD=0
+          VERSION_RELEASE=0
         elif [[ "$TARGET" == "MINOR" ]]; then
-          VERSION_MINOR=$(($VERSION_MINOR+1))
-          VERSION_BUILD=0
+          VERSION_MINOR=$((VERSION_MINOR + 1))
+          VERSION_RELEASE=0
+        elif [[ "$TARGET" == "RELEASE" ]]; then
+          VERSION_RELEASE=$((VERSION_RELEASE + 1))
         else
-          VERSION_BUILD=$(($VERSION_BUILD+1))
+          echo "INVALID TARGET ($TARGET)"
+          exit 1
         fi
-        VERSION=$(printf "%d.%d.%d" $VERSION_MAJOR $VERSION_MINOR $VERSION_BUILD 2>/dev/null)
-        ASSEMBLY_VERSION=$(printf "%d.0.0" $VERSION_MAJOR 2>/dev/null)
-        PATTERN=$(grep -Poh "<$VERSION_REGEX" "$VERSION_FILE")
-        sed -i "s/$PATTERN/<Version>$VERSION/g" "$VERSION_FILE"
-        grep -P "<$VERSION_REGEX" "$VERSION_FILE"
-        PATTERN=$(grep -Poh "<File$VERSION_REGEX" "$VERSION_FILE")
-        sed -i "s/$PATTERN/<FileVersion>$VERSION/g" "$VERSION_FILE"
-        grep -P "<File$VERSION_REGEX" "$VERSION_FILE"
+        VERSION=$(printf "%d.%d.%d" "$VERSION_MAJOR" "$VERSION_MINOR" "$VERSION_RELEASE")
+        ASSEMBLY_VERSION="$VERSION_MAJOR.0.0.0"
+        FILE_VERSION="$VERSION.0"
+        sed -i -E \
+          "s#<Version>[0-9]+\.[0-9]+\.[0-9]+</Version>#<Version>$VERSION</Version>#" \
+          "$VERSION_FILE"
+        sed -i -E \
+          "s#<FileVersion>[0-9]+(\.[0-9]+){3}</FileVersion>#<FileVersion>$FILE_VERSION</FileVersion>#" \
+          "$VERSION_FILE"
         if [[ "$TARGET" == "MAJOR" ]]; then
-          PATTERN=$(grep -Poh "<Assembly$VERSION_REGEX" "$VERSION_FILE")
-          sed -i "s/$PATTERN/<AssemblyVersion>$ASSEMBLY_VERSION/g" "$VERSION_FILE"
-          grep -P "<Assembly$VERSION_REGEX" "$VERSION_FILE"
+          sed -i -E \
+            "s#<AssemblyVersion>[0-9]+(\.[0-9]+){3}</AssemblyVersion>#<AssemblyVersion>$ASSEMBLY_VERSION</AssemblyVersion>#" \
+            "$VERSION_FILE"
         fi
-        echo "::set-output name=version::$VERSION"
-    - name: Readme Formatting
-      run: |
-        sed -e $'/<table>/,/<\/table>/d' README.md | sed 's/\r$//' | tr '\n' '~' | sed 's/\~\~\~/\~\~/' | tr '~' '\n' | cat > README.md
-    - name: Restore
-      working-directory: Solution/
-      run: dotnet restore --force-evaluate
-    - name: Build
-      working-directory: Solution/
-      run: dotnet build --verbosity normal --configuration Release --no-restore --no-incremental /p:DeterministicSourcePaths=true
-    - name: Pack
-      working-directory: Solution/
-      run: dotnet pack FastHashes/FastHashes.csproj --verbosity normal --configuration Release --no-restore --no-build --output ../Package/
-    - name: Package Artifact
-      uses: actions/upload-artifact@v3
+        if ! grep -Fxq "    <Version>$VERSION</Version>" "$VERSION_FILE" || ! grep -Fxq "    <FileVersion>$FILE_VERSION</FileVersion>" "$VERSION_FILE"; then
+          echo "FILE VERSION UPDATE FAILED"
+          exit 1
+        fi
+        if [[ "$TARGET" == "MAJOR" ]] && \
+           ! grep -Fxq "    <AssemblyVersion>$ASSEMBLY_VERSION</AssemblyVersion>" "$VERSION_FILE"; then
+          echo "ASSEMBLY VERSION UPDATE FAILED"
+          exit 1
+        fi
+        echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "PACKAGE_VERSION=$VERSION" >> "$GITHUB_ENV"
+        echo "Release Version: $VERSION"
+    - name: .NET Setup
+      uses: actions/setup-dotnet@v6
       with:
-        name: Package Artifact
+        dotnet-version: '10.0.x'
+    - name: Restore
+      working-directory: Solution
+      run: >-
+        dotnet restore
+        FastHashes.sln
+        --force-evaluate
+    - name: Build
+      working-directory: Solution
+      run: >-
+        dotnet build
+        FastHashes.sln
+        --configuration Release
+        --no-restore
+        --no-incremental
+        --verbosity normal
+    - name: Test
+      working-directory: Solution
+      run: >-
+        dotnet run
+        --project FastHashes.Tests/FastHashes.Tests.csproj
+        --configuration Release
+        --no-restore
+        --no-build
+    - name: Package Creation
+      working-directory: Solution
+      run: >-
+        dotnet pack
+        FastHashes/FastHashes.csproj
+        --configuration Release
+        --no-restore
+        --no-build
+        --output ../Package/
+    - name: Package Validation
+      run: |
+        test -s "Package/FastHashes.$PACKAGE_VERSION.nupkg"
+        test -s "Package/FastHashes.$PACKAGE_VERSION.snupkg"
+    - name: Package Artifact Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: Package-${{ steps.bump.outputs.version }}
         path: Package/
-    - name: Publish
+        if-no-files-found: error
+    - name: Package Publication
       env:
-        VERSION: ${{ steps.bump.outputs.version }}
-      working-directory: Package/
-      run: dotnet nuget push FastHashes.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_TOKEN }}
+        NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
+      run: |
+        dotnet nuget push \
+          "Package/FastHashes.$PACKAGE_VERSION.nupkg" \
+          --source https://api.nuget.org/v3/index.json \
+          --api-key "$NUGET_TOKEN"
     - name: Version Commit
-      env:
-        VERSION: ${{ steps.bump.outputs.version }}
       run: |
         git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
         git config --local user.name "${{ secrets.BOT_USERNAME }}"
