@@ -248,7 +248,7 @@ namespace FastHashes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static UInt64 KhLpu(ReadOnlySpan<Byte> buffer, Int32 offset, Int32 count, Int32 delta)
 		{
-			Int32 fbRef = (count > 0) ? count : buffer.Length;
+			Int32 fbRef = (count > 0) ? offset + count : buffer.Length;
 			UInt64 fb = (UInt64)(1 << (buffer[fbRef - 1] >> 7));
 
 			offset += delta;
