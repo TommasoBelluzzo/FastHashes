@@ -1,13 +1,21 @@
-name: "Continuous Integration"
+name: Continuous Integration
 
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-    
-env:
-  COVERLET_ENABLETRACKERLOG: 1
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: Solution
 
 jobs:
   continuous_integration:
@@ -16,41 +24,94 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
     steps:
     - name: Repository Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v7
     - name: .NET Setup
-      uses: actions/setup-dotnet@v2
+      uses: actions/setup-dotnet@v6
       with:
-        dotnet-version: |
-          2.1.x
-          3.1.x
-          5.0.x
-          6.0.x
+        dotnet-version: '10.0.x'
     - name: Restore
-      working-directory: Solution/
-      run: dotnet restore --force-evaluate
+      run: >-
+        dotnet restore
+        FastHashes.sln
+        --force-evaluate
     - name: Build
-      working-directory: Solution/
-      run: dotnet build --verbosity normal --configuration Release --no-restore --no-incremental
+      run: >-
+        dotnet build
+        FastHashes.sln
+        --configuration Release
+        --no-restore
+        --no-incremental
+        --verbosity normal
     - name: Test
-      working-directory: Solution/
-      run: dotnet test --verbosity normal --configuration Release --no-restore --no-build --collect "XPlat Code Coverage" --settings Coverage.runsettings --diag Coverage/log.txt --results-directory Coverage/
+      run: >-
+        dotnet run
+        --project FastHashes.Tests/FastHashes.Tests.csproj
+        --configuration Release
+        --no-restore
+        --no-build
+        --
+        --coverlet
+        --coverlet-output-format lcov
+        --coverlet-skip-auto-props
+        --results-directory Coverage
     - name: Coverage Report Creation
-      uses: danielpalme/ReportGenerator-GitHub-Action@5.1.9
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.4.24
       with:
-        reports: 'Solution/Coverage/*/coverage.info'
-        reporttypes: 'lcov'
-        targetdir: 'Solution/Coverage/'
+        reports: 'Solution/Coverage/**/*.info'
+        reporttypes: 'html;lcov'
+        targetdir: 'Solution/Coverage/Report'
         verbosity: 'Info'
     - name: Coverage Report Artifact
-      uses: actions/upload-artifact@v3
+      if: always()
+      uses: actions/upload-artifact@v4
       with:
         name: Coverage Artifact (${{ matrix.os }})
         path: Solution/Coverage/
+        if-no-files-found: error
+  coverage_publishing:
+    name: Coverage Publishing
+    needs: continuous_integration
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download Coverage Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        pattern: Coverage Artifact (*)
+        path: Coverage
+        merge-multiple: false
+    - name: Validate Coverage Artifacts
+      shell: bash
+      run: |
+        for os in ubuntu-latest windows-latest macos-latest; do
+          directory="Coverage/Coverage Artifact ($os)"
+          if [ ! -d "$directory" ]; then
+            echo "Missing coverage artifact: $os"
+            exit 1
+          fi
+          if ! find "$directory" -type f -name '*.info' -size +0c | grep -q .; then
+            echo "Missing or empty LCOV report: $os"
+            exit 1
+          fi
+        done
+    - name: Coverage Report Creation
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.4.24
+      with:
+        reports: 'Coverage/**/*.info'
+        reporttypes: 'Html;lcov'
+        targetdir: 'Coverage/Report'
+        verbosity: 'Info'
+    - name: Coverage Report Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Coverage Report
+        path: Coverage/Report/
+        if-no-files-found: error
     - name: Coverage Report Upload
-      uses: coverallsapp/github-action@master
+      uses: coverallsapp/github-action@v2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: Solution/Coverage/lcov.info
+        file: Coverage/Report/lcov.info
+        format: lcov
