@@ -35,7 +35,7 @@ namespace FastHashes.Tests
         public static IEnumerable<Object[]> DataBuffer()
         {
             foreach (TestCaseBuffer testCase in s_TestCasesBuffer)
-                yield return (new Object[] { testCase.Seed, testCase.BufferLegth, testCase.Offset, testCase.Count, testCase.ExpectedValue });
+                yield return (new Object[] { testCase.Seed, testCase.BufferLength, testCase.Offset, testCase.Count, testCase.ExpectedValue });
         }
 
         public static IEnumerable<Object[]> DataValue()
@@ -52,7 +52,7 @@ namespace FastHashes.Tests
             private readonly Byte[] m_ExpectedValue;
             private readonly Int32 m_Count;
             private readonly Int32 m_Offset;
-            private readonly Int32 m_BufferLegth;
+            private readonly Int32 m_BufferLength;
             private readonly UInt32 m_Seed;
             #endregion
 
@@ -60,21 +60,21 @@ namespace FastHashes.Tests
             public Byte[] ExpectedValue => m_ExpectedValue;
             public Int32 Count => m_Count;
             public Int32 Offset => m_Offset;
-            public Int32? BufferLegth => m_BufferLegth;
+            public Int32 BufferLength => m_BufferLength;
             public UInt32 Seed => m_Seed;
             #endregion
 
             #region Constructors
-            public TestCaseBuffer(UInt32 seed, Int32 bufferLegth, Int32 offset, Int32 count, Byte[] expectedValue)
+            public TestCaseBuffer(UInt32 seed, Int32 bufferLength, Int32 offset, Int32 count, Byte[] expectedValue)
             {
-                if (bufferLegth < 0)
-                    throw new ArgumentException("Invalid buffer legth specified.", nameof(bufferLegth));
+                if (bufferLength < 0)
+                    throw new ArgumentException("Invalid buffer length specified.", nameof(bufferLength));
 
                 if (expectedValue == null)
                     throw new ArgumentNullException(nameof(expectedValue));
 
                 m_ExpectedValue = expectedValue;
-                m_BufferLegth = bufferLegth;
+                m_BufferLength = bufferLength;
                 m_Count = count;
                 m_Offset = offset;
                 m_Seed = seed;
@@ -84,7 +84,7 @@ namespace FastHashes.Tests
             #region Methods
             public override String ToString()
             {
-                return $"{GetType().Name}: {nameof(Seed)}={m_Seed} {nameof(BufferLegth)}={m_BufferLegth} {nameof(Offset)}={m_Offset} {nameof(Count)}={m_Count} {nameof(ExpectedValue)}={Utilities.FormatNumericArray(m_ExpectedValue)}";
+                return $"{GetType().Name}: {nameof(Seed)}={m_Seed} {nameof(BufferLength)}={m_BufferLength} {nameof(Offset)}={m_Offset} {nameof(Count)}={m_Count} {nameof(ExpectedValue)}={Utilities.FormatNumericArray(m_ExpectedValue)}";
             }
             #endregion
         }

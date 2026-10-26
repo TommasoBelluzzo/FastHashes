@@ -9,28 +9,26 @@ using Xunit;
 
 namespace FastHashes.Tests
 {
-    public sealed class HashTests : IClassFixture<Fixture>
+    public sealed class HashTests : IClassFixture<CollisionFixture>
     {
         #region Constants
         private const UInt32 TEST_SEED = 0x9E3779B9u;
         #endregion
 
         #region Members
-        private readonly Fixture m_Fixture;
-        private readonly ITestOutputHelper m_Output;
+        private readonly CollisionFixture m_CollisionFixture;
         #endregion
 
         #region Constructors
-        public HashTests(Fixture fixture, ITestOutputHelper output)
+        public HashTests(CollisionFixture collisionFixture)
         {
-            m_Fixture = fixture;
-            m_Output = output;
+            m_CollisionFixture = collisionFixture;
         }
         #endregion
 
         #region Methods
         [Fact]
-        public void ExceptionTest()
+        public void InputNullTest()
         {
             Hash hash = new FarmHash32();
 
@@ -48,7 +46,7 @@ namespace FastHashes.Tests
         [InlineData(1, Int32.MaxValue, typeof(ArgumentException))]
         [InlineData(8, 3, typeof(ArgumentException))]
         [InlineData(10, 1, typeof(ArgumentException))]
-        public void SliceInvalidArgumentsTest(Int32 offset, Int32 count, Type exceptionType)
+        public void InputInvalidSliceTest(Int32 offset, Int32 count, Type exceptionType)
         {
             Hash hash = new FarmHash32();
             Byte[] buffer = new Byte[10];
@@ -57,25 +55,6 @@ namespace FastHashes.Tests
 
             Assert.NotNull(exception);
             Assert.Equal(exceptionType, exception.GetType());
-        }
-
-        [Theory]
-        [MemberData(nameof(HashTestsCases.DataOutput), MemberType=typeof(HashTestsCases))]
-        public void EmptyInputTest(String hashName, Func<UInt32,Hash> hashInitializer)
-        {
-            Hash hash = hashInitializer(0u);
-
-            Byte[] buffer = Array.Empty<Byte>();
-            Byte[] expected = hash.ComputeHash(buffer);
-
-            Assert.Equal(expected, hash.ComputeHash(buffer, 0));
-            Assert.Equal(expected, hash.ComputeHash(buffer, 0, 0));
-            Assert.Equal(expected, hash.ComputeHash(ReadOnlySpan<Byte>.Empty));
-
-            ReadOnlySpan<Byte> defaultSpan = default;
-            Assert.Equal(expected, hash.ComputeHash(defaultSpan));
-
-            m_Output.WriteLine($"NAME: {hashName}");
         }
 
         [Theory]
@@ -89,7 +68,7 @@ namespace FastHashes.Tests
         [InlineData(9, 0)]
         [InlineData(9, 1)]
         [InlineData(10, 0)]
-        public void SliceBoundaryTest(Int32 offset, Int32 count)
+        public void InputValidSliceTest(Int32 offset, Int32 count)
         {
             Hash hash = new FarmHash32();
 
@@ -108,7 +87,23 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataOutput), MemberType=typeof(HashTestsCases))]
+        [MemberData(nameof(HashTestsCases.DataGeneric), MemberType=typeof(HashTestsCases))]
+        public void InputEmptyTest(String hashName, Func<UInt32,Hash> hashInitializer)
+        {
+            Hash hash = hashInitializer(0u);
+
+            Byte[] buffer = Array.Empty<Byte>();
+            Byte[] expected = hash.ComputeHash(buffer);
+
+            Assert.Equal(expected, hash.ComputeHash(buffer, 0));
+            Assert.Equal(expected, hash.ComputeHash(buffer, 0, 0));
+
+            ReadOnlySpan<Byte> defaultSpan = default;
+            Assert.Equal(expected, hash.ComputeHash(defaultSpan));
+        }
+
+        [Theory]
+        [MemberData(nameof(HashTestsCases.DataGeneric), MemberType=typeof(HashTestsCases))]
         public void OutputTest(String hashName, Func<UInt32,Hash> hashInitializer)
         {
             Hash hash = hashInitializer(0u);
@@ -126,77 +121,42 @@ namespace FastHashes.Tests
 
             Assert.Equal(expected, hash.ComputeHash(paddedBuffer, 5, buffer.Length));
             Assert.Equal(expected, hash.ComputeHash(new ReadOnlySpan<Byte>(paddedBuffer, 5, buffer.Length)));
-
-            m_Output.WriteLine($"NAME: {hashName}");
         }
 
         [Theory]
         [MemberData(nameof(HashTestsCases.DataLength), MemberType=typeof(HashTestsCases))]
-        public void LengthTest(Type hashType, Func<UInt32,Hash> hashInitializer, Int32 maximumLength)
+        public void LengthTest(String hashName, Func<UInt32,Hash> hashInitializer, Int32 maximumLength)
         {
-            RandomXorShift random = new RandomXorShift(TEST_SEED);
+            UInt32[] seeds = { 0u, TEST_SEED };
 
-            Hash hash = (Hash)Activator.CreateInstance(hashType);
-            List<String> errorLengths = new List<String>();
-
-            for (Int32 i = 0; i <= maximumLength; ++i)
+            foreach (UInt32 seed in seeds)
             {
-                Byte[] buffer = new Byte[i];
-                random.NextBytes(buffer);
+                RandomXorShift random = new RandomXorShift(TEST_SEED);
+                Hash hash = hashInitializer(seed);
+                List<String> errorLengths = new List<String>();
 
-                try
+                for (Int32 i = 0; i <= maximumLength; ++i)
                 {
-                    hash.ComputeHash(buffer);
+                    Byte[] buffer = new Byte[i];
+                    random.NextBytes(buffer);
+
+                    try
+                    {
+                        hash.ComputeHash(buffer);
+                    }
+                    catch (Exception ex)
+                    {
+                        errorLengths.Add($"{i}: {ex.GetType().Name} - {ex.Message}");
+                    }
                 }
-                catch (Exception ex)
-                {
-                    errorLengths.Add($"{i}: {ex.GetType().Name} - {ex.Message}");
-                }
+
+                Assert.True(errorLengths.Count == 0, $"Length validation failed for {hashName}, seed 0x{seed:X8}: {String.Join(", ", errorLengths)}");
             }
-
-            m_Output.WriteLine($"NAME: {hashType.Name}");
-
-            if (errorLengths.Count > 0)
-                m_Output.WriteLine($"PLAIN ERROR LENGTHS: {String.Join(", ", errorLengths)}");
-            else
-                m_Output.WriteLine("NO PLAIN ERROR LENGTHS");
-
-            Assert.True(errorLengths.Count == 0);
-
-            errorLengths.Clear();
-
-            random = new RandomXorShift(TEST_SEED);
-            hash = hashInitializer(TEST_SEED);
-
-            for (Int32 i = 0; i <= maximumLength; ++i)
-            {
-                Byte[] buffer = new Byte[i];
-                random.NextBytes(buffer);
-
-                try
-                {
-                    hash.ComputeHash(buffer);
-                }
-                catch (Exception ex)
-                {
-                    errorLengths.Add($"{i}: {ex.GetType().Name} - {ex.Message}");
-                }
-            }
-
-            m_Output.WriteLine($"NAME: {hashType.Name}");
-            m_Output.WriteLine($"SEED: 0x{TEST_SEED:X8}");
-
-            if (errorLengths.Count > 0)
-                m_Output.WriteLine($"SEED ERROR LENGTHS: {String.Join(", ", errorLengths)}");
-            else
-                m_Output.WriteLine("NO SEED ERROR LENGTHS");
-
-            Assert.True(errorLengths.Count == 0);
         }
 
         [Theory]
         [MemberData(nameof(HashTestsCases.DataLengthExtended), MemberType=typeof(HashTestsCases))]
-        public void ExtendedLengthTest(String hashName, Func<UInt32,Hash> hashInitializer, Int32 length)
+        public void LengthExtendedTest(String hashName, Func<UInt32,Hash> hashInitializer, Int32 length)
         {
             Byte[] buffer = new Byte[length];
 
@@ -208,18 +168,8 @@ namespace FastHashes.Tests
             Byte[] expected = hash.ComputeHash(buffer);
             Byte[] actual = hash.ComputeHash(buffer);
 
-            Boolean validLength = (expected.Length == (hash.Length / 8));
-            Boolean validOutput = expected.SequenceEqual(actual);
-
-            m_Output.WriteLine($"NAME: {hashName}");
-            m_Output.WriteLine($"SEED: 0x{TEST_SEED:X8}");
-            m_Output.WriteLine($"INPUT LENGTH: {length}");
-            m_Output.WriteLine($"OUTPUT LENGTH: {expected.Length}");
-            m_Output.WriteLine($"EXPECTED LENGTH: {hash.Length / 8}");
-            m_Output.WriteLine($"RESULT: {(validLength && validOutput ? "SUCCESS" : "FAILURE")}");
-
-            Assert.True(validLength, "Invalid hash output length.");
-            Assert.True(validOutput, "Inconsistent hash output.");
+            Assert.Equal(hash.Length / 8, expected.Length);
+            Assert.Equal(expected, actual);
         }
 
         [Theory]
@@ -245,50 +195,37 @@ namespace FastHashes.Tests
             Byte[] h0 = hash0.ComputeHash(bufferFinal);
             String actualValue = String.Concat("0x", BitConverter.ToString(h0).Replace("-", String.Empty));
 
-            m_Output.WriteLine($"NAME: {hashName}");
-            m_Output.WriteLine($"EXPECTED: {expectedValue}");
-            m_Output.WriteLine($"ACTUAL: {actualValue}");
-
             Assert.Equal(expectedValue, actualValue);
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataCollision), MemberType=typeof(HashTestsCases))]
+        [MemberData(nameof(HashTestsCases.DataGeneric), MemberType=typeof(HashTestsCases))]
         public void CollisionTest(String hashName, Func<UInt32,Hash> hashInitializer)
         {
-            Int32 wordsCount = m_Fixture.Words.Count();
+            Int32 wordsCount = m_CollisionFixture.Words.Count();
             Assert.False(wordsCount == 0, "Fixture Words Empty");
 
             Hash hash = hashInitializer(TEST_SEED);
             Int32 hashBytes = hash.Length / 8;
 
-            Byte filler = Convert.ToByte('!');
-            List<(String,Byte[])> hashes = new List<(String,Byte[])>(wordsCount * 5);
+            List<Byte[]> hashes = new List<Byte[]>(wordsCount * 6);
 
-            foreach (String word in m_Fixture.Words)
+            foreach (String word in m_CollisionFixture.Words)
             {
                 Byte[] lineBytes = Encoding.UTF8.GetBytes(word);
                 Int32 lineBytesLength = lineBytes.Length;
 
-                Byte[] buffer = new Byte[lineBytes.Length + 5];
-                Int32 bufferLength = buffer.Length;
-
-                for (Int32 i = 0; i < bufferLength; ++i)
-                    buffer[i] = filler;
-
+                Byte[] buffer = new Byte[lineBytesLength + 5];
+                Array.Fill(buffer, (Byte)'!');
                 Buffer.BlockCopy(lineBytes, 0, buffer, 0, lineBytesLength);
 
                 for (Int32 j = 0; j <= 5; ++j)
-                    hashes.Add((Encoding.UTF8.GetString(buffer, 0, lineBytesLength + j), hash.ComputeHash(buffer, 0, lineBytesLength + j)));
+                    hashes.Add(hash.ComputeHash(buffer, 0, lineBytesLength + j));
             }
 
             Boolean cte = MathUtilities.CollisionsThresholdExceeded(hashes, hashBytes);
 
-            m_Output.WriteLine($"NAME: {hashName}");
-            m_Output.WriteLine($"SEED: 0x{TEST_SEED:X8}");
-            m_Output.WriteLine($"RESULT: {(cte ? "FAILURE" : "SUCCESS")}");
-
-            Assert.False(cte, "Collisions Threshold Exceeded");
+            Assert.False(cte, $"Collisions threshold exceeded for {hashName}, seed 0x{TEST_SEED:X8}.");
         }
         #endregion
     }

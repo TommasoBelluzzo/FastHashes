@@ -52,7 +52,7 @@ namespace FastHashes.Tests
             new TestCase("xxHash64", typeof(XxHash64), seed => new XxHash64(seed), "0xF47C4B0200F12795")
         };
 
-        public static IEnumerable<Object[]> DataCollision()
+        public static IEnumerable<Object[]> DataGeneric()
         {
             foreach (TestCase testCase in s_TestCases)
                 yield return (new Object[] { testCase.HashName, testCase.HashInitializer });
@@ -60,8 +60,8 @@ namespace FastHashes.Tests
 
         public static IEnumerable<Object[]> DataLength()
         {
-            foreach (var testCase in s_TestCases.Select(x => new { x.HashType, x.HashInitializer }).Distinct())
-                yield return (new Object[] { testCase.HashType, testCase.HashInitializer, MAXIMUM_LENGTH });
+            foreach (TestCase testCase in s_TestCases)
+                yield return (new Object[] { testCase.HashName, testCase.HashInitializer, MAXIMUM_LENGTH });
         }
 
         public static IEnumerable<Object[]> DataLengthExtended()
@@ -71,12 +71,6 @@ namespace FastHashes.Tests
             foreach (TestCase testCase in s_TestCases)
                 foreach (Int32 length in lengths)
                     yield return (new Object[] { testCase.HashName, testCase.HashInitializer, length });
-        }
-
-        public static IEnumerable<Object[]> DataOutput()
-        {
-            foreach (TestCase testCase in s_TestCases)
-                yield return (new Object[] { testCase.HashName, testCase.HashInitializer });
         }
 
         public static IEnumerable<Object[]> DataValidation()

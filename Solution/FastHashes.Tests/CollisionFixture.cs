@@ -1,3 +1,4 @@
+
 #region Using Directives
 using System;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ using System.IO;
 
 namespace FastHashes.Tests
 {
-    public sealed class Fixture : IDisposable
+    public sealed class CollisionFixture
     {
         #region Members
         private readonly IEnumerable<String> m_Words;
@@ -17,13 +18,9 @@ namespace FastHashes.Tests
         #endregion
 
         #region Constructors
-        public Fixture()
+        public CollisionFixture()
         {
-            #if NETCOREAPP1_0 || NETCOREAPP1_1
             String fileDirectory = AppContext.BaseDirectory;
-            #else
-            String fileDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            #endif
 
             if (String.IsNullOrWhiteSpace(fileDirectory))
             {
@@ -41,10 +38,6 @@ namespace FastHashes.Tests
 
             m_Words = File.ReadAllLines(filePath);
         }
-        #endregion
-
-        #region Methods
-        public void Dispose() { }
         #endregion
     }
 }

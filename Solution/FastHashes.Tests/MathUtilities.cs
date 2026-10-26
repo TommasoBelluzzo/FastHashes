@@ -33,7 +33,7 @@ namespace FastHashes.Tests
             return true;
         }
 
-        private static Double ActualCollisions(List<(String,Byte[])> hashes)
+        private static Double ActualCollisions(List<Byte[]> hashes)
         {
             hashes.Sort(CompareSequences);
 
@@ -41,7 +41,7 @@ namespace FastHashes.Tests
 
             for (Int32 i = 1; i < hashes.Count; ++i)
             {
-                if (SequencesEqual(hashes[i].Item2, hashes[i - 1].Item2))
+                if (SequencesEqual(hashes[i], hashes[i - 1]))
                     ++actualCollisions;
             }
 
@@ -75,11 +75,8 @@ namespace FastHashes.Tests
             return ((-0.5d * x) + 1.0d) * x;
         }
 
-        private static Int32 CompareSequences((String, Byte[]) element1, (String, Byte[]) element2)
+        private static Int32 CompareSequences(Byte[] array1, Byte[] array2)
         {
-            Byte[] array1 = element1.Item2;
-            Byte[] array2 = element2.Item2;
-
             if (ReferenceEquals(array1, null))
                 return ReferenceEquals(array2, null) ? 0 : 1;
 
@@ -115,7 +112,7 @@ namespace FastHashes.Tests
             return result;
         }
 
-        public static Boolean CollisionsThresholdExceeded(List<(String,Byte[])> hashes, Int32 hashBytes)
+        public static Boolean CollisionsThresholdExceeded(List<Byte[]> hashes, Int32 hashBytes)
         {
             if (hashes == null)
                 throw new ArgumentNullException(nameof(hashes));
