@@ -1,12 +1,12 @@
 # FastHashes
 
-FashHashes is a suite of .NET non-cryptographic hash functions.
+FastHashes is a suite of .NET non-cryptographic hash functions.
 
 <table>
   <tr>
     <td align="right">Status:</td>
     <td align="left">
-      <a href="https://github.com/TommasoBelluzzo/FastHashes/actions/workflows/continuous_integration.yml"><img alt="Build" src="https://img.shields.io/github/workflow/status/TommasoBelluzzo/FastHashes/Continuous%20Integration?style=flat&label=Build&color=1081C2"/></a>
+      <a href="https://github.com/TommasoBelluzzo/FastHashes/actions/workflows/continuous_integration.yml"><img alt="Build" src="https://github.com/TommasoBelluzzo/FastHashes/actions/workflows/continuous_integration.yml/badge.svg?branch=master"/></a>
       <a href="https://coveralls.io/github/TommasoBelluzzo/FastHashes?branch=master"><img alt="Coverage" src="https://img.shields.io/coveralls/github/TommasoBelluzzo/FastHashes?style=flat&label=Coverage&color=1081C2"/></a>
     </td>
   </tr>
@@ -35,11 +35,11 @@ FashHashes is a suite of .NET non-cryptographic hash functions.
 
 ## Main Features
 
- * `High Performing`: deeply-optimized code makes extensive use of method inlining and unsafe memory pointers in order to speed up the computations.
- * `Allocation Free`: all the internal functions follow a zero-allocation approach, only primitive types and/or arrays of primitive types are used by the algorithms.
- * `Endian-Agnostic`: all the hashes provide consistent results regardless of the machine byte order, while only moderately affecting the overall performance of the computations.
- * `Platform-Agnostic`: the code has been developed under `.NET Standard` framework and both `x86` and `x64` environments are fully supported.
- * `Fully Managed`: since version `3.0.0`, pointers requiring unsafe memory access contexts have been completely removed and the library is now fully managed.
+* `High Performing`: optimized implementations make extensive use of method inlining and efficient memory access to maximize hashing throughput.
+* `Allocation Free`: hashing computations avoid unnecessary intermediate allocations, minimizing garbage collection overhead.
+* `Endian-Agnostic`: all hashes produce consistent results regardless of the machine's byte order.
+* `Platform-Agnostic`: the library targets .NET Standard and modern .NET, with support for both x86 and x64 architectures.
+* `Fully Managed`: since version 3.0.0, the library no longer requires unsafe memory access.
 
  ## Hashes
 
@@ -52,7 +52,7 @@ The library includes the following non-cryptographic hashes:
  * `FastHash`
    * 32/64 Bits Output
    * Reference Implementation: [https://github.com/ZilongTan/fast-hash](https://github.com/ZilongTan/fast-hash)
- * `FastPositiveHash / TH1A`
+ * `FastPositiveHash / T1HA`
    * 64 Bits Output
    * 0/1/2 Variants
    * Reference Implementation: [https://github.com/leo-yuriev/t1ha](https://github.com/leo-yuriev/t1ha)
@@ -102,16 +102,17 @@ The library includes the following non-cryptographic hashes:
    * Reference Implementation: [https://github.com/Cyan4973/xxHash](https://github.com/Cyan4973/xxHash)
 
 ## Requirements
- 
-The following `Frameworks` are supported:
 
- * Library: `.NET Standard 2.0`, `.NET Standard 2.1`
- * Auxiliary Projects: `.NET Core 2.1`, `.NET Core 3.1`, `.NET 5.0`, `.NET 6.0`
- 
-The following `NuGet` packages are required for performing unit tests:
+The following frameworks are supported:
 
-* [Microsoft.NET.Test.Sdk](https://www.nuget.org/packages/Microsoft.NET.Test.Sdk)
-* [xunit](https://www.nuget.org/packages/xunit)
+* Library: `.NET Standard 2.0`, `.NET Standard 2.1`, `.NET 10.0`
+* Auxiliary Projects: `.NET 10.0`
+
+The following NuGet packages are used by the unit testing project:
+
+* [xunit.v3.mtp-v2](https://www.nuget.org/packages/xunit.v3.mtp-v2)
+* [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform)
+* [coverlet.MTP](https://www.nuget.org/packages/coverlet.MTP)
 
 ## Performance Benchmarks
 
@@ -155,7 +156,8 @@ The following `NuGet` packages are required for performing unit tests:
 | 35        | HalfSipHash             | 364.78 MB/s               | 119.96 MB/s               |
 
 The tests above have been conducted with the following machine setup:
-
  * `CPU:` Intel Core i7-7700HQ @2.80GHz (4 Cores, 8 Threads, 256KB L1 Cache)
  * `RAM:` 16 GB x DDR4 SO-DIMM @1200MHz
  * `OS:` Microsoft Windows 10 64-Bit
+
+ Performance may vary depending on the runtime, processor architecture, input size and execution environment.
