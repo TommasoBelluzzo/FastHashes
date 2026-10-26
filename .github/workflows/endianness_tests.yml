@@ -1,44 +1,54 @@
-name: "Endianness Tests"
+name: Endianness Tests
 
 on: workflow_dispatch
 
+permissions:
+  contents: read
+
 jobs:
-  big_endian:
-    name: Big Endian
+  endianness_tests:
+    name: Endianness Tests (${{ matrix.arch }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            endian: little
+          - arch: s390x
+            endian: big
     steps:
-    - name: Multiarch Setup
+    - name: Repository Checkout
+      uses: actions/checkout@v7
+    - name: QEMU Setup
+      if: matrix.arch == 's390x'
+      uses: docker/setup-qemu-action@v4
+      with:
+        platforms: s390x
+    - name: Endianness Verification
+      shell: bash
       run: |
-        docker run --rm --privileged multiarch/qemu-user-static:register --reset
-    - name: Tests
-      uses: docker://multiarch/ubuntu-core:s390x-focal
+        mkdir -p Results
+        docker run --rm \
+          --platform linux/${{ matrix.arch }} \
+          -v "$PWD:/workspace:ro" \
+          -v "$PWD/Results:/results" \
+          -e EXPECTED_ENDIAN=${{ matrix.endian }} \
+          -w /workspace \
+          python:3.13-slim \
+          python3 -c '
+        import os, sys, runpy
+        expected = os.environ["EXPECTED_ENDIAN"]
+        actual = sys.byteorder
+        print(f"Architecture endianness: {actual}", flush=True)
+        if actual != expected:
+            raise RuntimeError(f"Expected {expected}, got {actual}")
+        runpy.run_path("Solution/FastHashes.Tests/endianness_tests.py", run_name="__main__")
+        ' | tee Results/output.txt
+    - name: Results Artifact Upload
+      if: always()
+      uses: actions/upload-artifact@v4
       with:
-        args: >
-          bash -c
-          "
-            uname -a &&
-            apt-get update -y &&
-            apt-get install -y git python3 &&
-            git clone https://github.com/TommasoBelluzzo/FastHashes &&
-            python3 FastHashes/Solution/FastHashes.Tests/endianness_tests.py > output.txt
-          "
-    - name: Package Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: Big Endian Artifact
-        path: output.txt
-  little_endian:
-    name: Little Endian
-    runs-on: ubuntu-latest
-    steps:
-    - name: Tests
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git python3
-        git clone https://github.com/TommasoBelluzzo/FastHashes
-        python3 FastHashes/Solution/FastHashes.Tests/endianness_tests.py > output.txt
-    - name: Package Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: Little Endian Artifact
-        path: output.txt
+        name: endianness-${{ matrix.arch }}
+        path: Results/
+        if-no-files-found: warn
