@@ -6,15 +6,14 @@ FastHashes is a suite of .NET non-cryptographic hash functions.
   <tr>
     <td align="right">Status:</td>
     <td align="left">
-      <a href="https://github.com/TommasoBelluzzo/FastHashes/actions/workflows/continuous_integration.yml"><img alt="Build" src="https://github.com/TommasoBelluzzo/FastHashes/actions/workflows/continuous_integration.yml/badge.svg?branch=master"/></a>
+      <a href="https://github.com/TommasoBelluzzo/FastHashes/actions/workflows/continuous_integration.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/TommasoBelluzzo/FastHashes/continuous_integration.yml?branch=master&style=flat&label=Build&color=1081C2"/></a>
       <a href="https://coveralls.io/github/TommasoBelluzzo/FastHashes?branch=master"><img alt="Coverage" src="https://img.shields.io/coveralls/github/TommasoBelluzzo/FastHashes?style=flat&label=Coverage&color=1081C2"/></a>
     </td>
   </tr>
   <tr>
     <td align="right">Info:</td>
     <td align="left">
-      <a href="#"><img alt="License" src="https://img.shields.io/github/license/TommasoBelluzzo/FastHashes?style=flat&label=License&color=1081C2"/></a>
-      <a href="#"><img alt="Lines" src="https://img.shields.io/tokei/lines/github/TommasoBelluzzo/FastHashes?style=flat&label=Lines&color=1081C2"/></a>
+      <a href="https://github.com/TommasoBelluzzo/FastHashes/blob/master/LICENSE.md"><img alt="License" src="https://img.shields.io/github/license/TommasoBelluzzo/FastHashes?style=flat&label=License&color=1081C2"/></a>
       <a href="#"><img alt="Size" src="https://img.shields.io/github/repo-size/TommasoBelluzzo/FastHashes?style=flat&label=Size&color=1081C2"/></a>
     </td>
   </tr>
@@ -155,7 +154,7 @@ The following NuGet packages are used by the unit testing project:
 | 34        | SpookyHash128           | 723.91 MB/s               | 155.67 MB/s               |
 | 35        | HalfSipHash             | 364.78 MB/s               | 119.96 MB/s               |
 
-The tests above have been conducted with the following machine setup:
+The benchmarks above were conducted using the following hardware and software configuration:
  * `CPU:` Intel Core i7-7700HQ @2.80GHz (4 Cores, 8 Threads, 256KB L1 Cache)
  * `RAM:` 16 GB x DDR4 SO-DIMM @1200MHz
  * `OS:` Microsoft Windows 10 64-Bit
