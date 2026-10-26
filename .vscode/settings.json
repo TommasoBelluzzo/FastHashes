@@ -1,0 +1,21 @@
+
+{
+  "dotnet.defaultSolution": "Solution/FastHashes.sln",
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  },
+  "search.exclude": {
+    "Solution/Output": true,
+    "Solution/Coverage": true,
+    "Solution/TestResults": true,
+    "Package": true
+  },
+  "coverage-gutters.coverageBaseDir": "Solution/Coverage",
+  "coverage-gutters.coverageFileNames": [
+    "coverage.info",
+    "lcov.info"
+  ],
+  "coverage-gutters.showGutterCoverage": false,
+  "coverage-gutters.showLineCoverage": true
+}

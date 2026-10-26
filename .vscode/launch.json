@@ -1,0 +1,54 @@
+
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Tests",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Build Tests (Debug)",
+      "program": "${workspaceFolder}/Solution/Output/Debug/net10.0/FastHashes.Tests.dll",
+      "cwd": "${workspaceFolder}/Solution/Output/Debug/net10.0",
+      "args": [],
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "justMyCode": false
+    },
+    {
+      "name": "Run Tests",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Build Tests",
+      "program": "${workspaceFolder}/Solution/Output/Release/net10.0/FastHashes.Tests.dll",
+      "cwd": "${workspaceFolder}/Solution/Output/Release/net10.0",
+      "args": [],
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "noDebug": true
+    },
+    {
+      "name": "Debug Benchmarks",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Build Benchmarks (Debug)",
+      "program": "${workspaceFolder}/Solution/Output/Debug/net10.0/FastHashes.Benchmarks.dll",
+      "cwd": "${workspaceFolder}/Solution",
+      "args": [],
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "justMyCode": false
+    },
+    {
+      "name": "Run Benchmarks",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Build Benchmarks",
+      "program": "${workspaceFolder}/Solution/Output/Release/net10.0/FastHashes.Benchmarks.dll",
+      "cwd": "${workspaceFolder}/Solution",
+      "args": [],
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "noDebug": true
+    }
+  ]
+}

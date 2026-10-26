@@ -1,0 +1,248 @@
+{
+  "version": "2.0.0",
+  "inputs": [
+    {
+      "id": "configuration",
+      "type": "pickString",
+      "description": "Build Configuration",
+      "options": [
+        "Release",
+        "Debug"
+      ],
+      "default": "Release"
+    },
+    {
+      "id": "platform",
+      "type": "pickString",
+      "description": "Solution Platform",
+      "options": [
+        "Any CPU",
+        "x64",
+        "x86"
+      ],
+      "default": "Any CPU"
+    }
+  ],
+  "tasks": [
+    {
+      "label": "Restore",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "restore",
+        "${workspaceFolder}/Solution/FastHashes.sln"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Debug",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "test",
+        "${workspaceFolder}/Solution/FastHashes.Tests/FastHashes.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "-p:Platform=AnyCPU"
+      ],
+      "options": {
+        "env": {
+          "VSTEST_HOST_DEBUG": "1"
+        }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Clean All",
+      "type": "shell",
+      "command": "Get-ChildItem -LiteralPath '${workspaceFolder}/Solution' -Directory -Recurse -Force -ErrorAction SilentlyContinue | Where-Object { $_.Name -in @('bin','obj') } | Sort-Object FullName -Descending | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue; @('${workspaceFolder}/Solution/Output','${workspaceFolder}/Solution/Coverage','${workspaceFolder}/Solution/TestResults','${workspaceFolder}/Package') | ForEach-Object { Remove-Item -LiteralPath $_ -Recurse -Force -ErrorAction SilentlyContinue }",
+      "windows": {
+        "options": {
+          "shell": {
+            "executable": "powershell.exe",
+            "args": [
+              "-NoProfile",
+              "-Command"
+            ]
+          }
+        }
+      },
+      "linux": {
+        "command": "find '${workspaceFolder}/Solution' -type d \\( -name bin -o -name obj \\) -prune -exec rm -rf {} +; rm -rf '${workspaceFolder}/Solution/Output' '${workspaceFolder}/Solution/Coverage' '${workspaceFolder}/Solution/TestResults' '${workspaceFolder}/Package'"
+      },
+      "osx": {
+        "command": "find '${workspaceFolder}/Solution' -type d \\( -name bin -o -name obj \\) -prune -exec rm -rf {} +; rm -rf '${workspaceFolder}/Solution/Output' '${workspaceFolder}/Solution/Coverage' '${workspaceFolder}/Solution/TestResults' '${workspaceFolder}/Package'"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Build All",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/Solution/FastHashes.sln",
+        "--configuration",
+        "${input:configuration}",
+        "-p:Platform=${input:platform}"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Rebuild All",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/Solution/FastHashes.sln",
+        "--configuration",
+        "${input:configuration}",
+        "-p:Platform=${input:platform}"
+      ],
+      "dependsOn": [
+        "Clean All"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Build Tests: Debug",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/Solution/FastHashes.Tests/FastHashes.Tests.csproj",
+        "--configuration",
+        "Debug",
+        "-p:Platform=AnyCPU"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Build Tests: Release",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/Solution/FastHashes.Tests/FastHashes.Tests.csproj",
+        "--configuration",
+        "Release",
+        "-p:Platform=AnyCPU"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Run Tests",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "test",
+        "${workspaceFolder}/Solution/FastHashes.Tests/FastHashes.Tests.csproj",
+        "--configuration",
+        "Release",
+        "--no-build",
+        "--no-restore",
+        "-p:Platform=AnyCPU"
+      ],
+      "dependsOn": [
+        "Build Tests: Release"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Tests + Coverage",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/Solution/FastHashes.Tests/FastHashes.Tests.csproj",
+        "--configuration",
+        "Release",
+        "--framework",
+        "net10.0",
+        "--no-build",
+        "--no-restore",
+        "-p:Platform=AnyCPU",
+        "--",
+        "--coverlet",
+        "--coverlet-output-format",
+        "lcov",
+        "--results-directory",
+        "${workspaceFolder}/Solution/Coverage",
+        "--coverlet-exclude-by-attribute",
+        "CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute,GeneratedCodeAttribute",
+        "--coverlet-skip-auto-props"
+      ],
+      "dependsOn": [
+        "Build Tests: Release"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build Benchmarks: Debug",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/Solution/FastHashes.Benchmarks/FastHashes.Benchmarks.csproj",
+        "--configuration",
+        "Debug",
+        "-p:Platform=AnyCPU"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Build Benchmarks: Release",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/Solution/FastHashes.Benchmarks/FastHashes.Benchmarks.csproj",
+        "--configuration",
+        "Release",
+        "-p:Platform=AnyCPU"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Run Benchmarks",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/Solution/FastHashes.Benchmarks/FastHashes.Benchmarks.csproj",
+        "--configuration",
+        "Release",
+        "--framework",
+        "net10.0",
+        "--no-build",
+        "--no-restore",
+        "-p:Platform=AnyCPU"
+      ],
+      "dependsOn": [
+        "Build Benchmarks: Release"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    },
+    {
+      "label": "Create Packages",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "pack",
+        "${workspaceFolder}/Solution/FastHashes/FastHashes.csproj",
+        "--configuration",
+        "${input:configuration}",
+        "-p:Platform=${input:platform}",
+        "--output",
+        "${workspaceFolder}/Package"
+      ],
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}

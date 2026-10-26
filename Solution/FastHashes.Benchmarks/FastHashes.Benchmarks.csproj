@@ -2,15 +2,16 @@
 
   <PropertyGroup>
     <Description>Benchmarks for the FastHashes library.</Description>
+    <TargetFramework>net10.0</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
     <StartupObject>FastHashes.Benchmarks.Program</StartupObject>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Debug\</OutputPath>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile></DocumentationFile>
@@ -21,7 +22,6 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Debug-x64\</OutputPath>
     <PlatformTarget>x64</PlatformTarget>
     <DocumentationFile></DocumentationFile>
@@ -29,10 +29,9 @@
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
-  
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Debug-x86\</OutputPath>
     <PlatformTarget>x86</PlatformTarget>
     <DocumentationFile></DocumentationFile>
@@ -42,7 +41,6 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Release\</OutputPath>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -54,7 +52,6 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Release-x64\</OutputPath>
     <PlatformTarget>x64</PlatformTarget>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -64,9 +61,8 @@
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
-  
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\Output\Release-x86\</OutputPath>
     <PlatformTarget>x86</PlatformTarget>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -77,48 +73,8 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
-  <Choose>
-    <When Condition="'$(BuildingInsideVisualStudio)'=='false'">
-      <PropertyGroup>
-        <TargetFrameworks>netcoreapp2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
-      </PropertyGroup>
-    </When>
-    <Otherwise>
-      <Choose>
-        <When Condition="$(VisualStudioVersion.StartsWith('17.0'))">
-          <PropertyGroup>
-            <TargetFrameworks>netcoreapp2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
-          </PropertyGroup>
-        </When>
-        <When Condition="$(VisualStudioVersion.StartsWith('16.0'))">
-          <PropertyGroup>
-            <TargetFrameworks>netcoreapp2.1;netcoreapp3.1;net5.0</TargetFrameworks>
-          </PropertyGroup>
-        </When>
-        <Otherwise>
-          <PropertyGroup>
-            <TargetFrameworks>netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
-          </PropertyGroup>
-        </Otherwise>
-      </Choose>
-    </Otherwise>
-  </Choose>
-
-  <Choose>
-    <When Condition="'$(TargetFramework)'=='netcoreapp2.1'">
-      <ItemGroup>
-        <ProjectReference Include="..\FastHashes\FastHashes.csproj">
-          <SetTargetFramework>TargetFramework=netstandard2.0</SetTargetFramework>
-        </ProjectReference>
-      </ItemGroup>
-    </When>
-    <Otherwise>
-      <ItemGroup>
-        <ProjectReference Include="..\FastHashes\FastHashes.csproj">
-          <SetTargetFramework>TargetFramework=netstandard2.1</SetTargetFramework>
-        </ProjectReference>
-      </ItemGroup>
-    </Otherwise>
-  </Choose>
+  <ItemGroup>
+    <ProjectReference Include="..\FastHashes\FastHashes.csproj" />
+  </ItemGroup>
 
 </Project>
