@@ -76,13 +76,13 @@ jobs:
     needs: continuous_integration
     runs-on: ubuntu-latest
     steps:
-    - name: Download Coverage Artifacts
+    - name: Coverage Artifacts Download
       uses: actions/download-artifact@v4
       with:
         pattern: Coverage Artifact (*)
         path: Coverage
         merge-multiple: false
-    - name: Validate Coverage Artifacts
+    - name: Coverage Artifacts Validation
       shell: bash
       run: |
         for os in ubuntu-latest windows-latest macos-latest; do
