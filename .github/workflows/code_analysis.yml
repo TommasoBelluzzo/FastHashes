@@ -24,7 +24,5 @@ jobs:
       with:
         languages: csharp
         build-mode: autobuild
-    - name: Analysis Build
-      uses: github/codeql-action/autobuild@v2
     - name: Analysis Execution
       uses: github/codeql-action/analyze@v4

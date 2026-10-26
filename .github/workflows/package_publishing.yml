@@ -20,12 +20,15 @@ concurrency:
 jobs:
   package_publishing:
     name: Package Publishing
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
     - name: Repository Checkout
       uses: actions/checkout@v7
+      with:
+        persist-credentials: true
     - name: Version Bump
       id: bump
       shell: bash
@@ -72,12 +75,12 @@ jobs:
             "s#<AssemblyVersion>[0-9]+(\.[0-9]+){3}</AssemblyVersion>#<AssemblyVersion>$ASSEMBLY_VERSION</AssemblyVersion>#" \
             "$VERSION_FILE"
         fi
-        if ! grep -Fxq "    <Version>$VERSION</Version>" "$VERSION_FILE" || ! grep -Fxq "    <FileVersion>$FILE_VERSION</FileVersion>" "$VERSION_FILE"; then
+        if ! grep -Eq "^[[:space:]]*<Version>$VERSION</Version>[[:space:]]*$" "$VERSION_FILE" || ! grep -Eq "^[[:space:]]*<FileVersion>$FILE_VERSION</FileVersion>[[:space:]]*$" "$VERSION_FILE"; then
           echo "FILE VERSION UPDATE FAILED"
           exit 1
         fi
         if [[ "$TARGET" == "MAJOR" ]] && \
-           ! grep -Fxq "    <AssemblyVersion>$ASSEMBLY_VERSION</AssemblyVersion>" "$VERSION_FILE"; then
+           ! grep -Eq "^[[:space:]]*<AssemblyVersion>$ASSEMBLY_VERSION</AssemblyVersion>[[:space:]]*$" "$VERSION_FILE"; then
           echo "ASSEMBLY VERSION UPDATE FAILED"
           exit 1
         fi
@@ -141,10 +144,8 @@ jobs:
           --api-key "$NUGET_TOKEN"
     - name: Version Commit
       run: |
-        git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
         git config --local user.name "${{ secrets.BOT_USERNAME }}"
         git config --local user.email "${{ secrets.BOT_EMAIL }}"
-        git checkout -- README.md
-        git add --a
-        git commit -m "Release $VERSION"  
-        git push
+        git add Solution/Directory.Build.props
+        git commit -m "Release $PACKAGE_VERSION"
+        git push origin HEAD:master

@@ -28,6 +28,7 @@ jobs:
     - name: Endianness Verification
       shell: bash
       run: |
+        set -euo pipefail
         mkdir -p Results
         docker run --rm \
           --platform linux/${{ matrix.arch }} \
