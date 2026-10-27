@@ -8,7 +8,9 @@
       "preLaunchTask": "Build Tests: Debug",
       "program": "${workspaceFolder}/Solution/Output/Debug/net10.0/FastHashes.Tests.dll",
       "cwd": "${workspaceFolder}/Solution/Output/Debug/net10.0",
-      "args": [],
+      "args": [
+        "-automated"
+      ],
       "console": "integratedTerminal",
       "stopAtEntry": true,
       "justMyCode": false,
@@ -35,7 +37,9 @@
       "preLaunchTask": "Build Benchmarks: Debug",
       "program": "${workspaceFolder}/Solution/Output/Debug/net10.0/FastHashes.Benchmarks.dll",
       "cwd": "${workspaceFolder}/Solution",
-      "args": [],
+      "args": [
+        "-automated"
+      ],
       "console": "integratedTerminal",
       "stopAtEntry": true,
       "justMyCode": false,
