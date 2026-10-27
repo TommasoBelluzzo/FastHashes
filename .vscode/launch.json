@@ -10,8 +10,12 @@
       "cwd": "${workspaceFolder}/Solution/Output/Debug/net10.0",
       "args": [],
       "console": "integratedTerminal",
-      "stopAtEntry": false,
-      "justMyCode": false
+      "stopAtEntry": true,
+      "justMyCode": false,
+      "logging": {
+        "moduleLoad": true,
+        "exceptions": false
+      }
     },
     {
       "name": "Run Tests",
@@ -22,8 +26,7 @@
       "cwd": "${workspaceFolder}/Solution/Output/Release/net10.0",
       "args": [],
       "console": "integratedTerminal",
-      "stopAtEntry": false,
-      "noDebug": true
+      "stopAtEntry": false
     },
     {
       "name": "Debug Benchmarks",
@@ -34,8 +37,12 @@
       "cwd": "${workspaceFolder}/Solution",
       "args": [],
       "console": "integratedTerminal",
-      "stopAtEntry": false,
-      "justMyCode": false
+      "stopAtEntry": true,
+      "justMyCode": false,
+      "logging": {
+        "moduleLoad": true,
+        "exceptions": false
+      }
     },
     {
       "name": "Run Benchmarks",
@@ -46,8 +53,7 @@
       "cwd": "${workspaceFolder}/Solution",
       "args": [],
       "console": "integratedTerminal",
-      "stopAtEntry": false,
-      "noDebug": true
+      "stopAtEntry": false
     }
   ]
 }

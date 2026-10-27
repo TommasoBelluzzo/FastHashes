@@ -1,48 +1,32 @@
-﻿#region Using Directives
+﻿
+#region Using Directives
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
+
+using ReferenceCase = (System.String Algorithm, System.String Name, System.String Seed, System.String Input, System.String Expected, System.String Provenance);
 #endregion
 
 namespace FastHashes.Tests
 {
     public sealed class ConformanceFixture
     {
-        #region Constants
-        private const String VECTORS_DIRECTORY = "ReferenceVectors";
-        #endregion
-
         #region Members
-        private readonly IEnumerable<ReferenceCase> m_Cases;
-        #endregion
-
-        #region Properties
-        public IEnumerable<ReferenceCase> Cases => m_Cases;
+        private readonly Dictionary<String,List<ReferenceCase>> m_CasesByAlgorithm = new(StringComparer.Ordinal);
         #endregion
 
         #region Constructors
         public ConformanceFixture()
         {
-            String directory = Path.Combine(AppContext.BaseDirectory, "Data", VECTORS_DIRECTORY);
+            String directory = Path.Combine(AppContext.BaseDirectory, "Data", "Vectors");
 
             if (!Directory.Exists(directory))
-            {
-                m_Cases = Array.Empty<ReferenceCase>();
                 return;
-            }
 
             String[] files = Directory.GetFiles(directory, "*.json", SearchOption.TopDirectoryOnly);
             Array.Sort(files, StringComparer.Ordinal);
-
-            if (files.Length == 0)
-            {
-                m_Cases = Array.Empty<ReferenceCase>();
-                return;
-            }
-
-            List<ReferenceCase> casesList = new List<ReferenceCase>();
 
             foreach (String file in files)
             {
@@ -64,6 +48,8 @@ namespace FastHashes.Tests
                 if (!root.TryGetProperty("cases", out JsonElement testCases) || (testCases.ValueKind != JsonValueKind.Array))
                     throw new InvalidDataException($"Invalid reference cases in {file}");
 
+                List<ReferenceCase> algorithmCases = new List<ReferenceCase>();
+
                 foreach (JsonElement testCase in testCases.EnumerateArray())
                 {
                     String name = RequiredString(testCase, "name");
@@ -71,11 +57,11 @@ namespace FastHashes.Tests
                     String input = RequiredString(testCase, "input", true);
                     String expected = RequiredString(testCase, "expected");
 
-                    casesList.Add(new ReferenceCase(algorithm, name, seed, input, expected, provenance));
+                    algorithmCases.Add((algorithm, name, seed, input, expected, provenance));
                 }
-            }
 
-            m_Cases = casesList;
+                m_CasesByAlgorithm.Add(algorithm, algorithmCases);
+            }
         }
         #endregion
 
@@ -93,47 +79,17 @@ namespace FastHashes.Tests
             return value;
         }
 
-        public static Hash CreateHash(String algorithm, String seed)
+        public IEnumerable<ReferenceCase> GetCases()
         {
-            UInt64 seedValue = UInt64.Parse(seed.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? seed.Substring(2) : seed, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-
-            switch (algorithm)
-            {
-                case "xxHash32":
-                    return new XxHash32(checked((UInt32)seedValue));
-
-                case "xxHash64":
-                    return new XxHash64(seedValue);
-
-                default:
-                    throw new NotSupportedException($"Unknown reference algorithm: {algorithm}");
-            }
+            return m_CasesByAlgorithm.Values.SelectMany(cases => cases);
         }
-        #endregion
 
-        #region Nested Classes
-        public sealed class ReferenceCase
+        public IEnumerable<ReferenceCase> GetCases(String algorithm)
         {
-            #region Properties
-            public String Algorithm { get; }
-            public String Name { get; }
-            public String Seed { get; }
-            public String Input { get; }
-            public String Expected { get; }
-            public String Provenance { get; }
-            #endregion
+            if (m_CasesByAlgorithm.TryGetValue(algorithm, out List<ReferenceCase> cases))
+                return cases;
 
-            #region Constructors
-            public ReferenceCase(String algorithm, String name, String seed, String input, String expected, String provenance)
-            {
-                Algorithm = algorithm;
-                Name = name;
-                Seed = seed;
-                Input = input;
-                Expected = expected;
-                Provenance = provenance;
-            }
-            #endregion
+            return Array.Empty<ReferenceCase>();
         }
         #endregion
     }

@@ -10,8 +10,8 @@ namespace FastHashes.Tests
         #region Methods
         private static Boolean SequencesEqual(Byte[] array1, Byte[] array2)
         {
-            if (ReferenceEquals(array1, null))
-                return ReferenceEquals(array2, null);
+            if (array1 is null)
+                return array2 is null;
 
             if (ReferenceEquals(array1, array2))
                 return true;
@@ -92,7 +92,7 @@ namespace FastHashes.Tests
             if (length1 != length2)
                 return -Math.Min(Math.Max(length1 - length2, -1), 1);
 
-            Int32 n = Math.Max(length1, length2);
+            Int32 n = Math.Min(length1, length2);
             Int32 diff = 0;
 
             for (Int32 i = 0; i < n; ++i)

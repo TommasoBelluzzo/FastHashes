@@ -2,6 +2,7 @@
 #region Using Directives
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using Xunit;
@@ -9,7 +10,7 @@ using Xunit;
 
 namespace FastHashes.Tests
 {
-    public sealed class HashTests : IClassFixture<CollisionFixture>
+    public sealed class HashTests : IClassFixture<ConformanceFixture>, IClassFixture<CollisionFixture>
     {
         #region Constants
         private const UInt32 TEST_SEED = 0x9E3779B9u;
@@ -17,12 +18,14 @@ namespace FastHashes.Tests
 
         #region Members
         private readonly CollisionFixture m_CollisionFixture;
+        private readonly ConformanceFixture m_ConformanceFixture;
         #endregion
 
         #region Constructors
-        public HashTests(CollisionFixture collisionFixture)
+        public HashTests(ConformanceFixture conformanceFixture, CollisionFixture collisionFixture)
         {
             m_CollisionFixture = collisionFixture;
+            m_ConformanceFixture = conformanceFixture;
         }
         #endregion
 
@@ -88,7 +91,7 @@ namespace FastHashes.Tests
 
         [Theory]
         [MemberData(nameof(HashTestsCases.DataGeneric), MemberType=typeof(HashTestsCases))]
-        public void InputEmptyTest(String hashName, Func<UInt32,Hash> hashInitializer)
+        public void InputEmptyTest(String hashName, Func<UInt64,Hash> hashInitializer)
         {
             Hash hash = hashInitializer(0u);
 
@@ -104,12 +107,10 @@ namespace FastHashes.Tests
 
         [Theory]
         [MemberData(nameof(HashTestsCases.DataGeneric), MemberType=typeof(HashTestsCases))]
-        public void OutputTest(String hashName, Func<UInt32,Hash> hashInitializer)
+        public void OutputTest(String hashName, Func<UInt64,Hash> hashInitializer)
         {
-            Hash hash = hashInitializer(0u);
-
             Byte[] buffer = new Byte[] { 23, 134, 0, 237, 0, 81, 64, 64, 39, 5 };
-
+            Hash hash = hashInitializer(0u);
             Byte[] expected = hash.ComputeHash(buffer);
 
             Assert.Equal(expected, hash.ComputeHash(buffer, buffer.Length));
@@ -125,7 +126,7 @@ namespace FastHashes.Tests
 
         [Theory]
         [MemberData(nameof(HashTestsCases.DataLength), MemberType=typeof(HashTestsCases))]
-        public void LengthTest(String hashName, Func<UInt32,Hash> hashInitializer, Int32 maximumLength)
+        public void LengthTest(String hashName, Func<UInt64,Hash> hashInitializer, Int32 maximumLength)
         {
             UInt32[] seeds = { 0u, TEST_SEED };
 
@@ -133,7 +134,8 @@ namespace FastHashes.Tests
             {
                 RandomXorShift random = new RandomXorShift(TEST_SEED);
                 Hash hash = hashInitializer(seed);
-                List<String> errorLengths = new List<String>();
+
+                Int32 failed = 0;
 
                 for (Int32 i = 0; i <= maximumLength; ++i)
                 {
@@ -144,19 +146,19 @@ namespace FastHashes.Tests
                     {
                         hash.ComputeHash(buffer);
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        errorLengths.Add($"{i}: {ex.GetType().Name} - {ex.Message}");
+                        ++failed;
                     }
                 }
 
-                Assert.True(errorLengths.Count == 0, $"Length validation failed for {hashName}, seed 0x{seed:X8}: {String.Join(", ", errorLengths)}");
+                Assert.True(failed == 0, $"Length test failed for {hashName}, seed 0x{seed:X8}: {failed} of {maximumLength + 1} lengths failed.");
             }
         }
 
         [Theory]
         [MemberData(nameof(HashTestsCases.DataLengthExtended), MemberType=typeof(HashTestsCases))]
-        public void LengthExtendedTest(String hashName, Func<UInt32,Hash> hashInitializer, Int32 length)
+        public void LengthExtendedTest(String hashName, Func<UInt64,Hash> hashInitializer, Int32 length)
         {
             Byte[] buffer = new Byte[length];
 
@@ -174,7 +176,7 @@ namespace FastHashes.Tests
 
         [Theory]
         [MemberData(nameof(HashTestsCases.DataValidation), MemberType=typeof(HashTestsCases))]
-        public void ValidationTest(String hashName, Func<UInt32,Hash> hashInitializer, String expectedValue)
+        public void ValidationTest(String hashName, Func<UInt64,Hash> hashInitializer, String expectedValue)
         {
             Hash hash0 = hashInitializer(0u);
             Int32 hashBytes = hash0.Length / 8;
@@ -200,7 +202,7 @@ namespace FastHashes.Tests
 
         [Theory]
         [MemberData(nameof(HashTestsCases.DataGeneric), MemberType=typeof(HashTestsCases))]
-        public void CollisionTest(String hashName, Func<UInt32,Hash> hashInitializer)
+        public void CollisionTest(String hashName, Func<UInt64,Hash> hashInitializer)
         {
             Int32 wordsCount = m_CollisionFixture.Words.Count();
             Assert.False(wordsCount == 0, "Fixture Words Empty");
@@ -226,6 +228,31 @@ namespace FastHashes.Tests
             Boolean cte = MathUtilities.CollisionsThresholdExceeded(hashes, hashBytes);
 
             Assert.False(cte, $"Collisions threshold exceeded for {hashName}, seed 0x{TEST_SEED:X8}.");
+        }
+
+        [Theory]
+        [MemberData(nameof(HashTestsCases.DataGeneric), MemberType=typeof(HashTestsCases))]
+        public void ConformanceTest(String hashName, Func<UInt64,Hash> hashInitializer)
+        {
+            Int32 total = 0;
+            Int32 failed = 0;
+
+            foreach (var (_, _, Seed, Input, Expected, _) in m_ConformanceFixture.GetCases(hashName))
+            {
+                ++total;
+
+                UInt64 seedValue = UInt64.Parse(Seed.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? Seed[2..] : Seed, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                Hash hash = hashInitializer(seedValue);
+
+                Byte[] buffer = Convert.FromHexString(Input);
+                Byte[] actual = hash.ComputeHash(buffer);
+                Byte[] expected = Convert.FromHexString(Expected);
+
+                if ((expected.Length != (hash.Length / 8)) || !actual.AsSpan().SequenceEqual(expected))
+                    ++failed;
+            }
+
+            Assert.True(failed == 0, $"Conformance test failed for {hashName}: {failed} of {total} vectors failed.");
         }
         #endregion
     }
