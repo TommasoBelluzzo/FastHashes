@@ -3,12 +3,8 @@
   "reference": {
     "repository": "https://github.com/Cyan4973/xxHash",
     "revision": "Debian libxxhash0 0.8.3-2 (upstream 0.8.3; NOT commit-pinned)",
-    "entryPoint": "XXH32",
-    "license": "BSD-2-Clause",
-    "generator": "Python ctypes direct call to libxxhash.so.0",
-    "configuration": "Debian amd64, libxxhash0 0.8.3-2"
+    "entryPoint": "XXH32"
   },
-  "outputEncoding": "little-endian",
   "cases": [
     {
       "name": "zero-0-seed-00000000",

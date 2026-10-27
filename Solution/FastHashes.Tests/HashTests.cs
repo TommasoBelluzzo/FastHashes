@@ -234,10 +234,14 @@ namespace FastHashes.Tests
         [MemberData(nameof(HashTestsCases.DataGeneric), MemberType=typeof(HashTestsCases))]
         public void ConformanceTest(String hashName, Func<UInt64,Hash> hashInitializer)
         {
+            var cases = m_ConformanceFixture.GetCases(hashName);
+
+            Assert.SkipWhen(!cases.Any(), $"No reference vectors available for {hashName}.");
+
             Int32 total = 0;
             Int32 failed = 0;
 
-            foreach (var (_, _, Seed, Input, Expected, _) in m_ConformanceFixture.GetCases(hashName))
+            foreach (var (_, _, Seed, Input, Expected, _) in cases)
             {
                 ++total;
 
