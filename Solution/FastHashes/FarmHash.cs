@@ -166,7 +166,7 @@ namespace FastHashes
 
             for (Int32 i = 0; i < count; ++i)
             {
-                a = (a * C1) + buffer[offset + i];
+                a = (a * C1) + unchecked((UInt32)(SByte)buffer[offset + i]);
                 b ^= a;
             }
 

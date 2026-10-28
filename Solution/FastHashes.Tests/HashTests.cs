@@ -176,7 +176,7 @@ namespace FastHashes.Tests
 
         [Theory]
         [MemberData(nameof(HashTestsCases.DataValidation), MemberType=typeof(HashTestsCases))]
-        public void ValidationTest(String hashName, Func<UInt64,Hash> hashInitializer, String expectedValue)
+        public void ValidationTest(String hashName, Func<UInt64,Hash> hashInitializer, String expected)
         {
             Hash hash0 = hashInitializer(0u);
             Int32 hashBytes = hash0.Length / 8;
@@ -195,9 +195,9 @@ namespace FastHashes.Tests
             }
 
             Byte[] h0 = hash0.ComputeHash(bufferFinal);
-            String actualValue = String.Concat("0x", BitConverter.ToString(h0).Replace("-", String.Empty));
+            String actual = String.Concat("0x", BitConverter.ToString(h0).Replace("-", String.Empty));
 
-            Assert.Equal(expectedValue, actualValue);
+            Assert.Equal(expected, actual);
         }
 
         [Theory]

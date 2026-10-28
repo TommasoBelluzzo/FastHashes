@@ -100,7 +100,7 @@ namespace FastHashes
     public sealed class WyHash64 : Hash
     {
         #region Constants
-        private static readonly UInt64[] DEFAULT_SECRET = new UInt64[] { 0XA0761D6478BD642ful, 0XE7037ED1A0B428DBul, 0X8EBC6AF09C88C6E3ul, 0X589965CC75374CC3ul };
+        private static readonly UInt64[] DEFAULT_SECRET = new UInt64[] { 0x2D358DCCAA6C78A5ul, 0x8BB84B93962EACC9ul, 0x4B33A62ED433D4A3ul, 0x4D5A2DA51DE1AA47ul };
         #endregion
 
         #region Members
@@ -183,8 +183,8 @@ namespace FastHashes
             UInt64 lo = t + (rm1 << 32);
             UInt64 hi = rh + (rm0 >> 32) + (rm1 >> 32) + ((t < rl) ? 1ul : 0ul) + ((lo < t) ? 1ul : 0ul);
 
-            a ^= lo;
-            b ^= hi;
+            a = lo;
+            b = hi;
         }
 
         /// <inheritdoc/>
@@ -193,7 +193,7 @@ namespace FastHashes
             Int32 offset = 0;
             Int32 count = buffer.Length;
 
-            UInt64 seed = m_Seed ^ m_Secret[0];
+            UInt64 seed = m_Seed ^ WyMix(m_Seed ^ m_Secret[0], m_Secret[1]);
             UInt64 a, b;
 
             if (count <= 16)
@@ -218,7 +218,7 @@ namespace FastHashes
             {
                 Int32 i = count;
 
-                if (i > 48)
+                if (i >= 48)
                 {
                     UInt64 s1 = seed;
                     UInt64 s2 = seed;
@@ -233,7 +233,7 @@ namespace FastHashes
                         i -= 48;
                         offset += 48;
                     }
-                    while (i > 48);
+                    while (i >= 48);
 
                     seed ^= s1 ^ s2;
                 }
@@ -251,9 +251,12 @@ namespace FastHashes
                 b = BinaryOperations.Read64(buffer, offset + i - 8);
             }
 
-            UInt64 h1 = m_Secret[1] ^ (UInt64)count;
-            UInt64 h2 = WyMix(a ^ m_Secret[1], b ^ seed);
-            UInt64 hash = WyMix(h1, h2);
+            a ^= m_Secret[1];
+            b ^= seed;
+
+            WyMum(ref a, ref b);
+
+            UInt64 hash = WyMix(a ^ m_Secret[0] ^ (UInt64)count, b ^ m_Secret[1]);
 
             Byte[] result = BinaryOperations.ToArray64(hash);
 

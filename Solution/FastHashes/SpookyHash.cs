@@ -133,7 +133,8 @@ namespace FastHashes
 
             UInt64[] vr = BinaryOperations.ReadArray64(data, offset, 12);
 
-            LongMix(ref hash, vr);
+            for (Int32 i = 0; i < 12; ++i)
+                hash[i] += vr[i];
 
             for (Int32 i = 0; i < 3; ++i)
                 LongEnd(ref hash);
@@ -182,7 +183,7 @@ namespace FastHashes
                 }
             }
 
-            hash[3] = (UInt64)count << 56;
+            hash[3] += (UInt64)count << 56;
 
             switch (remainder)
             {

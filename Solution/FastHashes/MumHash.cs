@@ -69,8 +69,15 @@ namespace FastHashes
             UInt64 rm0 = hv1 * lv2;
             UInt64 rm1 = hv2 * lv1;
 
-            UInt64 lo = rl + (rm0 << 32) + (rm1 << 32);
-            UInt64 hi = rh + (rm0 >> 32) + (rm1 >> 32);
+            UInt64 carry = 0ul;
+
+            UInt64 t = rl + (rm0 << 32);
+            carry += (t < rl) ? 1ul : 0ul;
+
+            UInt64 lo = t + (rm1 << 32);
+            carry += (lo < t) ? 1ul : 0ul;
+
+            UInt64 hi = rh + (rm0 >> 32) + (rm1 >> 32) + carry;
 
             return hi + lo;
         }

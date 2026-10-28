@@ -64,9 +64,6 @@ namespace FastHashes
             UInt64[] b = new UInt64[4];
             UInt64[] s = new UInt64[] { 0ul, 0ul, 0ul, (UInt64)count };
 
-            if (count == 0)
-                goto Finalize;
-
             UInt64 seed = (UInt64)m_Seed;
 
             while ((count - offset) >= 32)
@@ -83,8 +80,6 @@ namespace FastHashes
 
             for (Int32 i = 0; i < 6; ++i)
                 Pengy(seed, b, ref s);
-
-            Finalize:
 
             UInt64 hash = s[0] + s[1] + s[2] + s[3];
             Byte[] result = BinaryOperations.ToArray64(hash);
