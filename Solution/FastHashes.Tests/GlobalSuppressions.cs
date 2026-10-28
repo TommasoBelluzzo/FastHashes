@@ -1,9 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("Style", "IDE0016:Use 'throw' expression", Justification = "<Pending>", Scope = "member", Target = "~M:FastHashes.Tests.BinaryOperationsTestsCases.TestCase`1.#ctor(System.Func{`0},`0)")]
-[assembly: SuppressMessage("Style", "IDE0016:Use 'throw' expression", Justification = "<Pending>", Scope = "member", Target = "~M:FastHashes.Tests.BinaryOperationsTestsCases.TestCaseArray`1.#ctor(System.Func{`0[]},`0[])")]
-[assembly: SuppressMessage("Style", "IDE0016:Use 'throw' expression", Justification = "<Pending>", Scope = "member", Target = "~M:FastHashes.Tests.RandomTestsCases.TestCaseBuffer.#ctor(System.UInt32,System.Int32,System.Int32,System.Int32,System.Byte[])")]
-[assembly: SuppressMessage("Style", "IDE0066:Use 'switch' expression", Justification = "<Pending>", Scope = "member", Target = "~M:FastHashes.Tests.Utilities.IsValidPrimitive(System.Type)~System.Boolean")]
 [assembly: SuppressMessage("Usage", "xUnit1026:Theory methods should use all of their parameters", Justification = "<Pending>", Scope = "member", Target = "~M:FastHashes.Tests.HashTests.InputEmptyTest(System.String,System.Func{System.UInt64,FastHashes.Hash})")]
 [assembly: SuppressMessage("Usage", "xUnit1026:Theory methods should use all of their parameters", Justification = "<Pending>", Scope = "member", Target = "~M:FastHashes.Tests.HashTests.OutputTest(System.String,System.Func{System.UInt64,FastHashes.Hash})")]
 [assembly: SuppressMessage("Usage", "xUnit1026:Theory methods should use all of their parameters", Justification = "<Pending>", Scope = "member", Target = "~M:FastHashes.Tests.HashTests.LengthExtendedTest(System.String,System.Func{System.UInt64,FastHashes.Hash},System.Int32)")]

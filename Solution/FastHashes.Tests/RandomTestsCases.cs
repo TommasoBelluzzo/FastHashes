@@ -8,113 +8,40 @@ namespace FastHashes.Tests
     public static class RandomTestsCases
     {
         #region Test Cases
-        private static readonly List<TestCaseBuffer> s_TestCasesBuffer = new List<TestCaseBuffer>
-        {
-            new TestCaseBuffer(9u, 0, 0, 0, Array.Empty<Byte>()),
-            new TestCaseBuffer(266u, 10, 0, 3, new Byte[] { 193, 74, 65, 0, 0, 0, 0, 0, 0, 0 }),
-            new TestCaseBuffer(148077u, 10, 0, 10, new Byte[] { 221, 40, 74, 23, 172, 98, 184, 208, 157, 36 }),
-            new TestCaseBuffer(8018u, 10, 1, 5, new Byte[] { 0, 71, 102, 179, 5, 105, 0, 0, 0, 0 }),
-            new TestCaseBuffer(5946u, 10, 3, 2, new Byte[] { 0, 0, 0, 103, 109, 0, 0, 0, 0, 0 }),
-            new TestCaseBuffer(139u, 10, 7, 1, new Byte[] { 0, 0, 0, 0, 0, 0, 0, 73, 0, 0 })
-        };
+        private static readonly List<(UInt32 Seed, Int32 BufferLength, Int32 Offset, Int32 Count, Byte[] Expected)> s_TestCasesBuffer =
+        [
+            (9u, 0, 0, 0, []),
+            (266u, 10, 0, 3, [193, 74, 65, 0, 0, 0, 0, 0, 0, 0]),
+            (148077u, 10, 0, 10, [221, 40, 74, 23, 172, 98, 184, 208, 157, 36]),
+            (8018u, 10, 1, 5, [0, 71, 102, 179, 5, 105, 0, 0, 0, 0]),
+            (5946u, 10, 3, 2, [0, 0, 0, 103, 109, 0, 0, 0, 0, 0]),
+            (139u, 10, 7, 1, [0, 0, 0, 0, 0, 0, 0, 73, 0, 0])
+        ];
 
-        private static readonly List<TestCaseValue> s_TestCasesValue = new List<TestCaseValue>
-        {
-            new TestCaseValue(1707731u, 3589663199u),
-            new TestCaseValue(26016u, 107436895u),
-            new TestCaseValue(37u, 88619671u),
-            new TestCaseValue(75u, 88820105u),
-            new TestCaseValue(8810u, 73101954u),
-            new TestCaseValue(93455u, 237727616u),
-            new TestCaseValue(0u, 88675226u),
-            new TestCaseValue(740u, 90056284u),
-            new TestCaseValue(128u, 88938266u),
-            new TestCaseValue(8944u, 73377480u)
-        };
+        private static readonly List<(UInt32 Seed, UInt32 Expected)> s_TestCasesValue =
+        [
+            (1707731u, 3589663199u),
+            (26016u, 107436895u),
+            (37u, 88619671u),
+            (75u, 88820105u),
+            (8810u, 73101954u),
+            (93455u, 237727616u),
+            (0u, 88675226u),
+            (740u, 90056284u),
+            (128u, 88938266u),
+            (8944u, 73377480u)
+        ];
 
         public static IEnumerable<Object[]> DataBuffer()
         {
-            foreach (TestCaseBuffer testCase in s_TestCasesBuffer)
-                yield return (new Object[] { testCase.Seed, testCase.BufferLength, testCase.Offset, testCase.Count, testCase.ExpectedValue });
+            foreach (var (Seed, BufferLength, Offset, Count, Expected) in s_TestCasesBuffer)
+                yield return new Object[] { Seed, BufferLength, Offset, Count, Expected };
         }
 
         public static IEnumerable<Object[]> DataValue()
         {
-            foreach (TestCaseValue testCase in s_TestCasesValue)
-                yield return (new Object[] { testCase.Seed, testCase.ExpectedValue });
-        }
-        #endregion
-
-        #region Nested Classes
-        private sealed class TestCaseBuffer
-        {
-            #region Members
-            private readonly Byte[] m_ExpectedValue;
-            private readonly Int32 m_Count;
-            private readonly Int32 m_Offset;
-            private readonly Int32 m_BufferLength;
-            private readonly UInt32 m_Seed;
-            #endregion
-
-            #region Properties
-            public Byte[] ExpectedValue => m_ExpectedValue;
-            public Int32 Count => m_Count;
-            public Int32 Offset => m_Offset;
-            public Int32 BufferLength => m_BufferLength;
-            public UInt32 Seed => m_Seed;
-            #endregion
-
-            #region Constructors
-            public TestCaseBuffer(UInt32 seed, Int32 bufferLength, Int32 offset, Int32 count, Byte[] expectedValue)
-            {
-                if (bufferLength < 0)
-                    throw new ArgumentException("Invalid buffer length specified.", nameof(bufferLength));
-
-                if (expectedValue == null)
-                    throw new ArgumentNullException(nameof(expectedValue));
-
-                m_ExpectedValue = expectedValue;
-                m_BufferLength = bufferLength;
-                m_Count = count;
-                m_Offset = offset;
-                m_Seed = seed;
-            }
-            #endregion
-
-            #region Methods
-            public override String ToString()
-            {
-                return $"{GetType().Name}: {nameof(Seed)}={m_Seed} {nameof(BufferLength)}={m_BufferLength} {nameof(Offset)}={m_Offset} {nameof(Count)}={m_Count} {nameof(ExpectedValue)}={Utilities.FormatNumericArray(m_ExpectedValue)}";
-            }
-            #endregion
-        }
-
-        private sealed class TestCaseValue
-        {
-            #region Members
-            private readonly UInt32 m_ExpectedValue;
-            private readonly UInt32 m_Seed;
-            #endregion
-
-            #region Properties
-            public UInt32 ExpectedValue => m_ExpectedValue;
-            public UInt32 Seed => m_Seed;
-            #endregion
-
-            #region Constructors
-            public TestCaseValue(UInt32 seed, UInt32 expectedValue)
-            {
-                m_ExpectedValue = expectedValue;
-                m_Seed = seed;
-            }
-            #endregion
-
-            #region Methods
-            public override String ToString()
-            {
-                return $"{GetType().Name}: {nameof(Seed)}={m_Seed} {nameof(ExpectedValue)}={m_ExpectedValue}";
-            }
-            #endregion
+            foreach (var (Seed, Expected) in s_TestCasesValue)
+                yield return new Object[] { Seed, Expected };
         }
         #endregion
     }

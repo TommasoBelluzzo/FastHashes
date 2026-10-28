@@ -95,7 +95,7 @@ namespace FastHashes.Tests
         {
             Hash hash = hashInitializer(0u);
 
-            Byte[] buffer = Array.Empty<Byte>();
+            Byte[] buffer = [];
             Byte[] expected = hash.ComputeHash(buffer);
 
             Assert.Equal(expected, hash.ComputeHash(buffer, 0));
@@ -109,7 +109,7 @@ namespace FastHashes.Tests
         [MemberData(nameof(HashTestsCases.DataGeneric), MemberType=typeof(HashTestsCases))]
         public void OutputTest(String hashName, Func<UInt64,Hash> hashInitializer)
         {
-            Byte[] buffer = new Byte[] { 23, 134, 0, 237, 0, 81, 64, 64, 39, 5 };
+            Byte[] buffer = [23, 134, 0, 237, 0, 81, 64, 64, 39, 5];
             Hash hash = hashInitializer(0u);
             Byte[] expected = hash.ComputeHash(buffer);
 
@@ -128,11 +128,11 @@ namespace FastHashes.Tests
         [MemberData(nameof(HashTestsCases.DataLength), MemberType=typeof(HashTestsCases))]
         public void LengthTest(String hashName, Func<UInt64,Hash> hashInitializer, Int32 maximumLength)
         {
-            UInt32[] seeds = { 0u, TEST_SEED };
+            UInt32[] seeds = [0u, TEST_SEED];
 
             foreach (UInt32 seed in seeds)
             {
-                RandomXorShift random = new RandomXorShift(TEST_SEED);
+                RandomXorShift random = new(TEST_SEED);
                 Hash hash = hashInitializer(seed);
 
                 Int32 failed = 0;
@@ -162,7 +162,7 @@ namespace FastHashes.Tests
         {
             Byte[] buffer = new Byte[length];
 
-            RandomXorShift random = new RandomXorShift(TEST_SEED);
+            RandomXorShift random = new(TEST_SEED);
             random.NextBytes(buffer);
 
             Hash hash = hashInitializer(TEST_SEED);
@@ -205,12 +205,12 @@ namespace FastHashes.Tests
         public void CollisionTest(String hashName, Func<UInt64,Hash> hashInitializer)
         {
             Int32 wordsCount = m_CollisionFixture.Words.Count();
-            Assert.False(wordsCount == 0, "Fixture Words Empty");
+            Assert.False(wordsCount == 0, "Fixture contains no words.");
 
             Hash hash = hashInitializer(TEST_SEED);
             Int32 hashBytes = hash.Length / 8;
 
-            List<Byte[]> hashes = new List<Byte[]>(wordsCount * 6);
+            List<Byte[]> hashes = new(wordsCount * 6);
 
             foreach (String word in m_CollisionFixture.Words)
             {
