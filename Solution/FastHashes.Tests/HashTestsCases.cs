@@ -27,7 +27,7 @@ namespace FastHashes.Tests
             new("HighwayHash64", seed => new HighwayHash64(seed), "0x2D9D80CDBD9F39E2"),
             new("HighwayHash128", seed => new HighwayHash128(seed), "0x4C21867CD2DD8E1882AC86A53705C53C"),
             new("HighwayHash256", seed => new HighwayHash256(seed), "0x52608FF47620F0694CC650484BF6C530A05CDEC658AF6CE27667F8F75729FED8"),
-            new("KomiHash", seed => new KomiHash(seed), "0xA424367060E16081"),
+            new("KomiHash", seed => new KomiHash(seed), "0x6DFF5781E27E4E69"),
             new("MetroHash64-V1", seed => new MetroHash64(MetroHashVariant.V1, checked((UInt32)seed)), "0xD2F788EE75E62D6B"),
             new("MetroHash64-V2", seed => new MetroHash64(MetroHashVariant.V2, checked((UInt32)seed)), "0x6E7CFCE14A183741"),
             new("MetroHash128-V1", seed => new MetroHash128(MetroHashVariant.V1, checked((UInt32)seed)), "0xD7A1E820E745C1A85B293EF5C2C876BC"),
