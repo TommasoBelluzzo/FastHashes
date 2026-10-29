@@ -40,32 +40,18 @@ namespace FastHashes.Benchmarks
         {
             m_Process = Process.GetCurrentProcess();
             m_PriorityClass = m_Process.PriorityClass;
-            m_LatencyMode = GCSettings.LatencyMode;
-            m_RestorePriority = false;
 
             try
             {
-                m_Process.PriorityClass = ProcessPriorityClass.RealTime;
+                m_Process.PriorityClass = ProcessPriorityClass.AboveNormal;
                 m_RestorePriority = true;
             }
             catch
             {
-                try
-                {
-                    m_Process.PriorityClass = ProcessPriorityClass.High;
-                    m_RestorePriority = true;
-                }
-                catch
-                {
-                    try
-                    {
-                        m_Process.PriorityClass = ProcessPriorityClass.AboveNormal;
-                        m_RestorePriority = true;
-                    }
-                    catch { }
-                }
+                m_RestorePriority = false;
             }
 
+            m_LatencyMode = GCSettings.LatencyMode;
             GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
         }
         #endregion
