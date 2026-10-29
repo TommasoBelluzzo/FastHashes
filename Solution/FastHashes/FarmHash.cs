@@ -38,7 +38,7 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         protected FarmHashOver32()
         {
-            m_Seeds = new ReadOnlyCollection<UInt64>(new UInt64[0]);
+            m_Seeds = new ReadOnlyCollection<UInt64>(Array.Empty<UInt64>());
         }
 
         /// <summary>Represents the base constructor with two seeds used by derived classes.</summary>
