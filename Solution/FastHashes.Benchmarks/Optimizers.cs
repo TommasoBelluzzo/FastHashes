@@ -41,6 +41,9 @@ namespace FastHashes.Benchmarks
             m_Process = Process.GetCurrentProcess();
             m_PriorityClass = m_Process.PriorityClass;
 
+            m_LatencyMode = GCSettings.LatencyMode;
+            GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
+
             try
             {
                 m_Process.PriorityClass = ProcessPriorityClass.AboveNormal;
@@ -50,17 +53,12 @@ namespace FastHashes.Benchmarks
             {
                 m_RestorePriority = false;
             }
-
-            m_LatencyMode = GCSettings.LatencyMode;
-            GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
         }
         #endregion
 
         #region Methods
         protected override void DisposeInternal()
         {
-            GCSettings.LatencyMode = m_LatencyMode;
-
             if (m_RestorePriority)
             {
                 try
@@ -69,6 +67,18 @@ namespace FastHashes.Benchmarks
                 }
                 catch { }
             }
+
+            try
+            {
+                GCSettings.LatencyMode = m_LatencyMode;
+            }
+            catch { }
+
+            try
+            {
+                m_Process.Dispose();
+            }
+            catch { }
         }
         #endregion
     }
