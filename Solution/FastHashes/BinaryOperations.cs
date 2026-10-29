@@ -1,4 +1,5 @@
-﻿#region Using Directives
+﻿
+#region Using Directives
 using System;
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
@@ -9,10 +10,6 @@ namespace FastHashes
     /// <summary>Provides static methods for binary operations.</summary>
     public static class BinaryOperations
     {
-        #region Members
-        private static readonly Boolean s_IsLittleEndian = BitConverter.IsLittleEndian;
-        #endregion
-
         #region Methods
         /// <summary>Reads a 2-bytes unsigned integer from the specified byte span.</summary>
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
@@ -260,12 +257,10 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Byte[] ToArray32(UInt32 value)
         {
-            Byte[] valueBytes = BitConverter.GetBytes(value);
+            Byte[] array = new Byte[4];
+            BinaryPrimitives.WriteUInt32LittleEndian(array, value);
 
-            if (!s_IsLittleEndian)
-                Array.Reverse(valueBytes);
-
-            return valueBytes;
+            return array;
         }
 
         /// <summary>Converts a 8-bytes unsigned integer to a 4-bytes array.</summary>
@@ -275,17 +270,46 @@ namespace FastHashes
         public static Byte[] ToArray32(UInt64 value)
         {
             Byte[] array = new Byte[4];
-            Byte[] valueBytes = BitConverter.GetBytes(value);
-
-            if (!s_IsLittleEndian)
-                Array.Reverse(valueBytes);
-
-            Buffer.BlockCopy(valueBytes, 0, array, 0, 4);
+            BinaryPrimitives.WriteUInt32LittleEndian(array, (UInt32)value);
 
             return array;
         }
 
-        /// <summary>Converts an array of a 4-bytes unsigned integers to a byte array.</summary>
+        /// <summary>Converts two 4-bytes unsigned integers to a byte array.</summary>
+        /// <param name="value1">The first <see cref="T:System.UInt32"/> to convert.</param>
+        /// <param name="value2">The second <see cref="T:System.UInt32"/> to convert.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Byte[] ToArray32(UInt32 value1, UInt32 value2)
+        {
+            Byte[] array = new Byte[8];
+
+            BinaryPrimitives.WriteUInt32LittleEndian(array.AsSpan(0, 4), value1);
+            BinaryPrimitives.WriteUInt32LittleEndian(array.AsSpan(4, 4), value2);
+
+            return array;
+        }
+
+        /// <summary>Converts four 4-bytes unsigned integers to a byte array.</summary>
+        /// <param name="value1">The first <see cref="T:System.UInt32"/> to convert.</param>
+        /// <param name="value2">The second <see cref="T:System.UInt32"/> to convert.</param>
+        /// <param name="value3">The third <see cref="T:System.UInt32"/> to convert.</param>
+        /// <param name="value4">The fourth <see cref="T:System.UInt32"/> to convert.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Byte[] ToArray32(UInt32 value1, UInt32 value2, UInt32 value3, UInt32 value4)
+        {
+            Byte[] array = new Byte[16];
+
+            BinaryPrimitives.WriteUInt32LittleEndian(array.AsSpan(0, 4), value1);
+            BinaryPrimitives.WriteUInt32LittleEndian(array.AsSpan(4, 4), value2);
+            BinaryPrimitives.WriteUInt32LittleEndian(array.AsSpan(8, 4), value3);
+            BinaryPrimitives.WriteUInt32LittleEndian(array.AsSpan(12, 4), value4);
+
+            return array;
+        }
+
+        /// <summary>Converts an array of 4-bytes unsigned integers to a byte array.</summary>
         /// <param name="values">The <see cref="T:System.UInt32"/>[] value to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -294,40 +318,20 @@ namespace FastHashes
             Int32 length = values.Length;
             Byte[] array = new Byte[4 * length];
 
-            if (s_IsLittleEndian)
-            {
-                for (Int32 i = 0; i < length; ++i)
-                {
-                    Byte[] valueBytes = BitConverter.GetBytes(values[i]);
-                    Buffer.BlockCopy(valueBytes, 0, array, i * 4, 4);
-                }
-            }
-            else
-            {
-                for (Int32 i = 0; i < length; ++i)
-                {
-                    Byte[] valueBytes = BitConverter.GetBytes(values[i]);
-                    Array.Reverse(valueBytes);
-                    Buffer.BlockCopy(valueBytes, 0, array, i * 4, 4);
-                }
-            }
+            for (Int32 i = 0; i < length; ++i)
+                BinaryPrimitives.WriteUInt32LittleEndian(array.AsSpan(i * 4, 4), values[i]);
 
             return array;
         }
 
         /// <summary>Converts a 4-bytes unsigned integer to a 8-bytes array.</summary>
-        /// <param name="value">The <see cref="T:System.UInt64"/> to convert.</param>
+        /// <param name="value">The <see cref="T:System.UInt32"/> to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Byte[] ToArray64(UInt32 value)
         {
             Byte[] array = new Byte[8];
-            Byte[] valueBytes = BitConverter.GetBytes(value);
-
-            if (!s_IsLittleEndian)
-                Array.Reverse(valueBytes);
-
-            Buffer.BlockCopy(valueBytes, 0, array, 0, 4);
+            BinaryPrimitives.WriteUInt64LittleEndian(array, value);
 
             return array;
         }
@@ -338,15 +342,47 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Byte[] ToArray64(UInt64 value)
         {
-            Byte[] valueBytes = BitConverter.GetBytes(value);
+            Byte[] array = new Byte[8];
+            BinaryPrimitives.WriteUInt64LittleEndian(array, value);
 
-            if (!s_IsLittleEndian)
-                Array.Reverse(valueBytes);
-
-            return valueBytes;
+            return array;
         }
 
-        /// <summary>Converts an array of a 8-bytes unsigned integers to a byte array.</summary>
+        /// <summary>Converts two 8-bytes unsigned integers to a byte array.</summary>
+        /// <param name="value1">The first <see cref="T:System.UInt64"/> to convert.</param>
+        /// <param name="value2">The second <see cref="T:System.UInt64"/> to convert.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Byte[] ToArray64(UInt64 value1, UInt64 value2)
+        {
+            Byte[] array = new Byte[16];
+
+            BinaryPrimitives.WriteUInt64LittleEndian(array.AsSpan(0, 8), value1);
+            BinaryPrimitives.WriteUInt64LittleEndian(array.AsSpan(8, 8), value2);
+
+            return array;
+        }
+
+        /// <summary>Converts four 8-bytes unsigned integers to a byte array.</summary>
+        /// <param name="value1">The first <see cref="T:System.UInt64"/> to convert.</param>
+        /// <param name="value2">The second <see cref="T:System.UInt64"/> to convert.</param>
+        /// <param name="value3">The third <see cref="T:System.UInt64"/> to convert.</param>
+        /// <param name="value4">The fourth <see cref="T:System.UInt64"/> to convert.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Byte[] ToArray64(UInt64 value1, UInt64 value2, UInt64 value3, UInt64 value4)
+        {
+            Byte[] array = new Byte[32];
+
+            BinaryPrimitives.WriteUInt64LittleEndian(array.AsSpan(0, 8), value1);
+            BinaryPrimitives.WriteUInt64LittleEndian(array.AsSpan(8, 8), value2);
+            BinaryPrimitives.WriteUInt64LittleEndian(array.AsSpan(16, 8), value3);
+            BinaryPrimitives.WriteUInt64LittleEndian(array.AsSpan(24, 8), value4);
+
+            return array;
+        }
+
+        /// <summary>Converts an array of 8-bytes unsigned integers to a byte array.</summary>
         /// <param name="values">The <see cref="T:System.UInt64"/>[] value to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -355,23 +391,8 @@ namespace FastHashes
             Int32 length = values.Length;
             Byte[] array = new Byte[8 * length];
 
-            if (s_IsLittleEndian)
-            {
-                for (Int32 i = 0; i < length; ++i)
-                {
-                    Byte[] valueBytes = BitConverter.GetBytes(values[i]);
-                    Buffer.BlockCopy(valueBytes, 0, array, i * 8, 8);
-                }
-            }
-            else
-            {
-                for (Int32 i = 0; i < length; ++i)
-                {
-                    Byte[] valueBytes = BitConverter.GetBytes(values[i]);
-                    Array.Reverse(valueBytes);
-                    Buffer.BlockCopy(valueBytes, 0, array, i * 8, 8);
-                }
-            }
+            for (Int32 i = 0; i < length; ++i)
+                BinaryPrimitives.WriteUInt64LittleEndian(array.AsSpan(i * 8, 8), values[i]);
 
             return array;
         }

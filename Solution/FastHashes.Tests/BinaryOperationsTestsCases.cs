@@ -71,6 +71,28 @@ namespace FastHashes.Tests
             yield return [(() => { UInt32 a = 9488124u, b = 4123321u; BinaryOperations.Swap(ref a, ref b); return a; }), 4123321u];
             yield return [(() => { UInt64 a = 234620953293ul, b = 6430983184821ul; BinaryOperations.Swap(ref a, ref b); return a; }), 6430983184821ul];
         }
+
+        public static IEnumerable<Object[]> DataToArray()
+        {
+            yield return [(() => BinaryOperations.ToArray32([])), ""];
+            yield return [(() => BinaryOperations.ToArray32(0x00000000u)), "00000000"];
+            yield return [(() => BinaryOperations.ToArray32(0x12345678u)), "78563412"];
+            yield return [(() => BinaryOperations.ToArray32(0xFFFFFFFFu)), "FFFFFFFF"];
+            yield return [(() => BinaryOperations.ToArray32(0x0123456789ABCDEFul)), "EFCDAB89"];
+            yield return [(() => BinaryOperations.ToArray32(0x12345678u, 0x9ABCDEF0u)), "78563412F0DEBC9A"];
+            yield return [(() => BinaryOperations.ToArray32(0x00000000u, 0x00000001u, 0x0C000000u, UInt32.MaxValue)), "00000000010000000000000CFFFFFFFF"];
+            yield return [(() => BinaryOperations.ToArray32([0x00000022u, 0xA0000000u])), "22000000000000A0"];
+
+            yield return [(() => BinaryOperations.ToArray64([])), ""];
+            yield return [(() => BinaryOperations.ToArray64(0x0000000000000000ul)), "0000000000000000"];
+            yield return [(() => BinaryOperations.ToArray64(0x0123456789ABCDEFul)), "EFCDAB8967452301"];
+            yield return [(() => BinaryOperations.ToArray64(0xFFFFFFFFFFFFFFFFul)), "FFFFFFFFFFFFFFFF"];
+            yield return [(() => BinaryOperations.ToArray64(0x12345678u)), "7856341200000000"];
+            yield return [(() => BinaryOperations.ToArray64(0x0123456789ABCDEFul, 0x0102030405060708ul)), "EFCDAB89674523010807060504030201"];
+            yield return [(() => BinaryOperations.ToArray64(0x0000000000000000ul, 0x0000000000000001ul, 0x0C00000000000000ul, UInt64.MaxValue)), "00000000000000000100000000000000000000000000000CFFFFFFFFFFFFFFFF"];
+            yield return [(() => BinaryOperations.ToArray64([0x0000000000000022ul, 0xA000000000000000ul])), "220000000000000000000000000000A0"];
+
+        }
         #endregion
     }
 }

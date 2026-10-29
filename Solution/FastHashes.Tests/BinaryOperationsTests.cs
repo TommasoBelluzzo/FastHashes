@@ -47,6 +47,14 @@ namespace FastHashes.Tests
             T actual = method();
             Assert.Equal(expected, actual);
         }
+
+        [Theory]
+        [MemberData(nameof(BinaryOperationsTestsCases.DataToArray), MemberType=typeof(BinaryOperationsTestsCases))]
+        public void ToArrayTest(Func<Byte[]> method, String expected)
+        {
+            Byte[] actual = method();
+            Assert.Equal(expected, Convert.ToHexString(actual));
+        }
         #endregion
     }
 }

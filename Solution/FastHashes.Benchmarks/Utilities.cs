@@ -7,7 +7,7 @@ namespace FastHashes.Benchmarks
     public static class Utilities
     {
         #region Members
-        private static readonly String[] s_SizeSuffixes = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
+        private static readonly String[] s_SizeSuffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
         #endregion
 
         #region Methods
@@ -22,9 +22,9 @@ namespace FastHashes.Benchmarks
             Int32 magnitude = 0;
             Double adjustedSpeed = speed;
 
-            while ((adjustedSpeed >= 1024.0d) && (magnitude < (s_SizeSuffixes.Length - 1)))
+            while ((adjustedSpeed >= 1000.0d) && (magnitude < (s_SizeSuffixes.Length - 1)))
             {
-                adjustedSpeed /= 1024.0d;
+                adjustedSpeed /= 1000.0d;
                 ++magnitude;
             }
 
