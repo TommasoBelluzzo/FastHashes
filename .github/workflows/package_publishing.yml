@@ -115,6 +115,21 @@ jobs:
         --configuration Release
         --no-restore
         --no-build
+    - name: Package Preparation
+      shell: bash
+      env:
+        README_FILE: README.md
+      run: |
+        set -euo pipefail
+        if [[ $(grep -c '^<table>$' "$README_FILE") -ne 1 ]] || [[ $(grep -c '^</table>$' "$README_FILE") -ne 1 ]]; then
+          echo "README TABLE NOT FOUND OR AMBIGUOUS"
+          exit 1
+        fi
+        sed -i '/^<table>$/,/^<\/table>$/d' "$README_FILE"
+        if grep -Eq '^</?table>$' "$README_FILE"; then
+          echo "README TABLE REMOVAL FAILED"
+          exit 1
+        fi
     - name: Package Creation
       working-directory: Solution
       run: >-
