@@ -7,7 +7,7 @@ namespace FastHashes.Benchmarks
     public static class Utilities
     {
         #region Members
-        private static readonly String[] s_SizeSuffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+        private static readonly String[] s_SizeSuffixes = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
         #endregion
 
         #region Methods

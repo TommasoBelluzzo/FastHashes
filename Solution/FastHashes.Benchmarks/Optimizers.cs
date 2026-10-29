@@ -22,6 +22,8 @@ namespace FastHashes.Benchmarks
 
             DisposeInternal();
             m_IsDisposed = true;
+
+            GC.SuppressFinalize(this);
         }
         #endregion
     }
@@ -29,6 +31,7 @@ namespace FastHashes.Benchmarks
     public sealed class SpeedOptimizer : Optimizer
     {
         #region Members
+        private readonly Boolean m_RestoreLatency;
         private readonly Boolean m_RestorePriority;
         private readonly Process m_Process; 
         private readonly ProcessPriorityClass m_PriorityClass; 
@@ -40,6 +43,17 @@ namespace FastHashes.Benchmarks
         {
             m_Process = Process.GetCurrentProcess();
             m_PriorityClass = m_Process.PriorityClass;
+            m_LatencyMode = GCSettings.LatencyMode;
+
+            try
+            {
+                GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
+                m_RestoreLatency = true;
+            }
+            catch
+            {
+                m_RestoreLatency = false;
+            }
 
             try
             {
@@ -50,9 +64,6 @@ namespace FastHashes.Benchmarks
             {
                 m_RestorePriority = false;
             }
-
-            m_LatencyMode = GCSettings.LatencyMode;
-            GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
         }
         #endregion
 
@@ -68,15 +79,18 @@ namespace FastHashes.Benchmarks
                 catch { }
             }
 
-            try
+            if (m_RestoreLatency)
             {
-                m_Process.Dispose();
+                try
+                {
+                    GCSettings.LatencyMode = m_LatencyMode;
+                }
+                catch { }
             }
-            catch { }
 
             try
             {
-                GCSettings.LatencyMode = m_LatencyMode;
+                m_Process.Dispose();
             }
             catch { }
         }
