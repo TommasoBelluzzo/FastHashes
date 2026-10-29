@@ -13,16 +13,16 @@ namespace FastHashes.Benchmarks
         #region Methods
         public static String FormatSpeed(Double speed)
         {
-            if (!Double.IsFinite(speed) || speed < 0.0d)
-                throw new ArgumentOutOfRangeException(nameof(speed), "Invalid speed specified.");
+            if (!Double.IsFinite(speed))
+                throw new ArgumentException("Invalid speed specified.", nameof(speed));
 
-            if (!Double.IsFinite(speed) || speed < 0.0d)
-                throw new ArgumentOutOfRangeException(nameof(speed), "Invalid speed specified.");
+            if (speed < 0.0d)
+                throw new ArgumentOutOfRangeException(nameof(speed), "Speed must be non-negative.");
 
             Int32 magnitude = 0;
             Double adjustedSpeed = speed;
 
-            while (adjustedSpeed >= 1024.0d && magnitude < s_SizeSuffixes.Length - 1)
+            while ((adjustedSpeed >= 1024.0d) && (magnitude < (s_SizeSuffixes.Length - 1)))
             {
                 adjustedSpeed /= 1024.0d;
                 ++magnitude;
