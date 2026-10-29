@@ -30,28 +30,7 @@ namespace FastHashes.Benchmarks
         }
         #endregion
 
-        #region Destructors
-        ~Clock()
-        {
-            Dispose(false);
-        }
-        #endregion
-
         #region Methods
-        private void Dispose(Boolean disposing)
-        {
-            if (m_IsDisposed)
-                return;
-
-            if (disposing)
-            {
-                m_StartTime?.Dispose();
-                m_StartTimestamp?.Dispose();
-            }
-
-            m_IsDisposed = true;
-        }
-
         public DateTime GetTime()
         {
             Double endTimestamp = Stopwatch.GetTimestamp();
@@ -69,8 +48,13 @@ namespace FastHashes.Benchmarks
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);  
+            if (m_IsDisposed)
+                return;
+
+            m_StartTime.Dispose();
+            m_StartTimestamp.Dispose();
+
+            m_IsDisposed = true;
         }
         #endregion
     }

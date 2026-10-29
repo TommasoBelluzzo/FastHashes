@@ -2,7 +2,6 @@
 using System;
 using System.Diagnostics;
 using System.Runtime;
-using System.Threading;
 #endregion
 
 namespace FastHashes.Benchmarks
@@ -13,72 +12,16 @@ namespace FastHashes.Benchmarks
         private Boolean m_IsDisposed;
         #endregion
 
-        #region Destructors
-        ~Optimizer()
-        {
-            Dispose(false);
-        }
-        #endregion
-
         #region Methods
-        private void Dispose(Boolean disposing)
+        protected virtual void DisposeInternal() { }
+
+        public void Dispose()
         {
             if (m_IsDisposed)
                 return;
 
-            if (disposing)
-                Finalization();
-
+            DisposeInternal();
             m_IsDisposed = true;
-        }
-
-        protected virtual void Finalization() { }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);  
-        }
-        #endregion
-    }
-
-    public sealed class AffinityOptimizer : Optimizer
-    {
-        #region Members
-        #if !MACOS && (NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2 || NETCOREAPP3_0 || NETCOREAPP3_1)
-        private readonly IntPtr m_ProcessAffinity;
-        private readonly Process m_Process;
-        private readonly IntPtr m_ThreadAffinity;
-        #endif
-        #endregion
-
-        #region Constructors
-        public AffinityOptimizer()
-        {
-            #if !MACOS && (NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2 || NETCOREAPP3_0 || NETCOREAPP3_1)
-            m_Process = Process.GetCurrentProcess();
-            m_ProcessAffinity = m_Process.ProcessorAffinity;
-            m_ThreadAffinity = IntPtr.Zero;
-
-            IntPtr affinity = (IntPtr)(1 << (Environment.ProcessorCount - 1));
-
-            m_Process.ProcessorAffinity = affinity;
-
-            Thread.BeginThreadAffinity();
-            m_ThreadAffinity = NativeMethods.SetThreadAffinity(affinity);
-            #endif
-        }
-        #endregion
-
-        #region Methods
-        protected override void Finalization()
-        {
-            #if !MACOS && (NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2 || NETCOREAPP3_0 || NETCOREAPP3_1)
-            NativeMethods.SetThreadAffinity(m_ThreadAffinity);
-            Thread.EndThreadAffinity();
-
-            m_Process.ProcessorAffinity = m_ProcessAffinity;
-            #endif
         }
         #endregion
     }
@@ -128,7 +71,7 @@ namespace FastHashes.Benchmarks
         #endregion
 
         #region Methods
-        protected override void Finalization()
+        protected override void DisposeInternal()
         {
             GCSettings.LatencyMode = m_LatencyMode;
 
