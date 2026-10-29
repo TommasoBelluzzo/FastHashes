@@ -47,6 +47,9 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static UInt64 GetKeyPart(ReadOnlySpan<Byte> buffer, Int32 offset, Int32 length)
         {
+            if (length == 8)
+                return BinaryOperations.Read64(buffer, offset);
+
             UInt64 tail = 0ul;
 
             for (Int32 i = 0; i < length; ++i)

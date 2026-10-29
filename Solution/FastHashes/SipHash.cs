@@ -58,23 +58,28 @@ namespace FastHashes
 
         #region Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Mix(ref UInt32[] v)
+        private static void Mix(ref UInt32 v0, ref UInt32 v1, ref UInt32 v2, ref UInt32 v3)
         {
-            v[0] += v[1];
-            v[1] = BinaryOperations.RotateLeft(v[1], 5);
-            v[1] ^= v[0];
-            v[0] = BinaryOperations.RotateLeft(v[0], 16);
-            v[2] += v[3];    
-            v[3] = BinaryOperations.RotateLeft(v[3], 8);
-            v[3] ^= v[2];
-            v[0] += v[3];
-            v[3] = BinaryOperations.RotateLeft(v[3], 7);
-            v[3] ^= v[0];
-            v[2] += v[1];
-            v[1] = BinaryOperations.RotateLeft(v[1], 13);
-            v[1] ^= v[2];
-            v[2] = BinaryOperations.RotateLeft(v[2], 16);
+            v0 += v1;
+            v1 = BinaryOperations.RotateLeft(v1, 5);
+            v1 ^= v0;
+            v0 = BinaryOperations.RotateLeft(v0, 16);
+
+            v2 += v3;
+            v3 = BinaryOperations.RotateLeft(v3, 8);
+            v3 ^= v2;
+
+            v0 += v3;
+            v3 = BinaryOperations.RotateLeft(v3, 7);
+            v3 ^= v0;
+
+            v2 += v1;
+            v1 = BinaryOperations.RotateLeft(v1, 13);
+            v1 ^= v2;
+            v2 = BinaryOperations.RotateLeft(v2, 16);
         }
+
+        /// <inheritdoc/>
 
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
@@ -83,7 +88,11 @@ namespace FastHashes
             Int32 count = buffer.Length;
 
             UInt32 b = (UInt32)count << 24;
-            UInt32[] v = { m_Seed1, m_Seed2, I0 ^ m_Seed1, I1 ^ m_Seed2 };
+
+            UInt32 v0 = m_Seed1;
+            UInt32 v1 = m_Seed2;
+            UInt32 v2 = I0 ^ m_Seed1;
+            UInt32 v3 = I1 ^ m_Seed2;
 
             if (count == 0)
                 goto Finalize;
@@ -95,30 +104,30 @@ namespace FastHashes
                 UInt32 m = BinaryOperations.Read32(buffer, offset);
                 offset += 4;
 
-                v[3] ^= m;
+                v3 ^= m;
 
                 for (Int32 i = 0; i < 2; ++i)
-                    Mix(ref v);
+                    Mix(ref v0, ref v1, ref v2, ref v3);
 
-                v[0] ^= m;
+                v0 ^= m;
             }
 
             b |= BinaryOperations.ReadTail32(buffer, offset);
 
             Finalize:
 
-            v[3] ^= b;
+            v3 ^= b;
 
             for (Int32 i = 0; i < 2; ++i)
-                Mix(ref v);
+                Mix(ref v0, ref v1, ref v2, ref v3);
 
-            v[0] ^= b;
-            v[2] ^= 0x000000FFu;
+            v0 ^= b;
+            v2 ^= 0x000000FFu;
 
             for (Int32 i = 0; i < 4; ++i)
-                Mix(ref v);
+                Mix(ref v0, ref v1, ref v2, ref v3);
 
-            UInt32 hash = v[1] ^ v[3];
+            UInt32 hash = v1 ^ v3;
             Byte[] result = BinaryOperations.ToArray32(hash);
 
             return result;
@@ -224,23 +233,32 @@ namespace FastHashes
 
         #region Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Mix(ref UInt64[] v)
+        private static void Mix(ref UInt64 v0, ref UInt64 v1, ref UInt64 v2, ref UInt64 v3)
         {
-            v[0] += v[1];
-            v[2] += v[3];
-            v[1] = BinaryOperations.RotateLeft(v[1], 13);
-            v[3] = BinaryOperations.RotateLeft(v[3], 16);
-            v[1] ^= v[0];
-            v[3] ^= v[2];
-            v[0] = BinaryOperations.RotateLeft(v[0], 32);
-            v[2] += v[1];
-            v[0] += v[3];
-            v[1] = BinaryOperations.RotateLeft(v[1], 17);
-            v[3] = BinaryOperations.RotateLeft(v[3], 21);
-            v[1] ^= v[2];
-            v[3] ^= v[0];
-            v[2] = BinaryOperations.RotateLeft(v[2], 32);
+            v0 += v1;
+            v2 += v3;
+
+            v1 = BinaryOperations.RotateLeft(v1, 13);
+            v3 = BinaryOperations.RotateLeft(v3, 16);
+
+            v1 ^= v0;
+            v3 ^= v2;
+
+            v0 = BinaryOperations.RotateLeft(v0, 32);
+
+            v2 += v1;
+            v0 += v3;
+
+            v1 = BinaryOperations.RotateLeft(v1, 17);
+            v3 = BinaryOperations.RotateLeft(v3, 21);
+
+            v1 ^= v2;
+            v3 ^= v0;
+
+            v2 = BinaryOperations.RotateLeft(v2, 32);
         }
+
+        /// <inheritdoc/>
 
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
@@ -249,7 +267,11 @@ namespace FastHashes
             Int32 count = buffer.Length;
 
             UInt64 b = (UInt64)(count & 0x000000FF) << 56;
-            UInt64[] v = { m_Seed1 ^ K0, m_Seed2 ^ K1, m_Seed1 ^ K2, m_Seed2 ^ K3 };
+
+            UInt64 v0 = m_Seed1 ^ K0;
+            UInt64 v1 = m_Seed2 ^ K1;
+            UInt64 v2 = m_Seed1 ^ K2;
+            UInt64 v3 = m_Seed2 ^ K3;
 
             if (count == 0)
                 goto Finalize;
@@ -261,30 +283,30 @@ namespace FastHashes
                 UInt64 m = BinaryOperations.Read64(buffer, offset);
                 offset += 8;
 
-                v[3] ^= m;
+                v3 ^= m;
 
                 for (Int32 i = 0; i < m_R1; ++i)
-                    Mix(ref v);
+                    Mix(ref v0, ref v1, ref v2, ref v3);
 
-                v[0] ^= m;
+                v0 ^= m;
             }
 
             b |= BinaryOperations.ReadTail64(buffer, offset);
 
             Finalize:
 
-            v[3] ^= b;
+            v3 ^= b;
 
             for (Int32 i = 0; i < m_R1; ++i)
-                Mix(ref v);
+                Mix(ref v0, ref v1, ref v2, ref v3);
 
-            v[0] ^= b;
-            v[2] ^= 0x000000000000000000FFul;
+            v0 ^= b;
+            v2 ^= 0x000000000000000000FFul;
 
             for (Int32 i = 0; i < m_R2; ++i)
-                Mix(ref v);
+                Mix(ref v0, ref v1, ref v2, ref v3);
 
-            UInt64 hash = v[0] ^ v[1] ^ v[2] ^ v[3];
+            UInt64 hash = v0 ^ v1 ^ v2 ^ v3;
             Byte[] result = BinaryOperations.ToArray64(hash);
 
             return result;

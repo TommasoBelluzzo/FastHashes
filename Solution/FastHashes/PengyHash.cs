@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -40,7 +41,7 @@ namespace FastHashes
 
         #region Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Pengy(UInt64 seed, UInt64[] b, ref UInt64[] s)
+        private static void Pengy(UInt64 seed, ReadOnlySpan<UInt64> b, Span<UInt64> s)
         {
             s[0] += s[1] + b[3];
             s[1] = s[0] + BinaryOperations.RotateLeft(s[1], 14) + seed;
@@ -56,30 +57,51 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
+
+        /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
 
-            UInt64[] b = new UInt64[4];
-            UInt64[] s = new UInt64[] { 0ul, 0ul, 0ul, (UInt64)count };
+            Span<UInt64> b = stackalloc UInt64[4];
+            b.Clear();
+
+            Span<UInt64> s = stackalloc UInt64[4];
+            s.Clear();
+
+            s[3] = (UInt64)count;
 
             UInt64 seed = (UInt64)m_Seed;
 
             while ((count - offset) >= 32)
             {
-                b = BinaryOperations.ReadArray64(buffer, offset, 4);
-                Pengy(0ul, b, ref s);
+                b[0] = BinaryOperations.Read64(buffer, offset);
+                b[1] = BinaryOperations.Read64(buffer, offset + 8);
+                b[2] = BinaryOperations.Read64(buffer, offset + 16);
+                b[3] = BinaryOperations.Read64(buffer, offset + 24);
+
+                Pengy(0ul, b, s);
 
                 offset += 32;
             }
 
-            Span<Byte> residue = new Span<Byte>(BinaryOperations.ToArray64(b));
+            Span<Byte> residue = stackalloc Byte[32];
+
+            BinaryPrimitives.WriteUInt64LittleEndian(residue.Slice(0, 8), b[0]);
+            BinaryPrimitives.WriteUInt64LittleEndian(residue.Slice(8, 8), b[1]);
+            BinaryPrimitives.WriteUInt64LittleEndian(residue.Slice(16, 8), b[2]);
+            BinaryPrimitives.WriteUInt64LittleEndian(residue.Slice(24, 8), b[3]);
+
             buffer.Slice(offset).CopyTo(residue);
-            b = BinaryOperations.ReadArray64(residue, 0, 4);
+
+            b[0] = BinaryOperations.Read64(residue, 0);
+            b[1] = BinaryOperations.Read64(residue, 8);
+            b[2] = BinaryOperations.Read64(residue, 16);
+            b[3] = BinaryOperations.Read64(residue, 24);
 
             for (Int32 i = 0; i < 6; ++i)
-                Pengy(seed, b, ref s);
+                Pengy(seed, b, s);
 
             UInt64 hash = s[0] + s[1] + s[2] + s[3];
             Byte[] result = BinaryOperations.ToArray64(hash);

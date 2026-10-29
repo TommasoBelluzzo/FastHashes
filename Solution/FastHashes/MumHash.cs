@@ -54,32 +54,40 @@ namespace FastHashes
         #endregion
 
         #region Methods
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static UInt64 Mum(UInt64 v1, UInt64 v2)
         {
-            UInt64 hv1 = v1 >> 32;
-            UInt64 lv1 = (UInt32) v1;
+            unchecked
+            {
+                #if NET5_0_OR_GREATER
+                UInt64 hi = Math.BigMul(v1, v2, out UInt64 lo);
+                #else
+                UInt64 hv1 = v1 >> 32;
+                UInt64 lv1 = (UInt32)v1;
 
-            UInt64 hv2 = v2 >> 32;
-            UInt64 lv2 = (UInt32)v2;
+                UInt64 hv2 = v2 >> 32;
+                UInt64 lv2 = (UInt32)v2;
 
-            UInt64 rh = hv1 * hv2;
-            UInt64 rl = lv1 * lv2;
+                UInt64 rh = hv1 * hv2;
+                UInt64 rl = lv1 * lv2;
 
-            UInt64 rm0 = hv1 * lv2;
-            UInt64 rm1 = hv2 * lv1;
+                UInt64 rm0 = hv1 * lv2;
+                UInt64 rm1 = hv2 * lv1;
 
-            UInt64 carry = 0ul;
+                UInt64 carry = 0ul;
 
-            UInt64 t = rl + (rm0 << 32);
-            carry += (t < rl) ? 1ul : 0ul;
+                UInt64 t = rl + (rm0 << 32);
+                carry += (t < rl) ? 1ul : 0ul;
 
-            UInt64 lo = t + (rm1 << 32);
-            carry += (lo < t) ? 1ul : 0ul;
+                UInt64 lo = t + (rm1 << 32);
+                carry += (lo < t) ? 1ul : 0ul;
 
-            UInt64 hi = rh + (rm0 >> 32) + (rm1 >> 32) + carry;
+                UInt64 hi = rh + (rm0 >> 32) + (rm1 >> 32) + carry;
+                #endif
 
-            return hi + lo;
+                return hi + lo;
+            }
         }
 
         /// <inheritdoc/>

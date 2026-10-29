@@ -64,18 +64,13 @@ namespace FastHashes
         #endregion
 
         #region Methods
-        /// <summary>Finalizes any partial computation and returns the hash code.</summary>
-        /// <param name="hashData">The <see cref="T:System.Byte"/>[] representing the hash data.</param>
-        /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
-        protected abstract Byte[] GetHash(Byte[] hashData);
-
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
         {
-            Byte[] hashData = m_Engine.ComputeHash(buffer);
-            Byte[] hash = GetHash(hashData);
+            Boolean output64 = Length == 64;
+            Byte[] result = m_Engine.ComputeHash(buffer, output64);
 
-            return hash;
+            return result;
         }
 
         /// <inheritdoc/>
@@ -111,7 +106,7 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            public abstract Byte[] ComputeHash(ReadOnlySpan<Byte> buffer);
+            public abstract Byte[] ComputeHash(ReadOnlySpan<Byte> buffer, Boolean output64);
             #endregion
         }
 
@@ -182,7 +177,7 @@ namespace FastHashes
                 return v1;
             }
 
-            public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
+            public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer, Boolean output64)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -254,7 +249,9 @@ namespace FastHashes
                 hash1 += hash2;
                 hash2 += hash1;
 
-                Byte[] result = BinaryOperations.ToArray64(hash1, hash2);
+                Byte[] result = output64
+                    ? BinaryOperations.ToArray64(hash1)
+                    : BinaryOperations.ToArray64(hash1, hash2);
 
                 return result;
             }
@@ -336,7 +333,7 @@ namespace FastHashes
                 return v1;
             }
 
-            public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
+            public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer, Boolean output64)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -435,7 +432,9 @@ namespace FastHashes
                 hash3 += hash1;
                 hash4 += hash1;
 
-                Byte[] result = BinaryOperations.ToArray32(hash1, hash2, hash3, hash4);
+                Byte[] result = output64
+                    ? BinaryOperations.ToArray32(hash1, hash2)
+                    : BinaryOperations.ToArray32(hash1, hash2, hash3, hash4);
 
                 return result;
             }
@@ -579,17 +578,6 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         public MurmurHash64(MurmurHashEngine engine, UInt32 seed) : base(engine, seed) {}
         #endregion
-
-        #region Methods
-        /// <inheritdoc/>
-        protected override Byte[] GetHash(Byte[] hashData)
-        {
-            Byte[] hash = new Byte[8];
-            Buffer.BlockCopy(hashData, 0, hash, 0, 8);
-
-            return hash;
-        }
-        #endregion
     }
 
     /// <summary>Represents the MurmurHash128 implementation. This class cannot be derived.</summary>
@@ -622,14 +610,6 @@ namespace FastHashes
         /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="engine">engine</paramref> is undefined.</exception>
         [ExcludeFromCodeCoverage]
         public MurmurHash128(MurmurHashEngine engine, UInt32 seed) : base(engine, seed) { }
-        #endregion
-
-        #region Methods
-        /// <inheritdoc/>
-        protected override Byte[] GetHash(Byte[] hashData)
-        {
-            return hashData;
-        }
         #endregion
     }
 }

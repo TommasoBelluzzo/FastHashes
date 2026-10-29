@@ -173,7 +173,7 @@ namespace FastHashes
 
             #region Methods
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void MixB(ref UInt32 a, ref UInt32 b, ref UInt32 c, ref UInt32 d, UInt32[] w)
+            private static void MixB(ref UInt32 a, ref UInt32 b, ref UInt32 c, ref UInt32 d, ReadOnlySpan<UInt32> w)
             {
                 UInt32 d13 = w[1] + BinaryOperations.RotateRight(w[3] + d, 17);
                 UInt32 c02 = w[0] ^ BinaryOperations.RotateRight(w[2] + c, 11);
@@ -223,9 +223,15 @@ namespace FastHashes
                     UInt32 c = ~a;
                     UInt32 d = BinaryOperations.RotateRight(b, 5);
 
+                    Span<UInt32> w = stackalloc UInt32[4];
+
                     while (blocks-- > 0)
                     {
-                        UInt32[] w = BinaryOperations.ReadArray32(buffer, offset, 4);
+                        w[0] = BinaryOperations.Read32(buffer, offset);
+                        w[1] = BinaryOperations.Read32(buffer, offset + 4);
+                        w[2] = BinaryOperations.Read32(buffer, offset + 8);
+                        w[3] = BinaryOperations.Read32(buffer, offset + 12);
+
                         offset += 16;
 
                         MixB(ref a, ref b, ref c, ref d, w);
@@ -305,7 +311,7 @@ namespace FastHashes
 
             #region Methods
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void MixB(ref UInt64 a, ref UInt64 b, ref UInt64 c, ref UInt64 d, UInt64[] w)
+            private static void MixB(ref UInt64 a, ref UInt64 b, ref UInt64 c, ref UInt64 d, ReadOnlySpan<UInt64> w)
             {
                 UInt64 d02 = w[0] ^ BinaryOperations.RotateRight(w[2] + d, 17);
                 UInt64 c13 = w[1] ^ BinaryOperations.RotateRight(w[3] + c, 17);
@@ -353,9 +359,15 @@ namespace FastHashes
                     UInt64 c = BinaryOperations.RotateRight(length, 17) + m_Seed;
                     UInt64 d = length ^ BinaryOperations.RotateRight(m_Seed, 17);
 
+                    Span<UInt64> w = stackalloc UInt64[4];
+
                     while (blocks-- > 0)
                     {
-                        UInt64[] w = BinaryOperations.ReadArray64(buffer, offset, 4);
+                        w[0] = BinaryOperations.Read64(buffer, offset);
+                        w[1] = BinaryOperations.Read64(buffer, offset + 8);
+                        w[2] = BinaryOperations.Read64(buffer, offset + 16);
+                        w[3] = BinaryOperations.Read64(buffer, offset + 24);
+
                         offset += 32;
 
                         MixB(ref a, ref b, ref c, ref d, w);
@@ -445,7 +457,7 @@ namespace FastHashes
 
             #region Methods
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void MixB(ref UInt64 a, ref UInt64 b, ref UInt64 c, ref UInt64 d, UInt64[] w)
+            private static void MixB(ref UInt64 a, ref UInt64 b, ref UInt64 c, ref UInt64 d, ReadOnlySpan<UInt64> w)
             {
                 UInt64 d02 = w[0] + BinaryOperations.RotateRight(w[2] + d, 56);
                 UInt64 c13 = w[1] + BinaryOperations.RotateRight(w[3] + c, 19);
@@ -493,10 +505,16 @@ namespace FastHashes
                 {
                     UInt64 c = BinaryOperations.RotateRight(length, 23) + ~m_Seed;
                     UInt64 d = ~length + BinaryOperations.RotateRight(m_Seed, 19);
+                    
+                    Span<UInt64> w = stackalloc UInt64[4];
 
                     while (blocks-- > 0)
                     {
-                        UInt64[] w = BinaryOperations.ReadArray64(buffer, offset, 4);
+                        w[0] = BinaryOperations.Read64(buffer, offset);
+                        w[1] = BinaryOperations.Read64(buffer, offset + 8);
+                        w[2] = BinaryOperations.Read64(buffer, offset + 16);
+                        w[3] = BinaryOperations.Read64(buffer, offset + 24);
+
                         offset += 32;
 
                         MixB(ref a, ref b, ref c, ref d, w);
