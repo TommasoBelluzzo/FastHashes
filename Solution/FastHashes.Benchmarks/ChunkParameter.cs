@@ -24,11 +24,11 @@ namespace FastHashes.Benchmarks
             if (increment == null)
                 throw new ArgumentException("Invalid increment specified.", nameof(increment));
 
-            if (keySize == 0)
-                throw new ArgumentException("Invalid key size specified.", nameof(keySize));
+            if (keySize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(keySize), "Key size must be positive.");
 
-            if (repetitions == 0)
-                throw new ArgumentException("Invalid repetitions specified.", nameof(repetitions));
+            if (repetitions <= 0)
+                throw new ArgumentOutOfRangeException(nameof(repetitions), "Repetitions must be positive.");
 
             m_Increment = increment;
             m_KeySize = keySize;

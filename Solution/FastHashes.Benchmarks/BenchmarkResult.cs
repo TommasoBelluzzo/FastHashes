@@ -28,6 +28,18 @@ namespace FastHashes.Benchmarks
             if (String.IsNullOrWhiteSpace(hashName))
                 throw new ArgumentException("Invalid hash name specified.", nameof(hashName));
 
+            if (!Double.IsFinite(bulkAverageSpeed))
+                throw new ArgumentException("Invalid bulk average speed specified.", nameof(bulkAverageSpeed));
+
+            if (bulkAverageSpeed < 0.0d)
+                throw new ArgumentOutOfRangeException(nameof(bulkAverageSpeed), "Invalid bulk average speed specified.");
+
+            if (!Double.IsFinite(chunkAverageSpeed))
+                throw new ArgumentException("Invalid chunk average speed specified.", nameof(chunkAverageSpeed));
+
+            if (chunkAverageSpeed < 0.0d)
+                throw new ArgumentOutOfRangeException(nameof(chunkAverageSpeed), "Invalid chunk average speed specified.");
+
             if (String.IsNullOrWhiteSpace(bulkAverageSpeedFormatted))
                 throw new ArgumentException("Invalid formatted bulk average speed specified.", nameof(bulkAverageSpeedFormatted));
 

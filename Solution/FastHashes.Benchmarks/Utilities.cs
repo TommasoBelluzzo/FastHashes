@@ -7,19 +7,25 @@ namespace FastHashes.Benchmarks
     public static class Utilities
     {
         #region Members
-        private static readonly String[] s_SizeSuffixes = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+        private static readonly String[] s_SizeSuffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
         #endregion
 
         #region Methods
         public static String FormatSpeed(Double speed)
         {
-            Int32 magnitude = (Int32)Math.Log(speed, 1024);
-            Double adjustedSpeed = speed / (1L << (magnitude * 10));
+            if (!Double.IsFinite(speed) || speed < 0.0d)
+                throw new ArgumentOutOfRangeException(nameof(speed), "Invalid speed specified.");
 
-            if (Math.Round(adjustedSpeed, 2) >= 1000.0d)
+            if (!Double.IsFinite(speed) || speed < 0.0d)
+                throw new ArgumentOutOfRangeException(nameof(speed), "Invalid speed specified.");
+
+            Int32 magnitude = 0;
+            Double adjustedSpeed = speed;
+
+            while (adjustedSpeed >= 1024.0d && magnitude < s_SizeSuffixes.Length - 1)
             {
-                magnitude += 1;
                 adjustedSpeed /= 1024.0d;
+                ++magnitude;
             }
 
             return $"{adjustedSpeed:N2} {s_SizeSuffixes[magnitude]}/s";
