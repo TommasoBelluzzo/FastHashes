@@ -62,7 +62,7 @@ namespace FastHashes
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void LongMix(ref UInt64[] hash, UInt64[] v)
+        private static void LongMix(ref UInt64[] hash, ReadOnlySpan<UInt64> v)
         {
             for (Int32 i = 0; i < 12; ++i)
             {
@@ -109,32 +109,36 @@ namespace FastHashes
             Int32 count = buffer.Length;
 
             Int32 blocks = count / 96;
-            Int32 blocksBytes = blocks * 96;
-
-            Int32 dataLength = (blocks + 1) * 96;
-            Span<Byte> data = new Span<Byte>(new Byte[dataLength]);
-
-            buffer.Slice(0, blocksBytes).CopyTo(data);
-            buffer.Slice(blocksBytes, count - blocksBytes).CopyTo(data.Slice(blocksBytes));
-            data[dataLength - 1] = (Byte)(count % 96);
+            Int32 remainder = count % 96;
 
             UInt64[] hash = new UInt64[12];
             hash[0] = hash[3] = hash[6] = hash[9] = m_Seed1;
             hash[1] = hash[4] = hash[7] = hash[10] = m_Seed2;
             hash[2] = hash[5] = hash[8] = hash[11] = C;
 
+            Span<UInt64> v = stackalloc UInt64[12];
+
             while (blocks-- > 0)
             {
-                UInt64[] vb = BinaryOperations.ReadArray64(data, offset, 12);
+                for (Int32 i = 0; i < 12; ++i)
+                    v[i] = BinaryOperations.Read64(buffer, offset + (i * 8));
+
                 offset += 96;
 
-                LongMix(ref hash, vb);
+                LongMix(ref hash, v);
             }
 
-            UInt64[] vr = BinaryOperations.ReadArray64(data, offset, 12);
+            Span<Byte> data = stackalloc Byte[96];
+            data.Clear();
+
+            buffer.Slice(offset, remainder).CopyTo(data);
+            data[95] = (Byte)remainder;
 
             for (Int32 i = 0; i < 12; ++i)
-                hash[i] += vr[i];
+                v[i] = BinaryOperations.Read64(data, i * 8);
+
+            for (Int32 i = 0; i < 12; ++i)
+                hash[i] += v[i];
 
             for (Int32 i = 0; i < 3; ++i)
                 LongEnd(ref hash);

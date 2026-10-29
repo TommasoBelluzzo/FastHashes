@@ -168,23 +168,33 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WyMum(ref UInt64 a, ref UInt64 b)
         {
-            UInt64 ha = a >> 32;
-            UInt64 hb = b >> 32;
+            unchecked
+            {
+                #if NET5_0_OR_GREATER
+                UInt64 hi = Math.BigMul(a, b, out UInt64 lo);
 
-            UInt64 la = (UInt32)a;
-            UInt64 lb = (UInt32)b;
+                a = lo;
+                b = hi;
+                #else
+                UInt64 ha = a >> 32;
+                UInt64 hb = b >> 32;
 
-            UInt64 rh = ha * hb;
-            UInt64 rm0 = ha * lb;
-            UInt64 rm1 = hb * la;
-            UInt64 rl = la * lb;
-            UInt64 t = rl + (rm0 << 32);
+                UInt64 la = (UInt32)a;
+                UInt64 lb = (UInt32)b;
 
-            UInt64 lo = t + (rm1 << 32);
-            UInt64 hi = rh + (rm0 >> 32) + (rm1 >> 32) + ((t < rl) ? 1ul : 0ul) + ((lo < t) ? 1ul : 0ul);
+                UInt64 rh = ha * hb;
+                UInt64 rm0 = ha * lb;
+                UInt64 rm1 = hb * la;
+                UInt64 rl = la * lb;
+                UInt64 t = rl + (rm0 << 32);
 
-            a = lo;
-            b = hi;
+                UInt64 lo = t + (rm1 << 32);
+                UInt64 hi = rh + (rm0 >> 32) + (rm1 >> 32) + ((t < rl) ? 1ul : 0ul) + ((lo < t) ? 1ul : 0ul);
+
+                a = lo;
+                b = hi;
+                #endif
+            }
         }
 
         /// <inheritdoc/>
@@ -225,10 +235,17 @@ namespace FastHashes
 
                     do
                     {
-                        UInt64[] k = BinaryOperations.ReadArray64(buffer, offset, 6);
-                        seed = WyMix(k[0] ^ m_Secret[1], k[1] ^ seed);
-                        s1 = WyMix(k[2] ^ m_Secret[2], k[3] ^ s1);
-                        s2 = WyMix(k[4] ^ m_Secret[3], k[5] ^ s2);
+                        a = BinaryOperations.Read64(buffer, offset) ^ m_Secret[1];
+                        b = BinaryOperations.Read64(buffer, offset + 8) ^ seed;
+                        seed = WyMix(a, b);
+
+                        a = BinaryOperations.Read64(buffer, offset + 16) ^ m_Secret[2];
+                        b = BinaryOperations.Read64(buffer, offset + 24) ^ s1;
+                        s1 = WyMix(a, b);
+
+                        a = BinaryOperations.Read64(buffer, offset + 32) ^ m_Secret[3];
+                        b = BinaryOperations.Read64(buffer, offset + 40) ^ s2;
+                        s2 = WyMix(a, b);
 
                         i -= 48;
                         offset += 48;
@@ -240,8 +257,9 @@ namespace FastHashes
 
                 while (i > 16)
                 {
-                    UInt64[] k = BinaryOperations.ReadArray64(buffer, offset, 2);
-                    seed = WyMix(k[0] ^ m_Secret[1], k[1] ^ seed);
+                    a = BinaryOperations.Read64(buffer, offset) ^ m_Secret[1];
+                    b = BinaryOperations.Read64(buffer, offset + 8) ^ seed;
+                    seed = WyMix(a, b);
 
                     i -= 16;
                     offset += 16;

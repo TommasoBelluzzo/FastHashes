@@ -111,7 +111,7 @@ namespace FastHashes
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Update(ref UInt64[] m0, ref UInt64[] m1, ref UInt64[] v0, ref UInt64[] v1, UInt64[] k)
+        private static void Update(ref UInt64[] m0, ref UInt64[] m1, ref UInt64[] v0, ref UInt64[] v1, ReadOnlySpan<UInt64> k)
         {
             for (Int32 i = 0; i < 4; ++i)
                 Mix(ref m0[i], ref m1[i], ref v0[i], ref v1[i], k[i]);
@@ -161,6 +161,8 @@ namespace FastHashes
             UInt64[] v0 = { M00 ^ m_Seed1, M01 ^ m_Seed2, M02 ^ m_Seed3, M03 ^ m_Seed4 };
             UInt64[] v1 = { M10 ^ ((m_Seed1 >> 32) | (m_Seed1 << 32)), M11 ^ ((m_Seed2 >> 32) | (m_Seed2 << 32)), M12 ^ ((m_Seed3 >> 32) | (m_Seed3 << 32)), M13 ^ ((m_Seed4 >> 32) | (m_Seed4 << 32)) };
 
+            Span<UInt64> k = stackalloc UInt64[4];
+
             if (count == 0)
                 goto Finalize;
 
@@ -168,7 +170,11 @@ namespace FastHashes
 
             while (blocks-- > 0)
             {
-                UInt64[] k = BinaryOperations.ReadArray64(buffer, offset, 4);
+                k[0] = BinaryOperations.Read64(buffer, offset);
+                k[1] = BinaryOperations.Read64(buffer, offset + 8);
+                k[2] = BinaryOperations.Read64(buffer, offset + 16);
+                k[3] = BinaryOperations.Read64(buffer, offset + 24);
+                
                 offset += 32;
 
                 Update(ref m0, ref m1, ref v0, ref v1, k);
@@ -189,7 +195,8 @@ namespace FastHashes
                 Int32 diff4 = remainder & ~3;
                 Int32 mod4 = remainder & 3;
 
-                Byte[] packet = new Byte[32];
+                Span<Byte> packet = stackalloc Byte[32];
+                packet.Clear();
 
                 if (diff4 > 0)
                 {
@@ -209,7 +216,10 @@ namespace FastHashes
                     packet[18] = buffer[offset + (mod4 - 1)];
                 }
 
-                UInt64[] k = BinaryOperations.ReadArray64(new ReadOnlySpan<Byte>(packet), 0, 4);
+                k[0] = BinaryOperations.Read64(packet, 0);
+                k[1] = BinaryOperations.Read64(packet, 8);
+                k[2] = BinaryOperations.Read64(packet, 16);
+                k[3] = BinaryOperations.Read64(packet, 24);
 
                 Update(ref m0, ref m1, ref v0, ref v1, k);
             }
@@ -218,13 +228,10 @@ namespace FastHashes
 
             for (UInt32 i = 0; i < P; ++i)
             {
-                UInt64[] k =
-                {
-                    (v0[2] >> 32) | (v0[2] << 32),
-                    (v0[3] >> 32) | (v0[3] << 32),
-                    (v0[0] >> 32) | (v0[0] << 32),
-                    (v0[1] >> 32) | (v0[1] << 32)
-                };
+                k[0] = (v0[2] >> 32) | (v0[2] << 32);
+                k[1] = (v0[3] >> 32) | (v0[3] << 32);
+                k[2] = (v0[0] >> 32) | (v0[0] << 32);
+                k[3] = (v0[1] >> 32) | (v0[1] << 32);
 
                 Update(ref m0, ref m1, ref v0, ref v1, k);
             }

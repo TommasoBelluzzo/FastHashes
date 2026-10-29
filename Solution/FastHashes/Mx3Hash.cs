@@ -102,15 +102,27 @@ namespace FastHashes
 
 			UInt64 hash = MixStream(m_Seed, (UInt64)count + 1);
 
-			while (count >= 64)
-			{
-				UInt64[] k = BinaryOperations.ReadArray64(buffer, offset, 8);
-				hash = MixStream(hash, k[0], k[1], k[2], k[3]);
-				hash = MixStream(hash, k[4], k[5], k[6], k[7]);
+            while (count >= 64)
+            {
+                hash = MixStream(
+					hash,
+                    BinaryOperations.Read64(buffer, offset),
+                    BinaryOperations.Read64(buffer, offset + 8),
+                    BinaryOperations.Read64(buffer, offset + 16),
+                    BinaryOperations.Read64(buffer, offset + 24)
+				);
 
-				offset += 64;
-				count -= 64;
-			}
+                hash = MixStream(
+					hash,
+                    BinaryOperations.Read64(buffer, offset + 32),
+                    BinaryOperations.Read64(buffer, offset + 40),
+                    BinaryOperations.Read64(buffer, offset + 48),
+                    BinaryOperations.Read64(buffer, offset + 56)
+				);
+
+                offset += 64;
+                count -= 64;
+            }
 
 			while (count >= 8)
 			{
