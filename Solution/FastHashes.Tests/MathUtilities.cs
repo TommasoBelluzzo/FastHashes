@@ -77,11 +77,11 @@ namespace FastHashes.Tests
 
         private static Int32 CompareSequences(Byte[] array1, Byte[] array2)
         {
-            if (ReferenceEquals(array1, null))
-                return ReferenceEquals(array2, null) ? 0 : 1;
+            if (array1 is null)
+                return array2 is null ? 0 : 1;
 
-            if (ReferenceEquals(array2, null))
-                return ReferenceEquals(array1, null) ? 0 : -1;
+            if (array2 is null)
+                return array1 is null ? 0 : -1;
 
             if (ReferenceEquals(array1, array2))
                 return 0;

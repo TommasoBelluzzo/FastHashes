@@ -52,6 +52,14 @@ namespace FastHashes.Tests
             ("xxHash64", seed => new XxHash64(seed), "0xF47C4B0200F12795")
         ];
 
+        public static IEnumerable<Object[]> DataFarmHashUnseeded()
+        {
+            Int32[] lengths = [0, 1, 4, 5, 12, 13, 15, 16, 17, 24, 25, 32, 127, 128, 144];
+
+            foreach (Int32 length in lengths)
+                yield return new Object[] { length };
+        }
+
         public static IEnumerable<Object[]> DataGeneric()
         {
             foreach (var (HashName, HashInitializer, _) in s_TestCases)
@@ -71,6 +79,33 @@ namespace FastHashes.Tests
             foreach (var (HashName, HashInitializer, _) in s_TestCases)
                 foreach (Int32 length in lengths)
                     yield return new Object[] { HashName, HashInitializer, length };
+        }
+
+        public static IEnumerable<Object[]> DataSliceInvalid()
+        {
+            yield return new Object[] { -1, 0, typeof(ArgumentOutOfRangeException) };
+            yield return new Object[] { -1, 1, typeof(ArgumentOutOfRangeException) };
+            yield return new Object[] { 11, 0, typeof(ArgumentOutOfRangeException) };
+            yield return new Object[] { Int32.MaxValue, 0, typeof(ArgumentOutOfRangeException) };
+            yield return new Object[] { 0, -1, typeof(ArgumentOutOfRangeException) };
+            yield return new Object[] { 0, Int32.MaxValue, typeof(ArgumentException) };
+            yield return new Object[] { 1, Int32.MaxValue, typeof(ArgumentException) };
+            yield return new Object[] { 8, 3, typeof(ArgumentException) };
+            yield return new Object[] { 10, 1, typeof(ArgumentException) };
+        }
+
+        public static IEnumerable<Object[]> DataSliceValid()
+        {
+            yield return new Object[] { 0, 0 };
+            yield return new Object[] { 0, 1 };
+            yield return new Object[] { 0, 10 };
+            yield return new Object[] { 1, 0 };
+            yield return new Object[] { 1, 1 };
+            yield return new Object[] { 5, 0 };
+            yield return new Object[] { 5, 5 };
+            yield return new Object[] { 9, 0 };
+            yield return new Object[] { 9, 1 };
+            yield return new Object[] { 10, 0 };
         }
 
         public static IEnumerable<Object[]> DataValidation()

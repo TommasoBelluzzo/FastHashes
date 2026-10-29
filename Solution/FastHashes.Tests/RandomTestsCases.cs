@@ -38,6 +38,16 @@ namespace FastHashes.Tests
                 yield return new Object[] { Seed, BufferLength, Offset, Count, Expected };
         }
 
+        public static IEnumerable<Object[]> DataBufferInvalidArguments()
+        {
+            yield return new Object[] { -1, 0, typeof(ArgumentOutOfRangeException) };
+            yield return new Object[] { 1, 0, typeof(ArgumentOutOfRangeException) };
+            yield return new Object[] { 0, -1, typeof(ArgumentOutOfRangeException) };
+            yield return new Object[] { 0, 1, typeof(ArgumentOutOfRangeException) };
+            yield return new Object[] { Int32.MaxValue, 0, typeof(ArgumentOutOfRangeException) };
+            yield return new Object[] { 0, Int32.MaxValue, typeof(ArgumentOutOfRangeException) };
+        }
+
         public static IEnumerable<Object[]> DataValue()
         {
             foreach (var (Seed, Expected) in s_TestCasesValue)

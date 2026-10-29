@@ -40,15 +40,7 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [InlineData(-1, 0, typeof(ArgumentOutOfRangeException))]
-        [InlineData(-1, 1, typeof(ArgumentOutOfRangeException))]
-        [InlineData(11, 0, typeof(ArgumentOutOfRangeException))]
-        [InlineData(Int32.MaxValue, 0, typeof(ArgumentOutOfRangeException))]
-        [InlineData(0, -1, typeof(ArgumentOutOfRangeException))]
-        [InlineData(0, Int32.MaxValue, typeof(ArgumentException))]
-        [InlineData(1, Int32.MaxValue, typeof(ArgumentException))]
-        [InlineData(8, 3, typeof(ArgumentException))]
-        [InlineData(10, 1, typeof(ArgumentException))]
+        [MemberData(nameof(HashTestsCases.DataSliceInvalid), MemberType=typeof(HashTestsCases))]
         public void InputInvalidSliceTest(Int32 offset, Int32 count, Type exceptionType)
         {
             Hash hash = new FarmHash32();
@@ -61,16 +53,7 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [InlineData(0, 0)]
-        [InlineData(0, 1)]
-        [InlineData(0, 10)]
-        [InlineData(1, 0)]
-        [InlineData(1, 1)]
-        [InlineData(5, 0)]
-        [InlineData(5, 5)]
-        [InlineData(9, 0)]
-        [InlineData(9, 1)]
-        [InlineData(10, 0)]
+        [MemberData(nameof(HashTestsCases.DataSliceValid), MemberType=typeof(HashTestsCases))]
         public void InputValidSliceTest(Int32 offset, Int32 count)
         {
             Hash hash = new FarmHash32();
@@ -257,6 +240,26 @@ namespace FastHashes.Tests
             }
 
             Assert.True(failed == 0, $"Conformance test failed for {hashName}: {failed} of {total} vectors failed.");
+        }
+
+        [Theory]
+        [MemberData(nameof(HashTestsCases.DataFarmHashUnseeded), MemberType=typeof(HashTestsCases))]
+        public void FarmHashUnseededTest(Int32 length)
+        {
+            RandomXorShift random = new(TEST_SEED);
+            Byte[] buffer = new Byte[length];
+            random.NextBytes(buffer);
+
+            Hash[] hashes = [new FarmHash32(), new FarmHash64(), new FarmHash128()];
+
+            foreach (Hash hash in hashes)
+            {
+                Byte[] expected = hash.ComputeHash(buffer);
+                Byte[] actual = hash.ComputeHash(buffer);
+
+                Assert.Equal(hash.Length / 8, expected.Length);
+                Assert.Equal(expected, actual);
+            }
         }
         #endregion
     }
