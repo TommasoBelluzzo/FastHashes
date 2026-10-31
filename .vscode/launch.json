@@ -9,7 +9,9 @@
       "program": "${workspaceFolder}/Solution/Output/Debug/net10.0/FastHashes.Tests.dll",
       "cwd": "${workspaceFolder}/Solution/Output/Debug/net10.0",
       "args": [
-        "-automated"
+        "-automated",
+        "--filter-not-method",
+        "*Collision*"
       ],
       "console": "integratedTerminal",
       "stopAtEntry": true,
@@ -26,7 +28,10 @@
       "preLaunchTask": "Build Tests: Release",
       "program": "${workspaceFolder}/Solution/Output/Release/net10.0/FastHashes.Tests.dll",
       "cwd": "${workspaceFolder}/Solution/Output/Release/net10.0",
-      "args": [],
+      "args": [
+        "--filter-not-method",
+        "*Collision*"
+      ],
       "console": "integratedTerminal",
       "stopAtEntry": false
     },

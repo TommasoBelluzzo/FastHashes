@@ -37,6 +37,19 @@
         #endregion
     }
 
+    /// <summary>Specifies the variant of <see cref="T:FastHashes.RapidHash"/>.</summary>
+    public enum RapidHashVariant
+    {
+        #region Values
+        /// <summary>The variant 1 of <see cref="T:FastHashes.RapidHash"/>.</summary>
+        V1,
+        /// <summary>The variant 2 of <see cref="T:FastHashes.RapidHash"/>.</summary>
+        V2,
+        /// <summary>The variant 3 of <see cref="T:FastHashes.RapidHash"/>.</summary>
+        V3
+        #endregion
+    }
+
     /// <summary>Specifies the variant of <see cref="T:FastHashes.SipHash"/>.</summary>
     public enum SipHashVariant
     {

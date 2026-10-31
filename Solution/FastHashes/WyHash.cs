@@ -275,7 +275,6 @@ namespace FastHashes
             WyMum(ref a, ref b);
 
             UInt64 hash = WyMix(a ^ m_Secret[0] ^ (UInt64)count, b ^ m_Secret[1]);
-
             Byte[] result = BinaryOperations.ToArray64(hash);
 
             return result;
