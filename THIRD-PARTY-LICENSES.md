@@ -751,6 +751,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 - Reference Revision: `a7cc6b00051b4b579d718a4f26428098580029ec`
 - License: zlib
 - License Source: [LICENSE](https://github.com/orlp/polymur-hash/blob/a7cc6b00051b4b579d718a4f26428098580029ec/LICENSE)
+- Note: FastHashes contains an independent C# port of PolymurHash, not the original upstream implementation.
 
 **Original License**
 
