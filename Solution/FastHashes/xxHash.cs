@@ -90,7 +90,7 @@ namespace FastHashes
                 UInt32 v3 = hash;
                 UInt32 v4 = hash - P1;
 
-                while (blocks-- > 0)
+                for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                 {
                     v1 = Mix(v1, P2, P1, 13, BinaryOperations.Read32(buffer, offset));
                     offset += 4;
@@ -116,7 +116,7 @@ namespace FastHashes
                 blocks = remainder / 4;
                 remainder &= 3;
 
-                while (blocks-- > 0)
+                for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                 {
                     hash = Mix(hash, P3, P4, 17, BinaryOperations.Read32(buffer, offset));
                     offset += 4;
@@ -276,7 +276,7 @@ namespace FastHashes
                 UInt64 v3 = hash;
                 UInt64 v4 = hash - P1;
 
-                while (blocks-- > 0)
+                for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                 {
                     v1 = Mix256A(v1, P2, P1, BinaryOperations.Read64(buffer, offset));
                     offset += 8;
@@ -307,7 +307,7 @@ namespace FastHashes
                 blocks = remainder / 8;
                 remainder &= 7;
 
-                while (blocks-- > 0)
+                for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                 {
                     hash = Mix64(hash, BinaryOperations.Read64(buffer, offset));
                     offset += 8;
@@ -319,7 +319,7 @@ namespace FastHashes
                 blocks = remainder / 4;
                 remainder &= 3;
 
-                while (blocks-- > 0)
+                for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                 {
                     hash = Mix32(hash, BinaryOperations.Read32(buffer, offset));
                     offset += 4;

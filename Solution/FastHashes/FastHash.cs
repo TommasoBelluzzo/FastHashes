@@ -70,7 +70,7 @@ namespace FastHashes
 
             Int32 blocks = count / 8;
 
-            while (blocks-- > 0)
+            for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
             {
                 hash = Mix(hash, BinaryOperations.Read64(buffer, offset));
                 offset += 8;

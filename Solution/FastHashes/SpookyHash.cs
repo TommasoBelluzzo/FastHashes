@@ -118,7 +118,7 @@ namespace FastHashes
 
             Span<UInt64> v = stackalloc UInt64[12];
 
-            while (blocks-- > 0)
+            for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
             {
                 for (Int32 i = 0; i < 12; ++i)
                     v[i] = BinaryOperations.Read64(buffer, offset + (i * 8));
@@ -159,7 +159,7 @@ namespace FastHashes
             {
                 Int32 blocks = count / 32;
 
-                while (blocks-- > 0)
+                for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                 {
                     hash[2] += BinaryOperations.Read64(buffer, offset);
                     offset += 8;

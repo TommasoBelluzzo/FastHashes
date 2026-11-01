@@ -229,7 +229,7 @@ namespace FastHashes
 
                     Span<UInt32> w = stackalloc UInt32[4];
 
-                    while (blocks-- > 0)
+                    for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                     {
                         w[0] = BinaryOperations.Read32(buffer, offset);
                         w[1] = BinaryOperations.Read32(buffer, offset + 4);
@@ -365,7 +365,7 @@ namespace FastHashes
 
                     Span<UInt64> w = stackalloc UInt64[4];
 
-                    while (blocks-- > 0)
+                    for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                     {
                         w[0] = BinaryOperations.Read64(buffer, offset);
                         w[1] = BinaryOperations.Read64(buffer, offset + 8);
@@ -512,7 +512,7 @@ namespace FastHashes
                     
                     Span<UInt64> w = stackalloc UInt64[4];
 
-                    while (blocks-- > 0)
+                    for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                     {
                         w[0] = BinaryOperations.Read64(buffer, offset);
                         w[1] = BinaryOperations.Read64(buffer, offset + 8);

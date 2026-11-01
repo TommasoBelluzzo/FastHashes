@@ -168,7 +168,7 @@ namespace FastHashes
 
             Int32 blocks = count / 32;
 
-            while (blocks-- > 0)
+            for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
             {
                 k[0] = BinaryOperations.Read64(buffer, offset);
                 k[1] = BinaryOperations.Read64(buffer, offset + 8);

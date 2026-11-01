@@ -99,7 +99,7 @@ namespace FastHashes
 
             Int32 blocks = count / 4;
 
-            while (blocks-- > 0)
+            for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
             {
                 UInt32 m = BinaryOperations.Read32(buffer, offset);
                 offset += 4;
@@ -278,7 +278,7 @@ namespace FastHashes
 
             Int32 blocks = count / 8;
 
-            while (blocks-- > 0)
+            for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
             {
                 UInt64 m = BinaryOperations.Read64(buffer, offset);
                 offset += 8;

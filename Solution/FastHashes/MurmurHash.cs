@@ -190,7 +190,7 @@ namespace FastHashes
 
                 Int32 blocks = count / 16;
 
-                while (blocks-- > 0)
+                for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                 {
                     UInt64 k1 = BinaryOperations.Read64(buffer, offset);
                     offset += 8;
@@ -348,7 +348,7 @@ namespace FastHashes
 
                 Int32 blocks = count / 16;
 
-                while (blocks-- > 0)
+                for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                 {
                     UInt32 k1 = BinaryOperations.Read32(buffer, offset);
                     offset += 4;
@@ -517,7 +517,7 @@ namespace FastHashes
 
             Int32 blocks = count / 4;
 
-            while (blocks-- > 0)
+            for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
             {
                 hash = Mur(hash, BinaryOperations.Read32(buffer, offset));
                 offset += 4;

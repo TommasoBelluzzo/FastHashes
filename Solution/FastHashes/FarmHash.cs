@@ -236,7 +236,7 @@ namespace FastHashes
 
             Int32 blocks = (count - 1) / 20;
 
-            do
+            for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
             {
                 UInt32 a = BinaryOperations.Read32(buffer, offset);
                 offset += 4;
@@ -259,8 +259,7 @@ namespace FastHashes
 
                 f += g;
                 g += f;
-            }
-            while (--blocks > 0);
+            };
 
             g = BinaryOperations.RotateRight(g, 11) * C1;
             g = BinaryOperations.RotateRight(g, 17) * C1;
