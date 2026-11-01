@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
-    /// <summary>Represents the xxHash32 implementation. This class cannot be derived.</summary>
+    /// <summary>Represents the XxHash32 implementation. This class cannot be derived.</summary>
     public sealed class XxHash32 : Hash
     {
         #region Constants
@@ -141,7 +141,7 @@ namespace FastHashes
         #endregion
     }
 
-    /// <summary>Represents the xxHash64 implementation. This class cannot be derived.</summary>
+    /// <summary>Represents the XxHash64 implementation. This class cannot be derived.</summary>
     public sealed class XxHash64 : Hash
     {
         #region Constants

@@ -1,5 +1,5 @@
 {
-  "algorithm": "xxHash64",
+  "algorithm": "XxHash64",
   "reference": {
     "repository": "https://github.com/Cyan4973/xxHash",
     "revision": "Debian libxxhash0 0.8.3-2 (upstream 0.8.3; NOT commit-pinned)",

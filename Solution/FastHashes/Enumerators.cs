@@ -71,4 +71,15 @@
         V24
         #endregion
     }
+
+    /// <summary>Specifies the output of <see cref="T:FastHashes.XxHash3"/>.</summary>
+    public enum XxHash3Output
+    {
+        #region Values
+        /// <summary>The 64-bit output of <see cref="T:FastHashes.XxHash3"/>.</summary>
+        O64,
+        /// <summary>The 128-bit output of <see cref="T:FastHashes.XxHash3"/>.</summary>
+        O128
+        #endregion
+    }
 }

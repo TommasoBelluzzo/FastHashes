@@ -52,15 +52,17 @@ namespace FastHashes.Benchmarks
             ("SpookyHash128", seed => new SpookyHash128(seed)),
             ("WyHash32", seed => new WyHash32(checked((UInt32)seed))),
             ("WyHash64", seed => new WyHash64(seed)),
-            ("xxHash32", seed => new XxHash32(checked((UInt32)seed))),
-            ("xxHash64", seed => new XxHash64(seed))
+            ("XxHash32", seed => new XxHash32(checked((UInt32)seed))),
+            ("XxHash64", seed => new XxHash64(seed)),
+            ("XxHash3-64", seed => new XxHash3(XxHash3Output.O64, seed)),
+            ("XxHash3-128", seed => new XxHash3(XxHash3Output.O128, seed))
         ];
 
         private const Int32 BATCH_MAXIMUM_OPERATIONS = 8192;
         private const Int32 BATCH_MAXIMUM_BYTES = 8 * 1024 * 1024;
         private const Int32 BULK_KEYS_LENGTH = 256 * 1024;
         private const Int32 BULK_REPETITIONS = 5000;
-        private const Int32 WARMUP_REPETITIONS = 128;
+        private const Int32 WARMUP_REPETITIONS = 100;
 
         private static readonly List<(Func<Int32,Int32> Increment, Int32 KeySize, Int32 Repetitions)> s_ChunkParameters =
         [

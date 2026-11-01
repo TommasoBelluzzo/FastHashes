@@ -90,15 +90,6 @@ namespace FastHashes
         private abstract class Engine
         {
             #region Constants
-            protected const UInt32 P1 = 0x9E3779B1u;
-            protected const UInt32 P2 = 0x85EBCA77u;
-            protected const UInt32 P3 = 0xC2B2AE3Du;
-            protected const UInt32 P4 = 0x27D4EB2Fu;
-
-            protected const UInt32 M1 = 0xF0D9649Bu;
-            protected const UInt32 M2 = 0x29A7935Du;
-            protected const UInt32 M3 = 0x55D35831u;
-
             private static readonly UInt32[] s_AccumulatorInitial =
             {
                 0xB8FE6C39u, 0x23A44BBEu, 0x7C01812Cu, 0xF721AD1Cu,
@@ -110,6 +101,14 @@ namespace FastHashes
                 0xA8FA763Fu, 0xE39C343Fu, 0xF9DCBBC7u, 0xC70B4F1Du,
                 0x8A51E04Bu, 0xCDB45931u, 0xC89F7EC9u, 0xD9787364u
             };
+
+            protected const UInt32 M1 = 0xF0D9649Bu;
+            protected const UInt32 M2 = 0x29A7935Du;
+            protected const UInt32 M3 = 0x55D35831u;
+            protected const UInt32 P1 = 0x9E3779B1u;
+            protected const UInt32 P2 = 0x85EBCA77u;
+            protected const UInt32 P3 = 0xC2B2AE3Du;
+            protected const UInt32 P4 = 0x27D4EB2Fu;
             #endregion
 
             #region Members
@@ -136,41 +135,38 @@ namespace FastHashes
             #region Methods
             private static void LongRound(Span<UInt32> x, Span<UInt32> y, ReadOnlySpan<Byte> buffer, Int32 offset)
             {
-                unchecked
-                {
-                    for (Int32 i = 0; i < 32; ++i)
-                        x[i] ^= BinaryOperations.Read32(buffer, offset + (i * 4));
+                for (Int32 i = 0; i < 32; ++i)
+                    x[i] ^= BinaryOperations.Read32(buffer, offset + (i * 4));
 
-                    for (Int32 i = 0; i < 32; ++i)
-                        y[i] ^= BinaryOperations.Read32(buffer, offset + 128 + (i * 4));
+                for (Int32 i = 0; i < 32; ++i)
+                    y[i] ^= BinaryOperations.Read32(buffer, offset + 128 + (i * 4));
 
-                    for (Int32 i = 0; i < 32; ++i)
-                        x[i] += y[i];
+                for (Int32 i = 0; i < 32; ++i)
+                    x[i] = unchecked(x[i] + y[i]);
 
-                    for (Int32 i = 0; i < 32; ++i)
-                        y[i] ^= x[i] >> 1;
+                for (Int32 i = 0; i < 32; ++i)
+                    y[i] ^= x[i] >> 1;
 
-                    for (Int32 i = 0; i < 32; ++i)
-                        x[i] = MultiplyHalves(x[i], M1);
+                for (Int32 i = 0; i < 32; ++i)
+                    x[i] = MultiplyHalves(x[i], M1);
 
-                    for (Int32 i = 0; i < 32; ++i)
-                        x[i] ^= (x[i] << 5) ^ (x[i] >> 13);
+                for (Int32 i = 0; i < 32; ++i)
+                    x[i] ^= (x[i] << 5) ^ (x[i] >> 13);
 
-                    for (Int32 i = 0; i < 32; ++i)
-                        x[i] = MultiplyHalves(x[i], M2);
+                for (Int32 i = 0; i < 32; ++i)
+                    x[i] = MultiplyHalves(x[i], M2);
 
-                    for (Int32 i = 0; i < 32; ++i)
-                        x[i] ^= y[i];
+                for (Int32 i = 0; i < 32; ++i)
+                    x[i] ^= y[i];
 
-                    for (Int32 i = 0; i < 32; ++i)
-                        x[i] ^= (x[i] << 11) ^ (x[i] >> 9);
+                for (Int32 i = 0; i < 32; ++i)
+                    x[i] ^= (x[i] << 11) ^ (x[i] >> 9);
 
-                    for (Int32 i = 0; i < 32; ++i)
-                        x[i] = MultiplyHalves(x[i], M3);
+                for (Int32 i = 0; i < 32; ++i)
+                    x[i] = MultiplyHalves(x[i], M3);
 
-                    for (Int32 i = 0; i < 32; ++i)
-                        x[i] ^= (x[i] >> 10) ^ (x[i] >> 20);
-                }
+                for (Int32 i = 0; i < 32; ++i)
+                    x[i] ^= (x[i] >> 10) ^ (x[i] >> 20);
             }
 
             protected static UInt32 ComputeLong(ReadOnlySpan<Byte> buffer, UInt32 seed)

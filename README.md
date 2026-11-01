@@ -81,18 +81,18 @@ The library includes the following non-cryptographic hashes:
  * `Mx3Hash`
    * 64 Bits Output
    * Reference Implementation: [https://github.com/jonmaiga/mx3](https://github.com/jonmaiga/mx3)
-  * `NmHash`
-    * 32 Bits Output
-    * Standard/X Variants
-    * Reference Implementation: [https://github.com/gzm55/hash-garage](https://github.com/gzm55/hash-garage)
+ * `NmHash`
+   * 32 Bits Output
+   * Standard/X Variants
+   * Reference Implementation: [https://github.com/gzm55/hash-garage](https://github.com/gzm55/hash-garage)
  * `PengyHash`
    * 64 Bits Output
    * Strict Variant
    * Reference Implementation: [https://github.com/tinypeng/pengyhash](https://github.com/tinypeng/pengyhash)
-  * `RapidHash`
-    * 64 Bits Output
-    * 1/2/3 Variants
-    * Reference Implementation: [https://github.com/Nicoshev/rapidhash](https://github.com/Nicoshev/rapidhash)
+ * `RapidHash`
+   * 64 Bits Output
+   * 1/2/3 Variants
+   * Reference Implementation: [https://github.com/Nicoshev/rapidhash](https://github.com/Nicoshev/rapidhash)
  * `SipHash`
    * 64 Bits Output
    * 1-3/2-4 Variants
@@ -104,7 +104,7 @@ The library includes the following non-cryptographic hashes:
    * 32/64 Bits Output
    * Strict Variant
    * Reference Implementation: [https://github.com/wangyi-fudan/wyhash](https://github.com/wangyi-fudan/wyhash)
- * `xxHash`
+ * `XxHash` & `XxHash3`
    * 32/64 Bits Output
    * Reference Implementation: [https://github.com/Cyan4973/xxHash](https://github.com/Cyan4973/xxHash)
 
