@@ -43,6 +43,7 @@ namespace FastHashes.Tests
             ("NmHash-S", seed => new NmHash(NmHashVariant.S, checked((UInt32)seed)), "0x5305A312"),
             ("NmHash-X", seed => new NmHash(NmHashVariant.X, checked((UInt32)seed)), "0x270258A8"),
             ("PengyHash", seed => new PengyHash(checked((UInt32)seed)), "0x7B21C21F62359105"),
+            ("PolymurHash", seed => new PolymurHash(seed), "0xA7B12207F06C150E"),
             ("RapidHash-V1", seed => new RapidHash(RapidHashVariant.V1, seed), "0x4B4C40AF2E277E4B"),
             ("RapidHash-V2", seed => new RapidHash(RapidHashVariant.V2, seed), "0xCC5E2094156B34C5"),
             ("RapidHash-V3", seed => new RapidHash(RapidHashVariant.V3, seed), "0xEE65DC1FA088816D"),

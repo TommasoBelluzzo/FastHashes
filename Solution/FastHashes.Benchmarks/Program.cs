@@ -42,6 +42,7 @@ namespace FastHashes.Benchmarks
             ("NmHash-S", seed => new NmHash(NmHashVariant.S, checked((UInt32)seed))),
             ("NmHash-X", seed => new NmHash(NmHashVariant.X, checked((UInt32)seed))),
             ("PengyHash", seed => new PengyHash(checked((UInt32)seed))),
+            ("PolymurHash", seed => new PolymurHash(seed)),
             ("RapidHash-V1", seed => new RapidHash(RapidHashVariant.V1, seed)),
             ("RapidHash-V2", seed => new RapidHash(RapidHashVariant.V2, seed)),
             ("RapidHash-V3", seed => new RapidHash(RapidHashVariant.V3, seed)),

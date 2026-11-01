@@ -77,21 +77,7 @@ namespace FastHashes
         private abstract class Engine
         {
             #region Constants
-            protected const UInt64 MX1 = 0x165667919E3779F9ul;
-            protected const UInt64 MX2 = 0x9FB21C651E98DF25ul;
-            protected const UInt32 P32_1 = 0x9E3779B1u;
-            protected const UInt32 P32_2 = 0x85EBCA77u;
-            protected const UInt32 P32_3 = 0xC2B2AE3Du;
-            protected const UInt64 P64_1 = 0x9E3779B185EBCA87ul;
-            protected const UInt64 P64_2 = 0xC2B2AE3D27D4EB4Ful;
-            protected const UInt64 P64_3 = 0x165667B19E3779F9ul;
-            protected const UInt64 P64_4 = 0x85EBCA77C2B2AE63ul;
-            protected const UInt64 P64_5 = 0x27D4EB2F165667C5ul;
-            protected const Int32 SECRET_SIZE = 192;
-            protected const Int32 SECRET_SIZE_MIN = 136;
-            protected const Int32 STRIPE_SIZE = 64;
-
-            protected static readonly Byte[] s_Secret =
+            private static readonly Byte[] s_Secret =
             {
                 0XB8, 0XFE, 0X6C, 0X39, 0X23, 0XA4, 0X4B, 0XBE, 0X7C, 0X01, 0X81, 0X2C, 0XF7, 0X21, 0XAD, 0X1C,
                 0XDE, 0XD4, 0X6D, 0XE9, 0X83, 0X90, 0X97, 0XDB, 0X72, 0X40, 0XA4, 0XA4, 0XB7, 0XB3, 0X67, 0X1F,
@@ -106,15 +92,32 @@ namespace FastHashes
                 0X2B, 0X16, 0XBE, 0X58, 0X7D, 0X47, 0XA1, 0XFC, 0X8F, 0XF8, 0XB8, 0XD1, 0X7A, 0XD0, 0X31, 0XCE,
                 0X45, 0XCB, 0X3A, 0X8F, 0X95, 0X16, 0X04, 0X28, 0XAF, 0XD7, 0XFB, 0XCA, 0XBB, 0X4B, 0X40, 0X7E
             };
+
+            protected const UInt64 MX1 = 0x165667919E3779F9ul;
+            protected const UInt64 MX2 = 0x9FB21C651E98DF25ul;
+            protected const UInt32 P32_1 = 0x9E3779B1u;
+            protected const UInt32 P32_2 = 0x85EBCA77u;
+            protected const UInt32 P32_3 = 0xC2B2AE3Du;
+            protected const UInt64 P64_1 = 0x9E3779B185EBCA87ul;
+            protected const UInt64 P64_2 = 0xC2B2AE3D27D4EB4Ful;
+            protected const UInt64 P64_3 = 0x165667B19E3779F9ul;
+            protected const UInt64 P64_4 = 0x85EBCA77C2B2AE63ul;
+            protected const UInt64 P64_5 = 0x27D4EB2F165667C5ul;
+            protected const Int32 SECRET_SIZE = 192;
+            protected const Int32 SECRET_SIZE_MIN = 136;
+            protected const Int32 STRIPE_SIZE = 64;
             #endregion
 
             #region Members
+            private readonly Byte[] m_LongSecret;
             protected readonly UInt64 m_Seed;
             #endregion
 
             #region Properties
+            protected static ReadOnlySpan<Byte> Secret => s_Secret;
+            
+            protected ReadOnlySpan<Byte> LongSecret => m_LongSecret;
             public abstract Int32 Length { get; }
-
             public abstract String Name { get; }
 
             [ExcludeFromCodeCoverage]
@@ -126,6 +129,22 @@ namespace FastHashes
             protected Engine(UInt64 seed)
             {
                 m_Seed = seed;
+
+                if (seed == 0)
+                    m_LongSecret = s_Secret;
+                else
+                {
+                    m_LongSecret = new Byte[SECRET_SIZE];
+
+                    for (Int32 i = 0; i < SECRET_SIZE; i += 16)
+                    {
+                        UInt64 lo = unchecked(BinaryOperations.Read64(s_Secret, i) + seed);
+                        BinaryPrimitives.WriteUInt64LittleEndian(m_LongSecret.AsSpan(i, 8), lo);
+
+                        UInt64 hi = unchecked(BinaryOperations.Read64(s_Secret, i + 8) - seed);
+                        BinaryPrimitives.WriteUInt64LittleEndian(m_LongSecret.AsSpan(i + 8, 8), hi);
+                    }
+                }
             }
             #endregion
 
@@ -199,24 +218,9 @@ namespace FastHashes
                 return mf;
             }
 
-            protected static void ComputeLong(ReadOnlySpan<Byte> buffer, UInt64 seed, Span<UInt64> acc, Span<Byte> secretBuffer)
+            protected static void ComputeLong(ReadOnlySpan<Byte> buffer, Span<UInt64> acc, ReadOnlySpan<Byte> secret)
             {
                 Int32 count = buffer.Length;
-                ReadOnlySpan<Byte> secret = s_Secret;
-
-                if (seed != 0)
-                {
-                    for (Int32 i = 0; i < SECRET_SIZE; i += 16)
-                    {
-                        UInt64 lo = unchecked(BinaryOperations.Read64(s_Secret, i) + seed);
-                        BinaryPrimitives.WriteUInt64LittleEndian(secretBuffer.Slice(i, 8), lo);
-
-                        UInt64 hi = unchecked(BinaryOperations.Read64(s_Secret, i + 8) - seed);
-                        BinaryPrimitives.WriteUInt64LittleEndian(secretBuffer.Slice(i + 8, 8), hi);
-                    }
-
-                    secret = secretBuffer;
-                }
 
                 acc[0] = P32_3;
                 acc[1] = P64_1;
@@ -309,7 +313,7 @@ namespace FastHashes
             private static UInt64 ComputeMedium(ReadOnlySpan<Byte> buffer, UInt64 seed)
             {
                 Int32 count = buffer.Length;
-                ReadOnlySpan<Byte> secret = s_Secret;
+                ReadOnlySpan<Byte> secret = Secret;
 
                 UInt64 hash = unchecked((UInt64)count * P64_1);
 
@@ -359,7 +363,7 @@ namespace FastHashes
             private static UInt64 ComputeShort(ReadOnlySpan<Byte> buffer, UInt64 seed)
             {
                 Int32 count = buffer.Length;
-                ReadOnlySpan<Byte> secret = s_Secret;
+                ReadOnlySpan<Byte> secret = Secret;
 
                 UInt64 hash;
 
@@ -423,16 +427,10 @@ namespace FastHashes
                 else
                 {
                     Span<UInt64> accumulator = stackalloc UInt64[8];
-                    Span<Byte> secret = stackalloc Byte[SECRET_SIZE];
-
-                    ComputeLong(buffer, Seed, accumulator, secret);
+                    ComputeLong(buffer, accumulator, LongSecret);
 
                     UInt64 start = unchecked((UInt64)count * P64_1);
-
-                    if (Seed == 0)
-                        hash = Merge(accumulator, s_Secret, 11, start);
-                    else
-                        hash = Merge(accumulator, secret, 11, start);
+                    hash = Merge(accumulator, LongSecret, 11, start);
                 }
 
                 Byte[] result = BinaryOperations.ToArray64(hash);
@@ -461,7 +459,7 @@ namespace FastHashes
             private static void ComputeMedium(ReadOnlySpan<Byte> buffer, UInt64 seed, out UInt64 lo, out UInt64 hi)
             {
                 Int32 count = buffer.Length;
-                ReadOnlySpan<Byte> secret = s_Secret;
+                ReadOnlySpan<Byte> secret = Secret;
 
                 UInt64 loAccumulator = unchecked((UInt64)count * P64_1);
                 UInt64 hiAccumulator = 0;
@@ -500,7 +498,7 @@ namespace FastHashes
             private static void ComputeShort(ReadOnlySpan<Byte> buffer, UInt64 seed, out UInt64 lo, out UInt64 hi)
             {
                 Int32 count = buffer.Length;
-                ReadOnlySpan<Byte> secret = s_Secret;
+                ReadOnlySpan<Byte> secret = Secret;
 
                 if (count > 8)
                 {
@@ -579,23 +577,13 @@ namespace FastHashes
                 else
                 {
                     Span<UInt64> accumulator = stackalloc UInt64[8];
-                    Span<Byte> secret = stackalloc Byte[SECRET_SIZE];
-
-                    ComputeLong(buffer, Seed, accumulator, secret);
+                    ComputeLong(buffer, accumulator, LongSecret);
 
                     UInt64 loStart = unchecked((UInt64)count * P64_1);
                     UInt64 hiStart = ~unchecked((UInt64)count * P64_2);
 
-                    if (Seed == 0)
-                    {
-                        lo = Merge(accumulator, s_Secret, 11, loStart);
-                        hi = Merge(accumulator, s_Secret, SECRET_SIZE - STRIPE_SIZE - 11, hiStart);
-                    }
-                    else
-                    {
-                        lo = Merge(accumulator, secret, 11, loStart);
-                        hi = Merge(accumulator, secret, SECRET_SIZE - STRIPE_SIZE - 11, hiStart);
-                    }
+                    lo = Merge(accumulator, LongSecret, 11, loStart);
+                    hi = Merge(accumulator, LongSecret, SECRET_SIZE - STRIPE_SIZE - 11, hiStart);
                 }
 
                 Byte[] result = new Byte[16];

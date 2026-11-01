@@ -105,6 +105,8 @@
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="" />
+    <None Include="..\..\LICENSE.md" Pack="true" PackagePath="" />
+    <None Include="..\..\THIRD-PARTY-LICENSES.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>

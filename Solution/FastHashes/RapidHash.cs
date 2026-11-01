@@ -63,7 +63,6 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         public RapidHash() : this(RapidHashVariant.V3, 0ul) { }
 
-
         /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
         /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.RapidHashVariant"/> representing the variant of the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentException ">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
