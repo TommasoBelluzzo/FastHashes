@@ -47,11 +47,11 @@ namespace FastHashes
 		private static UInt64 Mix(UInt64 x)
 		{
 			x ^= x >> 32;
-			x *= C;
+			x = unchecked(x * C);
 			x ^= x >> 29;
-			x *= C;
+			x = unchecked(x * C);
 			x ^= x >> 32;
-			x *= C;
+			x = unchecked(x * C);
 			x ^= x >> 29;
 
 			return x;
@@ -60,11 +60,11 @@ namespace FastHashes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static UInt64 MixStream(UInt64 hash, UInt64 x)
 		{
-			x *= C;
+			x = unchecked(x * C);
 			x ^= x >> 39;
 
-			hash += x * C;
-			hash *= C;
+			hash = unchecked(hash + (x * C));
+			hash = unchecked(hash * C);
 
 			return hash;
 		}
@@ -72,24 +72,24 @@ namespace FastHashes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static UInt64 MixStream(UInt64 hash, UInt64 a, UInt64 b, UInt64 c, UInt64 d)
 		{
-			a *= C;
-			b *= C;
-			c *= C;
-			d *= C;
+			a = unchecked(a * C);
+			b = unchecked(b * C);
+			c = unchecked(c * C);
+			d = unchecked(d * C);
 
 			a ^= a >> 39;
 			b ^= b >> 39;
 			c ^= c >> 39;
 			d ^= d >> 39;
 
-			hash += a * C;
-			hash *= C;
-			hash += b * C;
-			hash *= C;
-			hash += c * C;
-			hash *= C;
-			hash += d * C;
-			hash *= C;
+			hash = unchecked(hash + (a * C));
+			hash = unchecked(hash * C);
+			hash = unchecked(hash + (b * C));
+			hash = unchecked(hash * C);
+			hash = unchecked(hash + (c * C));
+			hash = unchecked(hash * C);
+			hash = unchecked(hash + (d * C));
+			hash = unchecked(hash * C);
 
 			return hash;
 		}
@@ -100,7 +100,7 @@ namespace FastHashes
 			Int32 offset = 0;
             Int32 count = buffer.Length;
 
-			UInt64 hash = MixStream(m_Seed, (UInt64)count + 1);
+			UInt64 hash = MixStream(m_Seed, unchecked((UInt64)count + 1));
 
             while (count >= 64)
             {

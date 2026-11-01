@@ -43,20 +43,18 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Pengy(UInt64 seed, ReadOnlySpan<UInt64> b, Span<UInt64> s)
         {
-            s[0] += s[1] + b[3];
-            s[1] = s[0] + BinaryOperations.RotateLeft(s[1], 14) + seed;
+            s[0] = unchecked(s[0] + s[1] + b[3]);
+            s[1] = unchecked(s[0] + BinaryOperations.RotateLeft(s[1], 14) + seed);
 
-            s[2] += s[3] + b[2];
-            s[3] = s[2] + BinaryOperations.RotateLeft(s[3], 23);
+            s[2] = unchecked(s[2] + s[3] + b[2]);
+            s[3] = unchecked(s[2] + BinaryOperations.RotateLeft(s[3], 23));
 
-            s[0] += s[3] + b[1];
+            s[0] = unchecked(s[0] + s[3] + b[1]);
             s[3] = s[0] ^ BinaryOperations.RotateLeft(s[3], 16);
 
-            s[2] += s[1] + b[0];
+            s[2] = unchecked(s[2] + s[1] + b[0]);
             s[1] = s[2] ^ BinaryOperations.RotateLeft(s[1], 40);
         }
-
-        /// <inheritdoc/>
 
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
@@ -103,7 +101,7 @@ namespace FastHashes
             for (Int32 i = 0; i < 6; ++i)
                 Pengy(seed, b, s);
 
-            UInt64 hash = s[0] + s[1] + s[2] + s[3];
+            UInt64 hash = unchecked(s[0] + s[1] + s[2] + s[3]);
             Byte[] result = BinaryOperations.ToArray64(hash);
 
             return result;

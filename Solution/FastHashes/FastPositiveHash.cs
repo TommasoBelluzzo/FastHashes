@@ -126,8 +126,11 @@ namespace FastHashes
 
             #region Methods
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected static void Mux(out UInt64 l, out UInt64 h, UInt64 v, UInt64 p)
+            protected static void Mux(out UInt64 lo, out UInt64 hi, UInt64 v, UInt64 p)
             {
+                #if NET5_0_OR_GREATER
+                hi = Math.BigMul(v, p, out lo);
+                #else
                 UInt64 a = v >> 32;
                 UInt64 b = v & 0x00000000FFFFFFFFul;
                 UInt64 c = p >> 32;
@@ -135,11 +138,12 @@ namespace FastHashes
 
                 UInt64 ad = a * d;
                 UInt64 bd = b * d;
-                UInt64 adbc = ad + (b * c);
+                UInt64 adbc = unchecked(ad + (b * c));
                 UInt64 carry = (adbc < ad) ? 1ul : 0ul;
 
-                l = bd + (adbc << 32);
-                h = (a * c) + (adbc >> 32) + (carry << 32) + ((l < bd) ? 1ul : 0ul);
+                lo = unchecked(bd + (adbc << 32));
+                hi = unchecked((a * c) + (adbc >> 32) + (carry << 32) + ((lo < bd) ? 1ul : 0ul));
+                #endif
             }
 
             public abstract Byte[] ComputeHash(ReadOnlySpan<Byte> buffer);

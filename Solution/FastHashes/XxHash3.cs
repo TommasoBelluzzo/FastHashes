@@ -254,6 +254,9 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static void Mul128(UInt64 a, UInt64 b, out UInt64 lo, out UInt64 hi)
             {
+                #if NET5_0_OR_GREATER
+                hi = Math.BigMul(a, b, out lo);
+                #else
                 UInt64 a0 = unchecked((UInt32)a);
                 UInt64 a1 = a >> 32;
 
@@ -268,6 +271,7 @@ namespace FastHashes
                 UInt64 mid = (p00 >> 32) + unchecked((UInt32)p01) + unchecked((UInt32)p10);
                 lo = (mid << 32) | unchecked((UInt32)p00);
                 hi = unchecked(p11 + (p01 >> 32) + (p10 >> 32) + (mid >> 32));
+                #endif
             }
 
             protected static void Scramble(Span<UInt64> acc, ReadOnlySpan<Byte> secret, Int32 offset)
