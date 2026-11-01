@@ -40,6 +40,8 @@ namespace FastHashes.Tests
             ("MurmurHash128-X64", seed => new MurmurHash128(MurmurHashEngine.x64, checked((UInt32)seed)), "0x69BA846303DEF3632DED84E68C879271"),
             ("MumHash", seed => new MumHash(checked((UInt32)seed)), "0xD4E2EA3EFC4952F1"),
             ("Mx3Hash", seed => new Mx3Hash(seed), "0x657B287B75CBFD8B"),
+            ("NmHash-S", seed => new NmHash(NmHashVariant.S, checked((UInt32)seed)), "0x5305A312"),
+            ("NmHash-X", seed => new NmHash(NmHashVariant.X, checked((UInt32)seed)), "0x270258A8"),
             ("PengyHash", seed => new PengyHash(checked((UInt32)seed)), "0x7B21C21F62359105"),
             ("RapidHash-V1", seed => new RapidHash(RapidHashVariant.V1, seed), "0x4B4C40AF2E277E4B"),
             ("RapidHash-V2", seed => new RapidHash(RapidHashVariant.V2, seed), "0xCC5E2094156B34C5"),

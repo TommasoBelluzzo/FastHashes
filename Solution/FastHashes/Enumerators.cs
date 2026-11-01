@@ -37,6 +37,17 @@
         #endregion
     }
 
+    /// <summary>Specifies the variant of <see cref="T:FastHashes.NmHash"/>.</summary>
+    public enum NmHashVariant
+    {
+        #region Values
+        /// <summary>The standard <see cref="T:FastHashes.NmHash"/>.</summary>
+        S,
+        /// <summary>The X variant of <see cref="T:FastHashes.NmHash"/>.</summary>
+        X
+        #endregion
+    }
+
     /// <summary>Specifies the variant of <see cref="T:FastHashes.RapidHash"/>.</summary>
     public enum RapidHashVariant
     {

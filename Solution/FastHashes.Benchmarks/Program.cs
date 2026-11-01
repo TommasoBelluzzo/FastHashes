@@ -39,7 +39,12 @@ namespace FastHashes.Benchmarks
             ("MurmurHash128-X64", seed => new MurmurHash128(MurmurHashEngine.x64, checked((UInt32)seed))),
             ("MumHash", seed => new MumHash(checked((UInt32)seed))),
             ("Mx3Hash", seed => new Mx3Hash(seed)),
+            ("NmHash-S", seed => new NmHash(NmHashVariant.S, checked((UInt32)seed))),
+            ("NmHash-X", seed => new NmHash(NmHashVariant.X, checked((UInt32)seed))),
             ("PengyHash", seed => new PengyHash(checked((UInt32)seed))),
+            ("RapidHash-V1", seed => new RapidHash(RapidHashVariant.V1, seed)),
+            ("RapidHash-V2", seed => new RapidHash(RapidHashVariant.V2, seed)),
+            ("RapidHash-V3", seed => new RapidHash(RapidHashVariant.V3, seed)),
             ("SipHash-13", seed => new SipHash(SipHashVariant.V13, seed)),
             ("SipHash-24", seed => new SipHash(SipHashVariant.V24, seed)),
             ("SpookyHash32", seed => new SpookyHash32(seed, seed)),
@@ -83,7 +88,7 @@ namespace FastHashes.Benchmarks
                 (String hashName, Func<UInt64,Hash> hashInitializer) = s_BenchmarkCases[i];
 
                 String title = $"# HASH: {hashName} #";
-                String frame = new String('#', title.Length);
+                String frame = new('#', title.Length);
 
                 Console.WriteLine(frame);
                 Console.WriteLine(title);
@@ -251,7 +256,7 @@ namespace FastHashes.Benchmarks
                 Int32 offset = 1;
 
                 List<Double> allSpeeds = [];
-                List<(Int32,Int32,Double)> chunkSpeeds = new List<(Int32,Int32,Double)>(s_ChunkParameters.Count);
+                List<(Int32,Int32,Double)> chunkSpeeds = new(s_ChunkParameters.Count);
 
                 foreach ((Func<Int32,Int32> increment, Int32 keySize, Int32 repetitions) in s_ChunkParameters)
                 {

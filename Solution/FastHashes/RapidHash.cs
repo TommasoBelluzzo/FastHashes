@@ -15,7 +15,7 @@ namespace FastHashes
 
         #region Properties
         /// <summary>Gets the variant of the hashing algorithm.</summary>
-        /// <value>An enumerator value of type <see cref="T:FastHashes.FastPositiveHashVariant"/>.</value>
+        /// <value>An enumerator value of type <see cref="T:FastHashes.RapidHashVariant"/>.</value>
         [ExcludeFromCodeCoverage]
         public RapidHashVariant Variant => m_Engine.Variant;
 
@@ -59,7 +59,7 @@ namespace FastHashes
             }
         }
         
-        /// <summary>Initializes a new instance using <see cref="F:FastHashes.RapidHashVariant.V2"/> and a seed value of <c>0</c>.</summary>
+        /// <summary>Initializes a new instance using <see cref="F:FastHashes.RapidHashVariant.V3"/> and a seed value of <c>0</c>.</summary>
         [ExcludeFromCodeCoverage]
         public RapidHash() : this(RapidHashVariant.V3, 0ul) { }
 
