@@ -54,8 +54,8 @@ namespace FastHashes.Benchmarks
             ("WyHash64", seed => new WyHash64(seed)),
             ("XxHash32", seed => new XxHash32(checked((UInt32)seed))),
             ("XxHash64", seed => new XxHash64(seed)),
-            ("XxHash3-64", seed => new XxHash3(XxHash3Output.O64, seed)),
-            ("XxHash3-128", seed => new XxHash3(XxHash3Output.O128, seed))
+            ("XxHash3-O64", seed => new XxHash3(XxHash3Output.O64, seed)),
+            ("XxHash3-O128", seed => new XxHash3(XxHash3Output.O128, seed))
         ];
 
         private const Int32 BATCH_MAXIMUM_OPERATIONS = 8192;

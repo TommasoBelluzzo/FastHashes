@@ -55,8 +55,8 @@ namespace FastHashes.Tests
             ("WyHash64", seed => new WyHash64(seed), "0xD37DAE9D1F46D8DB"),
             ("XxHash32", seed => new XxHash32(checked((UInt32)seed)), "0x43B788BA"),
             ("XxHash64", seed => new XxHash64(seed), "0xF47C4B0200F12795"),
-            ("XxHash3-64", seed => new XxHash3(XxHash3Output.O64, seed), "0x0564639A4BD12D32"),
-            ("XxHash3-128", seed => new XxHash3(XxHash3Output.O128, seed), "0x848EE45A0AA19CBD18910CDBAD010930")
+            ("XxHash3-O64", seed => new XxHash3(XxHash3Output.O64, seed), "0x0564639A4BD12D32"),
+            ("XxHash3-O128", seed => new XxHash3(XxHash3Output.O128, seed), "0x848EE45A0AA19CBD18910CDBAD010930")
         ];
 
         public static IEnumerable<Object[]> DataFarmHashUnseeded()
