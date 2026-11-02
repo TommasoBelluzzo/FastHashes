@@ -77,7 +77,7 @@ namespace FastHashes
         private abstract class Engine
         {
             #region Constants
-            private static readonly Byte[] s_Secret =
+            private static readonly Byte[] SECRET =
             {
                 0XB8, 0XFE, 0X6C, 0X39, 0X23, 0XA4, 0X4B, 0XBE, 0X7C, 0X01, 0X81, 0X2C, 0XF7, 0X21, 0XAD, 0X1C,
                 0XDE, 0XD4, 0X6D, 0XE9, 0X83, 0X90, 0X97, 0XDB, 0X72, 0X40, 0XA4, 0XA4, 0XB7, 0XB3, 0X67, 0X1F,
@@ -114,7 +114,7 @@ namespace FastHashes
             #endregion
 
             #region Properties
-            protected static ReadOnlySpan<Byte> Secret => s_Secret;
+            protected static ReadOnlySpan<Byte> Secret => SECRET;
 
             protected ReadOnlySpan<Byte> LongSecret => m_LongSecret;
             public abstract Int32 Length { get; }
@@ -131,17 +131,17 @@ namespace FastHashes
                 m_Seed = seed;
 
                 if (seed == 0)
-                    m_LongSecret = s_Secret;
+                    m_LongSecret = SECRET;
                 else
                 {
                     m_LongSecret = new Byte[SECRET_SIZE];
 
                     for (Int32 i = 0; i < SECRET_SIZE; i += 16)
                     {
-                        UInt64 lo = unchecked(BinaryOperations.Read64(s_Secret, i) + seed);
+                        UInt64 lo = unchecked(BinaryOperations.Read64(SECRET, i) + seed);
                         BinaryPrimitives.WriteUInt64LittleEndian(m_LongSecret.AsSpan(i, 8), lo);
 
-                        UInt64 hi = unchecked(BinaryOperations.Read64(s_Secret, i + 8) - seed);
+                        UInt64 hi = unchecked(BinaryOperations.Read64(SECRET, i + 8) - seed);
                         BinaryPrimitives.WriteUInt64LittleEndian(m_LongSecret.AsSpan(i + 8, 8), hi);
                     }
                 }

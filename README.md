@@ -87,8 +87,10 @@ The library includes the following non-cryptographic hashes:
    * Reference Implementation: [https://github.com/gzm55/hash-garage](https://github.com/gzm55/hash-garage)
  * `PengyHash`
    * 64 Bits Output
-   * Strict Variant
    * Reference Implementation: [https://github.com/tinypeng/pengyhash](https://github.com/tinypeng/pengyhash)
+ * `PolymurHash`
+   * 64 Bits Output
+   * Reference Implementation: [https://github.com/orlp/polymur-hash](https://github.com/orlp/polymur-hash)
  * `RapidHash`
    * 64 Bits Output
    * 1/2/3 Variants
@@ -100,9 +102,11 @@ The library includes the following non-cryptographic hashes:
  * `SpookyHash`
    * 32/64/128 Bits Output
    * Reference Implementation: [http://burtleburtle.net/bob/hash/spooky.html](http://burtleburtle.net/bob/hash/spooky.html)
+ * `Umash`
+   * 64/128 Bits Output
+   * Reference Implementation: [https://github.com/backtrace-labs/umash](https://github.com/backtrace-labs/umash)
  * `WyHash`
    * 32/64 Bits Output
-   * Strict Variant
    * Reference Implementation: [https://github.com/wangyi-fudan/wyhash](https://github.com/wangyi-fudan/wyhash)
  * `XxHash` & `XxHash3`
    * 32/64 Bits Output

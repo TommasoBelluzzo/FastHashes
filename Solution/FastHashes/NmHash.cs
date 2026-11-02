@@ -90,7 +90,7 @@ namespace FastHashes
         private abstract class Engine
         {
             #region Constants
-            private static readonly UInt32[] s_AccumulatorInitial =
+            private static readonly UInt32[] INITIAL_ACCUMULATOR =
             {
                 0xB8FE6C39u, 0x23A44BBEu, 0x7C01812Cu, 0xF721AD1Cu,
                 0xDED46DE9u, 0x839097DBu, 0x7240A4A4u, 0xB7B3671Fu,
@@ -174,7 +174,7 @@ namespace FastHashes
                 Int32 count = buffer.Length;
 
                 Span<UInt32> x = stackalloc UInt32[32];
-                s_AccumulatorInitial.AsSpan().CopyTo(x);
+                INITIAL_ACCUMULATOR.AsSpan().CopyTo(x);
 
                 Span<UInt32> y = stackalloc UInt32[32];
                 y.Fill(seed);
@@ -189,7 +189,7 @@ namespace FastHashes
                 UInt32 sum = 0;
 
                 for (Int32 i = 0; i < 32; ++i)
-                    sum = unchecked(sum + (x[i] ^ s_AccumulatorInitial[i]));
+                    sum = unchecked(sum + (x[i] ^ INITIAL_ACCUMULATOR[i]));
 
                 return sum ^ (UInt32)count;
             }

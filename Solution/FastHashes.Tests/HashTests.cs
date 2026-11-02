@@ -176,8 +176,7 @@ namespace FastHashes.Tests
                 Buffer.BlockCopy(hi, 0, bufferFinal, i * hashBytes, hashBytes);
             }
 
-            Byte[] h0 = hash0.ComputeHash(bufferFinal);
-            String actual = String.Concat("0x", BitConverter.ToString(h0).Replace("-", String.Empty));
+            String actual = hash0.ComputeHash(bufferFinal, HashFormat.HexadecimalPrefixed);
 
             Assert.Equal(expected, actual);
         }
