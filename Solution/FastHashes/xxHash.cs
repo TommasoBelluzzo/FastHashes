@@ -126,7 +126,7 @@ namespace FastHashes
             for (Int32 i = 0; i < remainder; ++i)
                 hash = Mix(hash, P5, P1, 11, buffer[offset + i]);
 
-            Finalize:
+        Finalize:
 
             hash ^= hash >> 15;
             hash *= P2;
@@ -329,7 +329,7 @@ namespace FastHashes
             for (Int32 i = 0; i < remainder; ++i)
                 hash = Mix8(hash, buffer[offset + i]);
 
-            Finalize:
+        Finalize:
 
             hash ^= hash >> 33;
             hash *= P2;

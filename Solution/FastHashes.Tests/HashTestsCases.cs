@@ -51,6 +51,8 @@ namespace FastHashes.Tests
             ("SpookyHash32", seed => new SpookyHash32(seed, seed), "0x65E28BA4"),
             ("SpookyHash64", seed => new SpookyHash64(seed), "0xDC4B2C973FE48012"),
             ("SpookyHash128", seed => new SpookyHash128(seed), "0xBEFC3C892A16F01B23B81DE576CA399A"),
+            ("Umash64", seed => new Umash64(seed), "0xCD64A23666A52B91"),
+            ("Umash128", seed => new Umash128(seed), "0x057D85637C4D1D0BA7A070DCC9A6516F"),
             ("WyHash32", seed => new WyHash32(checked((UInt32)seed)), "0x6680DE09"),
             ("WyHash64", seed => new WyHash64(seed), "0xD37DAE9D1F46D8DB"),
             ("XxHash32", seed => new XxHash32(checked((UInt32)seed)), "0x43B788BA"),

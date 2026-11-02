@@ -11,7 +11,7 @@ namespace FastHashes.Benchmarks
     public static class Program
     {
         #region Setup
-        private static readonly List<(String HashName, Func<UInt64,Hash> HashInitializer)> s_BenchmarkCases =
+        private static readonly List<(String HashName, Func<UInt64, Hash> HashInitializer)> s_BenchmarkCases =
         [
             ("DummyHash", seed => new DummyHash()),
             ("FarmHash32", seed => new FarmHash32(checked((UInt32)seed))),
@@ -51,6 +51,8 @@ namespace FastHashes.Benchmarks
             ("SpookyHash32", seed => new SpookyHash32(seed, seed)),
             ("SpookyHash64", seed => new SpookyHash64(seed)),
             ("SpookyHash128", seed => new SpookyHash128(seed)),
+            ("Umash64", seed => new Umash64(seed)),
+            ("Umash128", seed => new Umash128(seed)),
             ("WyHash32", seed => new WyHash32(checked((UInt32)seed))),
             ("WyHash64", seed => new WyHash64(seed)),
             ("XxHash32", seed => new XxHash32(checked((UInt32)seed))),
@@ -65,7 +67,7 @@ namespace FastHashes.Benchmarks
         private const Int32 BULK_REPETITIONS = 5000;
         private const Int32 WARMUP_REPETITIONS = 100;
 
-        private static readonly List<(Func<Int32,Int32> Increment, Int32 KeySize, Int32 Repetitions)> s_ChunkParameters =
+        private static readonly List<(Func<Int32, Int32> Increment, Int32 KeySize, Int32 Repetitions)> s_ChunkParameters =
         [
             (i => i + 1, 32, 200000),
             (i => i + 2, 64, 100000),
@@ -88,7 +90,7 @@ namespace FastHashes.Benchmarks
 
             for (Int32 i = 0; i < s_BenchmarkCases.Count; ++i)
             {
-                (String hashName, Func<UInt64,Hash> hashInitializer) = s_BenchmarkCases[i];
+                (String hashName, Func<UInt64, Hash> hashInitializer) = s_BenchmarkCases[i];
 
                 String title = $"# HASH: {hashName} #";
                 String frame = new('#', title.Length);
@@ -116,7 +118,7 @@ namespace FastHashes.Benchmarks
                 Console.WriteLine($"Keys Length Span: 0-{s_ChunkParameters.Max(x => x.KeySize)} Bytes");
                 Console.WriteLine($"Repetitions Span: {s_ChunkParameters.Min(x => x.Repetitions)}-{s_ChunkParameters.Max(x => x.Repetitions)}");
 
-                (List<(Int32,Int32,Double)> chunkSpeeds, Double chunkMedianSpeed, String chunkMedianSpeedFormatted) = ChunksSpeedTest(hashInitializer);
+                (List<(Int32, Int32, Double)> chunkSpeeds, Double chunkMedianSpeed, String chunkMedianSpeedFormatted) = ChunksSpeedTest(hashInitializer);
 
                 foreach ((Int32 chunkOffsetStart, Int32 chunkOffsetEnd, Double chunkSpeed) in chunkSpeeds)
                     Console.WriteLine($" - Median Speed {chunkOffsetStart}-{chunkOffsetEnd} Bytes: {Utilities.FormatSpeed(chunkSpeed)}");
@@ -178,7 +180,7 @@ namespace FastHashes.Benchmarks
         #endregion
 
         #region Methods
-        private static Double GetMedianSpeed(Func<UInt64,Hash> hashInitializer, Int32 length, Int32 repetitions, Int32 align)
+        private static Double GetMedianSpeed(Func<UInt64, Hash> hashInitializer, Int32 length, Int32 repetitions, Int32 align)
         {
             RandomXorShift r = new();
 
@@ -236,7 +238,7 @@ namespace FastHashes.Benchmarks
             return MathUtilities.Median(results, true);
         }
 
-        private static (Double[], Double, String) BulkSpeedTest(Func<UInt64,Hash> hashInitializer)
+        private static (Double[], Double, String) BulkSpeedTest(Func<UInt64, Hash> hashInitializer)
         {
             using (new SpeedOptimizer())
             {
@@ -252,16 +254,16 @@ namespace FastHashes.Benchmarks
             }
         }
 
-        private static (List<(Int32,Int32,Double)>, Double, String) ChunksSpeedTest(Func<UInt64,Hash> hashInitializer)
+        private static (List<(Int32, Int32, Double)>, Double, String) ChunksSpeedTest(Func<UInt64, Hash> hashInitializer)
         {
             using (new SpeedOptimizer())
             {
                 Int32 offset = 1;
 
                 List<Double> allSpeeds = [];
-                List<(Int32,Int32,Double)> chunkSpeeds = new(s_ChunkParameters.Count);
+                List<(Int32, Int32, Double)> chunkSpeeds = new(s_ChunkParameters.Count);
 
-                foreach ((Func<Int32,Int32> increment, Int32 keySize, Int32 repetitions) in s_ChunkParameters)
+                foreach ((Func<Int32, Int32> increment, Int32 keySize, Int32 repetitions) in s_ChunkParameters)
                 {
                     Int32 offsetStart = offset;
                     List<Double> speeds = [];
@@ -288,7 +290,7 @@ namespace FastHashes.Benchmarks
             }
         }
 
-        private static void Warmup(Func<UInt64,Hash> hashInitializer)
+        private static void Warmup(Func<UInt64, Hash> hashInitializer)
         {
             Int32[] lengths = [0, 1, 4, 16, 32, 64, 128, 256, 1024, 65536, BULK_KEYS_LENGTH];
 
