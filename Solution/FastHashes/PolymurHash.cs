@@ -200,9 +200,9 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Mul128(UInt64 a, UInt64 b, out UInt64 lo, out UInt64 hi)
         {
-            #if NET5_0_OR_GREATER
+#if NET5_0_OR_GREATER
             hi = Math.BigMul(a, b, out lo);
-            #else
+#else
             UInt64 a0 = unchecked((UInt32)a);
             UInt64 a1 = a >> 32;
 
@@ -217,7 +217,7 @@ namespace FastHashes
             UInt64 cross = (p0 >> 32) + unchecked((UInt32)p1) + p2;
             lo = (cross << 32) | unchecked((UInt32)p0);
             hi = unchecked((p1 >> 32) + (cross >> 32) + p3);
-            #endif
+#endif
         }
 
         /// <inheritdoc/>
@@ -262,7 +262,7 @@ namespace FastHashes
                         Add128(ref lo, ref hi, lo1, hi1);
                         Mul128(unchecked(h + m6), m_K7, out lo1, out hi1);
                         Add128(ref lo, ref hi, lo1, hi1);
-                        
+
                         h = Reduce(lo, hi);
 
                         count -= 49;
@@ -302,7 +302,7 @@ namespace FastHashes
                         Mul128(unchecked(t0r + m5), unchecked(k4 + m6), out UInt64 lo3, out UInt64 hi3);
                         Add128(ref lo1, ref hi1, lo2, hi2);
                         Add128(ref lo1, ref hi1, lo3, hi3);
-                        
+
                         hash = unchecked(hash + Reduce(lo1, hi1));
                     }
                 }

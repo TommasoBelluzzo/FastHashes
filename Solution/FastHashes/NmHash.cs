@@ -31,14 +31,14 @@ namespace FastHashes
 
         #region Constructors
         /// <summary>Initializes a new instance using the specified variant and seed.</summary>
-        /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.NmHashVariant"/> representing the variant of the hashing algorithm.</param>
+        /// <param name="variant">The <see cref="T:FastHashes.NmHashVariant"/> value specifying the variant of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException ">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
         public NmHash(NmHashVariant variant, UInt32 seed)
         {
             if (!Enum.IsDefined(typeof(NmHashVariant), variant))
-                throw new ArgumentException("Invalid variant specified.", nameof(variant));
+                throw new ArgumentOutOfRangeException(nameof(variant), "Invalid variant specified.");
 
             switch (variant)
             {
@@ -60,8 +60,8 @@ namespace FastHashes
         public NmHash() : this(NmHashVariant.S, 0u) { }
 
         /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
-        /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.NmHashVariant"/> representing the variant of the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException ">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <param name="variant">The <see cref="T:FastHashes.NmHashVariant"/> value specifying the variant of the hashing algorithm.</param>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
         public NmHash(NmHashVariant variant) : this(variant, 0u) { }
 
@@ -230,7 +230,7 @@ namespace FastHashes
                 UInt32 sl = unchecked(seed + (UInt32)count);
 
                 Span<UInt32> x = stackalloc UInt32[4] { P1, P2, P3, P4 };
-                
+
                 Span<UInt32> y = stackalloc UInt32[4];
                 y.Fill(sl);
 

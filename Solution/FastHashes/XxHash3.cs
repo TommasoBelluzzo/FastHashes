@@ -27,14 +27,14 @@ namespace FastHashes
 
         #region Constructors
         /// <summary>Initializes a new instance using the specified output and seed.</summary>
-        /// <param name="output">The enumerator value of type <see cref="T:FastHashes.XxHash3Output"/> representing the output of the hashing algorithm.</param>
+        /// <param name="output">The <see cref="T:FastHashes.XxHash3Output"/> value specifying the output of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException ">Thrown when the value of <paramref name="output">output</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="output">output</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
         public XxHash3(XxHash3Output output, UInt64 seed)
         {
             if (!Enum.IsDefined(typeof(XxHash3Output), output))
-                throw new ArgumentException("Invalid output specified.", nameof(output));
+                throw new ArgumentOutOfRangeException(nameof(output), "Invalid output specified.");
 
             switch (output)
             {
@@ -52,8 +52,8 @@ namespace FastHashes
         }
 
         /// <summary>Initializes a new instance using the specified output and a seed value of <c>0</c>.</summary>
-        /// <param name="output">The enumerator value of type <see cref="T:FastHashes.XxHash3Output"/> representing the output of the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException ">Thrown when the value of <paramref name="output">output</paramref> is undefined.</exception>
+        /// <param name="output">The <see cref="T:FastHashes.XxHash3Output"/> value specifying the output of the hashing algorithm.</param>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="output">output</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
         public XxHash3(XxHash3Output output) : this(output, 0ul) { }
         #endregion
@@ -115,7 +115,7 @@ namespace FastHashes
 
             #region Properties
             protected static ReadOnlySpan<Byte> Secret => s_Secret;
-            
+
             protected ReadOnlySpan<Byte> LongSecret => m_LongSecret;
             public abstract Int32 Length { get; }
             public abstract String Name { get; }
@@ -214,7 +214,7 @@ namespace FastHashes
             {
                 Mul128(a, b, out UInt64 lo, out UInt64 hi);
                 UInt64 mf = lo ^ hi;
-                
+
                 return mf;
             }
 
@@ -258,9 +258,9 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static void Mul128(UInt64 a, UInt64 b, out UInt64 lo, out UInt64 hi)
             {
-                #if NET5_0_OR_GREATER
+#if NET5_0_OR_GREATER
                 hi = Math.BigMul(a, b, out lo);
-                #else
+#else
                 UInt64 a0 = unchecked((UInt32)a);
                 UInt64 a1 = a >> 32;
 
@@ -275,7 +275,7 @@ namespace FastHashes
                 UInt64 mid = (p00 >> 32) + unchecked((UInt32)p01) + unchecked((UInt32)p10);
                 lo = (mid << 32) | unchecked((UInt32)p00);
                 hi = unchecked(p11 + (p01 >> 32) + (p10 >> 32) + (mid >> 32));
-                #endif
+#endif
             }
 
             protected static void Scramble(Span<UInt64> acc, ReadOnlySpan<Byte> secret, Int32 offset)

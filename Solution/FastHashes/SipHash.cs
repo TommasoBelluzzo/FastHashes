@@ -114,7 +114,7 @@ namespace FastHashes
 
             b |= BinaryOperations.ReadTail32(buffer, offset);
 
-            Finalize:
+        Finalize:
 
             v3 ^= b;
 
@@ -176,15 +176,15 @@ namespace FastHashes
 
         #region Constructors
         /// <summary>Initializes a new instance using the specified variant and seeds.</summary>
-        /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.SipHashVariant"/> representing the variant of the hashing algorithm.</param>
+        /// <param name="variant">The <see cref="T:FastHashes.SipHashVariant"/> value specifying the variant of the hashing algorithm.</param>
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
         public SipHash(SipHashVariant variant, UInt64 seed1, UInt64 seed2)
         {
             if (!Enum.IsDefined(typeof(SipHashVariant), variant))
-                throw new ArgumentException("Invalid variant specified.", nameof(variant));
+                throw new ArgumentOutOfRangeException(nameof(variant), "Invalid variant specified.");
 
             if (variant == SipHashVariant.V13)
             {
@@ -207,15 +207,15 @@ namespace FastHashes
         public SipHash() : this(SipHashVariant.V24, 0ul, 0ul) { }
 
         /// <summary>Initializes a new instance using the specified variant and a value of <c>0</c> for both seeds.</summary>
-        /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.SipHashVariant"/> representing the variant of the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <param name="variant">The <see cref="T:FastHashes.SipHashVariant"/> value specifying the variant of the hashing algorithm.</param>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
         public SipHash(SipHashVariant variant) : this(variant, 0ul, 0ul) { }
 
         /// <summary>Initializes a new instance using the specified variant and the specified value for both seeds.</summary>
-        /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.SipHashVariant"/> representing the variant of the hashing algorithm.</param>
+        /// <param name="variant">The <see cref="T:FastHashes.SipHashVariant"/> value specifying the variant of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
         public SipHash(SipHashVariant variant, UInt64 seed) : this(variant, seed, seed) { }
 
@@ -293,7 +293,7 @@ namespace FastHashes
 
             b |= BinaryOperations.ReadTail64(buffer, offset);
 
-            Finalize:
+        Finalize:
 
             v3 ^= b;
 

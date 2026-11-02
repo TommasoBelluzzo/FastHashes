@@ -31,14 +31,14 @@ namespace FastHashes
 
         #region Constructors
         /// <summary>Initializes a new instance using the specified variant and seed.</summary>
-        /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
+        /// <param name="variant">The <see cref="T:FastHashes.MetroHashVariant"/> value specifying the variant of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
-        [ExcludeFromCodeCoverage] 
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
+        [ExcludeFromCodeCoverage]
         public MetroHash64(MetroHashVariant variant, UInt32 seed)
         {
             if (!Enum.IsDefined(typeof(MetroHashVariant), variant))
-                throw new ArgumentException("Invalid variant specified.", nameof(variant));
+                throw new ArgumentOutOfRangeException(nameof(variant), "Invalid variant specified.");
 
             if (variant == MetroHashVariant.V1)
                 m_Engine = new Engine1(seed);
@@ -51,8 +51,8 @@ namespace FastHashes
         public MetroHash64() : this(MetroHashVariant.V1, 0u) { }
 
         /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
-        /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <param name="variant">The <see cref="T:FastHashes.MetroHashVariant"/> value specifying the variant of the hashing algorithm.</param>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
         public MetroHash64(MetroHashVariant variant) : this(variant, 0u) { }
 
@@ -276,7 +276,7 @@ namespace FastHashes
                 if ((count - offset) >= 1)
                     hash = Mix8(hash, buffer[offset], 25, K3, K1);
 
-                Finalize:
+            Finalize:
 
                 hash ^= BinaryOperations.RotateRight(hash, 33);
                 hash *= K0;
@@ -403,7 +403,7 @@ namespace FastHashes
                 if ((count - offset) >= 1)
                     hash = Mix8(hash, buffer[offset], 23, K3, K1);
 
-                Finalize:
+            Finalize:
 
                 hash ^= BinaryOperations.RotateRight(hash, 28);
                 hash *= K0;
@@ -443,14 +443,14 @@ namespace FastHashes
 
         #region Constructors
         /// <summary>Initializes a new instance using the specified variant and seed.</summary>
-        /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
+        /// <param name="variant">The <see cref="T:FastHashes.MetroHashVariant"/> value specifying the variant of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
         public MetroHash128(MetroHashVariant variant, UInt32 seed)
         {
             if (!Enum.IsDefined(typeof(MetroHashVariant), variant))
-                throw new ArgumentException("Invalid variant specified.", nameof(variant));
+                throw new ArgumentOutOfRangeException(nameof(variant), "Invalid variant specified.");
 
             if (variant == MetroHashVariant.V1)
                 m_Engine = new Engine1(seed);
@@ -463,8 +463,8 @@ namespace FastHashes
         public MetroHash128() : this(MetroHashVariant.V1, 0u) { }
 
         /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
-        /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/> representing the variant of the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <param name="variant">The <see cref="T:FastHashes.MetroHashVariant"/> value specifying the variant of the hashing algorithm.</param>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
         public MetroHash128(MetroHashVariant variant) : this(variant, 0u) { }
 
@@ -542,7 +542,7 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static UInt64 Mix256(UInt64 v1, UInt64 v2, UInt64 v3, UInt64 k)
             {
-                v1 += v3 * k; 
+                v1 += v3 * k;
                 v1 = BinaryOperations.RotateRight(v1, 29) + v2;
 
                 return v1;
@@ -671,7 +671,7 @@ namespace FastHashes
                 if ((count - offset) >= 1)
                     hash2 = Mix(hash2, hash1, buffer[offset], 33, 24, K2, K3, K3, K0);
 
-                Finalize:
+            Finalize:
 
                 hash1 = Fin(hash1, hash2, 13, K0);
                 hash2 = Fin(hash2, hash1, 37, K1);
@@ -792,7 +792,7 @@ namespace FastHashes
                 if ((count - offset) >= 1)
                     hash2 = Mix(hash2, hash1, buffer[offset], 29, 18, K2, K3, K3, K0);
 
-                Finalize:
+            Finalize:
 
                 hash1 = Fin(hash1, hash2, 33, K0);
                 hash2 = Fin(hash2, hash1, 33, K1);

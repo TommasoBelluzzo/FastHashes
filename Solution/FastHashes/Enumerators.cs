@@ -13,6 +13,31 @@
         #endregion
     }
 
+    /// <summary>Specifies the text representation of a computed hash.</summary>
+    public enum HashFormat
+    {
+        #region Values
+        /// <summary>The standard Base64 representation, including padding.</summary>
+        Base64,
+        /// <summary>The URL-safe Base64 representation, without padding.</summary>
+        Base64Url,
+        /// <summary>The binary representation, using eight bits per byte.</summary>
+        Binary,
+        /// <summary>The uppercase representation of bytes, separated by hyphens.</summary>
+        Bytes,
+        /// <summary>The lowercase representation of bytes, separated by hyphens.</summary>
+        BytesLower,
+        /// <summary>The uppercase hexadecimal representation, without separators or prefixes.</summary>
+        Hexadecimal,
+        /// <summary>The lowercase hexadecimal representation, without separators or prefixes.</summary>
+        HexadecimalLower,
+        /// <summary>The uppercase hexadecimal representation, prefixed with <c>0x</c>.</summary>
+        HexadecimalPrefixed,
+        /// <summary>The lowercase hexadecimal representation, prefixed with <c>0x</c>.</summary>
+        HexadecimalLowerPrefixed
+        #endregion
+    }
+
     /// <summary>Specifies the engine category of MurmurHash.</summary>
     public enum MurmurHashEngine
     {

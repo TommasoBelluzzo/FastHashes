@@ -31,14 +31,14 @@ namespace FastHashes
 
         #region Constructors
         /// <summary>Initializes a new instance using the specified variant and seed.</summary>
-        /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.FastPositiveHashVariant"/> representing the variant of the hashing algorithm.</param>
+        /// <param name="variant">The <see cref="T:FastHashes.FastPositiveHashVariant"/> value specifying the variant of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException ">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
         public FastPositiveHash(FastPositiveHashVariant variant, UInt64 seed)
         {
             if (!Enum.IsDefined(typeof(FastPositiveHashVariant), variant))
-                throw new ArgumentException("Invalid variant specified.", nameof(variant));
+                throw new ArgumentOutOfRangeException(nameof(variant), "Invalid variant specified.");
 
             switch (variant)
             {
@@ -64,8 +64,8 @@ namespace FastHashes
         public FastPositiveHash() : this(FastPositiveHashVariant.V2, 0ul) { }
 
         /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
-        /// <param name="variant">The enumerator value of type <see cref="T:FastHashes.FastPositiveHashVariant"/> representing the variant of the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException ">Thrown when the value of <paramref name="variant">variant</paramref> is undefined.</exception>
+        /// <param name="variant">The <see cref="T:FastHashes.FastPositiveHashVariant"/> value specifying the variant of the hashing algorithm.</param>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
         public FastPositiveHash(FastPositiveHashVariant variant) : this(variant, 0ul) { }
 
@@ -128,9 +128,9 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static void Mux(out UInt64 lo, out UInt64 hi, UInt64 v, UInt64 p)
             {
-                #if NET5_0_OR_GREATER
+#if NET5_0_OR_GREATER
                 hi = Math.BigMul(v, p, out lo);
-                #else
+#else
                 UInt64 a = v >> 32;
                 UInt64 b = v & 0x00000000FFFFFFFFul;
                 UInt64 c = p >> 32;
@@ -143,7 +143,7 @@ namespace FastHashes
 
                 lo = unchecked(bd + (adbc << 32));
                 hi = unchecked((a * c) + (adbc >> 32) + (carry << 32) + ((lo < bd) ? 1ul : 0ul));
-                #endif
+#endif
             }
 
             public abstract Byte[] ComputeHash(ReadOnlySpan<Byte> buffer);
@@ -282,7 +282,7 @@ namespace FastHashes
                         break;
                 }
 
-                Finalize:
+            Finalize:
 
                 UInt64 hash = (b ^ BinaryOperations.RotateRight(a, 13)) | ((UInt64)a << 32);
                 hash *= P640;
@@ -432,7 +432,7 @@ namespace FastHashes
                         break;
                 }
 
-                Finalize:
+            Finalize:
 
                 UInt64 h0 = (a ^ b) * P640;
 
@@ -466,10 +466,10 @@ namespace FastHashes
                 UInt64 d02 = w[0] + BinaryOperations.RotateRight(w[2] + d, 56);
                 UInt64 c13 = w[1] + BinaryOperations.RotateRight(w[3] + c, 19);
 
-                d ^= b + BinaryOperations.RotateRight(w[1], 38);                
-                c ^= a + BinaryOperations.RotateRight(w[0], 57);                
-                b ^= P646 * (c13 + w[2]);                  
-                a ^= P645 * (d02 + w[3]);                  
+                d ^= b + BinaryOperations.RotateRight(w[1], 38);
+                c ^= a + BinaryOperations.RotateRight(w[0], 57);
+                b ^= P646 * (c13 + w[2]);
+                a ^= P645 * (d02 + w[3]);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -477,7 +477,7 @@ namespace FastHashes
             {
                 Mux(out UInt64 l, out UInt64 h, v3 + v2, p);
                 v1 ^= l;
-                v2 += h;              
+                v2 += h;
             }
 
             public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
@@ -509,7 +509,7 @@ namespace FastHashes
                 {
                     UInt64 c = BinaryOperations.RotateRight(length, 23) + ~m_Seed;
                     UInt64 d = ~length + BinaryOperations.RotateRight(m_Seed, 19);
-                    
+
                     Span<UInt64> w = stackalloc UInt64[4];
 
                     for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
@@ -579,7 +579,7 @@ namespace FastHashes
                         break;
                 }
 
-                Finalize:
+            Finalize:
 
                 UInt64 h0 = (a + BinaryOperations.RotateRight(b, 41)) * P640;
                 UInt64 h1 = (BinaryOperations.RotateRight(a, 23) + b) * P646;

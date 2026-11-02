@@ -39,8 +39,8 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataSliceInvalid), MemberType=typeof(HashTestsCases))]
-        public void InputInvalidSliceTest(Int32 offset, Int32 count, Type exceptionType)
+        [MemberData(nameof(HashTestsCases.DataSliceInvalid), MemberType = typeof(HashTestsCases))]
+        public void InputSliceInvalidTest(Int32 offset, Int32 count, Type exceptionType)
         {
             Hash hash = new FarmHash32();
             Byte[] buffer = new Byte[10];
@@ -52,8 +52,8 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataSliceValid), MemberType=typeof(HashTestsCases))]
-        public void InputValidSliceTest(Int32 offset, Int32 count)
+        [MemberData(nameof(HashTestsCases.DataSliceValid), MemberType = typeof(HashTestsCases))]
+        public void InputSliceValidTest(Int32 offset, Int32 count)
         {
             Hash hash = new FarmHash32();
 
@@ -72,8 +72,8 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataGeneric), MemberType=typeof(HashTestsCases))]
-        public void InputEmptyTest(String hashName, Func<UInt64,Hash> hashInitializer)
+        [MemberData(nameof(HashTestsCases.DataHashesGeneric), MemberType = typeof(HashTestsCases))]
+        public void InputEmptyTest(String hashName, Func<UInt64, Hash> hashInitializer)
         {
             Hash hash = hashInitializer(0u);
 
@@ -88,8 +88,8 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataGeneric), MemberType=typeof(HashTestsCases))]
-        public void OutputTest(String hashName, Func<UInt64,Hash> hashInitializer)
+        [MemberData(nameof(HashTestsCases.DataHashesGeneric), MemberType = typeof(HashTestsCases))]
+        public void OutputTest(String hashName, Func<UInt64, Hash> hashInitializer)
         {
             Byte[] buffer = [23, 134, 0, 237, 0, 81, 64, 64, 39, 5];
             Hash hash = hashInitializer(0u);
@@ -107,8 +107,8 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataLength), MemberType=typeof(HashTestsCases))]
-        public void LengthTest(String hashName, Func<UInt64,Hash> hashInitializer, Int32 maximumLength)
+        [MemberData(nameof(HashTestsCases.DataHashesLength), MemberType = typeof(HashTestsCases))]
+        public void LengthTest(String hashName, Func<UInt64, Hash> hashInitializer, Int32 maximumLength)
         {
             UInt32[] seeds = [0u, TEST_SEED];
 
@@ -139,8 +139,8 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataLengthExtended), MemberType=typeof(HashTestsCases))]
-        public void LengthExtendedTest(String hashName, Func<UInt64,Hash> hashInitializer, Int32 length)
+        [MemberData(nameof(HashTestsCases.DataHashesLengthExtended), MemberType = typeof(HashTestsCases))]
+        public void LengthExtendedTest(String hashName, Func<UInt64, Hash> hashInitializer, Int32 length)
         {
             Byte[] buffer = new Byte[length];
 
@@ -157,8 +157,8 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataValidation), MemberType=typeof(HashTestsCases))]
-        public void ValidationTest(String hashName, Func<UInt64,Hash> hashInitializer, String expected)
+        [MemberData(nameof(HashTestsCases.DataHashesValidation), MemberType = typeof(HashTestsCases))]
+        public void ValidationTest(String hashName, Func<UInt64, Hash> hashInitializer, String expected)
         {
             Hash hash0 = hashInitializer(0u);
             Int32 hashBytes = hash0.Length / 8;
@@ -183,8 +183,8 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataGeneric), MemberType=typeof(HashTestsCases))]
-        public void CollisionTest(String hashName, Func<UInt64,Hash> hashInitializer)
+        [MemberData(nameof(HashTestsCases.DataHashesGeneric), MemberType = typeof(HashTestsCases))]
+        public void CollisionTest(String hashName, Func<UInt64, Hash> hashInitializer)
         {
             Int32 wordsCount = m_CollisionFixture.Words.Count();
             Assert.False(wordsCount == 0, "Fixture contains no words.");
@@ -213,8 +213,8 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataGeneric), MemberType=typeof(HashTestsCases))]
-        public void ConformanceTest(String hashName, Func<UInt64,Hash> hashInitializer)
+        [MemberData(nameof(HashTestsCases.DataHashesGeneric), MemberType = typeof(HashTestsCases))]
+        public void ConformanceTest(String hashName, Func<UInt64, Hash> hashInitializer)
         {
             var cases = m_ConformanceFixture.GetCases(hashName);
 
@@ -242,7 +242,7 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataFarmHashUnseeded), MemberType=typeof(HashTestsCases))]
+        [MemberData(nameof(HashTestsCases.DataFarmHashUnseeded), MemberType = typeof(HashTestsCases))]
         public void FarmHashUnseededTest(Int32 length)
         {
             RandomXorShift random = new(TEST_SEED);
@@ -259,6 +259,34 @@ namespace FastHashes.Tests
                 Assert.Equal(hash.Length / 8, expected.Length);
                 Assert.Equal(expected, actual);
             }
+        }
+
+        [Theory]
+        [MemberData(nameof(HashTestsCases.DataFormatInvalid), MemberType = typeof(HashTestsCases))]
+        public void FormatInvalidTest(Byte[] hash, HashFormat format, Type exceptionType, String parameterName)
+        {
+            Exception exception = Record.Exception(() => HashFormatter.Format(hash, format));
+
+            Assert.NotNull(exception);
+            Assert.Equal(exceptionType, exception.GetType());
+            Assert.Equal(parameterName, ((ArgumentException)exception).ParamName);
+
+            if (hash != null)
+            {
+                exception = Record.Exception(() => HashFormatter.Format(new ReadOnlySpan<Byte>(hash), format));
+
+                Assert.NotNull(exception);
+                Assert.Equal(exceptionType, exception.GetType());
+                Assert.Equal(parameterName, ((ArgumentException)exception).ParamName);
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(HashTestsCases.DataFormatValid), MemberType = typeof(HashTestsCases))]
+        public void FormatValidTest(Byte[] hash, HashFormat format, String expected)
+        {
+            Assert.Equal(expected, HashFormatter.Format(hash, format));
+            Assert.Equal(expected, HashFormatter.Format(new ReadOnlySpan<Byte>(hash), format));
         }
         #endregion
     }

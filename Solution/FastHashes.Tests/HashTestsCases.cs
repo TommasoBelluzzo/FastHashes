@@ -12,8 +12,7 @@ namespace FastHashes.Tests
         #endregion
 
         #region Test Cases
-
-        private static readonly List<(String HashName, Func<UInt64,Hash> HashInitializer, String Expected)> s_TestCases =
+        private static readonly List<(String HashName, Func<UInt64, Hash> HashInitializer, String Expected)> s_TestCases =
         [
             ("FarmHash32", seed => new FarmHash32(checked((UInt32)seed)), "0x39AFC90D"),
             ("FarmHash64", seed => new FarmHash64(seed), "0x79A6C4EB62E22A5C"),
@@ -68,25 +67,79 @@ namespace FastHashes.Tests
                 yield return new Object[] { length };
         }
 
-        public static IEnumerable<Object[]> DataGeneric()
+        public static IEnumerable<Object[]> DataFormatInvalid()
+        {
+            yield return new Object[] { null, HashFormat.Hexadecimal, typeof(ArgumentNullException), "hash" };
+            yield return new Object[] { new Byte[] { 0x01 }, (HashFormat)(-1), typeof(ArgumentOutOfRangeException), "format" };
+            yield return new Object[] { new Byte[] { 0x01 }, (HashFormat)Int32.MaxValue, typeof(ArgumentOutOfRangeException), "format" };
+        }
+
+        public static IEnumerable<Object[]> DataFormatValid()
+        {
+            Byte[] hash1 = [0x00, 0xDE, 0xAD, 0xBE, 0xEF];
+            yield return new Object[] { hash1, HashFormat.Base64, "AN6tvu8=" };
+            yield return new Object[] { hash1, HashFormat.Base64Url, "AN6tvu8" };
+            yield return new Object[] { hash1, HashFormat.Binary, "0000000011011110101011011011111011101111" };
+            yield return new Object[] { hash1, HashFormat.Bytes, "00-DE-AD-BE-EF" };
+            yield return new Object[] { hash1, HashFormat.BytesLower, "00-de-ad-be-ef" };
+            yield return new Object[] { hash1, HashFormat.Hexadecimal, "00DEADBEEF" };
+            yield return new Object[] { hash1, HashFormat.HexadecimalLower, "00deadbeef" };
+            yield return new Object[] { hash1, HashFormat.HexadecimalPrefixed, "0x00DEADBEEF" };
+            yield return new Object[] { hash1, HashFormat.HexadecimalLowerPrefixed, "0x00deadbeef" };
+
+            Byte[] hash2 = [0xF1, 0xD0, 0x05, 0x05, 0x05, 0x4C, 0xC1, 0x05, 0x00, 0x05, 0x01];
+            yield return new Object[] { hash2, HashFormat.Base64, "8dAFBQVMwQUABQE=" };
+            yield return new Object[] { hash2, HashFormat.Base64Url, "8dAFBQVMwQUABQE" };
+            yield return new Object[] { hash2, HashFormat.Binary, "1111000111010000000001010000010100000101010011001100000100000101000000000000010100000001" };
+            yield return new Object[] { hash2, HashFormat.Bytes, "F1-D0-05-05-05-4C-C1-05-00-05-01" };
+            yield return new Object[] { hash2, HashFormat.BytesLower, "f1-d0-05-05-05-4c-c1-05-00-05-01" };
+            yield return new Object[] { hash2, HashFormat.Hexadecimal, "F1D00505054CC105000501" };
+            yield return new Object[] { hash2, HashFormat.HexadecimalLower, "f1d00505054cc105000501" };
+            yield return new Object[] { hash2, HashFormat.HexadecimalPrefixed, "0xF1D00505054CC105000501" };
+            yield return new Object[] { hash2, HashFormat.HexadecimalLowerPrefixed, "0xf1d00505054cc105000501" };
+
+            yield return new Object[] { new Byte[] { 0xFF, 0x00, 0xFF }, HashFormat.Base64, "/wD/" };
+            yield return new Object[] { new Byte[] { 0xFF, 0x00, 0xFF }, HashFormat.Base64Url, "_wD_" };
+
+            yield return new Object[] { new Byte[] { 0x00, 0x01 }, HashFormat.Binary, "0000000000000001" };
+            yield return new Object[] { new Byte[] { 0x00, 0x01 }, HashFormat.Bytes, "00-01" };
+
+            yield return new Object[] { Array.Empty<Byte>(), HashFormat.Base64, String.Empty };
+            yield return new Object[] { Array.Empty<Byte>(), HashFormat.Base64Url, String.Empty };
+            yield return new Object[] { Array.Empty<Byte>(), HashFormat.Binary, String.Empty };
+            yield return new Object[] { Array.Empty<Byte>(), HashFormat.Bytes, String.Empty };
+            yield return new Object[] { Array.Empty<Byte>(), HashFormat.BytesLower, String.Empty };
+            yield return new Object[] { Array.Empty<Byte>(), HashFormat.Hexadecimal, String.Empty };
+            yield return new Object[] { Array.Empty<Byte>(), HashFormat.HexadecimalLower, String.Empty };
+            yield return new Object[] { Array.Empty<Byte>(), HashFormat.HexadecimalPrefixed, String.Empty };
+            yield return new Object[] { Array.Empty<Byte>(), HashFormat.HexadecimalLowerPrefixed, String.Empty };
+        }
+
+        public static IEnumerable<Object[]> DataHashesGeneric()
         {
             foreach (var (HashName, HashInitializer, _) in s_TestCases)
                 yield return new Object[] { HashName, HashInitializer };
         }
 
-        public static IEnumerable<Object[]> DataLength()
+        public static IEnumerable<Object[]> DataHashesLength()
         {
             foreach (var (HashName, HashInitializer, _) in s_TestCases)
                 yield return new Object[] { HashName, HashInitializer, MAXIMUM_LENGTH };
         }
 
-        public static IEnumerable<Object[]> DataLengthExtended()
+        public static IEnumerable<Object[]> DataHashesLengthExtended()
         {
             Int32[] lengths = [1025, 4095, 4096, 4097, 16383, 16384, 16385, 65535, 65536, 65537];
 
             foreach (var (HashName, HashInitializer, _) in s_TestCases)
                 foreach (Int32 length in lengths)
                     yield return new Object[] { HashName, HashInitializer, length };
+        }
+
+        public static IEnumerable<Object[]> DataHashesValidation()
+        {
+            foreach (var (HashName, HashInitializer, Expected) in s_TestCases)
+                yield return new Object[] { HashName, HashInitializer, Expected };
         }
 
         public static IEnumerable<Object[]> DataSliceInvalid()
@@ -114,12 +167,6 @@ namespace FastHashes.Tests
             yield return new Object[] { 9, 0 };
             yield return new Object[] { 9, 1 };
             yield return new Object[] { 10, 0 };
-        }
-
-        public static IEnumerable<Object[]> DataValidation()
-        {
-            foreach (var (HashName, HashInitializer, Expected) in s_TestCases)
-                yield return new Object[] { HashName, HashInitializer, Expected };
         }
         #endregion
     }
