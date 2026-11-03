@@ -316,7 +316,7 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         public override String ToString()
         {
-            return $"{GetType().Name}-{((m_Variant == SipHashVariant.V13) ? "-13" : "-24")}";
+            return $"{GetType().Name}-{m_Variant.ToString().Substring(1)}";
         }
         #endregion
     }

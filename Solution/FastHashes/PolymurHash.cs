@@ -9,15 +9,6 @@ namespace FastHashes
     /// <summary>Represents the PolymurHash implementation. This class cannot be derived.</summary>
     public sealed class PolymurHash : Hash
     {
-        #region Constants
-        private const UInt64 A1 = 0x6A09E667F3BCC908ul;
-        private const UInt64 A2 = 0xBB67AE8584CAA73Bul;
-        private const UInt64 A3 = 0x3C6EF372FE94F82Bul;
-        private const UInt64 A4 = 0xA54FF53A5F1D36F1ul;
-        private const UInt64 K7_MAX = (1ul << 60) - (1ul << 56);
-        private const UInt64 P611 = (1ul << 61) - 1ul;
-        #endregion
-
         #region Members
         private readonly UInt64 m_K;
         private readonly UInt64 m_K2;
@@ -53,10 +44,10 @@ namespace FastHashes
             m_Seed = seed;
             m_Tweak = tweak;
 
-            UInt64 kSeed = Mix(unchecked(seed + A3));
-            UInt64 sSeed = Mix(unchecked(seed + A4));
+            UInt64 kSeed = Mix(unchecked(seed + 0x3C6EF372FE94F82Bul));
+            UInt64 sSeed = Mix(unchecked(seed + 0xA54FF53A5F1D36F1ul));
 
-            m_KS = sSeed ^ A1;
+            m_KS = sSeed ^ 0x6A09E667F3BCC908ul;
 
             Span<UInt64> powers = stackalloc UInt64[64];
             powers[0] = 37ul;
@@ -68,9 +59,11 @@ namespace FastHashes
                 powers[i + 33] = ReduceExtra(MulReduce(powers[i + 32], powers[i + 32]));
             }
 
+            UInt64 k7m = (1ul << 60) - (1ul << 56);
+
             while (true)
             {
-                kSeed = unchecked(kSeed + A2);
+                kSeed = unchecked(kSeed + 0xBB67AE8584CAA73Bul);
 
                 UInt64 e = (kSeed >> 3) | 1ul;
 
@@ -101,7 +94,7 @@ namespace FastHashes
                 UInt64 k4 = MulReduce(k2, k2);
                 UInt64 k7 = ReduceExtra(MulReduce(k3, k4));
 
-                if (k7 < K7_MAX)
+                if (k7 < k7m)
                 {
                     m_K = k;
                     m_K2 = k2;
@@ -179,13 +172,13 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static UInt64 Reduce(UInt64 lo, UInt64 hi)
         {
-            return unchecked((lo & P611) + ((lo >> 61) | (hi << 3)));
+            return unchecked((lo & ((1ul << 61) - 1ul)) + ((lo >> 61) | (hi << 3)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static UInt64 ReduceExtra(UInt64 x)
         {
-            return unchecked((x & P611) + (x >> 61));
+            return unchecked((x & ((1ul << 61) - 1ul)) + (x >> 61));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

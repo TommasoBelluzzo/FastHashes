@@ -103,9 +103,6 @@ namespace FastHashes
             protected const UInt64 P64_3 = 0x165667B19E3779F9ul;
             protected const UInt64 P64_4 = 0x85EBCA77C2B2AE63ul;
             protected const UInt64 P64_5 = 0x27D4EB2F165667C5ul;
-            protected const Int32 SECRET_SIZE = 192;
-            protected const Int32 SECRET_SIZE_MIN = 136;
-            protected const Int32 STRIPE_SIZE = 64;
             #endregion
 
             #region Members
@@ -134,9 +131,9 @@ namespace FastHashes
                     m_LongSecret = SECRET;
                 else
                 {
-                    m_LongSecret = new Byte[SECRET_SIZE];
+                    m_LongSecret = new Byte[192];
 
-                    for (Int32 i = 0; i < SECRET_SIZE; i += 16)
+                    for (Int32 i = 0; i < 192; i += 16)
                     {
                         UInt64 lo = unchecked(BinaryOperations.Read64(SECRET, i) + seed);
                         BinaryPrimitives.WriteUInt64LittleEndian(m_LongSecret.AsSpan(i, 8), lo);
@@ -220,6 +217,7 @@ namespace FastHashes
 
             protected static void ComputeLong(ReadOnlySpan<Byte> buffer, Span<UInt64> acc, ReadOnlySpan<Byte> secret)
             {
+                Int32 offset = 0;
                 Int32 count = buffer.Length;
 
                 acc[0] = P32_3;
@@ -231,28 +229,24 @@ namespace FastHashes
                 acc[6] = P64_5;
                 acc[7] = P32_1;
 
-                Int32 stripesPerBlock = (SECRET_SIZE - STRIPE_SIZE) / 8;
-                Int32 blockLength = STRIPE_SIZE * stripesPerBlock;
-                Int32 blocks = (count - 1) / blockLength;
-
-                Int32 offset = 0;
+                Int32 blocks = (count - 1) / 1024;
 
                 for (Int32 block = 0; block < blocks; ++block)
                 {
-                    for (Int32 stripe = 0; stripe < stripesPerBlock; ++stripe)
-                        Accumulate(acc, buffer, offset + (stripe * STRIPE_SIZE), secret, stripe * 8);
+                    for (Int32 stripe = 0; stripe < 16; ++stripe)
+                        Accumulate(acc, buffer, offset + (stripe * 64), secret, stripe * 8);
 
-                    Scramble(acc, secret, SECRET_SIZE - STRIPE_SIZE);
+                    Scramble(acc, secret, 128);
 
-                    offset += blockLength;
+                    offset += 1024;
                 }
 
-                Int32 stripes = (count - offset - 1) / STRIPE_SIZE;
+                Int32 stripes = (count - offset - 1) / 64;
 
                 for (Int32 stripe = 0; stripe < stripes; ++stripe)
-                    Accumulate(acc, buffer, offset + (stripe * STRIPE_SIZE), secret, stripe * 8);
+                    Accumulate(acc, buffer, offset + (stripe * 64), secret, stripe * 8);
 
-                Accumulate(acc, buffer, count - STRIPE_SIZE, secret, SECRET_SIZE - STRIPE_SIZE - 7);
+                Accumulate(acc, buffer, count - 64, secret, 121);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -344,7 +338,7 @@ namespace FastHashes
                 else
                 {
                     Int32 rounds = count / 16;
-                    UInt64 end = Mix16(buffer, count - 16, secret, SECRET_SIZE_MIN - 17, seed);
+                    UInt64 end = Mix16(buffer, count - 16, secret, 119, seed);
 
                     for (Int32 i = 0; i < 8; ++i)
                         hash = unchecked(hash + Mix16(buffer, i * 16, secret, i * 16, seed));
@@ -488,7 +482,7 @@ namespace FastHashes
                     for (Int32 i = 160; i <= count; i += 32)
                         Mix32(buffer, seed, i - 32, i - 16, secret, 3 + i - 160, ref loAccumulator, ref hiAccumulator);
 
-                    Mix32(buffer, unchecked(0ul - seed), count - 16, count - 32, secret, SECRET_SIZE_MIN - 33, ref loAccumulator, ref hiAccumulator);
+                    Mix32(buffer, unchecked(0ul - seed), count - 16, count - 32, secret, 103, ref loAccumulator, ref hiAccumulator);
                 }
 
                 lo = AvalancheHhx3(unchecked(loAccumulator + hiAccumulator));
@@ -583,7 +577,7 @@ namespace FastHashes
                     UInt64 hiStart = ~unchecked((UInt64)count * P64_2);
 
                     lo = Merge(accumulator, LongSecret, 11, loStart);
-                    hi = Merge(accumulator, LongSecret, SECRET_SIZE - STRIPE_SIZE - 11, hiStart);
+                    hi = Merge(accumulator, LongSecret, 117, hiStart);
                 }
 
                 Byte[] result = new Byte[16];

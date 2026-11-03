@@ -259,7 +259,8 @@ namespace FastHashes
 
                 f += g;
                 g += f;
-            };
+            }
+            ;
 
             g = BinaryOperations.RotateRight(g, 11) * C1;
             g = BinaryOperations.RotateRight(g, 17) * C1;
@@ -565,7 +566,7 @@ namespace FastHashes
         #region Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Hash0(out UInt64 hash1, out UInt64 hash2, UInt64 seed1, UInt64 seed2)
-        { 
+        {
             UInt64 a = ShiftMix(seed1 * K1) * K1;
             UInt64 b = seed2;
             UInt64 c = (b * K1) + K2;
@@ -797,7 +798,7 @@ namespace FastHashes
             else
                 Hash128ToEnd(out hash1, out hash2, buffer, offset, count, seed1, seed2);
 
-            Finalize:
+        Finalize:
 
             Byte[] result = BinaryOperations.ToArray64(hash1, hash2);
 

@@ -13,6 +13,21 @@
         #endregion
     }
 
+    /// <summary>Specifies the internal processing style of <see cref="T:FastHashes.HalftimeHash"/>.</summary>
+    public enum HalftimeHashStyle
+    {
+        #region Values
+        /// <summary>The 64-bit internal processing style of <see cref="T:FastHashes.HalftimeHash"/>.</summary>
+        S64,
+        /// <summary>The 128-bit internal processing style of <see cref="T:FastHashes.HalftimeHash"/>.</summary>
+        S128,
+        /// <summary>The 256-bit internal processing style of <see cref="T:FastHashes.HalftimeHash"/>.</summary>
+        S256,
+        /// <summary>The 512-bit internal processing style of <see cref="T:FastHashes.HalftimeHash"/>.</summary>
+        S512
+        #endregion
+    }
+
     /// <summary>Specifies the text representation of a computed hash.</summary>
     public enum HashFormat
     {

@@ -129,13 +129,11 @@ namespace FastHashes
 
         /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static UInt64 Horner(UInt64 acc, UInt64 m0, UInt64 m1, UInt64 x, UInt64 y)
+        protected static UInt64 Horner(UInt64 accumulator, UInt64 m0, UInt64 m1, UInt64 x, UInt64 y)
         {
             UInt64 lo, hi;
 
-            acc = AddMod(acc, x);
-
-            Mul128(m0, acc, out lo, out hi);
+            Mul128(m0, AddMod(accumulator, x), out lo, out hi);
             UInt64 v1 = AddMod(lo, unchecked(8ul * hi));
 
             Mul128(m1, y, out lo, out hi);

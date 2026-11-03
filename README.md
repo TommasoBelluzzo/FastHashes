@@ -58,6 +58,10 @@ The library includes the following non-cryptographic hashes:
  * `HalfSipHash`
    * 32 Bits Output
    * Reference Implementation: [https://github.com/veorq/SipHash](https://github.com/veorq/SipHash)
+ * `HalftimeHash`
+   * 64 Bits Output
+   * 64/128/256/512 Bits Processing Styles
+   * Reference Implementation: [https://github.com/jbapple/HalftimeHash](https://github.com/jbapple/HalftimeHash)
  * `HighwayHash`
    * 64/128/256 Bits Output
    * Reference Implementation: [https://github.com/google/highwayhash](https://github.com/google/highwayhash)
@@ -73,11 +77,11 @@ The library includes the following non-cryptographic hashes:
    * Reference Implementation: [https://github.com/jandrewrogers/MetroHash](https://github.com/jandrewrogers/MetroHash)
  * `MirHash`
    * 64 Bits Output
-   * Strict Variant
+   * Strict Version
    * Reference Implementation: [https://github.com/vnmakarov/mir](https://github.com/vnmakarov/mir)
  * `MumHash`
    * 64 Bits Output
-   * V4 Quality Variant
+   * V4 Quality Version
    * Reference Implementation: [https://github.com/vnmakarov/mum-hash](https://github.com/vnmakarov/mum-hash)
  * `MurmurHash`
    * 32/64/128 Bits Output
