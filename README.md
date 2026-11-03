@@ -73,9 +73,11 @@ The library includes the following non-cryptographic hashes:
    * Reference Implementation: [https://github.com/jandrewrogers/MetroHash](https://github.com/jandrewrogers/MetroHash)
  * `MirHash`
    * 64 Bits Output
+   * Strict Variant
    * Reference Implementation: [https://github.com/vnmakarov/mir](https://github.com/vnmakarov/mir)
  * `MumHash`
    * 64 Bits Output
+   * V4 Quality Variant
    * Reference Implementation: [https://github.com/vnmakarov/mum-hash](https://github.com/vnmakarov/mum-hash)
  * `MurmurHash`
    * 32/64/128 Bits Output

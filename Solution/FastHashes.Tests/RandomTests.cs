@@ -9,14 +9,14 @@ namespace FastHashes.Tests
     {
         #region Methods
         [Theory]
-        [MemberData(nameof(RandomTestsCases.DataBuffer), MemberType=typeof(RandomTestsCases))]
-        public void BufferOutputTest(UInt32 seed, Int32 bufferLength, Int32 offset, Int32 count, Byte[] expectedValue)
+        [MemberData(nameof(RandomTestsCases.DataBuffer), MemberType = typeof(RandomTestsCases))]
+        public void BufferOutputTest(UInt32 seed, Int32 bufferLength, Int32 offset, Int32 count, Byte[] expected)
         {
             RandomXorShift random = new(seed);
-            Byte[] actualValue = new Byte[bufferLength];
-            random.NextBytes(actualValue, offset, count);
+            Byte[] actual = new Byte[bufferLength];
+            random.NextBytes(actual, offset, count);
 
-            Assert.Equal(expectedValue, actualValue);
+            Assert.Equal(expected, actual);
         }
 
         [Fact]
@@ -35,7 +35,7 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(RandomTestsCases.DataBufferInvalidArguments), MemberType=typeof(RandomTestsCases))]
+        [MemberData(nameof(RandomTestsCases.DataBufferInvalidArguments), MemberType = typeof(RandomTestsCases))]
         public void BufferInvalidArgumentsTest(Int32 offset, Int32 count, Type exceptionType)
         {
             RandomXorShift random = new(0u);
@@ -72,13 +72,13 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(RandomTestsCases.DataValue), MemberType=typeof(RandomTestsCases))]
-        public void ValueOutputTest(UInt32 seed, UInt32 expectedValue)
+        [MemberData(nameof(RandomTestsCases.DataValue), MemberType = typeof(RandomTestsCases))]
+        public void ValueOutputTest(UInt32 seed, UInt32 expected)
         {
             RandomXorShift random = new(seed);
-            UInt32 actualValue = random.NextValue();
+            UInt32 actual = random.NextValue();
 
-            Assert.Equal(expectedValue, actualValue);
+            Assert.Equal(expected, actual);
         }
         #endregion
     }

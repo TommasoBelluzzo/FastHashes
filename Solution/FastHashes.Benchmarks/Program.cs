@@ -27,6 +27,8 @@ namespace FastHashes.Benchmarks
             ("HighwayHash128", seed => new HighwayHash128(seed)),
             ("HighwayHash256", seed => new HighwayHash256(seed)),
             ("KomiHash", seed => new KomiHash(seed)),
+            ("LaneHash64", seed => new LaneHash64(seed)),
+            ("LaneHash128", seed => new LaneHash128(seed)),
             ("MetroHash64-V1", seed => new MetroHash64(MetroHashVariant.V1, checked((UInt32)seed))),
             ("MetroHash64-V2", seed => new MetroHash64(MetroHashVariant.V2, checked((UInt32)seed))),
             ("MetroHash128-V1", seed => new MetroHash128(MetroHashVariant.V1, checked((UInt32)seed))),
