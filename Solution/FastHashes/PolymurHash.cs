@@ -15,7 +15,6 @@ namespace FastHashes
         private const UInt64 A3 = 0x3C6EF372FE94F82Bul;
         private const UInt64 A4 = 0xA54FF53A5F1D36F1ul;
         private const UInt64 K7_MAX = (1ul << 60) - (1ul << 56);
-        private const UInt64 MIX = 0xE9846AF9B1A615Dul;
         private const UInt64 P611 = (1ul << 61) - 1ul;
         #endregion
 
@@ -128,9 +127,9 @@ namespace FastHashes
         private static UInt64 Mix(UInt64 x)
         {
             x ^= x >> 32;
-            x = unchecked(x * MIX);
+            x = unchecked(x * 0xE9846AF9B1A615Dul);
             x ^= x >> 32;
-            x = unchecked(x * MIX);
+            x = unchecked(x * 0xE9846AF9B1A615Dul);
             x ^= x >> 28;
 
             return x;

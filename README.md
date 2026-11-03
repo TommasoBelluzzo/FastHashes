@@ -64,6 +64,9 @@ The library includes the following non-cryptographic hashes:
  * `KomiHash`
    * 64 Bits Output
    * Reference Implementation: [https://github.com/avaneev/komihash](https://github.com/avaneev/komihash)
+ * `LaneHash`
+   * 64/128 Bits Output
+   * Reference Implementation: [https://github.com/ccipherx/lanehash](https://github.com/ccipherx/lanehash)
  * `MetroHash`
    * 64/128 Bits Output
    * 0/1 Variants
