@@ -70,7 +70,7 @@ namespace FastHashes
             m_Seed = seed;
         }
 
-        /// <summary>Initializes a new instance using <see cref="F:FastHashes.HalftimeHashVariant.S128"/> and a seed value of <c>0</c>.</summary>
+        /// <summary>Initializes a new instance using <see cref="F:FastHashes.HalftimeHashStyle.S128"/> and a seed value of <c>0</c>.</summary>
         [ExcludeFromCodeCoverage]
         public HalftimeHash() : this(HalftimeHashStyle.S128, 0ul) { }
 
@@ -80,7 +80,7 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         public HalftimeHash(HalftimeHashStyle style) : this(style, 0ul) { }
 
-        /// <summary>Initializes a new instance using <see cref="F:FastHashes.HalftimeHashVariant.S128"/> and the specified seed.</summary>
+        /// <summary>Initializes a new instance using <see cref="F:FastHashes.HalftimeHashStyle.S128"/> and the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         [ExcludeFromCodeCoverage]
         public HalftimeHash(UInt64 seed) : this(HalftimeHashStyle.S128, seed) { }
@@ -116,13 +116,16 @@ namespace FastHashes
             Int32 groupBytes = 18 * blockBytes;
             Int32 groups = count / groupBytes;
 
+            UInt64[] stack = groups > 0 ? new UInt64[144 * m_Lanes] : Array.Empty<UInt64>();
+
             Span<Int32> stackLengths = stackalloc Int32[9];
             stackLengths.Clear();
-            UInt64[] stack = groups > 0 ? new UInt64[144 * m_Lanes] : Array.Empty<UInt64>();
+
+            Span<UInt64> accumulator = stackalloc UInt64[2 * m_Lanes];
+            accumulator.Clear();
+
             Span<UInt64> scratch = stackalloc UInt64[21 * m_Lanes];
             Span<UInt64> hashes = stackalloc UInt64[7 * m_Lanes];
-            Span<UInt64> accum = stackalloc UInt64[2 * m_Lanes];
-            accum.Clear();
 
             for (Int32 group = 0; group < groups; ++group)
             {
@@ -133,8 +136,8 @@ namespace FastHashes
 
                 for (Int32 j = level - 1; j >= 0; --j)
                 {
-                    Int32 destination = ((j + 1) * 8 + stackLengths[j + 1]) * 2 * m_Lanes;
-                    Int32 source = j * 16 * m_Lanes;
+                    Int32 destination =  2 * (((j + 1) * 8) + stackLengths[j + 1]) * m_Lanes;
+                    Int32 source = 16 * j * m_Lanes;
                     Int32 entropyOffset = 533 + (14 * j);
 
                     for (Int32 channel = 0; channel < 2; ++channel)
@@ -145,7 +148,7 @@ namespace FastHashes
 
                             for (Int32 child = 1; child < 8; ++child)
                             {
-                                UInt64 input = stack[source + (child * 2 * m_Lanes) + (channel * m_Lanes) + lane];
+                                UInt64 input = stack[source + (2 * child * m_Lanes) + (channel * m_Lanes) + lane];
                                 UInt64 entropy = m_Entropy[entropyOffset + (channel * 7) + child - 1];
                                 value = Mix(value, input, entropy);
                             }
@@ -168,9 +171,9 @@ namespace FastHashes
                     UInt64 value = scratch[i];
 
                     for (Int32 row = 1; row < 6; ++row)
-                        value ^= scratch[(row * 3 * m_Lanes) + i];
+                        value ^= scratch[(3 * row * m_Lanes) + i];
 
-                    scratch[(6 * 3 * m_Lanes) + i] = value;
+                    scratch[(18 * m_Lanes) + i] = value;
                 }
 
                 for (Int32 row = 0; row < 7; ++row)
@@ -181,24 +184,29 @@ namespace FastHashes
 
                         for (Int32 column = 0; column < 3; ++column)
                         {
-                            UInt64 input = scratch[((row * 3 + column) * m_Lanes) + lane];
-                            value = Mix(value, input, m_Entropy[512 + row * 3 + column]);
+                            UInt64 input = scratch[(((row * 3) + column) * m_Lanes) + lane];
+                            value = Mix(value, input, m_Entropy[512 + (row * 3) + column]);
                         }
 
                         hashes[row * m_Lanes + lane] = value;
                     }
                 }
 
-                Int32 slotOffset = stackLengths[0] * 2 * m_Lanes;
+                Int32 slotOffset = 2 * stackLengths[0] * m_Lanes;
 
                 for (Int32 lane = 0; lane < m_Lanes; ++lane)
                 {
-                    UInt64 a = unchecked(hashes[lane] + hashes[2 * m_Lanes + lane] + hashes[3 * m_Lanes + lane] +
-                                       (hashes[4 * m_Lanes + lane] << 1) + hashes[5 * m_Lanes + lane] +
-                                       (hashes[6 * m_Lanes + lane] << 2));
-                    UInt64 b = unchecked(hashes[m_Lanes + lane] + hashes[2 * m_Lanes + lane] +
-                                       (hashes[3 * m_Lanes + lane] << 1) + hashes[4 * m_Lanes + lane] +
-                                       (hashes[5 * m_Lanes + lane] << 2) + hashes[6 * m_Lanes + lane]);
+                    UInt64 a = unchecked(
+                        hashes[lane] + hashes[(2 * m_Lanes) + lane] +
+                        hashes[(3 * m_Lanes) + lane] + (hashes[(4 * m_Lanes) + lane] << 1) +
+                        hashes[(5 * m_Lanes) + lane] + (hashes[(6 * m_Lanes) + lane] << 2)
+                    );
+
+                    UInt64 b = unchecked(
+                        hashes[m_Lanes + lane] + hashes[(2 * m_Lanes) + lane] +
+                        (hashes[(3 * m_Lanes) + lane] << 1) + hashes[(4 * m_Lanes) + lane] +
+                        (hashes[(5 * m_Lanes) + lane] << 2) + hashes[(6 * m_Lanes) + lane]
+                    );
 
                     stack[slotOffset + lane] = a;
                     stack[slotOffset + m_Lanes + lane] = b;
@@ -213,14 +221,14 @@ namespace FastHashes
             {
                 for (Int32 child = 0; child < stackLengths[level]; ++child)
                 {
-                    Int32 source = (level * 8 + child) * 2 * m_Lanes;
+                    Int32 source = 2 * ((level * 8) + child) * m_Lanes;
 
                     for (Int32 channel = 0; channel < 2; ++channel)
                     {
                         for (Int32 lane = 0; lane < m_Lanes; ++lane)
                         {
-                            Int32 index = channel * m_Lanes + lane;
-                            accum[index] = Mix(accum[index], stack[source + index], m_Entropy[seedOffset + lane]);
+                            Int32 index = (channel * m_Lanes) + lane;
+                            accumulator[index] = Mix(accumulator[index], stack[source + index], m_Entropy[seedOffset + lane]);
                         }
 
                         seedOffset += m_Lanes;
@@ -228,7 +236,6 @@ namespace FastHashes
                 }
             }
 
-            // Remaining complete blocks are mixed into both accumulators (Toeplitz entropy).
             Int32 inputOffset = groups * groupBytes;
 
             while (inputOffset + blockBytes <= count)
@@ -238,8 +245,8 @@ namespace FastHashes
                     for (Int32 lane = 0; lane < m_Lanes; ++lane)
                     {
                         UInt64 word = BinaryOperations.Read64(buffer, inputOffset + (lane * 8));
-                        Int32 index = channel * m_Lanes + lane;
-                        accum[index] = Mix(accum[index], word, m_Entropy[seedOffset + index]);
+                        Int32 index = (channel * m_Lanes) + lane;
+                        accumulator[index] = Mix(accumulator[index], word, m_Entropy[seedOffset + index]);
                     }
                 }
 
@@ -247,21 +254,23 @@ namespace FastHashes
                 inputOffset += blockBytes;
             }
 
-            // An additional, zero-padded block is always processed, even for an empty tail.
             for (Int32 channel = 0; channel < 2; ++channel)
             {
                 for (Int32 lane = 0; lane < m_Lanes; ++lane)
                 {
                     Int32 byteOffset = inputOffset + (lane * 8);
-                    UInt64 word = 0ul;
+                    
+                    UInt64 word;
 
                     if (byteOffset + 8 <= count)
                         word = BinaryOperations.Read64(buffer, byteOffset);
                     else if (byteOffset < count)
                         word = BinaryOperations.ReadTail64(buffer, byteOffset);
+                    else
+                        word = 0ul;
 
                     Int32 index = channel * m_Lanes + lane;
-                    accum[index] = Mix(accum[index], word, m_Entropy[seedOffset + index]);
+                    accumulator[index] = Mix(accumulator[index], word, m_Entropy[seedOffset + index]);
                 }
             }
 
@@ -270,8 +279,8 @@ namespace FastHashes
 
             for (Int32 lane = 0; lane < m_Lanes; ++lane)
             {
-                o0 = unchecked(o0 + accum[lane]);
-                o1 = unchecked(o1 + accum[m_Lanes + lane]);
+                o0 = unchecked(o0 + accumulator[lane]);
+                o1 = unchecked(o1 + accumulator[m_Lanes + lane]);
             }
 
             o0 = Tabulate(o0, 2048);

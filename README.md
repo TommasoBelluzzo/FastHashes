@@ -121,6 +121,13 @@ The library includes the following non-cryptographic hashes:
    * 32/64 Bits Output
    * Reference Implementation: [https://github.com/Cyan4973/xxHash](https://github.com/Cyan4973/xxHash)
 
+#### Compatibility
+
+FastHashes produces deterministic outputs for explicitly selected algorithms, variants, seeds, and inputs.\
+Algorithm upgrades or corrections may change computed hash values.\
+Such changes will be documented in the corresponding release notes.\
+Applications that persist hash values or depend on reproducible results across library versions should verify output compatibility before upgrading.
+
 ## Requirements
 
 The following frameworks are supported:

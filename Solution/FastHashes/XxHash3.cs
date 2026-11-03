@@ -69,7 +69,7 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         public override String ToString()
         {
-            return $"{GetType().Name}_{m_Engine.Name}";
+            return $"{GetType().Name}-{m_Engine.Name}";
         }
         #endregion
 

@@ -62,13 +62,13 @@ namespace FastHashes
         private static UInt64 MirMum(UInt64 v, UInt64 c)
         {
             UInt64 v1 = v >> 32;
-            UInt64 v2 = (UInt32)v;
+            UInt64 v2 = unchecked((UInt32)v);
 
             UInt64 c1 = c >> 32;
-            UInt64 c2 = (UInt32)c;
+            UInt64 c2 = unchecked((UInt32)c);
 
-            UInt64 rm = (v2 * c1) + (v1 * c2);
-            UInt64 mm = (v1 * c1) + (rm >> 32) + (v2 * c2) + (rm << 32);
+            UInt64 rm = unchecked((v2 * c1) + (v1 * c2));
+            UInt64 mm = unchecked((v1 * c1) + (rm >> 32) + (v2 * c2) + (rm << 32));
 
             return mm;
         }
@@ -88,7 +88,7 @@ namespace FastHashes
             Int32 offset = 0;
             Int32 count = buffer.Length;
 
-            UInt64 r = m_Seed + (UInt64)count;
+            UInt64 r = unchecked(m_Seed + (UInt64)count);
 
             if (count == 0)
                 goto Finalize;
@@ -122,7 +122,7 @@ namespace FastHashes
                 r ^= MirMum(k, P2);
             }
 
-            Finalize:
+        Finalize:
 
             UInt64 hash = MirRound(r, r);
             Byte[] result = BinaryOperations.ToArray64(hash);

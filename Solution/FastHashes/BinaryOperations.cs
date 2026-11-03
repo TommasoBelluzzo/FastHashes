@@ -193,7 +193,7 @@ namespace FastHashes
         public static UInt16 RotateLeft(UInt16 value, Int32 rotation)
         {
             rotation &= 0x0F;
-            return (UInt16)((value << rotation) | (value >> (16 - rotation)));
+            return unchecked((UInt16)((value << rotation) | (value >> (16 - rotation))));
         }
 
         /// <summary>Rotates a 4-bytes unsigned integer left by the specified number of bits.</summary>
@@ -226,7 +226,7 @@ namespace FastHashes
         public static UInt16 RotateRight(UInt16 value, Int32 rotation)
         {
             rotation &= 0x0F;
-            return (UInt16)((value >> rotation) | (value << (16 - rotation)));
+            return unchecked((UInt16)((value >> rotation) | (value << (16 - rotation))));
         }
 
         /// <summary>Rotates a 4-bytes unsigned integer right by the specified number of bits.</summary>
@@ -270,7 +270,7 @@ namespace FastHashes
         public static Byte[] ToArray32(UInt64 value)
         {
             Byte[] array = new Byte[4];
-            BinaryPrimitives.WriteUInt32LittleEndian(array, (UInt32)value);
+            BinaryPrimitives.WriteUInt32LittleEndian(array, unchecked((UInt32)value));
 
             return array;
         }

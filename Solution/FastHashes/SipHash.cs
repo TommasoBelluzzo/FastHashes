@@ -25,55 +25,55 @@ namespace FastHashes
         public override Int32 Length => 32;
 
         /// <summary>Gets the first seed used by the hashing algorithm.</summary>
-        /// <value>An <see cref="T:System.UInt64"/> value.</value>
+        /// <value>An <see cref="T:System.UInt32"/> value.</value>
         [ExcludeFromCodeCoverage]
-        public UInt64 Seed1 => m_Seed1;
+        public UInt32 Seed1 => m_Seed1;
 
         /// <summary>Gets the second seed used by the hashing algorithm.</summary>
-        /// <value>An <see cref="T:System.UInt64"/> value.</value>
+        /// <value>An <see cref="T:System.UInt32"/> value.</value>
         [ExcludeFromCodeCoverage]
-        public UInt64 Seed2 => m_Seed2;
+        public UInt32 Seed2 => m_Seed2;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance using the specified seeds.</summary>
-        /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed1">The first <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         [ExcludeFromCodeCoverage]
-        public HalfSipHash(UInt64 seed1, UInt64 seed2)
+        public HalfSipHash(UInt32 seed1, UInt32 seed2)
         {
-            m_Seed1 = (UInt32)(seed1 - (seed1 >> 32));
-            m_Seed2 = (UInt32)(seed2 - (seed2 >> 32));
+            m_Seed1 = seed1;
+            m_Seed2 = seed2;
         }
 
         /// <summary>Initializes a new instance using a value of <c>0</c> for both seeds.</summary>
         [ExcludeFromCodeCoverage]
-        public HalfSipHash() : this(0ul, 0ul) { }
+        public HalfSipHash() : this(0u, 0u) { }
 
         /// <summary>Initializes a new instance using the specified value for both seeds.</summary>
-        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         [ExcludeFromCodeCoverage]
-        public HalfSipHash(UInt64 seed) : this(seed, seed) { }
+        public HalfSipHash(UInt32 seed) : this(seed, seed) { }
         #endregion
 
         #region Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Mix(ref UInt32 v0, ref UInt32 v1, ref UInt32 v2, ref UInt32 v3)
         {
-            v0 += v1;
+            v0 = unchecked(v0 + v1);
             v1 = BinaryOperations.RotateLeft(v1, 5);
             v1 ^= v0;
             v0 = BinaryOperations.RotateLeft(v0, 16);
 
-            v2 += v3;
+            v2 = unchecked(v2 + v3);
             v3 = BinaryOperations.RotateLeft(v3, 8);
             v3 ^= v2;
 
-            v0 += v3;
+            v0 = unchecked(v0 + v3);
             v3 = BinaryOperations.RotateLeft(v3, 7);
             v3 ^= v0;
 
-            v2 += v1;
+            v2 = unchecked(v2 + v1);
             v1 = BinaryOperations.RotateLeft(v1, 13);
             v1 ^= v2;
             v2 = BinaryOperations.RotateLeft(v2, 16);
@@ -235,8 +235,8 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Mix(ref UInt64 v0, ref UInt64 v1, ref UInt64 v2, ref UInt64 v3)
         {
-            v0 += v1;
-            v2 += v3;
+            v0 = unchecked(v0 + v1);
+            v2 = unchecked(v2 + v3);
 
             v1 = BinaryOperations.RotateLeft(v1, 13);
             v3 = BinaryOperations.RotateLeft(v3, 16);
@@ -246,8 +246,8 @@ namespace FastHashes
 
             v0 = BinaryOperations.RotateLeft(v0, 32);
 
-            v2 += v1;
-            v0 += v3;
+            v2 = unchecked(v2 + v1);
+            v0 = unchecked(v0 + v3);
 
             v1 = BinaryOperations.RotateLeft(v1, 17);
             v3 = BinaryOperations.RotateLeft(v3, 21);

@@ -41,11 +41,11 @@ namespace FastHashes
         private static UInt64 Mix(UInt64 v1, UInt64 v2)
         {
             v2 ^= v2 >> 23;
-            v2 *= N;
+            v2 = unchecked(v2 * N);
             v2 ^= v2 >> 47;
 
             v1 ^= v2;
-            v1 *= M;
+            v1 = unchecked(v1 * M);
 
             return v1;
         }
@@ -66,7 +66,7 @@ namespace FastHashes
             if (count == 0)
                 goto Finalize;
 
-            hash ^= (UInt64)count * M;
+            hash ^= unchecked((UInt64)count * M);
 
             Int32 blocks = count / 8;
 
@@ -87,7 +87,7 @@ namespace FastHashes
             Finalize:
 
             hash ^= hash >> 23;
-            hash *= N;
+            hash = unchecked(hash * N);
             hash ^= hash >> 47;
 
             Byte[] result = GetHash(hash);

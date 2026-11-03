@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-
 #endregion
 
 namespace FastHashes
@@ -17,11 +16,12 @@ namespace FastHashes
         #endregion
 
         #region Members
+        private readonly Queue<Byte> m_Bytes;
+        private readonly UInt32 m_Seed;
         private UInt32 m_X;
         private UInt32 m_Y;
         private UInt32 m_Z;
         private UInt32 m_W;
-        private readonly Queue<Byte> m_Bytes;
         #endregion
 
         #region Properties
@@ -33,7 +33,7 @@ namespace FastHashes
         /// <summary>The seed used by the pseudorandom numbers generator.</summary>
         /// <value>An <see cref="T:System.UInt32"/> value.</value>
         [ExcludeFromCodeCoverage] 
-        public UInt32 Seed => m_X;
+        public UInt32 Seed => m_Seed;
         #endregion
 
         #region Constructors
@@ -43,6 +43,7 @@ namespace FastHashes
         public RandomXorShift(UInt32 seed)
         {
             m_Bytes = new Queue<Byte>();
+            m_Seed = seed;
 
             m_X = seed;
             m_Y = Y;
@@ -60,7 +61,7 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         public override String ToString()
         {
-            return $"{GetType().Name}: {m_X}";
+            return $"{GetType().Name}: {m_Seed}";
         }
 
         /// <summary>Returns a random 4-byte unsigned integer.</summary>
@@ -83,7 +84,7 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         public void NextBytes(Byte[] buffer)
         {
-            NextBytes(buffer, 0, ((buffer == null) ? 0 : buffer.Length));
+            NextBytes(buffer, 0, buffer?.Length ?? 0);
         }
 
         /// <summary>Fills the specified number of elements of a byte array with random numbers, starting at the first element.</summary>
@@ -119,23 +120,33 @@ namespace FastHashes
             if (count > (buffer.Length - offset))
                 throw new ArgumentException("The block defined by offset and count parameters must be within the bounds of the array.");
 
+            NextBytes(buffer.AsSpan(offset, count));
+        }
+
+        /// <summary>Fills the specified byte span with random numbers.</summary>
+        /// <param name="buffer">The <see cref="T:System.Span`1{T}">Span&lt;byte&gt;</see> to fill.</param>
+        public void NextBytes(Span<Byte> buffer)
+        {
+            Int32 count = buffer.Length;
+
             if (count == 0)
                 return;
 
             Int32 index = 0;
 
             while ((m_Bytes.Count > 0) && (index < count))
-                buffer[offset + index++] = m_Bytes.Dequeue();
+                buffer[index++] = m_Bytes.Dequeue();
 
             Int32 blocks = (count - index) / 4;
 
             for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
             {
                 UInt32 value = NextValue();
-                Byte[] valueBytes = BitConverter.GetBytes(value);
 
-                Buffer.BlockCopy(valueBytes, 0, buffer, offset + index, 4);
-                index += 4;
+                buffer[index++] = unchecked((Byte)value);
+                buffer[index++] = unchecked((Byte)(value >> 8));
+                buffer[index++] = unchecked((Byte)(value >> 16));
+                buffer[index++] = unchecked((Byte)(value >> 24));
             }
 
             Int32 remainder = (count - index) & 3;
@@ -143,13 +154,12 @@ namespace FastHashes
             if (remainder > 0)
             {
                 UInt32 value = NextValue();
-                Byte[] valueBytes = BitConverter.GetBytes(value);
 
                 for (Int32 i = 0; i < 4; ++i)
-                    m_Bytes.Enqueue(valueBytes[i]);
+                    m_Bytes.Enqueue(unchecked((Byte)(value >> (i * 8))));
 
                 while (index < count)
-                    buffer[offset + index++] = m_Bytes.Dequeue();
+                    buffer[index++] = m_Bytes.Dequeue();
             }
         }
         #endregion

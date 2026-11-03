@@ -31,7 +31,7 @@ namespace FastHashes
 
         #region Constructors
         /// <summary>Initializes a new instance using the specified seed.</summary>
-        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         [ExcludeFromCodeCoverage]
         public WyHash32(UInt32 seed)
         {
@@ -134,7 +134,7 @@ namespace FastHashes
             if (secret.Length != 4)
                 throw new ArgumentException("The specified array must contains 4 values.", nameof(secret));
 
-            m_Secret = secret;
+            m_Secret = (UInt64[])secret.Clone();
             m_Seed = seed;
         }
 

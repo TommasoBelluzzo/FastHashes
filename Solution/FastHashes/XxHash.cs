@@ -27,14 +27,14 @@ namespace FastHashes
         public override Int32 Length => 32;
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
-        /// <value>An <see cref="T:System.UInt64"/> value.</value>
+        /// <value>An <see cref="T:System.UInt32"/> value.</value>
         [ExcludeFromCodeCoverage]
-        public UInt64 Seed => m_Seed;
+        public UInt32 Seed => m_Seed;
         #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance using the specified seed.</summary>
-        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         [ExcludeFromCodeCoverage]
         public XxHash32(UInt32 seed)
         {
@@ -54,15 +54,16 @@ namespace FastHashes
             v2 = BinaryOperations.RotateLeft(v2, 7);
             v3 = BinaryOperations.RotateLeft(v3, 12);
             v4 = BinaryOperations.RotateLeft(v4, 18);
+            UInt32 v = unchecked(v1 + v2 + v3 + v4);
 
-            return v1 + v2 + v3 + v4;
+            return v;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static UInt32 Mix(UInt32 v, UInt32 p1, UInt32 p2, Int32 r, UInt32 k)
         {
-            v += k * p1;
-            v = BinaryOperations.RotateLeft(v, r) * p2;
+            v = unchecked(v + (k * p1));
+            v = unchecked(BinaryOperations.RotateLeft(v, r) * p2);
 
             return v;
         }
@@ -77,7 +78,7 @@ namespace FastHashes
 
             if (count == 0)
             {
-                hash += P5;
+                hash = unchecked(hash + P5);
                 goto Finalize;
             }
 
@@ -85,10 +86,10 @@ namespace FastHashes
 
             if (blocks > 0)
             {
-                UInt32 v1 = hash + P1 + P2;
-                UInt32 v2 = hash + P2;
+                UInt32 v1 = unchecked(hash + P1 + P2);
+                UInt32 v2 = unchecked(hash + P2);
                 UInt32 v3 = hash;
-                UInt32 v4 = hash - P1;
+                UInt32 v4 = unchecked(hash - P1);
 
                 for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                 {
@@ -105,9 +106,9 @@ namespace FastHashes
                 hash = Add(v1, v2, v3, v4);
             }
             else
-                hash += P5;
+                hash = unchecked(hash + P5);
 
-            hash += (UInt32)count;
+            hash = unchecked(hash + (UInt32)count);
 
             Int32 remainder = count & 15;
 
@@ -129,9 +130,9 @@ namespace FastHashes
         Finalize:
 
             hash ^= hash >> 15;
-            hash *= P2;
+            hash = unchecked(hash * P2);
             hash ^= hash >> 13;
-            hash *= P3;
+            hash = unchecked(hash * P3);
             hash ^= hash >> 16;
 
             Byte[] result = BinaryOperations.ToArray32(hash);
@@ -189,16 +190,17 @@ namespace FastHashes
             v2 = BinaryOperations.RotateLeft(v2, 7);
             v3 = BinaryOperations.RotateLeft(v3, 12);
             v4 = BinaryOperations.RotateLeft(v4, 18);
+            UInt64 v = unchecked(v1 + v2 + v3 + v4);
 
-            return v1 + v2 + v3 + v4;
+            return v;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static UInt64 Mix8(UInt64 v1, Byte v2)
         {
-            v1 ^= v2 * P5;
+            v1 ^= unchecked(v2 * P5);
             v1 = BinaryOperations.RotateLeft(v1, 11);
-            v1 *= P1;
+            v1 = unchecked(v1 * P1);
 
             return v1;
         }
@@ -206,10 +208,10 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static UInt64 Mix32(UInt64 v1, UInt32 v2)
         {
-            v1 ^= v2 * P1;
+            v1 ^= unchecked(v2 * P1);
             v1 = BinaryOperations.RotateLeft(v1, 23);
-            v1 *= P2;
-            v1 += P3;
+            v1 = unchecked(v1 * P2);
+            v1 = unchecked(v1 + P3);
 
             return v1;
         }
@@ -217,14 +219,14 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static UInt64 Mix64(UInt64 v1, UInt64 v2)
         {
-            v2 *= P2;
+            v2 = unchecked(v2 * P2);
             v2 = BinaryOperations.RotateLeft(v2, 31);
-            v2 *= P1;
+            v2 = unchecked(v2 * P1);
 
             v1 ^= v2;
             v1 = BinaryOperations.RotateLeft(v1, 27);
-            v1 *= P1;
-            v1 += P4;
+            v1 = unchecked(v1 * P1);
+            v1 = unchecked(v1 + P4);
 
             return v1;
         }
@@ -232,9 +234,9 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static UInt64 Mix256A(UInt64 v, UInt64 p1, UInt64 p2, UInt64 k)
         {
-            v += k * p1;
+            v = unchecked(v + (k * p1));
             v = BinaryOperations.RotateLeft(v, 31);
-            v *= p2;
+            v = unchecked(v * p2);
 
             return v;
         }
@@ -242,13 +244,13 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static UInt64 Mix256B(UInt64 v1, UInt64 v2)
         {
-            v2 *= P2;
+            v2 = unchecked(v2 * P2);
             v2 = BinaryOperations.RotateLeft(v2, 31);
-            v2 *= P1;
+            v2 = unchecked(v2 * P1);
 
             v1 ^= v2;
-            v1 *= P1;
-            v1 += P4;
+            v1 = unchecked(v1 * P1);
+            v1 = unchecked(v1 + P4);
 
             return v1;
         }
@@ -263,7 +265,7 @@ namespace FastHashes
 
             if (count == 0)
             {
-                hash += P5;
+                hash = unchecked(hash + P5);
                 goto Finalize;
             }
 
@@ -271,10 +273,10 @@ namespace FastHashes
 
             if (blocks > 0)
             {
-                UInt64 v1 = hash + P1 + P2;
-                UInt64 v2 = hash + P2;
+                UInt64 v1 = unchecked(hash + P1 + P2);
+                UInt64 v2 = unchecked(hash + P2);
                 UInt64 v3 = hash;
-                UInt64 v4 = hash - P1;
+                UInt64 v4 = unchecked(hash - P1);
 
                 for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                 {
@@ -296,7 +298,7 @@ namespace FastHashes
                 hash = Mix256B(hash, v4);
             }
             else
-                hash += P5;
+                hash = unchecked(hash + P5);
 
             hash += (UInt64)count;
 

@@ -22,7 +22,7 @@ namespace FastHashes.Tests
             ("FastPositiveHash-V0", seed => new FastPositiveHash(FastPositiveHashVariant.V0, seed), "0x297B7D7F81EC046C"),
             ("FastPositiveHash-V1", seed => new FastPositiveHash(FastPositiveHashVariant.V1, seed), "0x816383D664638705"),
             ("FastPositiveHash-V2", seed => new FastPositiveHash(FastPositiveHashVariant.V2, seed), "0x48C9168F5572BC11"),
-            ("HalfSipHash", seed => new HalfSipHash(seed), "0x4C192ADA"),
+            ("HalfSipHash", seed => new HalfSipHash(checked((UInt32)seed)), "0x4C192ADA"),
             ("HalftimeHash-S64", seed => new HalftimeHash(HalftimeHashStyle.S64, seed), "0x8FA0F2557E35A798"),
             ("HalftimeHash-S128", seed => new HalftimeHash(HalftimeHashStyle.S128, seed), "0xD3C3EE437B993FB8"),
             ("HalftimeHash-S256", seed => new HalftimeHash(HalftimeHashStyle.S256, seed), "0xA9F64B555BEF6362"),
