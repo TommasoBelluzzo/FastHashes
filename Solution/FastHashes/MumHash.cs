@@ -11,16 +11,13 @@ namespace FastHashes
     {
         #region Constants
         private const UInt64 BSP = 0xC42B5E2E6480B23Bul;
-        private const UInt64 FP1 = 0xA9A7AE7CEFF79F3Ful;
-        private const UInt64 FP2 = 0xAF47D47C99B1461Bul;
         private const UInt64 UP = 0x7B51EC3D22F7096Ful;
         private const UInt64 TP = 0xAF47D47C99B1461Bul;
+
         private static readonly UInt64[] P =
         {
             0x9EBDCAE10D981691ul, 0x32B9B9B97A27AC7Dul, 0x29B5584D83D35BBDul, 0x4B04E0E61401255Ful,
             0x25E8F7B1F1C9D027ul, 0x80D4C8C000F3E881ul, 0xBD1255431904B9DDul, 0x8A3BD4485EEE6D81ul,
-            0x3BC721B2AAD05197ul, 0x71B1A19B907D6E33ul, 0x525E6C1084A8534Bul, 0x9E4C2CD340C1299Ful,
-            0xDE3ADD92E94CAA37ul, 0x7E14EADB1F65311Dul, 0x3F5AA40F89812853ul, 0x33B15A3B587D15C9ul,
         };
         #endregion
 
@@ -57,9 +54,9 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static UInt64 Mum(UInt64 v1, UInt64 v2)
         {
-            #if NET5_0_OR_GREATER
+#if NET5_0_OR_GREATER
             UInt64 hi = Math.BigMul(v1, v2, out UInt64 lo);
-            #else
+#else
             UInt64 hv1 = v1 >> 32;
             UInt64 lv1 = unchecked((UInt32)v1);
 
@@ -81,9 +78,11 @@ namespace FastHashes
             carry += (lo < t) ? 1ul : 0ul;
 
             UInt64 hi = rh + (rm0 >> 32) + (rm1 >> 32) + carry;
-            #endif
+#endif
 
-            return unchecked(hi + lo);
+            UInt64 v = unchecked(hi + lo);
+
+            return v;
         }
 
         /// <inheritdoc/>
@@ -97,34 +96,47 @@ namespace FastHashes
             if (count == 0)
                 goto Finalize;
 
-            while (count > 32)
+            while (count > 64)
             {
-                for (Int32 i = 0; i < 4; ++i)
+                for (Int32 i = 0; i < 8; i += 2)
                 {
-                    hash ^= Mum(BinaryOperations.Read64(buffer, offset), P[i]);
-                    offset += 8;
+                    UInt64 v1 = BinaryOperations.Read64(buffer, offset) ^ P[i];
+                    UInt64 v2 = BinaryOperations.Read64(buffer, offset + 8) ^ P[i + 1];
+
+                    if (v1 == 0ul)
+                        v1 = P[i];
+
+                    if (v2 == 0ul)
+                        v2 = P[i + 1];
+
+                    hash ^= Mum(v1, v2);
+                    offset += 16;
                 }
 
                 hash = Mum(hash, UP);
-
-                count -= 32;
+                count -= 64;
             }
 
             Int32 blocks = count / 8;
 
             for (Int32 i = 0; i < blocks; ++i)
             {
-                hash ^= Mum(BinaryOperations.Read64(buffer, offset), P[i]);
+                UInt64 v = unchecked(BinaryOperations.Read64(buffer, offset) + P[i]);
+                hash ^= Mum(v, P[i]);
                 offset += 8;
             }
 
-            UInt64 v = BinaryOperations.ReadTail64(buffer, offset);
-            hash ^= Mum(v, TP);
+            Int32 remaining = count - (blocks * 8);
 
-            Finalize:
+            if (remaining > 0)
+            {
+                UInt64 v = unchecked(BinaryOperations.ReadTail64(buffer, offset) + P[7 - remaining]);
+                hash ^= Mum(v, TP);
+            }
 
-            hash ^= Mum(hash, FP1);
-            hash ^= Mum(hash, FP2);
+        Finalize:
+
+            hash = Mum(hash, hash);
 
             Byte[] result = BinaryOperations.ToArray64(hash);
 
