@@ -72,29 +72,6 @@ namespace FastHashes
             return sum;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt64 ReadShort(ReadOnlySpan<Byte> buffer)
-        {
-            Int32 count = buffer.Length;
-            
-            UInt32 lo, hi;
-
-            if (count >= 4)
-            {
-                lo = BinaryOperations.Read32(buffer, 0);
-                hi = BinaryOperations.Read32(buffer, count - 4);
-            }
-            else
-            {
-                lo = (count & 1) != 0 ? buffer[0] : 0u;
-                hi = (count & 2) != 0 ? (UInt32)(buffer[count - 2] | (buffer[count - 1] << 8)) : 0u;
-            }
-
-            UInt64 value = ((UInt64)hi << 32) | unchecked((UInt32)(lo + hi));
-
-            return value;
-        }
-
         /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static UInt64 Finalize(UInt64 value)
@@ -123,9 +100,24 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static UInt64 HashShort(ReadOnlySpan<Byte> buffer, UInt64 seed, Int32 shift)
         {
-            seed = unchecked(seed + OH[buffer.Length + shift]);
+            Int32 count = buffer.Length;
 
-            UInt64 hash = ReadShort(buffer);
+            seed = unchecked(seed + OH[count + shift]);
+
+            UInt32 lo, hi;
+
+            if (count >= 4)
+            {
+                lo = BinaryOperations.Read32(buffer, 0);
+                hi = BinaryOperations.Read32(buffer, count - 4);
+            }
+            else
+            {
+                lo = (count & 1) != 0 ? buffer[0] : 0u;
+                hi = (count & 2) != 0 ? (UInt32)(buffer[count - 2] | (buffer[count - 1] << 8)) : 0u;
+            }
+
+            UInt64 hash = ((UInt64)hi << 32) | unchecked((UInt32)(lo + hi));
             hash ^= hash >> 30;
             hash = unchecked(hash * 0xBF58476D1CE4E5B9ul);
             hash = (hash ^ seed) ^ (hash >> 27);
@@ -159,7 +151,7 @@ namespace FastHashes
                 sum = unchecked(sum + 8ul);
 
             sum = unchecked(sum + fixup);
-            
+
             if (sum >= (UInt64.MaxValue - 7ul))
                 sum = unchecked(sum + 8ul);
 
@@ -179,7 +171,7 @@ namespace FastHashes
                     continue;
 
                 lo ^= x << i;
-                
+
                 if (i != 0)
                     hi ^= x >> (64 - i);
             }
@@ -410,7 +402,7 @@ namespace FastHashes
 
             tw0 = unchecked((tw0 ^ oh0) << 1);
             tw1 = unchecked((tw1 ^ oh1) << 1);
-            
+
             ClMul(lrc0, lrc1, out UInt64 cl0, out UInt64 cl1);
             tw0 ^= cl0;
             tw1 ^= cl1;

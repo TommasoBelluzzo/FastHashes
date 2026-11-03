@@ -168,12 +168,12 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WyMum(ref UInt64 a, ref UInt64 b)
         {
-            #if NET5_0_OR_GREATER
+#if NET5_0_OR_GREATER
             UInt64 hi = Math.BigMul(a, b, out UInt64 lo);
 
             a = lo;
             b = hi;
-            #else
+#else
             UInt64 ha = a >> 32;
             UInt64 hb = b >> 32;
 
@@ -191,7 +191,7 @@ namespace FastHashes
 
             a = lo;
             b = hi;
-            #endif
+#endif
         }
 
         /// <inheritdoc/>
@@ -271,7 +271,10 @@ namespace FastHashes
 
             WyMum(ref a, ref b);
 
-            UInt64 hash = WyMix(a ^ m_Secret[0] ^ (UInt64)count, b ^ m_Secret[1]);
+            a ^= m_Secret[0] ^ (UInt64)count;
+            b ^= m_Secret[1];
+
+            UInt64 hash = WyMix(a, b);
             Byte[] result = BinaryOperations.ToArray64(hash);
 
             return result;

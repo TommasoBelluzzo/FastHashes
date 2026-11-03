@@ -153,11 +153,11 @@ namespace FastHashes
             {
                 for (Int32 i = 0; i < 8; ++i)
                 {
-                    UInt64 value = BinaryOperations.Read64(data, dataOffset + i * 8);
-                    UInt64 key = value ^ BinaryOperations.Read64(secret, secretOffset + i * 8);
+                    UInt64 v = BinaryOperations.Read64(data, dataOffset + i * 8);
+                    UInt64 k = v ^ BinaryOperations.Read64(secret, secretOffset + i * 8);
 
-                    accumulator[i ^ 1] = unchecked(accumulator[i ^ 1] + value);
-                    accumulator[i] = unchecked(accumulator[i] + ((UInt64)unchecked((UInt32)key) * (UInt32)(key >> 32)));
+                    accumulator[i ^ 1] = unchecked(accumulator[i ^ 1] + v);
+                    accumulator[i] = unchecked(accumulator[i] + ((UInt64)unchecked((UInt32)k) * (UInt32)(k >> 32)));
                 }
             }
 
@@ -185,18 +185,18 @@ namespace FastHashes
 
             protected static UInt64 Merge(Span<UInt64> acc, ReadOnlySpan<Byte> secret, Int32 offset, UInt64 start)
             {
-                UInt64 value = start;
+                UInt64 v = start;
 
                 for (Int32 i = 0; i < 4; ++i)
                 {
                     UInt64 a = acc[i * 2] ^ BinaryOperations.Read64(secret, offset + (i * 16));
                     UInt64 b = acc[(i * 2) + 1] ^ BinaryOperations.Read64(secret, offset + (i * 16) + 8);
-                    value = unchecked(value + MulFold(a, b));
+                    v = unchecked(v + MulFold(a, b));
                 }
 
-                value = AvalancheHhx3(value);
+                v = AvalancheHhx3(v);
 
-                return value;
+                return v;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

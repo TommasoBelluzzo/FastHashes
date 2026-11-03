@@ -158,22 +158,22 @@ namespace FastHashes
             if (count == 0)
                 return 0ul;
 
-            UInt64 value;
+            UInt64 v;
 
             if (count < 4)
             {
-                value = buffer[0];
-                value |= (UInt64)buffer[count / 2] << (8 * (count / 2));
-                value |= (UInt64)buffer[count - 1] << (8 * (count - 1));
+                v = buffer[0];
+                v |= (UInt64)buffer[count / 2] << (8 * (count / 2));
+                v |= (UInt64)buffer[count - 1] << (8 * (count - 1));
             }
             else
             {
                 UInt64 lo = BinaryOperations.Read32(buffer, 0);
                 UInt64 hi = BinaryOperations.Read32(buffer, count - 4);
-                value = lo | (hi << (8 * (count - 4)));
+                v = lo | (hi << (8 * (count - 4)));
             }
 
-            return value;
+            return v;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
