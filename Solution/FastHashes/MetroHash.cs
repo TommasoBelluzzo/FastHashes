@@ -544,8 +544,8 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static UInt64 Mix256(UInt64 v1, UInt64 v2, UInt64 v3, UInt64 k)
             {
-                v1 += v3 * k;
-                v1 = BinaryOperations.RotateRight(v1, 29) + v2;
+                v1 = unchecked(v1 + (v3 * k));
+                v1 = unchecked(BinaryOperations.RotateRight(v1, 29) + v2);
 
                 return v1;
             }

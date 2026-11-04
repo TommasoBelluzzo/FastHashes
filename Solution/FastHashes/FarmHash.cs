@@ -697,8 +697,8 @@ namespace FastHashes
                 {
                     Update(ref x, ref y, ref z, buffer, offset, v0, v1, w0, w1, K1, 1ul);
 
-                    HashWeak32(out v0, out v1, buffer, offset, v1 * K1, x + w0);
-                    HashWeak32(out w0, out w1, buffer, offset + 32, z + w1, y + BinaryOperations.Read64(buffer, offset + 16));
+                    HashWeak32(out v0, out v1, buffer, offset, unchecked(v1 * K1), unchecked(x + w0));
+                    HashWeak32(out w0, out w1, buffer, offset + 32, unchecked(z + w1), unchecked(y + BinaryOperations.Read64(buffer, offset + 16)));
                     BinaryOperations.Swap(ref z, ref x);
 
                     offset += 64;

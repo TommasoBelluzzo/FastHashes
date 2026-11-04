@@ -102,7 +102,7 @@ namespace FastHashes
             UInt64 result = 0ul;
 
             for (Int32 i = 0; i < 8; ++i)
-                result ^= m_Entropy[offset + (i * 256) + (Byte)(value >> (i * 8))];
+                result ^= m_Entropy[offset + (i * 256) + unchecked((Byte)(value >> (i * 8)))];
 
             return result;
         }

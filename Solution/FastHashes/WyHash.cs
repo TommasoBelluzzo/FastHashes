@@ -48,7 +48,6 @@ namespace FastHashes
         private static void WyMix(ref UInt32 a, ref UInt32 b)
         {
             UInt64 c = (UInt64)(a ^ P1) * (b ^ P2);
-
             a = unchecked((UInt32)c);
             b = (UInt32)(c >> 32);
         }

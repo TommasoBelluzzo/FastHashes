@@ -242,7 +242,7 @@ namespace FastHashes
                 remaining -= 256;
             }
 
-            Compress(buffer, offset, remaining, seed ^ (Byte)remaining, out oh0, out oh1);
+            Compress(buffer, offset, remaining, seed ^ unchecked((Byte)remaining), out oh0, out oh1);
 
             UInt64 hash = Finalize(Horner(acc, p0, p1, oh0, oh1));
 
@@ -351,7 +351,7 @@ namespace FastHashes
                 remaining -= 256;
             }
 
-            Compress(buffer, offset, remaining, seed ^ (Byte)remaining, out oh0, out oh1, out tw0, out tw1);
+            Compress(buffer, offset, remaining, seed ^ unchecked((Byte)remaining), out oh0, out oh1, out tw0, out tw1);
 
             hash1 = Finalize(Horner(acc0, p0, p1, oh0, oh1));
             hash2 = Finalize(Horner(acc1, p2, p3, tw0, tw1));
