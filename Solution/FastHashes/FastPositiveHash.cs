@@ -179,22 +179,21 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void MixB(ref UInt32 a, ref UInt32 b, ref UInt32 c, ref UInt32 d, ReadOnlySpan<UInt32> w)
             {
-                UInt32 d13 = w[1] + BinaryOperations.RotateRight(w[3] + d, 17);
-                UInt32 c02 = w[0] ^ BinaryOperations.RotateRight(w[2] + c, 11);
+                UInt32 d13 = unchecked(w[1] + BinaryOperations.RotateRight(unchecked(w[3] + d), 17));
+                UInt32 c02 = w[0] ^ BinaryOperations.RotateRight(unchecked(w[2] + c), 11);
 
-                d ^= BinaryOperations.RotateRight(a + w[0], 3);
-                c ^= BinaryOperations.RotateRight(b + w[1], 7);
-                b = P321 * (c02 + w[3]);
-                a = P320 * (d13 ^ w[2]);
+                d ^= BinaryOperations.RotateRight(unchecked(a + w[0]), 3);
+                c ^= BinaryOperations.RotateRight(unchecked(b + w[1]), 7);
+                b = unchecked(P321 * unchecked(c02 + w[3]));
+                a = unchecked(P320 * (d13 ^ w[2]));
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void MixT(ref UInt32 v1, ref UInt32 v2, UInt32 v3, UInt32 p)
             {
-                UInt64 l = (v2 + v3) * (UInt64)p;
-
-                v1 ^= (UInt32)l;
-                v2 += (UInt32)(l >> 32);
+                UInt64 l = unchecked(v2 + v3) * (UInt64)p;
+                v1 ^= unchecked((UInt32)l);
+                v2 = unchecked(v2 + (UInt32)(l >> 32));
             }
 
             public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
@@ -203,7 +202,7 @@ namespace FastHashes
                 Int32 count = buffer.Length;
 
                 UInt32 length = (UInt32)count;
-                UInt32 a = BinaryOperations.RotateRight(length, 17) + (UInt32)m_Seed;
+                UInt32 a = unchecked(BinaryOperations.RotateRight(length, 17) + (UInt32)m_Seed);
                 UInt32 b = length ^ (UInt32)(m_Seed >> 32);
 
                 if (count == 0)
@@ -241,10 +240,10 @@ namespace FastHashes
                         MixB(ref a, ref b, ref c, ref d, w);
                     }
 
-                    c += a;
-                    d += b;
-                    a ^= P326 * (BinaryOperations.RotateRight(c, 16) + d);
-                    b ^= P325 * (c + BinaryOperations.RotateRight(d, 16));
+                    c = unchecked(c + a);
+                    d = unchecked(d + b);
+                    a ^= unchecked(P326 * (BinaryOperations.RotateRight(c, 16) + d));
+                    b ^= unchecked(P325 * (c + BinaryOperations.RotateRight(d, 16)));
                 }
 
                 switch (remainder)
@@ -285,11 +284,11 @@ namespace FastHashes
             Finalize:
 
                 UInt64 hash = (b ^ BinaryOperations.RotateRight(a, 13)) | ((UInt64)a << 32);
-                hash *= P640;
+                hash = unchecked(hash * P640);
                 hash ^= hash >> 41;
-                hash *= P644;
+                hash = unchecked(hash * P644);
                 hash ^= hash >> 47;
-                hash *= P646;
+                hash = unchecked(hash * P646);
 
                 Byte[] result = BinaryOperations.ToArray64(hash);
 
@@ -317,13 +316,13 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void MixB(ref UInt64 a, ref UInt64 b, ref UInt64 c, ref UInt64 d, ReadOnlySpan<UInt64> w)
             {
-                UInt64 d02 = w[0] ^ BinaryOperations.RotateRight(w[2] + d, 17);
-                UInt64 c13 = w[1] ^ BinaryOperations.RotateRight(w[3] + c, 17);
+                UInt64 d02 = w[0] ^ BinaryOperations.RotateRight(unchecked(w[2] + d), 17);
+                UInt64 c13 = w[1] ^ BinaryOperations.RotateRight(unchecked(w[3] + c), 17);
 
-                d -= b ^ BinaryOperations.RotateRight(w[1], 31);
-                c += a ^ BinaryOperations.RotateRight(w[0], 41);
-                b ^= P640 * (c13 + w[2]);
-                a ^= P641 * (d02 + w[3]);
+                d = unchecked(d - (b ^ BinaryOperations.RotateRight(w[1], 31)));
+                c = unchecked(c + (a ^ BinaryOperations.RotateRight(w[0], 41)));
+                b ^= unchecked(P640 * (c13 + w[2]));
+                a ^= unchecked(P641 * (d02 + w[3]));
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -360,7 +359,7 @@ namespace FastHashes
 
                 if (blocks > 0)
                 {
-                    UInt64 c = BinaryOperations.RotateRight(length, 17) + m_Seed;
+                    UInt64 c = unchecked(BinaryOperations.RotateRight(length, 17) + m_Seed);
                     UInt64 d = length ^ BinaryOperations.RotateRight(m_Seed, 17);
 
                     Span<UInt64> w = stackalloc UInt64[4];
@@ -377,8 +376,8 @@ namespace FastHashes
                         MixB(ref a, ref b, ref c, ref d, w);
                     }
 
-                    a ^= P646 * (BinaryOperations.RotateRight(c, 17) + d);
-                    b ^= P645 * (c + BinaryOperations.RotateRight(d, 17));
+                    a ^= unchecked(P646 * (BinaryOperations.RotateRight(c, 17) + d));
+                    b ^= unchecked(P645 * (c + BinaryOperations.RotateRight(d, 17)));
                 }
 
                 switch (remainder)
@@ -391,7 +390,7 @@ namespace FastHashes
                     case 27:
                     case 26:
                     case 25:
-                        b += MixT(BinaryOperations.Read64(buffer, offset), P644);
+                        b = unchecked(b + MixT(BinaryOperations.Read64(buffer, offset), P644));
                         offset += 8;
                         goto case 17;
 
@@ -403,7 +402,7 @@ namespace FastHashes
                     case 19:
                     case 18:
                     case 17:
-                        a += MixT(BinaryOperations.Read64(buffer, offset), P643);
+                        a = unchecked(a + MixT(BinaryOperations.Read64(buffer, offset), P643));
                         offset += 8;
                         goto case 9;
 
@@ -415,7 +414,7 @@ namespace FastHashes
                     case 11:
                     case 10:
                     case 9:
-                        b += MixT(BinaryOperations.Read64(buffer, offset), P642);
+                        b = unchecked(b + MixT(BinaryOperations.Read64(buffer, offset), P642));
                         offset += 8;
                         goto case 1;
 
@@ -428,15 +427,15 @@ namespace FastHashes
                     case 2:
                     case 1:
                         UInt64 t = BinaryOperations.ReadTail64(buffer, offset);
-                        a += MixT(t, P641);
+                        a = unchecked(a + MixT(t, P641));
                         break;
                 }
 
             Finalize:
 
-                UInt64 h0 = (a ^ b) * P640;
+                UInt64 h0 = unchecked((a ^ b) * P640);
 
-                UInt64 hash = MixT(BinaryOperations.RotateRight(a + b, 17), P644) + (h0 ^ BinaryOperations.RotateRight(h0, 41));
+                UInt64 hash = unchecked(MixT(BinaryOperations.RotateRight(a + b, 17), P644) + (h0 ^ BinaryOperations.RotateRight(h0, 41)));
                 Byte[] result = BinaryOperations.ToArray64(hash);
 
                 return result;
@@ -463,21 +462,21 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void MixB(ref UInt64 a, ref UInt64 b, ref UInt64 c, ref UInt64 d, ReadOnlySpan<UInt64> w)
             {
-                UInt64 d02 = w[0] + BinaryOperations.RotateRight(w[2] + d, 56);
-                UInt64 c13 = w[1] + BinaryOperations.RotateRight(w[3] + c, 19);
+                UInt64 d02 = unchecked(w[0] + BinaryOperations.RotateRight(w[2] + d, 56));
+                UInt64 c13 = unchecked(w[1] + BinaryOperations.RotateRight(w[3] + c, 19));
 
-                d ^= b + BinaryOperations.RotateRight(w[1], 38);
-                c ^= a + BinaryOperations.RotateRight(w[0], 57);
-                b ^= P646 * (c13 + w[2]);
-                a ^= P645 * (d02 + w[3]);
+                d ^= unchecked(b + BinaryOperations.RotateRight(w[1], 38));
+                c ^= unchecked(a + BinaryOperations.RotateRight(w[0], 57));
+                b ^= unchecked(P646 * (c13 + w[2]));
+                a ^= unchecked(P645 * (d02 + w[3]));
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void MixT(ref UInt64 v1, ref UInt64 v2, UInt64 v3, UInt64 p)
             {
-                Mux(out UInt64 l, out UInt64 h, v3 + v2, p);
+                Mux(out UInt64 l, out UInt64 h, unchecked(v3 + v2), p);
                 v1 ^= l;
-                v2 += h;
+                v2 = unchecked(v2 + h);
             }
 
             public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
@@ -507,8 +506,8 @@ namespace FastHashes
 
                 if (blocks > 0)
                 {
-                    UInt64 c = BinaryOperations.RotateRight(length, 23) + ~m_Seed;
-                    UInt64 d = ~length + BinaryOperations.RotateRight(m_Seed, 19);
+                    UInt64 c = unchecked(BinaryOperations.RotateRight(length, 23) + ~m_Seed);
+                    UInt64 d = unchecked(~length + BinaryOperations.RotateRight(m_Seed, 19));
 
                     Span<UInt64> w = stackalloc UInt64[4];
 
@@ -524,8 +523,8 @@ namespace FastHashes
                         MixB(ref a, ref b, ref c, ref d, w);
                     }
 
-                    a ^= P646 * (c + BinaryOperations.RotateRight(d, 23));
-                    b ^= P645 * (BinaryOperations.RotateRight(c, 19) + d);
+                    a ^= unchecked(P646 * (c + BinaryOperations.RotateRight(d, 23)));
+                    b ^= unchecked(P645 * (BinaryOperations.RotateRight(c, 19) + d));
                 }
 
                 switch (remainder)
@@ -581,8 +580,8 @@ namespace FastHashes
 
             Finalize:
 
-                UInt64 h0 = (a + BinaryOperations.RotateRight(b, 41)) * P640;
-                UInt64 h1 = (BinaryOperations.RotateRight(a, 23) + b) * P646;
+                UInt64 h0 = unchecked((a + BinaryOperations.RotateRight(b, 41)) * P640);
+                UInt64 h1 = unchecked((BinaryOperations.RotateRight(a, 23) + b) * P646);
                 Mux(out UInt64 l, out UInt64 h, h0 ^ h1, P645);
 
                 UInt64 hash = l ^ h;

@@ -292,26 +292,6 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataFarmHashUnseeded), MemberType = typeof(HashTestsCases))]
-        public void FarmHashUnseededTest(Int32 length)
-        {
-            RandomXorShift random = new(TEST_SEED);
-            Byte[] buffer = new Byte[length];
-            random.NextBytes(buffer);
-
-            Hash[] hashes = [new FarmHash32(), new FarmHash64(), new FarmHash128()];
-
-            foreach (Hash hash in hashes)
-            {
-                Byte[] expected = hash.ComputeHash(buffer);
-                Byte[] actual = hash.ComputeHash(buffer);
-
-                Assert.Equal(hash.Length / 8, expected.Length);
-                Assert.Equal(expected, actual);
-            }
-        }
-
-        [Theory]
         [MemberData(nameof(HashTestsCases.DataFormatInvalid), MemberType = typeof(HashTestsCases))]
         public void FormatInvalidTest(Byte[] hash, HashFormat format, Type exceptionType, String parameterName)
         {
@@ -337,6 +317,106 @@ namespace FastHashes.Tests
         {
             Assert.Equal(expected, HashFormatter.Format(hash, format));
             Assert.Equal(expected, HashFormatter.Format(new ReadOnlySpan<Byte>(hash), format));
+        }
+
+        [Fact]
+        public void RegistryTest()
+        {
+            IReadOnlyList<String> algorithms = Hash.GetAlgorithms();
+
+            Assert.NotEmpty(algorithms);
+            Assert.Equal(algorithms.Count, algorithms.Distinct(StringComparer.Ordinal).Count());
+
+            Byte[] buffer = [];
+
+            foreach (String name in algorithms)
+            {
+                Hash hashDefault = Hash.Create(name);
+                Hash hashSeeded = Hash.Create(name, TEST_SEED);
+
+                Hash hashInitializedDefault = Hash.GetInitializerDefault(name)();
+                Hash hashInitializedSeeded = Hash.GetInitializerSeeded(name)(TEST_SEED);
+
+                Assert.Equal(hashDefault.GetType(), hashInitializedDefault.GetType());
+                Assert.Equal(hashSeeded.GetType(), hashInitializedSeeded.GetType());
+
+                Assert.Equal(hashDefault.ComputeHash(buffer), hashInitializedDefault.ComputeHash(buffer));
+                Assert.Equal(hashSeeded.ComputeHash(buffer), hashInitializedSeeded.ComputeHash(buffer));
+
+                Assert.True(Hash.TryCreate(name, out Hash hash1));
+                Assert.True(Hash.TryCreate(name, TEST_SEED, out Hash hash2));
+
+                Assert.Equal(hashDefault.ComputeHash(buffer), hash1.ComputeHash(buffer));
+                Assert.Equal(hashSeeded.ComputeHash(buffer), hash2.ComputeHash(buffer));
+            }
+        }
+
+
+        [Fact]
+        public void RegistryInvalidTest()
+        {
+            Assert.Throws<ArgumentNullException>(() => Hash.Create(null));
+            Assert.Throws<ArgumentNullException>(() => Hash.Create(null, TEST_SEED));
+            Assert.Throws<ArgumentNullException>(() => Hash.TryCreate(null, out _));
+            Assert.Throws<ArgumentNullException>(() => Hash.TryCreate(null, TEST_SEED, out _));
+            Assert.Throws<ArgumentNullException>(() => Hash.GetInitializerDefault(null));
+            Assert.Throws<ArgumentNullException>(() => Hash.GetInitializerSeeded(null));
+
+            Assert.Throws<ArgumentException>(() => Hash.Create(String.Empty));
+            Assert.Throws<ArgumentException>(() => Hash.Create(String.Empty, TEST_SEED));
+            Assert.Throws<ArgumentException>(() => Hash.GetInitializerDefault(String.Empty));
+            Assert.Throws<ArgumentException>(() => Hash.GetInitializerSeeded(String.Empty));
+
+            Assert.False(Hash.TryCreate(String.Empty, out Hash hash1));
+            Assert.Null(hash1);
+
+            Assert.False(Hash.TryCreate(String.Empty, TEST_SEED, out Hash hash2));
+            Assert.Null(hash2);
+
+            Assert.Throws<ArgumentException>(() => Hash.Create("UnknownAlgorithm"));
+            Assert.Throws<ArgumentException>(() => Hash.Create("UnknownAlgorithm", TEST_SEED));
+            Assert.Throws<ArgumentException>(() => Hash.GetInitializerDefault("UnknownAlgorithm"));
+            Assert.Throws<ArgumentException>(() => Hash.GetInitializerSeeded("UnknownAlgorithm"));
+
+            Assert.False(Hash.TryCreate("UnknownAlgorithm", out Hash hash3));
+            Assert.Null(hash3);
+
+            Assert.False(Hash.TryCreate("UnknownAlgorithm", TEST_SEED, out Hash hash4));
+            Assert.Null(hash4);
+
+            Assert.Throws<OverflowException>(() => Hash.Create("XxHash32", UInt64.MaxValue));
+            Assert.Throws<OverflowException>(() => Hash.TryCreate("XxHash32", UInt64.MaxValue, out _));
+            Assert.Throws<OverflowException>(() => Hash.GetInitializerSeeded("XxHash32")(UInt64.MaxValue));
+        }
+
+        [Fact]
+        public void RegistryCoverageTest()
+        {
+            IReadOnlyList<String> registered = Hash.GetAlgorithms();
+            String[] validated = [.. HashTestsCases.DataHashesValidation().Select(x => (String)x[0])];
+
+            Assert.Equal(validated.Length, validated.Distinct(StringComparer.Ordinal).Count());
+            Assert.Equal(registered.OrderBy(x => x, StringComparer.Ordinal), validated.OrderBy(x => x, StringComparer.Ordinal));
+        }
+
+        [Theory]
+        [MemberData(nameof(HashTestsCases.DataFarmHashUnseeded), MemberType = typeof(HashTestsCases))]
+        public void FarmHashUnseededTest(Int32 length)
+        {
+            RandomXorShift random = new(TEST_SEED);
+            Byte[] buffer = new Byte[length];
+            random.NextBytes(buffer);
+
+            Hash[] hashes = [new FarmHash32(), new FarmHash64(), new FarmHash128()];
+
+            foreach (Hash hash in hashes)
+            {
+                Byte[] expected = hash.ComputeHash(buffer);
+                Byte[] actual = hash.ComputeHash(buffer);
+
+                Assert.Equal(hash.Length / 8, expected.Length);
+                Assert.Equal(expected, actual);
+            }
         }
         #endregion
     }

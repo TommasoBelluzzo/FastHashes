@@ -104,9 +104,9 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Mix(ref UInt64 m0, ref UInt64 m1, ref UInt64 v0, ref UInt64 v1, UInt64 k)
         {
-            v1 += m0 + k;
+            v1 = unchecked(v1 + m0 + k);
             m0 ^= (v1 & 0x00000000FFFFFFFFul) * (v0 >> 32);
-            v0 += m1;
+            v0 = unchecked(v0 + m1);
             m1 ^= (v0 & 0x00000000FFFFFFFFul) * (v1 >> 32);
         }
 
@@ -125,20 +125,24 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ZMA(ref UInt64 v1, ref UInt64 v2, UInt64 v3, UInt64 v4)
         {
-            v1 += (((v4 & 0x00000000FF000000ul) | (v3 & 0x000000FF00000000ul)) >> 24)
+            v1 = unchecked(v1 + (
+                  (((v4 & 0x00000000FF000000ul) | (v3 & 0x000000FF00000000ul)) >> 24)
                 | (((v4 & 0x0000FF0000000000ul) | (v3 & 0x00FF000000000000ul)) >> 16)
                 | (v4 & 0x0000000000FF0000ul)
                 | ((v4 & 0x000000000000FF00ul) << 32)
                 | ((v3 & 0xFF00000000000000ul) >> 8)
-                | (v4 << 56);
+                | (v4 << 56)
+            ));
 
-            v2 += (((v3 & 0x00000000FF000000ul) | (v4 & 0x000000FF00000000ul)) >> 24)
+            v2 = unchecked(v2 + (
+                  (((v3 & 0x00000000FF000000ul) | (v4 & 0x000000FF00000000ul)) >> 24)
                 | (v3 & 0x0000000000FF0000ul)
                 | ((v3 & 0x0000FF0000000000ul) >> 16)
                 | ((v3 & 0x000000000000FF00ul) << 24)
                 | ((v4 & 0x00FF000000000000ul) >> 8)
                 | ((v3 & 0x00000000000000FFul) << 48)
-                | (v4 & 0xFF00000000000000ul);
+                | (v4 & 0xFF00000000000000ul)
+            ));
         }
 
         /// <summary>Finalizes any partial computation and returns the hash code.</summary>
@@ -174,7 +178,7 @@ namespace FastHashes
                 k[1] = BinaryOperations.Read64(buffer, offset + 8);
                 k[2] = BinaryOperations.Read64(buffer, offset + 16);
                 k[3] = BinaryOperations.Read64(buffer, offset + 24);
-                
+
                 offset += 32;
 
                 Update(ref m0, ref m1, ref v0, ref v1, k);
@@ -188,7 +192,7 @@ namespace FastHashes
 
                 for (Int32 i = 0; i < 4; ++i)
                 {
-                    v0[i] += increment;
+                    v0[i] = unchecked(v0[i] + increment);
                     v1[i] = Mix(v1[i], remainder);
                 }
 
@@ -224,7 +228,7 @@ namespace FastHashes
                 Update(ref m0, ref m1, ref v0, ref v1, k);
             }
 
-            Finalize:
+        Finalize:
 
             for (UInt32 i = 0; i < P; ++i)
             {
@@ -286,7 +290,7 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1)
         {
-            UInt64 hash = v0[0] + v1[0] + m0[0] + m1[0];
+            UInt64 hash = unchecked(v0[0] + v1[0] + m0[0] + m1[0]);
             Byte[] result = BinaryOperations.ToArray64(hash);
 
             return result;
@@ -337,8 +341,8 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1)
         {
-            UInt64 hash1 = v0[0] + m0[0] + v1[2] + m1[2];
-            UInt64 hash2 = v0[1] + m0[1] + v1[3] + m1[3];
+            UInt64 hash1 = unchecked(v0[0] + m0[0] + v1[2] + m1[2]);
+            UInt64 hash2 = unchecked(v0[1] + m0[1] + v1[3] + m1[3]);
             Byte[] result = BinaryOperations.ToArray64(hash1, hash2);
 
             return result;
@@ -388,10 +392,10 @@ namespace FastHashes
         #region Methods
         private static void MR(out UInt64 hash1, out UInt64 hash2, UInt64 v1, UInt64 m1, UInt64 v2, UInt64 m2, UInt64 v3, UInt64 m3, UInt64 v4, UInt64 m4)
         {
-            UInt64 a0 = v1 + m1;
-            UInt64 a1 = v2 + m2;
-            UInt64 a2 = v3 + m3;
-            UInt64 a3 = (v4 + m4) & 0x3FFFFFFFFFFFFFFFul;
+            UInt64 a0 = unchecked(v1 + m1);
+            UInt64 a1 = unchecked(v2 + m2);
+            UInt64 a2 = unchecked(v3 + m3);
+            UInt64 a3 = unchecked(v4 + m4) & 0x3FFFFFFFFFFFFFFFul;
 
             hash1 = a0 ^ (a2 << 1) ^ (a2 << 2);
             hash2 = a1 ^ ((a3 << 1) | (a2 >> 63)) ^ ((a3 << 2) | (a2 >> 62));

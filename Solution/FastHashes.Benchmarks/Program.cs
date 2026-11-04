@@ -11,62 +11,6 @@ namespace FastHashes.Benchmarks
     public static class Program
     {
         #region Setup
-        private static readonly List<(String HashName, Func<UInt64, Hash> HashInitializer)> s_BenchmarkCases =
-        [
-            ("DummyHash", seed => new DummyHash()),
-            ("FarmHash32", seed => new FarmHash32(checked((UInt32)seed))),
-            ("FarmHash64", seed => new FarmHash64(seed)),
-            ("FarmHash128", seed => new FarmHash128(seed)),
-            ("FastHash32", seed => new FastHash32(seed)),
-            ("FastHash64", seed => new FastHash64(seed)),
-            ("FastPositiveHash-V0", seed => new FastPositiveHash(FastPositiveHashVariant.V0, seed)),
-            ("FastPositiveHash-V1", seed => new FastPositiveHash(FastPositiveHashVariant.V1, seed)),
-            ("FastPositiveHash-V2", seed => new FastPositiveHash(FastPositiveHashVariant.V2, seed)),
-            ("HalfSipHash", seed => new HalfSipHash(checked((UInt32)seed))),
-            ("HalftimeHash-S64", seed => new HalftimeHash(HalftimeHashStyle.S64, seed)),
-            ("HalftimeHash-S128", seed => new HalftimeHash(HalftimeHashStyle.S128, seed)),
-            ("HalftimeHash-S256", seed => new HalftimeHash(HalftimeHashStyle.S256, seed)),
-            ("HalftimeHash-S512", seed => new HalftimeHash(HalftimeHashStyle.S512, seed)),
-            ("HighwayHash64", seed => new HighwayHash64(seed)),
-            ("HighwayHash128", seed => new HighwayHash128(seed)),
-            ("HighwayHash256", seed => new HighwayHash256(seed)),
-            ("KomiHash", seed => new KomiHash(seed)),
-            ("LaneHash64", seed => new LaneHash64(seed)),
-            ("LaneHash128", seed => new LaneHash128(seed)),
-            ("MetroHash64-V1", seed => new MetroHash64(MetroHashVariant.V1, checked((UInt32)seed))),
-            ("MetroHash64-V2", seed => new MetroHash64(MetroHashVariant.V2, checked((UInt32)seed))),
-            ("MetroHash128-V1", seed => new MetroHash128(MetroHashVariant.V1, checked((UInt32)seed))),
-            ("MetroHash128-V2", seed => new MetroHash128(MetroHashVariant.V2, checked((UInt32)seed))),
-            ("MirHash", seed => new MirHash(seed)),
-            ("MurmurHash32", seed => new MurmurHash32(checked((UInt32)seed))),
-            ("MurmurHash64-X86", seed => new MurmurHash64(MurmurHashEngine.x86, checked((UInt32)seed))),
-            ("MurmurHash64-X64", seed => new MurmurHash64(MurmurHashEngine.x64, checked((UInt32)seed))),
-            ("MurmurHash128-X86", seed => new MurmurHash128(MurmurHashEngine.x86, checked((UInt32)seed))),
-            ("MurmurHash128-X64", seed => new MurmurHash128(MurmurHashEngine.x64, checked((UInt32)seed))),
-            ("MumHash", seed => new MumHash(checked((UInt32)seed))),
-            ("Mx3Hash", seed => new Mx3Hash(seed)),
-            ("NmHash-S", seed => new NmHash(NmHashVariant.S, checked((UInt32)seed))),
-            ("NmHash-X", seed => new NmHash(NmHashVariant.X, checked((UInt32)seed))),
-            ("PengyHash", seed => new PengyHash(checked((UInt32)seed))),
-            ("PolymurHash", seed => new PolymurHash(seed)),
-            ("RapidHash-V1", seed => new RapidHash(RapidHashVariant.V1, seed)),
-            ("RapidHash-V2", seed => new RapidHash(RapidHashVariant.V2, seed)),
-            ("RapidHash-V3", seed => new RapidHash(RapidHashVariant.V3, seed)),
-            ("SipHash-13", seed => new SipHash(SipHashVariant.V13, seed)),
-            ("SipHash-24", seed => new SipHash(SipHashVariant.V24, seed)),
-            ("SpookyHash32", seed => new SpookyHash32(seed, seed)),
-            ("SpookyHash64", seed => new SpookyHash64(seed)),
-            ("SpookyHash128", seed => new SpookyHash128(seed)),
-            ("Umash64", seed => new Umash64(seed)),
-            ("Umash128", seed => new Umash128(seed)),
-            ("WyHash32", seed => new WyHash32(checked((UInt32)seed))),
-            ("WyHash64", seed => new WyHash64(seed)),
-            ("XxHash32", seed => new XxHash32(checked((UInt32)seed))),
-            ("XxHash64", seed => new XxHash64(seed)),
-            ("XxHash3-O64", seed => new XxHash3(XxHash3Output.O64, seed)),
-            ("XxHash3-O128", seed => new XxHash3(XxHash3Output.O128, seed))
-        ];
-
         private const Int32 BATCH_MAXIMUM_OPERATIONS = 8192;
         private const Int32 BATCH_MAXIMUM_BYTES = 8 * 1024 * 1024;
         private const Int32 BULK_KEYS_LENGTH = 256 * 1024;
@@ -92,11 +36,15 @@ namespace FastHashes.Benchmarks
             Console.WriteLine();
             Console.WriteLine();
 
-            List<(String HashName, Double BulkMedianSpeed, String BulkMedianSpeedFormatted, Double ChunkMedianSpeed, String ChunkMedianSpeedFormatted)> results = new(s_BenchmarkCases.Count);
+            IReadOnlyList<String> algorithms = Hash.GetAlgorithms();
+            List<(String HashName, Double BulkMedianSpeed, String BulkMedianSpeedFormatted, Double ChunkMedianSpeed, String ChunkMedianSpeedFormatted)> results = new(algorithms.Count + 1);
 
-            for (Int32 i = 0; i < s_BenchmarkCases.Count; ++i)
+            for (Int32 i = 0; i < algorithms.Count; ++i)
             {
-                (String hashName, Func<UInt64, Hash> hashInitializer) = s_BenchmarkCases[i];
+                String hashName = i < 0 ? "DummyHash" : algorithms[i];
+                Func<UInt64, Hash> hashInitializer = i < 0
+                    ? seed => new DummyHash()
+                    : Hash.GetInitializerSeeded(hashName);
 
                 String title = $"# HASH: {hashName} #";
                 String frame = new('#', title.Length);

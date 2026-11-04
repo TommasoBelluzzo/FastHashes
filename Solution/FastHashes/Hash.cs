@@ -1,12 +1,13 @@
 ﻿#region Using Directives
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 #endregion
 
 namespace FastHashes
 {
-    /// <summary>Represents the base class from which all the hash algorithms must derive. This class is abstract.</summary>
+    /// <summary>Represents the base class from which all the hashing algorithms must derive. This class is abstract.</summary>
     public abstract class Hash
     {
         #region Properties
@@ -33,6 +34,103 @@ namespace FastHashes
                 throw new ArgumentException("The block defined by offset and count parameters must be within the bounds of the data array.");
 
             return new ReadOnlySpan<Byte>(buffer, offset, count);
+        }
+
+        /// <summary>Attempts to create a new instance of the specified hashing algorithm using its default configuration.</summary>
+        /// <param name="name">The <see cref="T:System.String"/> identifying the hashing algorithm.</param>
+        /// <param name="hash">The resulting <see cref="T:FastHashes.Hash"/> instance, or <c>null</c> if the hashing algorithm is unknown.</param>
+        /// <returns>A <see cref="T:System.Boolean"/> value equal to <c>true</c> if the hashing algorithm was created; <c>false</c> otherwise.</returns>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="name">name</paramref> is <c>null</c>.</exception>
+        public static Boolean TryCreate(String name, out Hash hash)
+        {
+            if (!HashRegistry.TryGetInitializers(name, out var initializers))
+            {
+                hash = null;
+                return false;
+            }
+
+            hash = initializers.Default();
+            return true;
+        }
+
+        /// <summary>Attempts to create a new instance of the specified hashing algorithm using a standardized single-seed initialization.</summary>
+        /// <param name="name">The <see cref="T:System.String"/> identifying the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> value mapped to the algorithm-specific seed configuration.</param>
+        /// <param name="hash">The resulting <see cref="T:FastHashes.Hash"/> instance, or <c>null</c> if the hashing algorithm is unknown.</param>
+        /// <returns>A <see cref="T:System.Boolean"/> value equal to <c>true</c> if the hashing algorithm was created; <c>false</c> otherwise.</returns>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="name">name</paramref> is <c>null</c>.</exception>
+        /// <exception cref="T:System.OverflowException">Thrown when <paramref name="seed">seed</paramref> cannot be represented by a hashing algorithm requiring a 32-bit seed.</exception>
+        public static Boolean TryCreate(String name, UInt64 seed, out Hash hash)
+        {
+            if (!HashRegistry.TryGetInitializers(name, out var initializers))
+            {
+                hash = null;
+                return false;
+            }
+
+            hash = initializers.Seeded(seed);
+            return true;
+        }
+
+        /// <summary>Gets the default initializer of the specified hashing algorithm.</summary>
+        /// <param name="name">The <see cref="T:System.String"/> identifying the hashing algorithm.</param>
+        /// <returns>A <see cref="T:System.Func`1"/> delegate of type <c>Func&lt;Hash&gt;</c> that creates a new hash instance using its default configuration.</returns>
+        /// <exception cref="T:System.ArgumentException">Thrown when the specified hashing algorithm is unknown.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="name">name</paramref> is <c>null</c>.</exception>
+        public static Func<Hash> GetInitializerDefault(String name)
+        {
+            if (!HashRegistry.TryGetInitializers(name, out var initializers))
+                throw new ArgumentException("Unknown hashing algorithm specified.", nameof(name));
+
+            return initializers.Default;
+        }
+
+        /// <summary>Gets the standardized single-seed initializer of the specified hashing algorithm.</summary>
+        /// <param name="name">The <see cref="T:System.String"/> identifying the hashing algorithm.</param>
+        /// <returns>A <see cref="T:System.Func`2"/> delegate of type <c>Func&lt;UInt64, Hash&gt;</c> that creates a new hash instance using a standardized single-seed initialization.</returns>
+        /// <exception cref="T:System.ArgumentException">Thrown when the specified hashing algorithm is unknown.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="name">name</paramref> is <c>null</c>.</exception>
+        public static Func<UInt64, Hash> GetInitializerSeeded(String name)
+        {
+            if (!HashRegistry.TryGetInitializers(name, out var initializers))
+                throw new ArgumentException("Unknown hashing algorithm specified.", nameof(name));
+
+            return initializers.Seeded;
+        }
+
+        /// <summary>Creates a new instance of the specified hashing algorithm using its default configuration.</summary>
+        /// <param name="name">The <see cref="T:System.String"/> identifying the hashing algorithm.</param>
+        /// <returns>A <see cref="T:FastHashes.Hash"/> instance.</returns>
+        /// <exception cref="T:System.ArgumentException">Thrown when the specified hashing algorithm is unknown.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="name">name</paramref> is <c>null</c>.</exception>
+        public static Hash Create(String name)
+        {
+            if (!HashRegistry.TryGetInitializers(name, out var initializers))
+                throw new ArgumentException("Unknown hashing algorithm specified.", nameof(name));
+
+            return initializers.Default();
+        }
+
+        /// <summary>Creates a new instance of the specified hashing algorithm using a standardized single-seed initialization.</summary>
+        /// <param name="name">The <see cref="T:System.String"/> identifying the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> value mapped to the algorithm-specific seed configuration.</param>
+        /// <returns>A <see cref="T:FastHashes.Hash"/> instance.</returns>
+        /// <exception cref="T:System.ArgumentException">Thrown when the specified hashing algorithm is unknown.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="name">name</paramref> is <c>null</c>.</exception>
+        /// <exception cref="T:System.OverflowException">Thrown when <paramref name="seed">seed</paramref> cannot be represented by a hashing algorithm requiring a 32-bit seed.</exception>
+        public static Hash Create(String name, UInt64 seed)
+        {
+            if (!HashRegistry.TryGetInitializers(name, out var initializers))
+                throw new ArgumentException("Unknown hashing algorithm specified.", nameof(name));
+
+            return initializers.Seeded(seed);
+        }
+
+        /// <summary>Gets the identifiers of all registered hashing algorithms and their supported variants.</summary>
+        /// <returns>A <see cref="T:System.Collections.Generic.IReadOnlyList`1{T}">IReadOnlyList&lt;string&gt;</see> containing all the algorithm identifiers.</returns>
+        public static IReadOnlyList<String> GetAlgorithms()
+        {
+            return HashRegistry.GetIdentifiers();
         }
 
         /// <summary>Represents the core hashing function of the algorithm.</summary>

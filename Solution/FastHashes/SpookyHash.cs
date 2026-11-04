@@ -13,8 +13,8 @@ namespace FastHashes
         private const UInt64 C = 0xDEADBEEFDEADBEEFul;
         private static readonly Int32[] LRE = { 44, 15, 34, 21, 38, 33, 10, 13, 38, 53, 42, 54 };
         private static readonly Int32[] LRM = { 11, 32, 43, 31, 17, 28, 39, 57, 55, 54, 22, 46 };
-        private static readonly Int32[] SRE = { 15, 52, 26, 51, 28,  9, 47, 54, 32, 25, 63 };
-        private static readonly Int32[] SRM = { 50, 52, 30, 41, 54, 48, 38, 37, 62, 34,  5, 36 };
+        private static readonly Int32[] SRE = { 15, 52, 26, 51, 28, 9, 47, 54, 32, 25, 63 };
+        private static readonly Int32[] SRM = { 50, 52, 30, 41, 54, 48, 38, 37, 62, 34, 5, 36 };
         #endregion
 
         #region Members
@@ -55,8 +55,8 @@ namespace FastHashes
                 Int32 index1 = (j + 11) % 12;
                 Int32 index2 = (j + 1) % 12;
 
-                hash[index1] += hash[index2]; 
-                hash[(j + 2) % 12] ^= hash[index1]; 
+                hash[index1] = unchecked(hash[index1] + hash[index2]);
+                hash[(j + 2) % 12] ^= hash[index1];
                 hash[index2] = BinaryOperations.RotateLeft(hash[index2], LRE[j]);
             }
         }
@@ -68,11 +68,11 @@ namespace FastHashes
             {
                 Int32 index = (i + 11) % 12;
 
-                hash[i] += v[i]; 
-                hash[(i + 2) % 12] ^= hash[(i + 10) % 12]; 
+                hash[i] = unchecked(hash[i] + v[i]);
+                hash[(i + 2) % 12] ^= hash[(i + 10) % 12];
                 hash[index] ^= hash[i];
-                hash[i] = BinaryOperations.RotateLeft(hash[i], LRM[i]); 
-                hash[index] += hash[(i + 1) % 12];
+                hash[i] = BinaryOperations.RotateLeft(hash[i], LRM[i]);
+                hash[index] = unchecked(hash[index] + hash[(i + 1) % 12]);
             }
         }
 
@@ -86,7 +86,7 @@ namespace FastHashes
 
                 hash[index2] ^= hash[index1];
                 hash[index1] = BinaryOperations.RotateLeft(hash[index1], SRE[i]);
-                hash[index2] += hash[index1];
+                hash[index2] = unchecked(hash[index2] + hash[index1]);
             }
         }
 
@@ -98,7 +98,7 @@ namespace FastHashes
                 Int32 index = (i + 2) % 4;
 
                 hash[index] = BinaryOperations.RotateLeft(hash[index], SRM[i]);
-                hash[index] += hash[(i + 3) % 4];
+                hash[index] = unchecked(hash[index] + hash[(i + 3) % 4]);
                 hash[i % 4] ^= hash[index];
             }
         }
@@ -138,7 +138,7 @@ namespace FastHashes
                 v[i] = BinaryOperations.Read64(data, i * 8);
 
             for (Int32 i = 0; i < 12; ++i)
-                hash[i] += v[i];
+                hash[i] = unchecked(hash[i] + v[i]);
 
             for (Int32 i = 0; i < 3; ++i)
                 LongEnd(ref hash);
@@ -161,24 +161,24 @@ namespace FastHashes
 
                 for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                 {
-                    hash[2] += BinaryOperations.Read64(buffer, offset);
+                    hash[2] = unchecked(hash[2] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
-                    hash[3] += BinaryOperations.Read64(buffer, offset);
+                    hash[3] = unchecked(hash[3] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
 
                     ShortMix(ref hash);
 
-                    hash[0] += BinaryOperations.Read64(buffer, offset);
+                    hash[0] = unchecked(hash[0] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
-                    hash[1] += BinaryOperations.Read64(buffer, offset);
+                    hash[1] = unchecked(hash[1] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
                 }
 
                 if (remainder >= 16)
                 {
-                    hash[2] += BinaryOperations.Read64(buffer, offset);
+                    hash[2] = unchecked(hash[2] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
-                    hash[3] += BinaryOperations.Read64(buffer, offset);
+                    hash[3] = unchecked(hash[3] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
 
                     ShortMix(ref hash);
@@ -187,38 +187,38 @@ namespace FastHashes
                 }
             }
 
-            hash[3] += (UInt64)count << 56;
+            hash[3] = unchecked(hash[3] + ((UInt64)count << 56));
 
             switch (remainder)
             {
-                case 15: hash[3] += (UInt64)buffer[offset + 14] << 48; goto case 14;
-                case 14: hash[3] += (UInt64)buffer[offset + 13] << 40; goto case 13;
-                case 13: hash[3] += (UInt64)buffer[offset + 12] << 32; goto case 12;
+                case 15: hash[3] = unchecked(hash[3] + ((UInt64)buffer[offset + 14] << 48)); goto case 14;
+                case 14: hash[3] = unchecked(hash[3] + ((UInt64)buffer[offset + 13] << 40)); goto case 13;
+                case 13: hash[3] = unchecked(hash[3] + ((UInt64)buffer[offset + 12] << 32)); goto case 12;
                 case 12:
-                    hash[2] += BinaryOperations.Read64(buffer, offset);
+                    hash[2] = unchecked(hash[2] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
-                    hash[3] += BinaryOperations.Read32(buffer, offset);
+                    hash[3] = unchecked(hash[3] + BinaryOperations.Read32(buffer, offset));
                     break;
-                case 11: hash[3] += (UInt64)buffer[offset + 10] << 16; goto case 10;
-                case 10: hash[3] += (UInt64)buffer[offset + 9] << 8; goto case 9;
-                case 9: hash[3] += buffer[offset + 8]; goto case 8;
+                case 11: hash[3] = unchecked(hash[3] + ((UInt64)buffer[offset + 10] << 16)); goto case 10;
+                case 10: hash[3] = unchecked(hash[3] + ((UInt64)buffer[offset + 9] << 8)); goto case 9;
+                case 9: hash[3] = unchecked(hash[3] + buffer[offset + 8]); goto case 8;
                 case 8:
-                    hash[2] += BinaryOperations.Read64(buffer, offset);
+                    hash[2] = unchecked(hash[2] + BinaryOperations.Read64(buffer, offset));
                     break;
-                case 7: hash[2] += (UInt64)buffer[offset + 6] << 48; goto case 6;
-                case 6: hash[2] += (UInt64)buffer[offset + 5] << 40; goto case 5;
-                case 5: hash[2] += (UInt64)buffer[offset + 4] << 32; goto case 4;
+                case 7: hash[2] = unchecked(hash[2] + ((UInt64)buffer[offset + 6] << 48)); goto case 6;
+                case 6: hash[2] = unchecked(hash[2] + ((UInt64)buffer[offset + 5] << 40)); goto case 5;
+                case 5: hash[2] = unchecked(hash[2] + ((UInt64)buffer[offset + 4] << 32)); goto case 4;
                 case 4:
-                    hash[2] += BinaryOperations.Read32(buffer, offset);
+                    hash[2] = unchecked(hash[2] + BinaryOperations.Read32(buffer, offset));
                     break;
-                case 3: hash[2] += (UInt64)buffer[offset + 2] << 16; goto case 2;
-                case 2: hash[2] += (UInt64)buffer[offset + 1] << 8; goto case 1;
+                case 3: hash[2] = unchecked(hash[2] + ((UInt64)buffer[offset + 2] << 16)); goto case 2;
+                case 2: hash[2] = unchecked(hash[2] + ((UInt64)buffer[offset + 1] << 8)); goto case 1;
                 case 1:
-                    hash[2] += buffer[offset];
+                    hash[2] = unchecked(hash[2] + buffer[offset]);
                     break;
                 case 0:
-                    hash[2] += C;
-                    hash[3] += C;
+                    hash[2] = unchecked(hash[2] + C);
+                    hash[3] = unchecked(hash[3] + C);
                     break;
             }
 
@@ -263,7 +263,7 @@ namespace FastHashes
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         [ExcludeFromCodeCoverage]
         public SpookyHash32(UInt32 seed) : base(seed, seed) { }
-        
+
         /// <summary>Initializes a new instance using the specified seeds.</summary>
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
