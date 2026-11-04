@@ -23,7 +23,7 @@ namespace FastHashes
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
         [ExcludeFromCodeCoverage]
-        protected UInt64 Seed => m_Seed;
+        public UInt64 Seed => m_Seed;
         #endregion
 
         #region Constructors

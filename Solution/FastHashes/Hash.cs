@@ -1,6 +1,7 @@
 ﻿#region Using Directives
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 #endregion
 
 namespace FastHashes
@@ -81,6 +82,31 @@ namespace FastHashes
             return ComputeHashInternal(buffer);
         }
 
+        /// <summary>Computes the hash of the specified text using UTF-8 encoding and returns its <see cref="T:System.Byte"/>[] representation.</summary>
+        /// <param name="text">The <see cref="T:System.String"/> whose hash must be computed.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="text">text</paramref> is <c>null</c>.</exception>
+        public Byte[] ComputeHash(String text)
+        {
+            return ComputeHash(text, Encoding.UTF8);
+        }
+
+        /// <summary>Computes the hash of the specified string using the specified encoding and returns its <see cref="T:System.Byte"/>[] representation.</summary>
+        /// <param name="text">The <see cref="T:System.String"/> whose hash must be computed.</param>
+        /// <param name="encoding">The <see cref="T:System.Text.Encoding"/> used to encode the string.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="text">text</paramref> or <paramref name="encoding">encoding</paramref> is <c>null</c>.</exception>
+        public Byte[] ComputeHash(String text, Encoding encoding)
+        {
+            if (text == null)
+                throw new ArgumentNullException(nameof(text));
+
+            if (encoding == null)
+                throw new ArgumentNullException(nameof(encoding));
+
+            return ComputeHash(encoding.GetBytes(text).AsSpan());
+        }
+
         /// <summary>Computes the hash of the specified byte array and returns its <see cref="T:System.String"/> representation.</summary>
         /// <param name="buffer">The <see cref="T:System.Byte"/>[] whose hash must be computed.</param>
         /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> value specifying the format of the resulting hash.</param>
@@ -127,6 +153,35 @@ namespace FastHashes
         public String ComputeHash(ReadOnlySpan<Byte> buffer, HashFormat format)
         {
             return HashFormatter.Format(ComputeHashInternal(buffer), format);
+        }
+
+        /// <summary>Computes the hash of the specified text using UTF-8 encoding and returns its <see cref="T:System.String"/> representation.</summary>
+        /// <param name="text">The <see cref="T:System.String"/> whose hash must be computed.</param>
+        /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> value specifying the format of the resulting hash.</param>
+        /// <returns>A <see cref="T:System.String"/> representing the computed hash.</returns>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="text">text</paramref> is <c>null</c>.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
+        public String ComputeHash(String text, HashFormat format)
+        {
+            return ComputeHash(text, Encoding.UTF8, format);
+        }
+
+        /// <summary>Computes the hash of the specified text using the specified encoding and returns its <see cref="T:System.String"/> representation.</summary>
+        /// <param name="text">The <see cref="T:System.String"/> whose hash must be computed.</param>
+        /// <param name="encoding">The <see cref="T:System.Text.Encoding"/> used to encode the string.</param>
+        /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> value specifying the format of the resulting hash.</param>
+        /// <returns>A <see cref="T:System.String"/> representing the computed hash.</returns>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="text">text</paramref> or <paramref name="encoding">encoding</paramref> is <c>null</c>.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
+        public String ComputeHash(String text, Encoding encoding, HashFormat format)
+        {
+            if (text == null)
+                throw new ArgumentNullException(nameof(text));
+
+            if (encoding == null)
+                throw new ArgumentNullException(nameof(encoding));
+
+            return ComputeHash(encoding.GetBytes(text).AsSpan(), format);
         }
 
         /// <summary>Returns the text representation of the current instance.</summary>

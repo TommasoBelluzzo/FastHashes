@@ -148,9 +148,9 @@ namespace FastHashes
             private static UInt64 Fin(UInt64 hash)
             {
                 hash ^= hash >> 33;
-                hash *= F1;
+                hash = unchecked(hash * F1);
                 hash ^= hash >> 33;
-                hash *= F2;
+                hash = unchecked(hash * F2);
                 hash ^= hash >> 33;
 
                 return hash;
@@ -159,9 +159,9 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static UInt64 Mix(UInt64 v, UInt64 c1, UInt64 c2, Int32 r)
             {
-                v *= c1;
+                v = unchecked(v * c1);
                 v = BinaryOperations.RotateLeft(v, r);
-                v *= c2;
+                v = unchecked(v * c2);
 
                 return v;
             }
@@ -171,8 +171,8 @@ namespace FastHashes
             {
                 v1 ^= v3;
                 v1 = BinaryOperations.RotateLeft(v1, r);
-                v1 += v2;
-                v1 = (v1 * 5ul) + n;
+                v1 = unchecked(v1 + v2);
+                v1 = unchecked((v1 * 5ul) + n);
 
                 return v1;
             }
@@ -240,14 +240,14 @@ namespace FastHashes
                 hash1 ^= length;
                 hash2 ^= length;
 
-                hash1 += hash2;
-                hash2 += hash1;
+                hash1 = unchecked(hash1 + hash2);
+                hash2 = unchecked(hash2 + hash1);
 
                 hash1 = Fin(hash1);
                 hash2 = Fin(hash2);
 
-                hash1 += hash2;
-                hash2 += hash1;
+                hash1 = unchecked(hash1 + hash2);
+                hash2 = unchecked(hash2 + hash1);
 
                 Byte[] result = output64
                     ? BinaryOperations.ToArray64(hash1)
@@ -304,9 +304,9 @@ namespace FastHashes
             private static UInt32 Fin(UInt32 hash)
             {
                 hash ^= hash >> 16;
-                hash *= F1;
+                hash = unchecked(hash * F1);
                 hash ^= hash >> 13;
-                hash *= F2;
+                hash = unchecked(hash * F2);
                 hash ^= hash >> 16;
 
                 return hash;
@@ -315,9 +315,9 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static UInt32 Mix(UInt32 v, UInt32 c1, UInt32 c2, Int32 r)
             {
-                v *= c1;
+                v = unchecked(v * c1);
                 v = BinaryOperations.RotateLeft(v, r);
-                v *= c2;
+                v = unchecked(v * c2);
 
                 return v;
             }
@@ -327,8 +327,8 @@ namespace FastHashes
             {
                 v1 ^= v3;
                 v1 = BinaryOperations.RotateLeft(v1, r);
-                v1 += v2;
-                v1 = (v1 * 5u) + n;
+                v1 = unchecked(v1 + v2);
+                v1 = unchecked((v1 * 5u) + n);
 
                 return v1;
             }
@@ -417,20 +417,20 @@ namespace FastHashes
                 hash3 ^= length;
                 hash4 ^= length;
 
-                hash1 += hash2 + hash3 + hash4;
-                hash2 += hash1;
-                hash3 += hash1;
-                hash4 += hash1;
+                hash1 = unchecked(hash1 + hash2 + hash3 + hash4);
+                hash2 = unchecked(hash2 + hash1);
+                hash3 = unchecked(hash3 + hash1);
+                hash4 = unchecked(hash4 + hash1);
 
                 hash1 = Fin(hash1);
                 hash2 = Fin(hash2);
                 hash3 = Fin(hash3);
                 hash4 = Fin(hash4);
 
-                hash1 += hash2 + hash3 + hash4;
-                hash2 += hash1;
-                hash3 += hash1;
-                hash4 += hash1;
+                hash1 = unchecked(hash1 + hash2 + hash3 + hash4);
+                hash2 = unchecked(hash2 + hash1);
+                hash3 = unchecked(hash3 + hash1);
+                hash4 = unchecked(hash4 + hash1);
 
                 Byte[] result = output64
                     ? BinaryOperations.ToArray32(hash1, hash2)
@@ -487,9 +487,9 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static UInt32 Mix(UInt32 v)
         {
-            v *= C1;
+            v = unchecked(v * C1);
             v = BinaryOperations.RotateLeft(v, 15);
-            v *= C2;
+            v = unchecked(v * C2);
 
             return v;
         }
@@ -499,7 +499,7 @@ namespace FastHashes
         {
             v1 ^= Mix(v2);
             v1 = BinaryOperations.RotateLeft(v1, 13);
-            v1 = (v1 * 5u) + N;
+            v1 = unchecked((v1 * 5u) + N);
 
             return v1;
         }
@@ -535,9 +535,9 @@ namespace FastHashes
 
             hash ^= (UInt32)count;
             hash ^= hash >> 16;
-            hash *= F1;
+            hash = unchecked(hash * F1);
             hash ^= hash >> 13;
-            hash *= F2;
+            hash = unchecked(hash * F2);
             hash ^= hash >> 16;
 
             Byte[] result = BinaryOperations.ToArray32(hash);

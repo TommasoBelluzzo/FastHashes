@@ -107,8 +107,8 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static UInt64 Mix8(UInt64 v1, Byte v2, Int32 r, UInt64 k1, UInt64 k2)
             {
-                v1 += v2 * k1;
-                v1 ^= BinaryOperations.RotateRight(v1, r) * k2;
+                v1 = unchecked(v1 + (v2 * k1));
+                v1 ^= unchecked(BinaryOperations.RotateRight(v1, r) * k2);
 
                 return v1;
             }
@@ -116,8 +116,8 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static UInt64 Mix16(UInt64 v1, UInt16 v2, Int32 r, UInt64 k1, UInt64 k2)
             {
-                v1 += v2 * k1;
-                v1 ^= BinaryOperations.RotateRight(v1, r) * k2;
+                v1 = unchecked(v1 + (v2 * k1));
+                v1 ^= unchecked(BinaryOperations.RotateRight(v1, r) * k2);
 
                 return v1;
             }
@@ -125,8 +125,8 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static UInt64 Mix32(UInt64 v1, UInt32 v2, Int32 r, UInt64 k1, UInt64 k2)
             {
-                v1 += v2 * k1;
-                v1 ^= BinaryOperations.RotateRight(v1, r) * k2;
+                v1 = unchecked(v1 + (v2 * k1));
+                v1 ^= unchecked(BinaryOperations.RotateRight(v1, r) * k2);
 
                 return v1;
             }
@@ -134,8 +134,8 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static UInt64 Mix64(UInt64 v1, UInt64 v2, Int32 r, UInt64 k1, UInt64 k2)
             {
-                v1 += v2 * k1;
-                v1 ^= BinaryOperations.RotateRight(v1, r) * k2;
+                v1 = unchecked(v1 + (v2 * k1));
+                v1 ^= unchecked(BinaryOperations.RotateRight(v1, r) * k2);
 
                 return v1;
             }
@@ -143,8 +143,8 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static UInt64 Mix128(UInt64 v1, UInt64 v2, Int32 r, UInt64 k1, UInt64 k2)
             {
-                v1 += v2 * k1;
-                v1 = BinaryOperations.RotateRight(v1, r) * k2;
+                v1 = unchecked(v1 + (v2 * k1));
+                v1 = unchecked(BinaryOperations.RotateRight(v1, r) * k2);
 
                 return v1;
             }
@@ -152,8 +152,8 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static UInt64 Mix256(UInt64 v1, UInt64 v2, UInt64 v3, Int32 r, UInt64 k)
             {
-                v1 += v2 * k;
-                v1 = BinaryOperations.RotateRight(v1, r) + v3;
+                v1 = unchecked(v1 + (v2 * k));
+                v1 = unchecked(BinaryOperations.RotateRight(v1, r) + v3);
 
                 return v1;
             }
@@ -190,12 +190,12 @@ namespace FastHashes
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
 
-                UInt64 hash = (m_Seed + K2) * K0;
+                UInt64 hash = unchecked((m_Seed + K2) * K0);
 
                 if (count == 0)
                     goto Finalize;
 
-                hash += (UInt64)count;
+                hash = unchecked(hash + (UInt64)count);
 
                 if (count >= 32)
                 {
@@ -222,12 +222,12 @@ namespace FastHashes
                     }
                     while ((count - 32) >= offset);
 
-                    v3 ^= BinaryOperations.RotateRight(((v1 + v4) * K0) + v2, 33) * K1;
-                    v4 ^= BinaryOperations.RotateRight(((v2 + v3) * K1) + v1, 33) * K0;
-                    v1 ^= BinaryOperations.RotateRight(((v1 + v3) * K0) + v4, 33) * K1;
-                    v2 ^= BinaryOperations.RotateRight(((v2 + v4) * K1) + v3, 33) * K0;
+                    v3 ^= unchecked(BinaryOperations.RotateRight(((v1 + v4) * K0) + v2, 33) * K1);
+                    v4 ^= unchecked(BinaryOperations.RotateRight(((v2 + v3) * K1) + v1, 33) * K0);
+                    v1 ^= unchecked(BinaryOperations.RotateRight(((v1 + v3) * K0) + v4, 33) * K1);
+                    v2 ^= unchecked(BinaryOperations.RotateRight(((v2 + v4) * K1) + v3, 33) * K0);
 
-                    hash += v1 ^ v2;
+                    hash = unchecked(hash + (v1 ^ v2));
                 }
 
                 if ((count - offset) >= 16)
@@ -243,10 +243,10 @@ namespace FastHashes
                     v1 = Mix128(v1, z1, 33, K0, K1);
                     v2 = Mix128(v2, z2, 33, K1, K2);
 
-                    v1 ^= BinaryOperations.RotateRight(v1 * K0, 35) + v2;
-                    v2 ^= BinaryOperations.RotateRight(v2 * K3, 35) + v1;
+                    v1 ^= unchecked(BinaryOperations.RotateRight(v1 * K0, 35) + v2);
+                    v2 ^= unchecked(BinaryOperations.RotateRight(v2 * K3, 35) + v1);
 
-                    hash += v2;
+                    hash = unchecked(hash + v2);
                 }
 
                 if ((count - offset) >= 8)
@@ -279,7 +279,7 @@ namespace FastHashes
             Finalize:
 
                 hash ^= BinaryOperations.RotateRight(hash, 33);
-                hash *= K0;
+                hash = unchecked(hash * K0);
                 hash ^= BinaryOperations.RotateRight(hash, 33);
 
                 Byte[] result = BinaryOperations.ToArray64(hash);
@@ -317,12 +317,12 @@ namespace FastHashes
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
 
-                UInt64 hash = (m_Seed + K2) * K0;
+                UInt64 hash = unchecked((m_Seed + K2) * K0);
 
                 if (count == 0)
                     goto Finalize;
 
-                hash += (UInt64)count;
+                hash = unchecked(hash + (UInt64)count);
 
                 if (count >= 32)
                 {
@@ -349,12 +349,12 @@ namespace FastHashes
                     }
                     while ((count - 32) >= offset);
 
-                    v3 ^= BinaryOperations.RotateRight(((v1 + v4) * K0) + v2, 30) * K1;
-                    v4 ^= BinaryOperations.RotateRight(((v2 + v3) * K1) + v1, 30) * K0;
-                    v1 ^= BinaryOperations.RotateRight(((v1 + v3) * K0) + v4, 30) * K1;
-                    v2 ^= BinaryOperations.RotateRight(((v2 + v4) * K1) + v3, 30) * K0;
+                    v3 ^= unchecked(BinaryOperations.RotateRight(((v1 + v4) * K0) + v2, 30) * K1);
+                    v4 ^= unchecked(BinaryOperations.RotateRight(((v2 + v3) * K1) + v1, 30) * K0);
+                    v1 ^= unchecked(BinaryOperations.RotateRight(((v1 + v3) * K0) + v4, 30) * K1);
+                    v2 ^= unchecked(BinaryOperations.RotateRight(((v2 + v4) * K1) + v3, 30) * K0);
 
-                    hash += v1 ^ v2;
+                    hash = unchecked(hash + (v1 ^ v2));
                 }
 
                 if ((count - offset) >= 16)
@@ -370,10 +370,10 @@ namespace FastHashes
                     v1 = Mix128(v1, z1, 29, K2, K3);
                     v2 = Mix128(v2, z2, 29, K2, K3);
 
-                    v1 ^= BinaryOperations.RotateRight(v1 * K0, 34) + v2;
-                    v2 ^= BinaryOperations.RotateRight(v2 * K3, 34) + v1;
+                    v1 ^= unchecked(BinaryOperations.RotateRight(v1 * K0, 34) + v2);
+                    v2 ^= unchecked(BinaryOperations.RotateRight(v2 * K3, 34) + v1);
 
-                    hash += v2;
+                    hash = unchecked(hash + v2);
                 }
 
                 if ((count - offset) >= 8)
@@ -406,7 +406,7 @@ namespace FastHashes
             Finalize:
 
                 hash ^= BinaryOperations.RotateRight(hash, 28);
-                hash *= K0;
+                hash = unchecked(hash * K0);
                 hash ^= BinaryOperations.RotateRight(hash, 29);
 
                 Byte[] result = BinaryOperations.ToArray64(hash);
@@ -517,15 +517,17 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static UInt64 Fin(UInt64 v1, UInt64 v2, Int32 r, UInt64 k)
             {
-                return (v1 + BinaryOperations.RotateRight((v1 * k) + v2, r));
+                UInt64 v = unchecked(v1 + BinaryOperations.RotateRight((v1 * k) + v2, r));
+
+                return v;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static UInt64 Mix(UInt64 v1, UInt64 v2, UInt64 v3, Int32 r1, Int32 r2, UInt64 k1, UInt64 k2, UInt64 k3, UInt64 k4)
             {
-                v1 += v3 * k1;
-                v1 = BinaryOperations.RotateRight(v1, r1) * k2;
-                v1 ^= BinaryOperations.RotateRight((v1 * k3) + v2, r2) * k4;
+                v1 = unchecked(v1 + (v3 * k1));
+                v1 = unchecked(BinaryOperations.RotateRight(v1, r1) * k2);
+                v1 ^= unchecked(BinaryOperations.RotateRight((v1 * k3) + v2, r2) * k4);
 
                 return v1;
             }
@@ -533,8 +535,8 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static UInt64 Mix128(UInt64 v1, UInt64 v2, Int32 r, UInt64 k1, UInt64 k2)
             {
-                v1 += v2 * k1;
-                v1 = BinaryOperations.RotateRight(v1, r) * k2;
+                v1 = unchecked(v1 + (v2 * k1));
+                v1 = unchecked(BinaryOperations.RotateRight(v1, r) * k2);
 
                 return v1;
             }
@@ -551,13 +553,17 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static UInt64 Xor128(UInt64 v1, UInt64 v2, Int32 r, UInt64 k1, UInt64 k2)
             {
-                return (v1 ^ BinaryOperations.RotateRight((v1 * k1) + v2, r) * k2);
+                UInt64 v = v1 ^ unchecked(BinaryOperations.RotateRight((v1 * k1) + v2, r) * k2);
+
+                return v;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static UInt64 Xor256(UInt64 v1, UInt64 v2, UInt64 v3, UInt64 v4, Int32 r, UInt64 k1, UInt64 k2)
             {
-                return (v1 ^ BinaryOperations.RotateRight(((v2 + v3) * k1) + v4, r) * k2);
+                UInt64 v = v1 ^ unchecked(BinaryOperations.RotateRight(((v2 + v3) * k1) + v4, r) * k2);
+
+                return v;
             }
 
             public abstract Byte[] ComputeHash(ReadOnlySpan<Byte> buffer);
@@ -592,20 +598,20 @@ namespace FastHashes
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
 
-                UInt64 hash1 = (m_Seed - K0) * K3;
-                UInt64 hash2 = (m_Seed + K1) * K2;
+                UInt64 hash1 = unchecked((m_Seed - K0) * K3);
+                UInt64 hash2 = unchecked((m_Seed + K1) * K2);
 
                 if (count == 0)
                     goto Finalize;
 
                 UInt64 length = (UInt64)count;
-                hash1 += length;
-                hash2 += length;
+                hash1 = unchecked(hash1 + length);
+                hash2 = unchecked(hash2 + length);
 
                 if (count >= 32)
                 {
-                    UInt64 v1 = ((m_Seed + K0) * K2) + length;
-                    UInt64 v2 = ((m_Seed - K1) * K3) + length;
+                    UInt64 v1 = unchecked(((m_Seed + K0) * K2) + length);
+                    UInt64 v2 = unchecked(((m_Seed - K1) * K3) + length);
 
                     do
                     {
@@ -713,20 +719,20 @@ namespace FastHashes
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
 
-                UInt64 hash1 = (m_Seed - K0) * K3;
-                UInt64 hash2 = (m_Seed + K1) * K2;
+                UInt64 hash1 = unchecked((m_Seed - K0) * K3);
+                UInt64 hash2 = unchecked((m_Seed + K1) * K2);
 
                 if (count == 0)
                     goto Finalize;
 
                 UInt64 length = (UInt64)count;
-                hash1 += length;
-                hash2 += length;
+                hash1 = unchecked(hash1 + length);
+                hash2 = unchecked(hash2 + length);
 
                 if (count >= 32)
                 {
-                    UInt64 v1 = ((m_Seed + K0) * K2) + length;
-                    UInt64 v2 = ((m_Seed - K1) * K3) + length;
+                    UInt64 v1 = unchecked(((m_Seed + K0) * K2) + length);
+                    UInt64 v2 = unchecked(((m_Seed - K1) * K3) + length);
 
                     do
                     {

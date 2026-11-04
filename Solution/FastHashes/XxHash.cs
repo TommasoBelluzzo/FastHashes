@@ -300,7 +300,7 @@ namespace FastHashes
             else
                 hash = unchecked(hash + P5);
 
-            hash += (UInt64)count;
+            hash = unchecked(hash + (UInt64)count);
 
             Int32 remainder = count & 31;
 
@@ -334,9 +334,9 @@ namespace FastHashes
         Finalize:
 
             hash ^= hash >> 33;
-            hash *= P2;
+            hash = unchecked(hash * P2);
             hash ^= hash >> 29;
-            hash *= P3;
+            hash = unchecked(hash * P3);
             hash ^= hash >> 32;
 
             Byte[] result = BinaryOperations.ToArray64(hash);

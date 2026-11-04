@@ -89,6 +89,57 @@ namespace FastHashes.Tests
 
         [Theory]
         [MemberData(nameof(HashTestsCases.DataHashesGeneric), MemberType = typeof(HashTestsCases))]
+        public void InputStringTest(String hashName, Func<UInt64, Hash> hashInitializer)
+        {
+            Hash hash = hashInitializer(TEST_SEED);
+
+            String[] texts = [String.Empty, "Hello World", "你好世界", "🚀"];
+            Encoding[] encodings = [Encoding.UTF8, Encoding.Unicode, Encoding.BigEndianUnicode];
+
+            Byte[] expected, actual;
+
+            foreach (String text in texts)
+            {
+                expected = hash.ComputeHash(Encoding.UTF8.GetBytes(text));
+                actual = hash.ComputeHash(text);
+
+                Assert.Equal(expected, actual);
+
+                foreach (Encoding encoding in encodings)
+                {
+                    expected = hash.ComputeHash(encoding.GetBytes(text));
+                    actual = hash.ComputeHash(text, encoding);
+
+                    Assert.Equal(expected, actual);
+                }
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(HashTestsCases.DataHashesGeneric), MemberType = typeof(HashTestsCases))]
+        public void InputStringFormattedTest(String hashName, Func<UInt64, Hash> hashInitializer)
+        {
+            Hash hash = hashInitializer(TEST_SEED);
+
+            String text = "Hello 世界 🚀";
+            Encoding encoding = Encoding.Unicode;
+
+            String expected, actual;
+
+            foreach (HashFormat format in Enum.GetValues<HashFormat>())
+            {
+                expected = hash.ComputeHash(Encoding.UTF8.GetBytes(text), format);
+                actual = hash.ComputeHash(text, format);
+                Assert.Equal(expected, actual);
+
+                expected = hash.ComputeHash(encoding.GetBytes(text), format);
+                actual = hash.ComputeHash(text, encoding, format);
+                Assert.Equal(expected, actual);
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(HashTestsCases.DataHashesGeneric), MemberType = typeof(HashTestsCases))]
         public void OutputTest(String hashName, Func<UInt64, Hash> hashInitializer)
         {
             Byte[] buffer = [23, 134, 0, 237, 0, 81, 64, 64, 39, 5];
