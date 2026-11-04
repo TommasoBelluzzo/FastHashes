@@ -48,7 +48,7 @@ namespace FastHashes
 
         #region Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void LongEnd(ref UInt64[] hash)
+        private static void LongEnd(Span<UInt64> hash)
         {
             for (Int32 j = 0; j < 12; ++j)
             {
@@ -62,7 +62,7 @@ namespace FastHashes
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void LongMix(ref UInt64[] hash, ReadOnlySpan<UInt64> v)
+        private static void LongMix(Span<UInt64> hash, ReadOnlySpan<UInt64> v)
         {
             for (Int32 i = 0; i < 12; ++i)
             {
@@ -77,7 +77,7 @@ namespace FastHashes
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ShortEnd(ref UInt64[] hash)
+        private static void ShortEnd(Span<UInt64> hash)
         {
             for (Int32 i = 0; i < 11; ++i)
             {
@@ -91,7 +91,7 @@ namespace FastHashes
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ShortMix(ref UInt64[] hash)
+        private static void ShortMix(Span<UInt64> hash)
         {
             for (Int32 i = 0; i < 12; ++i)
             {
@@ -111,7 +111,7 @@ namespace FastHashes
             Int32 blocks = count / 96;
             Int32 remainder = count % 96;
 
-            UInt64[] hash = new UInt64[12];
+            Span<UInt64> hash = stackalloc UInt64[12];
             hash[0] = hash[3] = hash[6] = hash[9] = m_Seed1;
             hash[1] = hash[4] = hash[7] = hash[10] = m_Seed2;
             hash[2] = hash[5] = hash[8] = hash[11] = C;
@@ -125,7 +125,7 @@ namespace FastHashes
 
                 offset += 96;
 
-                LongMix(ref hash, v);
+                LongMix(hash, v);
             }
 
             Span<Byte> data = stackalloc Byte[96];
@@ -141,7 +141,7 @@ namespace FastHashes
                 hash[i] = unchecked(hash[i] + v[i]);
 
             for (Int32 i = 0; i < 3; ++i)
-                LongEnd(ref hash);
+                LongEnd(hash);
 
             return GetHash(hash);
         }
@@ -151,7 +151,7 @@ namespace FastHashes
             Int32 offset = 0;
             Int32 count = buffer.Length;
 
-            UInt64[] hash = { m_Seed1, m_Seed2, C, C };
+            Span<UInt64> hash = stackalloc UInt64[4] { m_Seed1, m_Seed2, C, C };
 
             Int32 remainder = count % 32;
 
@@ -166,7 +166,7 @@ namespace FastHashes
                     hash[3] = unchecked(hash[3] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
 
-                    ShortMix(ref hash);
+                    ShortMix(hash);
 
                     hash[0] = unchecked(hash[0] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
@@ -181,7 +181,7 @@ namespace FastHashes
                     hash[3] = unchecked(hash[3] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
 
-                    ShortMix(ref hash);
+                    ShortMix(hash);
 
                     remainder -= 16;
                 }
@@ -222,7 +222,7 @@ namespace FastHashes
                     break;
             }
 
-            ShortEnd(ref hash);
+            ShortEnd(hash);
 
             Byte[] result = GetHash(hash);
 
@@ -230,9 +230,9 @@ namespace FastHashes
         }
 
         /// <summary>Finalizes any partial computation and returns the hash code.</summary>
-        /// <param name="hashData">The <see cref="T:System.UInt64"/>[] representing the hash data.</param>
+        /// <param name="hashData">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;ulong&gt;</see> representing the hash data.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
-        protected abstract Byte[] GetHash(UInt64[] hashData);
+        protected abstract Byte[] GetHash(ReadOnlySpan<UInt64> hashData);
 
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
@@ -273,7 +273,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] GetHash(UInt64[] hashData)
+        protected override Byte[] GetHash(ReadOnlySpan<UInt64> hashData)
         {
             UInt64 hash = hashData[0];
             Byte[] result = BinaryOperations.ToArray32(hash);
@@ -311,7 +311,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] GetHash(UInt64[] hashData)
+        protected override Byte[] GetHash(ReadOnlySpan<UInt64> hashData)
         {
             UInt64 hash = hashData[0];
             Byte[] result = BinaryOperations.ToArray64(hash);
@@ -349,7 +349,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] GetHash(UInt64[] hashData)
+        protected override Byte[] GetHash(ReadOnlySpan<UInt64> hashData)
         {
             Byte[] result = BinaryOperations.ToArray64(hashData[0], hashData[1]);
 

@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
@@ -279,7 +280,7 @@ namespace FastHashes
             if (encoding == null)
                 throw new ArgumentNullException(nameof(encoding));
 
-            return ComputeHash(encoding.GetBytes(text).AsSpan(), format);
+            return HashFormatter.Format(ComputeHash(text, encoding), format);
         }
 
         /// <summary>Returns the text representation of the current instance.</summary>

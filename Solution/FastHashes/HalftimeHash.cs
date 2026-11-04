@@ -10,6 +10,8 @@ namespace FastHashes
     public sealed class HalftimeHash : Hash
     {
         #region Members
+        private static readonly UInt64[] s_DefaultEntropy = GenerateEntropy(0ul);
+
         private readonly HalftimeHashStyle m_Style;
         private readonly Int32 m_Lanes;
         private readonly UInt64[] m_Entropy;
@@ -42,6 +44,31 @@ namespace FastHashes
             if (!Enum.IsDefined(typeof(HalftimeHashStyle), style))
                 throw new ArgumentOutOfRangeException(nameof(style), "Invalid style specified.");
 
+            m_Style = style;
+            m_Lanes = 1 << (Int32)style;
+            m_Entropy = (seed == 0) ? s_DefaultEntropy : GenerateEntropy(seed);
+            m_Seed = seed;
+        }
+
+        /// <summary>Initializes a new instance using <see cref="F:FastHashes.HalftimeHashStyle.S128"/> and a seed value of <c>0</c>.</summary>
+        [ExcludeFromCodeCoverage]
+        public HalftimeHash() : this(HalftimeHashStyle.S128, 0ul) { }
+
+        /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
+        /// <param name="style">The <see cref="T:FastHashes.HalftimeHashStyle"/> value specifying the internal processing style of the hashing algorithm.</param>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="style">style</paramref> is not a defined enumeration value.</exception>
+        [ExcludeFromCodeCoverage]
+        public HalftimeHash(HalftimeHashStyle style) : this(style, 0ul) { }
+
+        /// <summary>Initializes a new instance using <see cref="F:FastHashes.HalftimeHashStyle.S128"/> and the specified seed.</summary>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
+        public HalftimeHash(UInt64 seed) : this(HalftimeHashStyle.S128, seed) { }
+        #endregion
+
+        #region Methods
+        private static UInt64[] GenerateEntropy(UInt64 seed)
+        {
             UInt64[] entropy = new UInt64[8866];
 
             UInt64 w = seed;
@@ -64,29 +91,9 @@ namespace FastHashes
                 z = BinaryOperations.RotateLeft(unchecked(oldY + oldW), 19);
             }
 
-            m_Style = style;
-            m_Lanes = 1 << (Int32)style;
-            m_Entropy = entropy;
-            m_Seed = seed;
+            return entropy;
         }
 
-        /// <summary>Initializes a new instance using <see cref="F:FastHashes.HalftimeHashStyle.S128"/> and a seed value of <c>0</c>.</summary>
-        [ExcludeFromCodeCoverage]
-        public HalftimeHash() : this(HalftimeHashStyle.S128, 0ul) { }
-
-        /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
-        /// <param name="style">The <see cref="T:FastHashes.HalftimeHashStyle"/> value specifying the internal processing style of the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="style">style</paramref> is not a defined enumeration value.</exception>
-        [ExcludeFromCodeCoverage]
-        public HalftimeHash(HalftimeHashStyle style) : this(style, 0ul) { }
-
-        /// <summary>Initializes a new instance using <see cref="F:FastHashes.HalftimeHashStyle.S128"/> and the specified seed.</summary>
-        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        [ExcludeFromCodeCoverage]
-        public HalftimeHash(UInt64 seed) : this(HalftimeHashStyle.S128, seed) { }
-        #endregion
-
-        #region Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static UInt64 Mix(UInt64 accumulator, UInt64 value, UInt64 entropy)
         {
@@ -116,7 +123,9 @@ namespace FastHashes
             Int32 groupBytes = 18 * blockBytes;
             Int32 groups = count / groupBytes;
 
-            UInt64[] stack = groups > 0 ? new UInt64[144 * m_Lanes] : Array.Empty<UInt64>();
+            Span<UInt64> stack = groups > 0
+                ? stackalloc UInt64[144 * m_Lanes]
+                : Span<UInt64>.Empty;
 
             Span<Int32> stackLengths = stackalloc Int32[9];
             stackLengths.Clear();

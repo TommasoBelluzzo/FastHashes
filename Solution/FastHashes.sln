@@ -5,9 +5,6 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastHashes", "FastHashes\FastHashes.csproj", "{23C0573C-FA6E-4932-A637-18B5A34BAE61}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastHashes.Tests", "FastHashes.Tests\FastHashes.Tests.csproj", "{56B52E49-B24F-4406-A8B8-0426F4CE1AB6}"
-	ProjectSection(ProjectDependencies) = postProject
-		{23C0573C-FA6E-4932-A637-18B5A34BAE61} = {23C0573C-FA6E-4932-A637-18B5A34BAE61}
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastHashes.Benchmarks", "FastHashes.Benchmarks\FastHashes.Benchmarks.csproj", "{63B36156-D83C-47C3-8BC9-9FBCC685686B}"
 EndProject
