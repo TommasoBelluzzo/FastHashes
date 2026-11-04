@@ -49,7 +49,7 @@ namespace FastHashes
         {
             UInt64 c = (UInt64)(a ^ P1) * (b ^ P2);
 
-            a = (UInt32)c;
+            a = unchecked((UInt32)c);
             b = (UInt32)(c >> 32);
         }
 

@@ -182,10 +182,10 @@ namespace FastHashes
 #if NET5_0_OR_GREATER
             hi = Math.BigMul(x, y, out lo);
 #else
-            UInt64 x0 = (UInt32)x;
+            UInt64 x0 = unchecked((UInt32)x);
             UInt64 x1 = x >> 32;
 
-            UInt64 y0 = (UInt32)y;
+            UInt64 y0 = unchecked((UInt32)y);
             UInt64 y1 = y >> 32;
 
             UInt64 p0 = x0 * y0;
@@ -194,7 +194,7 @@ namespace FastHashes
             UInt64 p3 = x1 * y1;
 
             UInt64 mid = unchecked((p0 >> 32) + (UInt32)p1 + (UInt32)p2);
-            lo = (mid << 32) | (UInt32)p0;
+            lo = (mid << 32) | unchecked((UInt32)p0);
             hi = unchecked(p3 + (p1 >> 32) + (p2 >> 32) + (mid >> 32));
 #endif
         }
