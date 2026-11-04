@@ -111,7 +111,7 @@ namespace FastHashes
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Update(ref UInt64[] m0, ref UInt64[] m1, ref UInt64[] v0, ref UInt64[] v1, ReadOnlySpan<UInt64> k)
+        private static void Update(Span<UInt64> m0, Span<UInt64> m1, Span<UInt64> v0, Span<UInt64> v1, ReadOnlySpan<UInt64> k)
         {
             for (Int32 i = 0; i < 4; ++i)
                 Mix(ref m0[i], ref m1[i], ref v0[i], ref v1[i], k[i]);
@@ -146,12 +146,12 @@ namespace FastHashes
         }
 
         /// <summary>Finalizes any partial computation and returns the hash code.</summary>
-        /// <param name="m0">The <see cref="T:System.UInt64"/>[] representing the hash data M0.</param>
-        /// <param name="m1">The <see cref="T:System.UInt64"/>[] representing the hash data M1.</param>
-        /// <param name="v0">The <see cref="T:System.UInt64"/>[] representing the hash data V0.</param>
-        /// <param name="v1">The <see cref="T:System.UInt64"/>[] representing the hash data V1.</param>
+        /// <param name="m0">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;ulong&gt;</see> representing the hash data M0.</param>
+        /// <param name="m1">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;ulong&gt;</see> representing the hash data M1.</param>
+        /// <param name="v0">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;ulong&gt;</see> representing the hash data V0.</param>
+        /// <param name="v1">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;ulong&gt;</see> representing the hash data V1.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
-        protected abstract Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1);
+        protected abstract Byte[] GetHash(ReadOnlySpan<UInt64> m0, ReadOnlySpan<UInt64> m1, ReadOnlySpan<UInt64> v0, ReadOnlySpan<UInt64> v1);
 
         /// <inheritdoc/>
         protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
@@ -159,11 +159,11 @@ namespace FastHashes
             Int32 offset = 0;
             Int32 count = buffer.Length;
 
-            UInt64[] m0 = { M00, M01, M02, M03 };
-            UInt64[] m1 = { M10, M11, M12, M13 };
+            Span<UInt64> m0 = stackalloc UInt64[4] { M00, M01, M02, M03 };
+            Span<UInt64> m1 = stackalloc UInt64[4] { M10, M11, M12, M13 };
 
-            UInt64[] v0 = { M00 ^ m_Seed1, M01 ^ m_Seed2, M02 ^ m_Seed3, M03 ^ m_Seed4 };
-            UInt64[] v1 = { M10 ^ ((m_Seed1 >> 32) | (m_Seed1 << 32)), M11 ^ ((m_Seed2 >> 32) | (m_Seed2 << 32)), M12 ^ ((m_Seed3 >> 32) | (m_Seed3 << 32)), M13 ^ ((m_Seed4 >> 32) | (m_Seed4 << 32)) };
+            Span<UInt64> v0 = stackalloc UInt64[4] { M00 ^ m_Seed1, M01 ^ m_Seed2, M02 ^ m_Seed3, M03 ^ m_Seed4 };
+            Span<UInt64> v1 = stackalloc UInt64[4] { M10 ^ ((m_Seed1 >> 32) | (m_Seed1 << 32)), M11 ^ ((m_Seed2 >> 32) | (m_Seed2 << 32)), M12 ^ ((m_Seed3 >> 32) | (m_Seed3 << 32)), M13 ^ ((m_Seed4 >> 32) | (m_Seed4 << 32)) };
 
             Span<UInt64> k = stackalloc UInt64[4];
 
@@ -181,7 +181,7 @@ namespace FastHashes
 
                 offset += 32;
 
-                Update(ref m0, ref m1, ref v0, ref v1, k);
+                Update(m0, m1, v0, v1, k);
             }
 
             Int32 remainder = count & 31;
@@ -225,7 +225,7 @@ namespace FastHashes
                 k[2] = BinaryOperations.Read64(packet, 16);
                 k[3] = BinaryOperations.Read64(packet, 24);
 
-                Update(ref m0, ref m1, ref v0, ref v1, k);
+                Update(m0, m1, v0, v1, k);
             }
 
         Finalize:
@@ -237,7 +237,7 @@ namespace FastHashes
                 k[2] = (v0[0] >> 32) | (v0[0] << 32);
                 k[3] = (v0[1] >> 32) | (v0[1] << 32);
 
-                Update(ref m0, ref m1, ref v0, ref v1, k);
+                Update(m0, m1, v0, v1, k);
             }
 
             Byte[] result = GetHash(m0, m1, v0, v1);
@@ -288,7 +288,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1)
+        protected override Byte[] GetHash(ReadOnlySpan<UInt64> m0, ReadOnlySpan<UInt64> m1, ReadOnlySpan<UInt64> v0, ReadOnlySpan<UInt64> v1)
         {
             UInt64 hash = unchecked(v0[0] + v1[0] + m0[0] + m1[0]);
             Byte[] result = BinaryOperations.ToArray64(hash);
@@ -339,7 +339,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1)
+        protected override Byte[] GetHash(ReadOnlySpan<UInt64> m0, ReadOnlySpan<UInt64> m1, ReadOnlySpan<UInt64> v0, ReadOnlySpan<UInt64> v1)
         {
             UInt64 hash1 = unchecked(v0[0] + m0[0] + v1[2] + m1[2]);
             UInt64 hash2 = unchecked(v0[1] + m0[1] + v1[3] + m1[3]);
@@ -402,7 +402,7 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
-        protected override Byte[] GetHash(UInt64[] m0, UInt64[] m1, UInt64[] v0, UInt64[] v1)
+        protected override Byte[] GetHash(ReadOnlySpan<UInt64> m0, ReadOnlySpan<UInt64> m1, ReadOnlySpan<UInt64> v0, ReadOnlySpan<UInt64> v1)
         {
             MR(out UInt64 hash1, out UInt64 hash2, v0[0], m0[0], v0[1], m0[1], v1[0], m1[0], v1[1], m1[1]);
             MR(out UInt64 hash3, out UInt64 hash4, v0[2], m0[2], v0[3], m0[3], v1[2], m1[2], v1[3], m1[3]);
