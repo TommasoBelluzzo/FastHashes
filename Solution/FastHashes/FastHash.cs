@@ -107,7 +107,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override UInt32 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             UInt64 h0 = ComputeFastHash(buffer);
             UInt64 h1 = unchecked(h0 - (h0 >> 32));
@@ -134,7 +134,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             return ComputeFastHash(buffer);
         }

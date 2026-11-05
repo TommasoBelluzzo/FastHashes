@@ -55,7 +55,7 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
-        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;

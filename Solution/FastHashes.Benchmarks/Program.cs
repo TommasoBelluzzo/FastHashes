@@ -171,7 +171,7 @@ namespace FastHashes.Benchmarks
                         Byte[] digest = null;
 
                         for (Int32 i = 0; i < count; ++i)
-                            digest = hashes[i].ComputeHash(key, offset + (i * stride), length);
+                            digest = hashes[i].ComputeHashBytes(key, offset + (i * stride), length);
 
                         Int64 elapsed = Stopwatch.GetTimestamp() - start;
 
@@ -260,7 +260,7 @@ namespace FastHashes.Benchmarks
                 Byte[] digest = null;
 
                 for (Int32 j = 0; j < WARMUP_REPETITIONS; ++j)
-                    digest = hash.ComputeHash(key, 0, length);
+                    digest = hash.ComputeHashBytes(key, 0, length);
 
                 GC.KeepAlive(digest);
             }

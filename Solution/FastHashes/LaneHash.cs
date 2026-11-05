@@ -285,7 +285,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             Int32 count = buffer.Length;
 
@@ -349,7 +349,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override (UInt64, UInt64) ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             Int32 count = buffer.Length;
             UInt64 z = (UInt64)count;

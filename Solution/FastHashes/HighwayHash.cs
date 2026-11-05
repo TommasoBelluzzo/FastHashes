@@ -1,4 +1,4 @@
-#region Using Directives
+﻿#region Using Directives
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -304,7 +304,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             return ComputeHighwayHash(buffer).Hash1;
         }
@@ -348,7 +348,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override (UInt64, UInt64) ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             (UInt64 hash1, UInt64 hash2, _, _) = ComputeHighwayHash(buffer);
             return (hash1, hash2);
@@ -393,7 +393,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override (UInt64, UInt64, UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override (UInt64, UInt64, UInt64, UInt64) ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             return ComputeHighwayHash(buffer);
         }

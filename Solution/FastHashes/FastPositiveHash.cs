@@ -1,4 +1,4 @@
-#region Using Directives
+﻿#region Using Directives
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -74,7 +74,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             return m_Engine.ComputeHashValue(buffer);
         }
@@ -435,7 +435,7 @@ namespace FastHashes
 
                 UInt64 h0 = unchecked((a ^ b) * P640);
                 UInt64 hash = unchecked(MixT(BinaryOperations.RotateRight(a + b, 17), P644) + (h0 ^ BinaryOperations.RotateRight(h0, 41)));
-                
+
                 return hash;
             }
 

@@ -62,7 +62,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             return m_Engine.ComputeHashValue(buffer);
         }
@@ -476,7 +476,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override (UInt64, UInt64) ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             return m_Engine.ComputeHashValue(buffer);
         }

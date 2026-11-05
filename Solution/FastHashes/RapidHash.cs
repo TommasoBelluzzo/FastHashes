@@ -74,7 +74,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             return m_Engine.ComputeHashValue(buffer);
         }
@@ -266,7 +266,7 @@ namespace FastHashes
                 b ^= S1;
 
                 UInt64 hash = Mix(a, b);
-                
+
                 return hash;
             }
 
@@ -441,7 +441,7 @@ namespace FastHashes
                 b ^= S1;
 
                 UInt64 hash = Mix(a, b);
-                
+
                 return hash;
             }
 
@@ -604,7 +604,7 @@ namespace FastHashes
                 b ^= S1 ^ (UInt64)remaining;
 
                 UInt64 hash = Mix(a, b);
-                
+
                 return hash;
             }
 

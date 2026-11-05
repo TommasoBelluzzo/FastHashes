@@ -293,7 +293,7 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
-        protected override UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override UInt32 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -500,7 +500,7 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
-        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -726,7 +726,7 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
-        protected override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override (UInt64, UInt64) ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;

@@ -11,7 +11,7 @@ namespace FastHashes.Benchmarks
         #endregion
 
         #region Methods
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        protected override void ComputeHashBytesInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
         {
             destination.Clear();
         }

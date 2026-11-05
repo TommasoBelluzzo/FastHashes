@@ -1,13 +1,19 @@
 ﻿#region Using Directives
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using System.Text;
 #endregion
 
 namespace FastHashes
 {
-    /// <summary>Represents the base class from which all the hashing algorithms must derive. This class is abstract.</summary>
+    /// <summary>Represents the abstract base class for hashing algorithms that produce byte-oriented results.</summary>
+    /// <remarks>
+    /// Provides byte-oriented and formatted hash computation, along with algorithm registry operations.
+    /// Hashing algorithms are non-cryptographic and must not be used for security purposes.
+    /// </remarks>
     public abstract class Hash
     {
         #region Properties
@@ -17,7 +23,7 @@ namespace FastHashes
         #endregion
 
         #region Methods
-        private static ReadOnlySpan<Byte> GetSpan(Byte[] buffer, Int32 offset, Int32 count)
+        private protected static ReadOnlySpan<Byte> GetSpan(Byte[] buffer, Int32 offset, Int32 count)
         {
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
@@ -25,7 +31,7 @@ namespace FastHashes
             Int32 bufferLength = buffer.Length;
 
             if ((offset < 0) || (offset > bufferLength))
-                throw new ArgumentOutOfRangeException(nameof(offset), "The offset parameter must be within the bounds of the data array.");
+                throw new ArgumentOutOfRangeException(nameof(offset), "The offset parameter must be within the bou\nds of the data array.");
 
             if (count < 0)
                 throw new ArgumentOutOfRangeException(nameof(count), "The count parameter must be greater than or equal to 0.");
@@ -136,15 +142,15 @@ namespace FastHashes
         /// <summary>Computes the hash of the specified byte span and writes it into the destination byte span.</summary>
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> containing the data to hash.</param>
         /// <param name="destination">The <see cref="T:System.Span`1{T}">Span&lt;byte&gt;</see> receiving the computed hash.</param>
-        protected abstract void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination);
+        protected abstract void ComputeHashBytesInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination);
 
         /// <summary>Computes the hash of the specified byte array.</summary>
         /// <param name="buffer">The <see cref="T:System.Byte"/>[] containing the data to hash.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] containing the computed hash.</returns>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
-        public Byte[] ComputeHash(Byte[] buffer)
+        public Byte[] ComputeHashBytes(Byte[] buffer)
         {
-            return ComputeHash(GetSpan(buffer, 0, buffer?.Length ?? 0));
+            return ComputeHashBytes(GetSpan(buffer, 0, buffer?.Length ?? 0));
         }
 
         /// <summary>Computes the hash of the first <paramref name="count">count</paramref> bytes of the specified array.</summary>
@@ -154,9 +160,9 @@ namespace FastHashes
         /// <exception cref="T:System.ArgumentException">Thrown when <paramref name="count">count</paramref> exceeds the length of <paramref name="buffer">buffer</paramref>.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="count">count</paramref> is negative.</exception>
-        public Byte[] ComputeHash(Byte[] buffer, Int32 count)
+        public Byte[] ComputeHashBytes(Byte[] buffer, Int32 count)
         {
-            return ComputeHash(GetSpan(buffer, 0, count));
+            return ComputeHashBytes(GetSpan(buffer, 0, count));
         }
 
         /// <summary>Computes the hash of the specified region of a byte array.</summary>
@@ -167,18 +173,18 @@ namespace FastHashes
         /// <exception cref="T:System.ArgumentException">Thrown when the region defined by <paramref name="offset">offset</paramref> and <paramref name="count">count</paramref> exceeds the bounds of <paramref name="buffer">buffer</paramref>.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="offset">offset</paramref> is outside the valid range or <paramref name="count">count</paramref> is negative.</exception>
-        public Byte[] ComputeHash(Byte[] buffer, Int32 offset, Int32 count)
+        public Byte[] ComputeHashBytes(Byte[] buffer, Int32 offset, Int32 count)
         {
-            return ComputeHash(GetSpan(buffer, offset, count));
+            return ComputeHashBytes(GetSpan(buffer, offset, count));
         }
 
         /// <summary>Computes the hash of the specified byte span.</summary>
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> containing the data to hash.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] containing the computed hash.</returns>
-        public Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
+        public Byte[] ComputeHashBytes(ReadOnlySpan<Byte> buffer)
         {
             Byte[] result = new Byte[Length / 8];
-            ComputeHashInternal(buffer, result);
+            ComputeHashBytesInternal(buffer, result);
 
             return result;
         }
@@ -187,23 +193,23 @@ namespace FastHashes
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> containing the data to hash.</param>
         /// <param name="destination">The <see cref="T:System.Span`1{T}">Span&lt;byte&gt;</see> receiving the computed hash.</param>
         /// <exception cref="T:System.ArgumentException">Thrown when the destination is too small to contain the computed hash.</exception>
-        public void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        public void ComputeHashBytes(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
         {
             Int32 length = Length / 8;
 
             if (destination.Length < length)
                 throw new ArgumentException("The destination buffer is too small.", nameof(destination));
 
-            ComputeHashInternal(buffer, destination.Slice(0, length));
+            ComputeHashBytesInternal(buffer, destination.Slice(0, length));
         }
 
         /// <summary>Computes the hash of the specified text using UTF-8 encoding.</summary>
         /// <param name="text">The <see cref="T:System.String"/> containing the text to hash.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] containing the computed hash.</returns>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="text">text</paramref> is <c>null</c>.</exception>
-        public Byte[] ComputeHash(String text)
+        public Byte[] ComputeHashBytes(String text)
         {
-            return ComputeHash(text, Encoding.UTF8);
+            return ComputeHashBytes(text, Encoding.UTF8);
         }
 
         /// <summary>Computes the hash of the specified text using the specified encoding.</summary>
@@ -211,7 +217,7 @@ namespace FastHashes
         /// <param name="encoding">The <see cref="T:System.Text.Encoding"/> used to encode the text.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] containing the computed hash.</returns>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="text">text</paramref> or <paramref name="encoding">encoding</paramref> is <c>null</c>.</exception>
-        public Byte[] ComputeHash(String text, Encoding encoding)
+        public Byte[] ComputeHashBytes(String text, Encoding encoding)
         {
             if (text == null)
                 throw new ArgumentNullException(nameof(text));
@@ -219,7 +225,7 @@ namespace FastHashes
             if (encoding == null)
                 throw new ArgumentNullException(nameof(encoding));
 
-            return ComputeHash(encoding.GetBytes(text).AsSpan());
+            return ComputeHashBytes(encoding.GetBytes(text).AsSpan());
         }
 
         /// <summary>Computes the hash of the specified byte array and returns it in the specified format.</summary>
@@ -228,9 +234,9 @@ namespace FastHashes
         /// <returns>A <see cref="T:System.String"/> containing the formatted hash.</returns>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
-        public String ComputeHash(Byte[] buffer, HashFormat format)
+        public String ComputeHashString(Byte[] buffer, HashFormat format)
         {
-            return ComputeHash(GetSpan(buffer, 0, buffer?.Length ?? 0), format);
+            return ComputeHashString(GetSpan(buffer, 0, buffer?.Length ?? 0), format);
         }
 
         /// <summary>Computes the hash of the first <paramref name="count">count</paramref> bytes of the specified array and returns it in the specified format.</summary>
@@ -241,9 +247,9 @@ namespace FastHashes
         /// <exception cref="T:System.ArgumentException">Thrown when <paramref name="count">count</paramref> exceeds the length of <paramref name="buffer">buffer</paramref>.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="count">count</paramref> is negative or <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
-        public String ComputeHash(Byte[] buffer, Int32 count, HashFormat format)
+        public String ComputeHashString(Byte[] buffer, Int32 count, HashFormat format)
         {
-            return ComputeHash(GetSpan(buffer, 0, count), format);
+            return ComputeHashString(GetSpan(buffer, 0, count), format);
         }
 
         /// <summary>Computes the hash of the specified region of a byte array and returns it in the specified format.</summary>
@@ -255,9 +261,9 @@ namespace FastHashes
         /// <exception cref="T:System.ArgumentException">Thrown when the region defined by <paramref name="offset">offset</paramref> and <paramref name="count">count</paramref> exceeds the bounds of <paramref name="buffer">buffer</paramref>.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="offset">offset</paramref> is outside the valid range, <paramref name="count">count</paramref> is negative, or <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
-        public String ComputeHash(Byte[] buffer, Int32 offset, Int32 count, HashFormat format)
+        public String ComputeHashString(Byte[] buffer, Int32 offset, Int32 count, HashFormat format)
         {
-            return ComputeHash(GetSpan(buffer, offset, count), format);
+            return ComputeHashString(GetSpan(buffer, offset, count), format);
         }
 
         /// <summary>Computes the hash of the specified byte span and returns it in the specified format.</summary>
@@ -265,9 +271,9 @@ namespace FastHashes
         /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> specifying the output format.</param>
         /// <returns>A <see cref="T:System.String"/> containing the formatted hash.</returns>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
-        public String ComputeHash(ReadOnlySpan<Byte> buffer, HashFormat format)
+        public String ComputeHashString(ReadOnlySpan<Byte> buffer, HashFormat format)
         {
-            return HashFormatter.Format(ComputeHash(buffer), format);
+            return HashFormatter.Format(ComputeHashBytes(buffer), format);
         }
 
         /// <summary>Computes the hash of the specified text using UTF-8 encoding and returns it in the specified format.</summary>
@@ -276,9 +282,9 @@ namespace FastHashes
         /// <returns>A <see cref="T:System.String"/> containing the formatted hash.</returns>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="text">text</paramref> is <c>null</c>.</exception>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
-        public String ComputeHash(String text, HashFormat format)
+        public String ComputeHashString(String text, HashFormat format)
         {
-            return ComputeHash(text, Encoding.UTF8, format);
+            return ComputeHashString(text, Encoding.UTF8, format);
         }
 
         /// <summary>Computes the hash of the specified text using the specified encoding and returns it in the specified format.</summary>
@@ -288,7 +294,7 @@ namespace FastHashes
         /// <returns>A <see cref="T:System.String"/> containing the formatted hash.</returns>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="text">text</paramref> or <paramref name="encoding">encoding</paramref> is <c>null</c>.</exception>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
-        public String ComputeHash(String text, Encoding encoding, HashFormat format)
+        public String ComputeHashString(String text, Encoding encoding, HashFormat format)
         {
             if (text == null)
                 throw new ArgumentNullException(nameof(text));
@@ -296,7 +302,7 @@ namespace FastHashes
             if (encoding == null)
                 throw new ArgumentNullException(nameof(encoding));
 
-            return HashFormatter.Format(ComputeHash(text, encoding), format);
+            return HashFormatter.Format(ComputeHashBytes(text, encoding), format);
         }
 
         /// <summary>Returns the text representation of the current instance.</summary>
@@ -305,6 +311,230 @@ namespace FastHashes
         public override String ToString()
         {
             return GetType().Name;
+        }
+        #endregion
+    }
+
+    /// <summary>Represents the abstract base class for hashing algorithms that produce strongly typed results.</summary>
+    /// <typeparam name="T">The result type: <see cref="T:System.UInt32"/>, <see cref="T:System.UInt64"/>, <c>(UInt64, UInt64)</c>, or <c>(UInt64, UInt64, UInt64, UInt64)</c>.</typeparam>
+    /// <remarks>
+    /// Extends <see cref="T:FastHashes.Hash"/> with strongly typed hash computation while retaining byte-oriented and formatted output.
+    /// </remarks>
+    public abstract class Hash<T> : Hash where T : unmanaged
+    {
+        #region Members
+        private static readonly Int32 s_Length = GetLength();
+        #endregion
+
+        #region Properties
+        /// <inheritdoc/>
+        public sealed override Int32 Length => s_Length;
+        #endregion
+
+        #region Methods
+        private static Int32 GetLength()
+        {
+            if (typeof(T) == typeof(UInt32))
+                return 32;
+
+            if (typeof(T) == typeof(UInt64))
+                return 64;
+
+            if (typeof(T) == typeof((UInt64, UInt64)))
+                return 128;
+
+            if (typeof(T) == typeof((UInt64, UInt64, UInt64, UInt64)))
+                return 256;
+
+            throw new NotSupportedException($"The hash result type {typeof(T)} is not supported.");
+        }
+
+        private static void Write(T value, Span<Byte> destination)
+        {
+            Span<T> source = stackalloc T[1];
+            source[0] = value;
+
+            if (typeof(T) == typeof(UInt32))
+            {
+                UInt32 hash = MemoryMarshal.Cast<T, UInt32>(source)[0];
+                BinaryPrimitives.WriteUInt32LittleEndian(destination, hash);
+                return;
+            }
+
+            if (typeof(T) == typeof(UInt64))
+            {
+                UInt64 hash = MemoryMarshal.Cast<T, UInt64>(source)[0];
+                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
+                return;
+            }
+
+            if (typeof(T) == typeof((UInt64, UInt64)))
+            {
+                (UInt64 hash1, UInt64 hash2) = MemoryMarshal.Cast<T, (UInt64, UInt64)>(source)[0];
+                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
+                BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
+                return;
+            }
+
+            if (typeof(T) == typeof((UInt64, UInt64, UInt64, UInt64)))
+            {
+                (UInt64 hash1, UInt64 hash2, UInt64 hash3, UInt64 hash4) = MemoryMarshal.Cast<T, (UInt64, UInt64, UInt64, UInt64)>(source)[0];
+                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
+                BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
+                BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(16), hash3);
+                BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(24), hash4);
+                return;
+            }
+
+            throw new NotSupportedException($"The hash result type {typeof(T)} is not supported.");
+        }
+
+        /// <summary>Attempts to create a new strongly typed instance of the specified hashing algorithm using its default configuration.</summary>
+        /// <param name="name">The <see cref="T:System.String"/> identifying the hashing algorithm.</param>
+        /// <param name="hash">The resulting <see cref="T:FastHashes.Hash`1"/> instance, or <c>null</c> if the hashing algorithm is unknown or incompatible.</param>
+        /// <returns>A <see cref="T:System.Boolean"/> value equal to <c>true</c> if the hashing algorithm was created; <c>false</c> otherwise.</returns>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="name">name</paramref> is <c>null</c>.</exception>
+        public static Boolean TryCreate(String name, out Hash<T> hash)
+        {
+            hash = null;
+
+            if (!HashRegistry.TryGetInitializers(name, out var initializers))
+                return false;
+
+            hash = initializers.Default() as Hash<T>;
+
+            return hash != null;
+        }
+
+        /// <summary>Attempts to create a new strongly typed instance of the specified hashing algorithm using a standardized single-seed initialization.</summary>
+        /// <param name="name">The <see cref="T:System.String"/> identifying the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> value mapped to the algorithm-specific seed configuration.</param>
+        /// <param name="hash">The resulting <see cref="T:FastHashes.Hash`1"/> instance, or <c>null</c> if the hashing algorithm is unknown or incompatible.</param>
+        /// <returns>A <see cref="T:System.Boolean"/> value equal to <c>true</c> if the hashing algorithm was created; <c>false</c> otherwise.</returns>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="name">name</paramref> is <c>null</c>.</exception>
+        /// <exception cref="T:System.OverflowException">Thrown when <paramref name="seed">seed</paramref> cannot be represented by a hashing algorithm requiring a 32-bit seed.</exception>
+        public static Boolean TryCreate(String name, UInt64 seed, out Hash<T> hash)
+        {
+            hash = null;
+
+            if (!HashRegistry.TryGetInitializers(name, out var initializers))
+                return false;
+
+            hash = initializers.Seeded(seed) as Hash<T>;
+
+            return hash != null;
+        }
+
+        /// <summary>Creates a new strongly typed instance of the specified hashing algorithm using its default configuration.</summary>
+        /// <param name="name">The <see cref="T:System.String"/> identifying the hashing algorithm.</param>
+        /// <returns>A <see cref="T:FastHashes.Hash`1"/> instance.</returns>
+        /// <exception cref="T:System.ArgumentException">Thrown when the specified hashing algorithm is unknown or incompatible.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="name">name</paramref> is <c>null</c>.</exception>
+        public static new Hash<T> Create(String name)
+        {
+            if (!HashRegistry.TryGetInitializers(name, out var initializers))
+                throw new ArgumentException("Unknown hashing algorithm specified.", nameof(name));
+
+            if (initializers.Default() is Hash<T> hash)
+                return hash;
+
+            throw new ArgumentException("Incompatible hashing algorithm specified.", nameof(name));
+        }
+
+        /// <summary>Creates a new strongly typed instance of the specified hashing algorithm using a standardized single-seed initialization.</summary>
+        /// <param name="name">The <see cref="T:System.String"/> identifying the hashing algorithm.</param>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> value mapped to the algorithm-specific seed configuration.</param>
+        /// <returns>A <see cref="T:FastHashes.Hash`1"/> instance.</returns>
+        /// <exception cref="T:System.ArgumentException">Thrown when the specified hashing algorithm is unknown or incompatible.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="name">name</paramref> is <c>null</c>.</exception>
+        /// <exception cref="T:System.OverflowException">Thrown when <paramref name="seed">seed</paramref> cannot be represented by a hashing algorithm requiring a 32-bit seed.</exception>
+        public static new Hash<T> Create(String name, UInt64 seed)
+        {
+            if (!HashRegistry.TryGetInitializers(name, out var initializers))
+                throw new ArgumentException("Unknown hashing algorithm specified.", nameof(name));
+
+            if (initializers.Seeded(seed) is Hash<T> hash)
+                return hash;
+
+            throw new ArgumentException("Incompatible hashing algorithm specified.", nameof(name));
+        }
+
+        /// <summary>Computes the hash of the specified byte span.</summary>
+        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> containing the data to hash.</param>
+        /// <returns>A <typeparamref name="T"/> value containing the computed hash.</returns>
+        protected abstract T ComputeHashValueInternal(ReadOnlySpan<Byte> buffer);
+
+        /// <inheritdoc/>
+        protected sealed override void ComputeHashBytesInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        {
+            Write(ComputeHashValueInternal(buffer), destination);
+        }
+
+        /// <summary>Computes the hash of the specified byte array.</summary>
+        /// <param name="buffer">The <see cref="T:System.Byte"/>[] containing the data to hash.</param>
+        /// <returns>A <typeparamref name="T"/> value containing the computed hash.</returns>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
+        public T ComputeHashValue(Byte[] buffer)
+        {
+            return ComputeHashValue(GetSpan(buffer, 0, buffer?.Length ?? 0));
+        }
+
+        /// <summary>Computes the hash of the first <paramref name="count">count</paramref> bytes of the specified array.</summary>
+        /// <param name="buffer">The <see cref="T:System.Byte"/>[] containing the data to hash.</param>
+        /// <param name="count">The number of bytes to hash.</param>
+        /// <returns>A <typeparamref name="T"/> value containing the computed hash.</returns>
+        /// <exception cref="T:System.ArgumentException">Thrown when <paramref name="count">count</paramref> exceeds the length of <paramref name="buffer">buffer</paramref>.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="count">count</paramref> is negative.</exception>
+        public T ComputeHashValue(Byte[] buffer, Int32 count)
+        {
+            return ComputeHashValue(GetSpan(buffer, 0, count));
+        }
+
+        /// <summary>Computes the hash of the specified region of a byte array.</summary>
+        /// <param name="buffer">The <see cref="T:System.Byte"/>[] containing the data to hash.</param>
+        /// <param name="offset">The zero-based starting index in <paramref name="buffer">buffer</paramref>.</param>
+        /// <param name="count">The number of bytes to hash.</param>
+        /// <returns>A <typeparamref name="T"/> value containing the computed hash.</returns>
+        /// <exception cref="T:System.ArgumentException">Thrown when the region defined by <paramref name="offset">offset</paramref> and <paramref name="count">count</paramref> exceeds the bounds of <paramref name="buffer">buffer</paramref>.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="offset">offset</paramref> is outside the valid range or <paramref name="count">count</paramref> is negative.</exception>
+        public T ComputeHashValue(Byte[] buffer, Int32 offset, Int32 count)
+        {
+            return ComputeHashValue(GetSpan(buffer, offset, count));
+        }
+
+        /// <summary>Computes the hash of the specified byte span.</summary>
+        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> containing the data to hash.</param>
+        /// <returns>A <typeparamref name="T"/> value containing the computed hash.</returns>
+        public T ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        {
+            return ComputeHashValueInternal(buffer);
+        }
+
+        /// <summary>Computes the hash of the specified text using UTF-8 encoding.</summary>
+        /// <param name="text">The <see cref="T:System.String"/> containing the text to hash.</param>
+        /// <returns>A <typeparamref name="T"/> value containing the computed hash.</returns>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="text">text</paramref> is <c>null</c>.</exception>
+        public T ComputeHashValue(String text)
+        {
+            return ComputeHashValue(text, Encoding.UTF8);
+        }
+
+        /// <summary>Computes the hash of the specified text using the specified encoding.</summary>
+        /// <param name="text">The <see cref="T:System.String"/> containing the text to hash.</param>
+        /// <param name="encoding">The <see cref="T:System.Text.Encoding"/> used to encode the text.</param>
+        /// <returns>A <typeparamref name="T"/> value containing the computed hash.</returns>
+        /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="text">text</paramref> or <paramref name="encoding">encoding</paramref> is <c>null</c>.</exception>
+        public T ComputeHashValue(String text, Encoding encoding)
+        {
+            if (text == null)
+                throw new ArgumentNullException(nameof(text));
+
+            if (encoding == null)
+                throw new ArgumentNullException(nameof(encoding));
+
+            return ComputeHashValue(encoding.GetBytes(text).AsSpan());
         }
         #endregion
     }

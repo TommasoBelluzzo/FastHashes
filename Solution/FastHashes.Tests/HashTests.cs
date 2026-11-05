@@ -34,8 +34,8 @@ namespace FastHashes.Tests
         {
             Hash hash = new FarmHash32();
 
-            Assert.Throws<ArgumentNullException>(() => hash.ComputeHash((Byte[])null));
-            Assert.Throws<ArgumentNullException>(() => hash.ComputeHash((Byte[])null, 0, 10));
+            Assert.Throws<ArgumentNullException>(() => hash.ComputeHashBytes((Byte[])null));
+            Assert.Throws<ArgumentNullException>(() => hash.ComputeHashBytes((Byte[])null, 0, 10));
         }
 
         [Theory]
@@ -45,7 +45,7 @@ namespace FastHashes.Tests
             Hash hash = new FarmHash32();
             Byte[] buffer = new Byte[10];
 
-            Exception exception = Record.Exception(() => hash.ComputeHash(buffer, offset, count));
+            Exception exception = Record.Exception(() => hash.ComputeHashBytes(buffer, offset, count));
 
             Assert.NotNull(exception);
             Assert.Equal(exceptionType, exception.GetType());
@@ -65,8 +65,8 @@ namespace FastHashes.Tests
             Byte[] slice = new Byte[count];
             Array.Copy(buffer, offset, slice, 0, count);
 
-            Byte[] expected = hash.ComputeHash(slice);
-            Byte[] actual = hash.ComputeHash(buffer, offset, count);
+            Byte[] expected = hash.ComputeHashBytes(slice);
+            Byte[] actual = hash.ComputeHashBytes(buffer, offset, count);
 
             Assert.Equal(expected, actual);
         }
@@ -78,13 +78,13 @@ namespace FastHashes.Tests
             Hash hash = hashInitializer(0u);
 
             Byte[] buffer = [];
-            Byte[] expected = hash.ComputeHash(buffer);
+            Byte[] expected = hash.ComputeHashBytes(buffer);
 
-            Assert.Equal(expected, hash.ComputeHash(buffer, 0));
-            Assert.Equal(expected, hash.ComputeHash(buffer, 0, 0));
+            Assert.Equal(expected, hash.ComputeHashBytes(buffer, 0));
+            Assert.Equal(expected, hash.ComputeHashBytes(buffer, 0, 0));
 
             ReadOnlySpan<Byte> defaultSpan = default;
-            Assert.Equal(expected, hash.ComputeHash(defaultSpan));
+            Assert.Equal(expected, hash.ComputeHashBytes(defaultSpan));
         }
 
         [Theory]
@@ -100,15 +100,15 @@ namespace FastHashes.Tests
 
             foreach (String text in texts)
             {
-                expected = hash.ComputeHash(Encoding.UTF8.GetBytes(text));
-                actual = hash.ComputeHash(text);
+                expected = hash.ComputeHashBytes(Encoding.UTF8.GetBytes(text));
+                actual = hash.ComputeHashBytes(text);
 
                 Assert.Equal(expected, actual);
 
                 foreach (Encoding encoding in encodings)
                 {
-                    expected = hash.ComputeHash(encoding.GetBytes(text));
-                    actual = hash.ComputeHash(text, encoding);
+                    expected = hash.ComputeHashBytes(encoding.GetBytes(text));
+                    actual = hash.ComputeHashBytes(text, encoding);
 
                     Assert.Equal(expected, actual);
                 }
@@ -128,12 +128,12 @@ namespace FastHashes.Tests
 
             foreach (HashFormat format in Enum.GetValues<HashFormat>())
             {
-                expected = hash.ComputeHash(Encoding.UTF8.GetBytes(text), format);
-                actual = hash.ComputeHash(text, format);
+                expected = hash.ComputeHashString(Encoding.UTF8.GetBytes(text), format);
+                actual = hash.ComputeHashString(text, format);
                 Assert.Equal(expected, actual);
 
-                expected = hash.ComputeHash(encoding.GetBytes(text), format);
-                actual = hash.ComputeHash(text, encoding, format);
+                expected = hash.ComputeHashString(encoding.GetBytes(text), format);
+                actual = hash.ComputeHashString(text, encoding, format);
                 Assert.Equal(expected, actual);
             }
         }
@@ -144,17 +144,17 @@ namespace FastHashes.Tests
         {
             Byte[] buffer = [23, 134, 0, 237, 0, 81, 64, 64, 39, 5];
             Hash hash = hashInitializer(0u);
-            Byte[] expected = hash.ComputeHash(buffer);
+            Byte[] expected = hash.ComputeHashBytes(buffer);
 
-            Assert.Equal(expected, hash.ComputeHash(buffer, buffer.Length));
-            Assert.Equal(expected, hash.ComputeHash(buffer, 0, buffer.Length));
-            Assert.Equal(expected, hash.ComputeHash(new ReadOnlySpan<Byte>(buffer)));
+            Assert.Equal(expected, hash.ComputeHashBytes(buffer, buffer.Length));
+            Assert.Equal(expected, hash.ComputeHashBytes(buffer, 0, buffer.Length));
+            Assert.Equal(expected, hash.ComputeHashBytes(new ReadOnlySpan<Byte>(buffer)));
 
             Byte[] paddedBuffer = new Byte[buffer.Length + 10];
             Array.Copy(buffer, 0, paddedBuffer, 5, buffer.Length);
 
-            Assert.Equal(expected, hash.ComputeHash(paddedBuffer, 5, buffer.Length));
-            Assert.Equal(expected, hash.ComputeHash(new ReadOnlySpan<Byte>(paddedBuffer, 5, buffer.Length)));
+            Assert.Equal(expected, hash.ComputeHashBytes(paddedBuffer, 5, buffer.Length));
+            Assert.Equal(expected, hash.ComputeHashBytes(new ReadOnlySpan<Byte>(paddedBuffer, 5, buffer.Length)));
         }
 
         [Theory]
@@ -177,7 +177,7 @@ namespace FastHashes.Tests
 
                     try
                     {
-                        hash.ComputeHash(buffer);
+                        hash.ComputeHashBytes(buffer);
                     }
                     catch
                     {
@@ -200,8 +200,8 @@ namespace FastHashes.Tests
 
             Hash hash = hashInitializer(TEST_SEED);
 
-            Byte[] expected = hash.ComputeHash(buffer);
-            Byte[] actual = hash.ComputeHash(buffer);
+            Byte[] expected = hash.ComputeHashBytes(buffer);
+            Byte[] actual = hash.ComputeHashBytes(buffer);
 
             Assert.Equal(hash.Length / 8, expected.Length);
             Assert.Equal(expected, actual);
@@ -222,12 +222,12 @@ namespace FastHashes.Tests
                 buffer[i] = (Byte)i;
 
                 Hash hashi = hashInitializer((UInt32)(256 - i));
-                Byte[] hi = hashi.ComputeHash(buffer, 0, i);
+                Byte[] hi = hashi.ComputeHashBytes(buffer, 0, i);
 
                 Buffer.BlockCopy(hi, 0, bufferFinal, i * hashBytes, hashBytes);
             }
 
-            String actual = hash0.ComputeHash(bufferFinal, HashFormat.HexadecimalPrefixed);
+            String actual = hash0.ComputeHashString(bufferFinal, HashFormat.HexadecimalPrefixed);
 
             Assert.Equal(expected, actual);
         }
@@ -254,7 +254,7 @@ namespace FastHashes.Tests
                 Buffer.BlockCopy(lineBytes, 0, buffer, 0, lineBytesLength);
 
                 for (Int32 j = 0; j <= 5; ++j)
-                    hashes.Add(hash.ComputeHash(buffer, 0, lineBytesLength + j));
+                    hashes.Add(hash.ComputeHashBytes(buffer, 0, lineBytesLength + j));
             }
 
             Boolean cte = MathUtilities.CollisionsThresholdExceeded(hashes, hashBytes);
@@ -281,7 +281,7 @@ namespace FastHashes.Tests
                 Hash hash = hashInitializer(seedValue);
 
                 Byte[] buffer = Convert.FromHexString(Input);
-                Byte[] actual = hash.ComputeHash(buffer);
+                Byte[] actual = hash.ComputeHashBytes(buffer);
                 Byte[] expected = Convert.FromHexString(Expected);
 
                 if ((expected.Length != (hash.Length / 8)) || !actual.AsSpan().SequenceEqual(expected))
@@ -340,14 +340,14 @@ namespace FastHashes.Tests
                 Assert.Equal(hashDefault.GetType(), hashInitializedDefault.GetType());
                 Assert.Equal(hashSeeded.GetType(), hashInitializedSeeded.GetType());
 
-                Assert.Equal(hashDefault.ComputeHash(buffer), hashInitializedDefault.ComputeHash(buffer));
-                Assert.Equal(hashSeeded.ComputeHash(buffer), hashInitializedSeeded.ComputeHash(buffer));
+                Assert.Equal(hashDefault.ComputeHashBytes(buffer), hashInitializedDefault.ComputeHashBytes(buffer));
+                Assert.Equal(hashSeeded.ComputeHashBytes(buffer), hashInitializedSeeded.ComputeHashBytes(buffer));
 
                 Assert.True(Hash.TryCreate(name, out Hash hash1));
                 Assert.True(Hash.TryCreate(name, TEST_SEED, out Hash hash2));
 
-                Assert.Equal(hashDefault.ComputeHash(buffer), hash1.ComputeHash(buffer));
-                Assert.Equal(hashSeeded.ComputeHash(buffer), hash2.ComputeHash(buffer));
+                Assert.Equal(hashDefault.ComputeHashBytes(buffer), hash1.ComputeHashBytes(buffer));
+                Assert.Equal(hashSeeded.ComputeHashBytes(buffer), hash2.ComputeHashBytes(buffer));
             }
         }
 
@@ -411,8 +411,8 @@ namespace FastHashes.Tests
 
             foreach (Hash hash in hashes)
             {
-                Byte[] expected = hash.ComputeHash(buffer);
-                Byte[] actual = hash.ComputeHash(buffer);
+                Byte[] expected = hash.ComputeHashBytes(buffer);
+                Byte[] actual = hash.ComputeHashBytes(buffer);
 
                 Assert.Equal(hash.Length / 8, expected.Length);
                 Assert.Equal(expected, actual);

@@ -70,7 +70,7 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected override UInt32 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             return m_Engine.ComputeHashValue(buffer);
         }
