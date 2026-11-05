@@ -60,9 +60,9 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
         {
-            return m_Engine.ComputeHash(buffer);
+            m_Engine.ComputeHash(buffer, destination);
         }
 
         /// <inheritdoc/>
@@ -284,7 +284,7 @@ namespace FastHashes
                 }
             }
 
-            public abstract Byte[] ComputeHash(ReadOnlySpan<Byte> buffer);
+            public abstract void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination);
             #endregion
         }
 
@@ -408,7 +408,7 @@ namespace FastHashes
                 return hash;
             }
 
-            public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
+            private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
                 Int32 count = buffer.Length;
 
@@ -427,9 +427,13 @@ namespace FastHashes
                     hash = Merge(accumulator, LongSecret, 11, start);
                 }
 
-                Byte[] result = BinaryOperations.ToArray64(hash);
+                return hash;
+            }
 
-                return result;
+            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+            {
+                UInt64 hash = ComputeHashValue(buffer);
+                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
             }
             #endregion
         }
@@ -559,7 +563,7 @@ namespace FastHashes
                 high ^= unchecked(BinaryOperations.Read64(buffer, offset1) + BinaryOperations.Read64(buffer, offset1 + 8));
             }
 
-            public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
+            private (UInt64 Hash1, UInt64 Hash2) ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
                 Int32 count = buffer.Length;
                 UInt64 lo, hi;
@@ -580,11 +584,14 @@ namespace FastHashes
                     hi = Merge(accumulator, LongSecret, 117, hiStart);
                 }
 
-                Byte[] result = new Byte[16];
-                BinaryPrimitives.WriteUInt64LittleEndian(result.AsSpan(0, 8), lo);
-                BinaryPrimitives.WriteUInt64LittleEndian(result.AsSpan(8, 8), hi);
+                return (lo, hi);
+            }
 
-                return result;
+            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+            {
+                var (hash1, hash2) = ComputeHashValue(buffer);
+                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
+                BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
             }
             #endregion
         }

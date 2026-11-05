@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -82,8 +83,7 @@ namespace FastHashes
             return state;
         }
 
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -125,9 +125,15 @@ namespace FastHashes
         Finalize:
 
             UInt64 hash = MirRound(r, r);
-            Byte[] result = BinaryOperations.ToArray64(hash);
+            
+            return hash;
+        }
 
-            return result;
+        /// <inheritdoc/>
+        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        {
+            UInt64 hash = ComputeHashValue(buffer);
+            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
         }
         #endregion
     }

@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -52,8 +53,7 @@ namespace FastHashes
             b = (UInt32)(c >> 32);
         }
 
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        private UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -88,9 +88,15 @@ namespace FastHashes
             WyMix(ref seed, ref s0);
 
             UInt32 hash = seed ^ s0;
-            Byte[] result = BinaryOperations.ToArray32(hash);
+            
+            return hash;
+        }
 
-            return result;
+        /// <inheritdoc/>
+        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        {
+            UInt32 hash = ComputeHashValue(buffer);
+            BinaryPrimitives.WriteUInt32LittleEndian(destination, hash);
         }
         #endregion
     }
@@ -193,8 +199,7 @@ namespace FastHashes
 #endif
         }
 
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -274,9 +279,15 @@ namespace FastHashes
             b ^= m_Secret[1];
 
             UInt64 hash = WyMix(a, b);
-            Byte[] result = BinaryOperations.ToArray64(hash);
+            
+            return hash;
+        }
 
-            return result;
+        /// <inheritdoc/>
+        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        {
+            UInt64 hash = ComputeHashValue(buffer);
+            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
         }
         #endregion
     }

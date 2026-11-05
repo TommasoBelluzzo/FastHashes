@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -79,10 +80,7 @@ namespace FastHashes
             v2 = BinaryOperations.RotateLeft(v2, 16);
         }
 
-        /// <inheritdoc/>
-
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        private UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -128,9 +126,15 @@ namespace FastHashes
                 Mix(ref v0, ref v1, ref v2, ref v3);
 
             UInt32 hash = v1 ^ v3;
-            Byte[] result = BinaryOperations.ToArray32(hash);
+            
+            return hash;
+        }
 
-            return result;
+        /// <inheritdoc/>
+        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        {
+            UInt32 hash = ComputeHashValue(buffer);
+            BinaryPrimitives.WriteUInt32LittleEndian(destination, hash);
         }
         #endregion
     }
@@ -258,10 +262,7 @@ namespace FastHashes
             v2 = BinaryOperations.RotateLeft(v2, 32);
         }
 
-        /// <inheritdoc/>
-
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -307,9 +308,15 @@ namespace FastHashes
                 Mix(ref v0, ref v1, ref v2, ref v3);
 
             UInt64 hash = v0 ^ v1 ^ v2 ^ v3;
-            Byte[] result = BinaryOperations.ToArray64(hash);
+            
+            return hash;
+        }
 
-            return result;
+        /// <inheritdoc/>
+        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        {
+            UInt64 hash = ComputeHashValue(buffer);
+            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
         }
 
         /// <inheritdoc/>

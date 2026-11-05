@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -50,13 +51,12 @@ namespace FastHashes
             return v1;
         }
 
-        /// <summary>Finalizes any partial computation and returns the hash code.</summary>
+        /// <summary>Finalizes the hash computation and writes the resulting hash code into the destination.</summary>
         /// <param name="hashData">The <see cref="T:System.UInt64"/> value representing the hash data.</param>
-        /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
-        protected abstract Byte[] GetHash(UInt64 hashData);
+        /// <param name="destination">The <see cref="T:System.Span`1{T}">Span&lt;byte&gt;</see> receiving the computed hash.</param>
+        protected abstract void WriteHash(UInt64 hashData, Span<Byte> destination);
 
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -84,15 +84,20 @@ namespace FastHashes
                 hash = Mix(hash, v);
             }
 
-            Finalize:
+        Finalize:
 
             hash ^= hash >> 23;
             hash = unchecked(hash * N);
             hash ^= hash >> 47;
 
-            Byte[] result = GetHash(hash);
+            return hash;
+        }
 
-            return result;
+        /// <inheritdoc/>
+        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        {
+            UInt64 hash = ComputeHashValue(buffer);
+            WriteHash(hash, destination);
         }
         #endregion
     }
@@ -118,13 +123,17 @@ namespace FastHashes
         #endregion
 
         #region Methods
-        /// <inheritdoc/>
-        protected override Byte[] GetHash(UInt64 hashData)
+        private static UInt32 ComputeHashValue(UInt64 hashData)
         {
-            UInt64 hash = hashData - (hashData >> 32);
-            Byte[] result = BinaryOperations.ToArray32(hash);
+            UInt64 hash = unchecked(hashData - (hashData >> 32));
+            return unchecked((UInt32)hash);
+        }
 
-            return result;
+        /// <inheritdoc/>
+        protected override void WriteHash(UInt64 hashData, Span<Byte> destination)
+        {
+            UInt32 hash = ComputeHashValue(hashData);
+            BinaryPrimitives.WriteUInt32LittleEndian(destination, hash);
         }
         #endregion
     }
@@ -151,12 +160,9 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] GetHash(UInt64 hashData)
+        protected override void WriteHash(UInt64 hashData, Span<Byte> destination)
         {
-            UInt64 hash = hashData;
-            Byte[] result = BinaryOperations.ToArray64(hash);
-
-            return result;
+            BinaryPrimitives.WriteUInt64LittleEndian(destination, hashData);
         }
         #endregion
     }

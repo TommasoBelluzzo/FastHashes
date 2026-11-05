@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -68,8 +69,7 @@ namespace FastHashes
             return v;
         }
 
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        private UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -135,9 +135,14 @@ namespace FastHashes
             hash = unchecked(hash * P3);
             hash ^= hash >> 16;
 
-            Byte[] result = BinaryOperations.ToArray32(hash);
+            return hash;
+        }
 
-            return result;
+        /// <inheritdoc/>
+        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        {
+            UInt32 hash = ComputeHashValue(buffer);
+            BinaryPrimitives.WriteUInt32LittleEndian(destination, hash);
         }
         #endregion
     }
@@ -255,8 +260,7 @@ namespace FastHashes
             return v1;
         }
 
-        /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -339,9 +343,14 @@ namespace FastHashes
             hash = unchecked(hash * P3);
             hash ^= hash >> 32;
 
-            Byte[] result = BinaryOperations.ToArray64(hash);
+            return hash;
+        }
 
-            return result;
+        /// <inheritdoc/>
+        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        {
+            UInt64 hash = ComputeHashValue(buffer);
+            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
         }
         #endregion
     }

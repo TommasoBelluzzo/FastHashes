@@ -1,6 +1,5 @@
 ﻿#region Using Directives
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
@@ -134,66 +133,83 @@ namespace FastHashes
             return HashRegistry.GetIdentifiers();
         }
 
-        /// <summary>Represents the core hashing function of the algorithm.</summary>
-        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> whose hash must be computed.</param>
-        /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
-        protected abstract Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer);
+        /// <summary>Computes the hash of the specified byte span and writes it into the destination byte span.</summary>
+        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> containing the data to hash.</param>
+        /// <param name="destination">The <see cref="T:System.Span`1{T}">Span&lt;byte&gt;</see> receiving the computed hash.</param>
+        protected abstract void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination);
 
-        /// <summary>Computes the hash of the specified byte array and returns its <see cref="T:System.Byte"/>[] representation.</summary>
-        /// <param name="buffer">The <see cref="T:System.Byte"/>[] whose hash must be computed.</param>
-        /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
+        /// <summary>Computes the hash of the specified byte array.</summary>
+        /// <param name="buffer">The <see cref="T:System.Byte"/>[] containing the data to hash.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] containing the computed hash.</returns>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
         public Byte[] ComputeHash(Byte[] buffer)
         {
             return ComputeHash(GetSpan(buffer, 0, buffer?.Length ?? 0));
         }
 
-        /// <summary>Computes the hash of the specified number of elements of a byte array, starting at the first element, and returns its <see cref="T:System.Byte"/>[] representation.</summary>
-        /// <param name="buffer">The <see cref="T:System.Byte"/>[] whose hash must be computed.</param>
-        /// <param name="count">The number of bytes in the array to use as data.</param>
-        /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
-        /// <exception cref="T:System.ArgumentException">Thrown when the number of bytes in <paramref name="buffer">buffer</paramref> is less than <paramref name="count">count</paramref>.</exception>
+        /// <summary>Computes the hash of the first <paramref name="count">count</paramref> bytes of the specified array.</summary>
+        /// <param name="buffer">The <see cref="T:System.Byte"/>[] containing the data to hash.</param>
+        /// <param name="count">The number of bytes to hash.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] containing the computed hash.</returns>
+        /// <exception cref="T:System.ArgumentException">Thrown when <paramref name="count">count</paramref> exceeds the length of <paramref name="buffer">buffer</paramref>.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="count">count</paramref> is less than <c>0</c>.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="count">count</paramref> is negative.</exception>
         public Byte[] ComputeHash(Byte[] buffer, Int32 count)
         {
             return ComputeHash(GetSpan(buffer, 0, count));
         }
 
-        /// <summary>Computes the hash of the specified region of a byte array and returns its <see cref="T:System.Byte"/>[] representation.</summary>
-        /// <param name="buffer">The <see cref="T:System.Byte"/>[] whose hash must be computed.</param>
-        /// <param name="offset">The offset into the byte array from which to begin using data.</param>
-        /// <param name="count">The number of bytes in the array to use as data.</param>
-        /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
+        /// <summary>Computes the hash of the specified region of a byte array.</summary>
+        /// <param name="buffer">The <see cref="T:System.Byte"/>[] containing the data to hash.</param>
+        /// <param name="offset">The zero-based starting index in <paramref name="buffer">buffer</paramref>.</param>
+        /// <param name="count">The number of bytes to hash.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] containing the computed hash.</returns>
         /// <exception cref="T:System.ArgumentException">Thrown when the region defined by <paramref name="offset">offset</paramref> and <paramref name="count">count</paramref> exceeds the bounds of <paramref name="buffer">buffer</paramref>.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="offset">offset</paramref> is not within the bounds of <paramref name="buffer">buffer</paramref> or when <paramref name="count">count</paramref> is less than <c>0</c>.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="offset">offset</paramref> is outside the valid range or <paramref name="count">count</paramref> is negative.</exception>
         public Byte[] ComputeHash(Byte[] buffer, Int32 offset, Int32 count)
         {
             return ComputeHash(GetSpan(buffer, offset, count));
         }
 
-        /// <summary>Computes the hash of the specified byte span and returns its <see cref="T:System.Byte"/>[] representation.</summary>
-        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> whose hash must be computed.</param>
-        /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
+        /// <summary>Computes the hash of the specified byte span.</summary>
+        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> containing the data to hash.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] containing the computed hash.</returns>
         public Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
         {
-            return ComputeHashInternal(buffer);
+            Byte[] result = new Byte[Length / 8];
+            ComputeHashInternal(buffer, result);
+
+            return result;
         }
 
-        /// <summary>Computes the hash of the specified text using UTF-8 encoding and returns its <see cref="T:System.Byte"/>[] representation.</summary>
-        /// <param name="text">The <see cref="T:System.String"/> whose hash must be computed.</param>
-        /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
+        /// <summary>Computes the hash of the specified byte span and writes it into the destination byte span.</summary>
+        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> containing the data to hash.</param>
+        /// <param name="destination">The <see cref="T:System.Span`1{T}">Span&lt;byte&gt;</see> receiving the computed hash.</param>
+        /// <exception cref="T:System.ArgumentException">Thrown when the destination is too small to contain the computed hash.</exception>
+        public void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        {
+            Int32 length = Length / 8;
+
+            if (destination.Length < length)
+                throw new ArgumentException("The destination buffer is too small.", nameof(destination));
+
+            ComputeHashInternal(buffer, destination.Slice(0, length));
+        }
+
+        /// <summary>Computes the hash of the specified text using UTF-8 encoding.</summary>
+        /// <param name="text">The <see cref="T:System.String"/> containing the text to hash.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] containing the computed hash.</returns>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="text">text</paramref> is <c>null</c>.</exception>
         public Byte[] ComputeHash(String text)
         {
             return ComputeHash(text, Encoding.UTF8);
         }
 
-        /// <summary>Computes the hash of the specified string using the specified encoding and returns its <see cref="T:System.Byte"/>[] representation.</summary>
-        /// <param name="text">The <see cref="T:System.String"/> whose hash must be computed.</param>
-        /// <param name="encoding">The <see cref="T:System.Text.Encoding"/> used to encode the string.</param>
-        /// <returns>A <see cref="T:System.Byte"/>[] representing the computed hash.</returns>
+        /// <summary>Computes the hash of the specified text using the specified encoding.</summary>
+        /// <param name="text">The <see cref="T:System.String"/> containing the text to hash.</param>
+        /// <param name="encoding">The <see cref="T:System.Text.Encoding"/> used to encode the text.</param>
+        /// <returns>A <see cref="T:System.Byte"/>[] containing the computed hash.</returns>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="text">text</paramref> or <paramref name="encoding">encoding</paramref> is <c>null</c>.</exception>
         public Byte[] ComputeHash(String text, Encoding encoding)
         {
@@ -206,10 +222,10 @@ namespace FastHashes
             return ComputeHash(encoding.GetBytes(text).AsSpan());
         }
 
-        /// <summary>Computes the hash of the specified byte array and returns its <see cref="T:System.String"/> representation.</summary>
-        /// <param name="buffer">The <see cref="T:System.Byte"/>[] whose hash must be computed.</param>
-        /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> value specifying the format of the resulting hash.</param>
-        /// <returns>A <see cref="T:System.String"/> representing the computed hash.</returns>
+        /// <summary>Computes the hash of the specified byte array and returns it in the specified format.</summary>
+        /// <param name="buffer">The <see cref="T:System.Byte"/>[] containing the data to hash.</param>
+        /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> specifying the output format.</param>
+        /// <returns>A <see cref="T:System.String"/> containing the formatted hash.</returns>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
         public String ComputeHash(Byte[] buffer, HashFormat format)
@@ -217,47 +233,47 @@ namespace FastHashes
             return ComputeHash(GetSpan(buffer, 0, buffer?.Length ?? 0), format);
         }
 
-        /// <summary>Computes the hash of the specified number of elements of a byte array, starting at the first element, and returns its <see cref="T:System.String"/> representation.</summary>
-        /// <param name="buffer">The <see cref="T:System.Byte"/>[] whose hash must be computed.</param>
-        /// <param name="count">The number of bytes in the array to use as data.</param>
-        /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> value specifying the format of the resulting hash.</param>
-        /// <returns>A <see cref="T:System.String"/> representing the computed hash.</returns>
-        /// <exception cref="T:System.ArgumentException">Thrown when the number of bytes in <paramref name="buffer">buffer</paramref> is less than <paramref name="count">count</paramref>.</exception>
+        /// <summary>Computes the hash of the first <paramref name="count">count</paramref> bytes of the specified array and returns it in the specified format.</summary>
+        /// <param name="buffer">The <see cref="T:System.Byte"/>[] containing the data to hash.</param>
+        /// <param name="count">The number of bytes to hash.</param>
+        /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> specifying the output format.</param>
+        /// <returns>A <see cref="T:System.String"/> containing the formatted hash.</returns>
+        /// <exception cref="T:System.ArgumentException">Thrown when <paramref name="count">count</paramref> exceeds the length of <paramref name="buffer">buffer</paramref>.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="count">count</paramref> is less than <c>0</c> or when <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="count">count</paramref> is negative or <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
         public String ComputeHash(Byte[] buffer, Int32 count, HashFormat format)
         {
             return ComputeHash(GetSpan(buffer, 0, count), format);
         }
 
-        /// <summary>Computes the hash of the specified region of a byte array and returns its <see cref="T:System.String"/> representation.</summary>
-        /// <param name="buffer">The <see cref="T:System.Byte"/>[] whose hash must be computed.</param>
-        /// <param name="offset">The offset into the byte array from which to begin using data.</param>
-        /// <param name="count">The number of bytes in the array to use as data.</param>
-        /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> value specifying the format of the resulting hash.</param>
-        /// <returns>A <see cref="T:System.String"/> representing the computed hash.</returns>
+        /// <summary>Computes the hash of the specified region of a byte array and returns it in the specified format.</summary>
+        /// <param name="buffer">The <see cref="T:System.Byte"/>[] containing the data to hash.</param>
+        /// <param name="offset">The zero-based starting index in <paramref name="buffer">buffer</paramref>.</param>
+        /// <param name="count">The number of bytes to hash.</param>
+        /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> specifying the output format.</param>
+        /// <returns>A <see cref="T:System.String"/> containing the formatted hash.</returns>
         /// <exception cref="T:System.ArgumentException">Thrown when the region defined by <paramref name="offset">offset</paramref> and <paramref name="count">count</paramref> exceeds the bounds of <paramref name="buffer">buffer</paramref>.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="buffer">buffer</paramref> is <c>null</c>.</exception>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="offset">offset</paramref> is not within the bounds of <paramref name="buffer">buffer</paramref>, when <paramref name="count">count</paramref> is less than <c>0</c>, or when <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="offset">offset</paramref> is outside the valid range, <paramref name="count">count</paramref> is negative, or <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
         public String ComputeHash(Byte[] buffer, Int32 offset, Int32 count, HashFormat format)
         {
             return ComputeHash(GetSpan(buffer, offset, count), format);
         }
 
-        /// <summary>Computes the hash of the specified byte span and returns its <see cref="T:System.String"/> representation.</summary>
-        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> whose hash must be computed.</param>
-        /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> value specifying the format of the resulting hash.</param>
-        /// <returns>A <see cref="T:System.String"/> representing the computed hash.</returns>
+        /// <summary>Computes the hash of the specified byte span and returns it in the specified format.</summary>
+        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> containing the data to hash.</param>
+        /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> specifying the output format.</param>
+        /// <returns>A <see cref="T:System.String"/> containing the formatted hash.</returns>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
         public String ComputeHash(ReadOnlySpan<Byte> buffer, HashFormat format)
         {
-            return HashFormatter.Format(ComputeHashInternal(buffer), format);
+            return HashFormatter.Format(ComputeHash(buffer), format);
         }
 
-        /// <summary>Computes the hash of the specified text using UTF-8 encoding and returns its <see cref="T:System.String"/> representation.</summary>
-        /// <param name="text">The <see cref="T:System.String"/> whose hash must be computed.</param>
-        /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> value specifying the format of the resulting hash.</param>
-        /// <returns>A <see cref="T:System.String"/> representing the computed hash.</returns>
+        /// <summary>Computes the hash of the specified text using UTF-8 encoding and returns it in the specified format.</summary>
+        /// <param name="text">The <see cref="T:System.String"/> containing the text to hash.</param>
+        /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> specifying the output format.</param>
+        /// <returns>A <see cref="T:System.String"/> containing the formatted hash.</returns>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="text">text</paramref> is <c>null</c>.</exception>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
         public String ComputeHash(String text, HashFormat format)
@@ -265,11 +281,11 @@ namespace FastHashes
             return ComputeHash(text, Encoding.UTF8, format);
         }
 
-        /// <summary>Computes the hash of the specified text using the specified encoding and returns its <see cref="T:System.String"/> representation.</summary>
-        /// <param name="text">The <see cref="T:System.String"/> whose hash must be computed.</param>
-        /// <param name="encoding">The <see cref="T:System.Text.Encoding"/> used to encode the string.</param>
-        /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> value specifying the format of the resulting hash.</param>
-        /// <returns>A <see cref="T:System.String"/> representing the computed hash.</returns>
+        /// <summary>Computes the hash of the specified text using the specified encoding and returns it in the specified format.</summary>
+        /// <param name="text">The <see cref="T:System.String"/> containing the text to hash.</param>
+        /// <param name="encoding">The <see cref="T:System.Text.Encoding"/> used to encode the text.</param>
+        /// <param name="format">The <see cref="T:FastHashes.HashFormat"/> specifying the output format.</param>
+        /// <returns>A <see cref="T:System.String"/> containing the formatted hash.</returns>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="text">text</paramref> or <paramref name="encoding">encoding</paramref> is <c>null</c>.</exception>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="format">format</paramref> is not a defined enumeration value.</exception>
         public String ComputeHash(String text, Encoding encoding, HashFormat format)

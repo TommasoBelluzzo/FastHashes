@@ -290,8 +290,7 @@ namespace FastHashes
 			return BinaryPrimitives.ReadUInt64LittleEndian(buffer.Slice(offset, 8));
 		} 
 
-		/// <inheritdoc/>
-		protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+		private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
 		{
 			Int32 count = buffer.Length;
 
@@ -309,9 +308,14 @@ namespace FastHashes
 			else
 				hash = Hash32ToEnd(buffer, count, s1, s5);
 
-			Byte[] result = BinaryOperations.ToArray64(hash);
+			return hash;
+		}
 
-			return result;
+		/// <inheritdoc/>
+		protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+		{
+			UInt64 hash = ComputeHashValue(buffer);
+			BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
 		}
 		#endregion
     }

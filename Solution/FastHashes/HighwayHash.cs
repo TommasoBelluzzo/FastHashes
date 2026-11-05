@@ -145,16 +145,16 @@ namespace FastHashes
             ));
         }
 
-        /// <summary>Finalizes any partial computation and returns the hash code.</summary>
+        /// <summary>Finalizes any partial computation and writes the hash code into the destination.</summary>
         /// <param name="m0">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;ulong&gt;</see> representing the hash data M0.</param>
         /// <param name="m1">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;ulong&gt;</see> representing the hash data M1.</param>
         /// <param name="v0">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;ulong&gt;</see> representing the hash data V0.</param>
         /// <param name="v1">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;ulong&gt;</see> representing the hash data V1.</param>
-        /// <returns>A <see cref="T:System.Byte"/>[] representing the hash code.</returns>
-        protected abstract Byte[] GetHash(ReadOnlySpan<UInt64> m0, ReadOnlySpan<UInt64> m1, ReadOnlySpan<UInt64> v0, ReadOnlySpan<UInt64> v1);
+        /// <param name="destination">The <see cref="T:System.Span`1{T}">Span&lt;byte&gt;</see> receiving the hash code.</param>
+        protected abstract void WriteHash(ReadOnlySpan<UInt64> m0, ReadOnlySpan<UInt64> m1, ReadOnlySpan<UInt64> v0, ReadOnlySpan<UInt64> v1, Span<Byte> destination);
 
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -240,10 +240,8 @@ namespace FastHashes
                 Update(m0, m1, v0, v1, k);
             }
 
-            Byte[] result = GetHash(m0, m1, v0, v1);
-
-            return result;
-        }
+            WriteHash(m0, m1, v0, v1, destination);
+                }
         #endregion
     }
 
@@ -288,12 +286,10 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] GetHash(ReadOnlySpan<UInt64> m0, ReadOnlySpan<UInt64> m1, ReadOnlySpan<UInt64> v0, ReadOnlySpan<UInt64> v1)
+        protected override void WriteHash(ReadOnlySpan<UInt64> m0, ReadOnlySpan<UInt64> m1, ReadOnlySpan<UInt64> v0, ReadOnlySpan<UInt64> v1, Span<Byte> destination)
         {
             UInt64 hash = unchecked(v0[0] + v1[0] + m0[0] + m1[0]);
-            Byte[] result = BinaryOperations.ToArray64(hash);
-
-            return result;
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
         }
         #endregion
     }
@@ -339,13 +335,12 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] GetHash(ReadOnlySpan<UInt64> m0, ReadOnlySpan<UInt64> m1, ReadOnlySpan<UInt64> v0, ReadOnlySpan<UInt64> v1)
+        protected override void WriteHash(ReadOnlySpan<UInt64> m0, ReadOnlySpan<UInt64> m1, ReadOnlySpan<UInt64> v0, ReadOnlySpan<UInt64> v1, Span<Byte> destination)
         {
             UInt64 hash1 = unchecked(v0[0] + m0[0] + v1[2] + m1[2]);
             UInt64 hash2 = unchecked(v0[1] + m0[1] + v1[3] + m1[3]);
-            Byte[] result = BinaryOperations.ToArray64(hash1, hash2);
-
-            return result;
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
         }
         #endregion
     }
@@ -402,14 +397,15 @@ namespace FastHashes
         }
 
         /// <inheritdoc/>
-        protected override Byte[] GetHash(ReadOnlySpan<UInt64> m0, ReadOnlySpan<UInt64> m1, ReadOnlySpan<UInt64> v0, ReadOnlySpan<UInt64> v1)
+        protected override void WriteHash(ReadOnlySpan<UInt64> m0, ReadOnlySpan<UInt64> m1, ReadOnlySpan<UInt64> v0, ReadOnlySpan<UInt64> v1, Span<Byte> destination)
         {
             MR(out UInt64 hash1, out UInt64 hash2, v0[0], m0[0], v0[1], m0[1], v1[0], m1[0], v1[1], m1[1]);
             MR(out UInt64 hash3, out UInt64 hash4, v0[2], m0[2], v0[3], m0[3], v1[2], m1[2], v1[3], m1[3]);
 
-            Byte[] result = BinaryOperations.ToArray64(hash1, hash2, hash3, hash4);
-
-            return result;
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(16), hash3);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(24), hash4);
         }
         #endregion
     }

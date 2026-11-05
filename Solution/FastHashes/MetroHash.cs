@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -64,11 +65,9 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
         {
-            Byte[] hash = m_Engine.ComputeHash(buffer);
-
-            return hash;
+            m_Engine.ComputeHash(buffer, destination);
         }
 
         /// <inheritdoc/>
@@ -158,7 +157,7 @@ namespace FastHashes
                 return v1;
             }
 
-            public abstract Byte[] ComputeHash(ReadOnlySpan<Byte> buffer);
+            public abstract void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination);
             #endregion
         }
 
@@ -185,7 +184,7 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
+            private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -282,9 +281,13 @@ namespace FastHashes
                 hash = unchecked(hash * K0);
                 hash ^= BinaryOperations.RotateRight(hash, 33);
 
-                Byte[] result = BinaryOperations.ToArray64(hash);
+                return hash;
+            }
 
-                return result;
+            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+            {
+                UInt64 hash = ComputeHashValue(buffer);
+                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
             }
             #endregion
         }
@@ -312,7 +315,7 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
+            private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -409,9 +412,13 @@ namespace FastHashes
                 hash = unchecked(hash * K0);
                 hash ^= BinaryOperations.RotateRight(hash, 29);
 
-                Byte[] result = BinaryOperations.ToArray64(hash);
+                return hash;
+            }
 
-                return result;
+            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+            {
+                UInt64 hash = ComputeHashValue(buffer);
+                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
             }
             #endregion
         }
@@ -476,9 +483,9 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override Byte[] ComputeHashInternal(ReadOnlySpan<Byte> buffer)
+        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
         {
-            return m_Engine.ComputeHash(buffer);
+            m_Engine.ComputeHash(buffer, destination);
         }
 
         /// <inheritdoc/>
@@ -566,7 +573,7 @@ namespace FastHashes
                 return v;
             }
 
-            public abstract Byte[] ComputeHash(ReadOnlySpan<Byte> buffer);
+            public abstract void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination);
             #endregion
         }
 
@@ -593,7 +600,7 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
+            private (UInt64 Hash1, UInt64 Hash2) ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -684,9 +691,14 @@ namespace FastHashes
                 hash1 = Fin(hash1, hash2, 13, K2);
                 hash2 = Fin(hash2, hash1, 37, K3);
 
-                Byte[] result = BinaryOperations.ToArray64(hash1, hash2);
+                return (hash1, hash2);
+            }
 
-                return result;
+            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+            {
+                var (hash1, hash2) = ComputeHashValue(buffer);
+                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
+                BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
             }
             #endregion
         }
@@ -714,7 +726,7 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            public override Byte[] ComputeHash(ReadOnlySpan<Byte> buffer)
+            private (UInt64 Hash1, UInt64 Hash2) ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -805,9 +817,14 @@ namespace FastHashes
                 hash1 = Fin(hash1, hash2, 33, K2);
                 hash2 = Fin(hash2, hash1, 33, K3);
 
-                Byte[] result = BinaryOperations.ToArray64(hash1, hash2);
+                return (hash1, hash2);
+            }
 
-                return result;
+            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+            {
+                var (hash1, hash2) = ComputeHashValue(buffer);
+                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
+                BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
             }
             #endregion
         }
