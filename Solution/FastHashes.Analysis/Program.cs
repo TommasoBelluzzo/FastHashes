@@ -19,13 +19,12 @@ namespace FastHashes.Analysis
         private const Int32 KEY_LENGTH = 64;
         private const Int32 KEY_LENGTH_MINIMUM = 0;
         private const Int32 KEY_LENGTH_MAXIMUM = 4096;
-        private const String OUTPUT_DIRECTORY = "Results";
         #endregion
 
         #region Entry Point
         public static Int32 Main(String[] args)
         {
-            RootCommand command = new("Analyzes the statistical quality of algorithms.");
+            RootCommand command = new("Analyzes hash algorithms using statistical quality and distribution tests.");
 
             Option<Boolean> listOption = new("--list")
             {
@@ -34,7 +33,7 @@ namespace FastHashes.Analysis
 
             Option<String> hashOption = new("--hash")
             {
-                Description = "The registered hash to analyze."
+                Description = "The registered hash to analyze.",
             };
 
             Option<String> analysisOption = new("--analysis")
@@ -63,13 +62,7 @@ namespace FastHashes.Analysis
             Option<Int32> keyLengthOption = new("--key-length")
             {
                 Description = $"Input key length in bytes. [valid range: {KEY_LENGTH_MINIMUM}-{KEY_LENGTH_MAXIMUM}]",
-                DefaultValueFactory = _ => KEY_LENGTH
-            };
-
-            Option<String> outputOption = new("--output")
-            {
-                Description = "Root directory for run artifacts.",
-                DefaultValueFactory = _ => OUTPUT_DIRECTORY
+                DefaultValueFactory = _ => KEY_LENGTH,
             };
 
             hashOption.Validators.Add(result =>
@@ -78,7 +71,7 @@ namespace FastHashes.Analysis
 
                 if (String.IsNullOrWhiteSpace(hashName))
                 {
-                    result.AddError("--hash requires a nonempty name.");
+                    result.AddError("--hash requires a non-empty name.");
                     return;
                 }
 
@@ -110,10 +103,26 @@ namespace FastHashes.Analysis
                     result.AddError($"--key-length must be between {KEY_LENGTH_MINIMUM} and {KEY_LENGTH_MAXIMUM}.");
             });
 
-            outputOption.Validators.Add(result =>
+            command.Validators.Add(result =>
             {
-                if (String.IsNullOrWhiteSpace(result.GetValueOrDefault<String>()))
-                    result.AddError("--output requires a nonempty directory.");
+                if (!result.GetValue(listOption))
+                {
+                    if (result.GetResult(hashOption)?.Implicit != false)
+                        result.AddError("--hash is required.");
+
+                    return;
+                }
+
+                Option[] analysisOptions = [hashOption, analysisOption, hashSeedOption, generatorSeedOption, samplesOption, keyLengthOption];
+
+                foreach (Option option in analysisOptions)
+                {
+                    if (result.GetResult(option)?.Implicit == false)
+                    {
+                        result.AddError("--list cannot be combined with other analysis options.");
+                        return;
+                    }
+                }
             });
 
             command.Options.Add(hashOption);
@@ -122,45 +131,37 @@ namespace FastHashes.Analysis
             command.Options.Add(generatorSeedOption);
             command.Options.Add(samplesOption);
             command.Options.Add(keyLengthOption);
-            command.Options.Add(outputOption);
             command.Options.Add(listOption);
 
             command.SetAction
             (
-                parseResult => RunAnalysis
-                (
-                    parseResult.GetValue(hashOption),
-                    parseResult.GetValue(analysisOption),
-                    parseResult.GetValue(hashSeedOption),
-                    parseResult.GetValue(generatorSeedOption),
-                    parseResult.GetValue(samplesOption),
-                    parseResult.GetValue(keyLengthOption),
-                    parseResult.GetValue(outputOption),
-                    parseResult.GetValue(listOption)
-                )
+                parseResult =>
+                {
+                    if (parseResult.GetValue(listOption))
+                    {
+                        foreach (String algorithm in Hash.GetAlgorithms())
+                            Console.WriteLine(algorithm);
+
+                        return 0;
+                    }
+
+                    return RunAnalysis
+                    (
+                        parseResult.GetValue(hashOption),
+                        parseResult.GetValue(analysisOption),
+                        parseResult.GetValue(hashSeedOption),
+                        parseResult.GetValue(generatorSeedOption),
+                        parseResult.GetValue(samplesOption),
+                        parseResult.GetValue(keyLengthOption)
+                    );
+                }
             );
 
             return command.Parse(args).Invoke();
         }
-        #endregion
 
-        #region Methods
-        private static Int32 RunAnalysis(String selectedHash, String analysis, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength, String outputDirectory, Boolean listAlgorithms)
+        private static Int32 RunAnalysis(String selectedHash, String analysis, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength)
         {
-            if (listAlgorithms)
-            {
-                foreach (String algorithm in Hash.GetAlgorithms())
-                    Console.WriteLine(algorithm);
-
-                return 0;
-            }
-
-            if (String.IsNullOrWhiteSpace(selectedHash))
-            {
-                Console.Error.WriteLine("Error: --hash is required unless --list is specified.");
-                return 2;
-            }
-
             Assembly hashAssembly = typeof(Hash).Assembly;
             String hashVersion = hashAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
                 ?? hashAssembly.GetName().Version?.ToString()
@@ -173,7 +174,6 @@ namespace FastHashes.Analysis
             Console.WriteLine($"Process Architecture: {RuntimeInformation.ProcessArchitecture}");
             Console.WriteLine($"Runtime: {RuntimeInformation.FrameworkDescription}");
             Console.WriteLine($"FastHashes Version: {hashVersion}");
-            Console.WriteLine($"Available Processors: {Environment.ProcessorCount}");
             Console.WriteLine();
 
             Console.WriteLine("[ANALYSIS CONFIGURATION]");
@@ -184,7 +184,6 @@ namespace FastHashes.Analysis
             Console.WriteLine($"Generator Seed: {generatorSeed}");
             Console.WriteLine($"Samples: {samples}");
             Console.WriteLine($"Key Length: {keyLength} Bytes");
-            Console.WriteLine($"Output Directory: {outputDirectory}");
             Console.WriteLine();
 
             String title = $"# HASH: {selectedHash} #";
@@ -197,7 +196,7 @@ namespace FastHashes.Analysis
 
             try
             {
-                String directory = AnalysisRunner.Run(selectedHash, analysis, hashSeed, generatorSeed, samples, keyLength, outputDirectory);
+                String directory = AnalysisRunner.Run(selectedHash, analysis, hashSeed, generatorSeed, samples, keyLength);
 
                 Console.WriteLine("[INFRASTRUCTURE SMOKE TEST]");
                 Console.WriteLine($"Output: {directory}");

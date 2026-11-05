@@ -42,7 +42,12 @@
       "preLaunchTask": "Build Analysis: Debug",
       "program": "${workspaceFolder}/Solution/Output/Debug/net10.0/FastHashes.Analysis.dll",
       "cwd": "${workspaceFolder}/Solution",
-      "args": [],
+      "args": [
+        "--hash",
+        "XxHash64",
+        "--analysis",
+        "smoke"
+      ],
       "console": "integratedTerminal",
       "stopAtEntry": true,
       "justMyCode": false,
@@ -58,7 +63,12 @@
       "preLaunchTask": "Build Analysis: Release",
       "program": "${workspaceFolder}/Solution/Output/Release/net10.0/FastHashes.Analysis.dll",
       "cwd": "${workspaceFolder}/Solution",
-      "args": [],
+      "args": [
+        "--hash",
+        "XxHash64",
+        "--analysis",
+        "smoke"
+      ],
       "console": "integratedTerminal",
       "stopAtEntry": false
     },
@@ -88,6 +98,37 @@
       "args": [],
       "console": "integratedTerminal",
       "stopAtEntry": false
+    },
+    {
+      "name": "Run Coverage",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Build Tests: Release",
+      "program": "${workspaceFolder}/Solution/Output/Release/net10.0/FastHashes.Tests.dll",
+      "cwd": "${workspaceFolder}/Solution/Output/Release/net10.0",
+      "args": [
+        "--coverlet",
+        "--coverlet-output-format",
+        "cobertura",
+        "--coverlet-output-format",
+        "json",
+        "--coverlet-output-format",
+        "lcov",
+        "--coverlet-include",
+        "[FastHashes]*",
+        "--results-directory",
+        "${workspaceFolder}/Solution/Coverage",
+        "--coverlet-exclude-by-attribute",
+        "CompilerGeneratedAttribute",
+        "--coverlet-exclude-by-attribute",
+        "ExcludeFromCodeCoverageAttribute",
+        "--coverlet-exclude-by-attribute",
+        "GeneratedCodeAttribute",
+        "--coverlet-skip-auto-props"
+      ],
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "justMyCode": false
     }
   ]
 }

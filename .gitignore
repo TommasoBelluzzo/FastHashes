@@ -20,6 +20,7 @@
 [Oo]utput/
 [Pp]ackage/
 [Cc]overage/
+[Aa]nalysis/
 x64/
 x86/
 bld/

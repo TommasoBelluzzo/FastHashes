@@ -114,63 +114,6 @@
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "Run Tests",
-      "type": "process",
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "${workspaceFolder}/Solution/FastHashes.Tests/FastHashes.Tests.csproj",
-        "--configuration",
-        "Release",
-        "--framework",
-        "net10.0",
-        "--no-build",
-        "--no-restore",
-        "-p:Platform=AnyCPU"
-      ],
-      "dependsOn": [
-        "Build Tests: Release"
-      ],
-      "dependsOrder": "sequence",
-      "problemMatcher": []
-    },
-    {
-      "label": "Run Tests + Coverage",
-      "type": "process",
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "${workspaceFolder}/Solution/FastHashes.Tests/FastHashes.Tests.csproj",
-        "--configuration",
-        "Release",
-        "--framework",
-        "net10.0",
-        "--no-build",
-        "--no-restore",
-        "-p:Platform=AnyCPU",
-        "--",
-        "--coverlet",
-        "--coverlet-output-format",
-        "lcov",
-        "--results-directory",
-        "${workspaceFolder}/Solution/Coverage",
-        "--coverlet-exclude-by-attribute",
-        "CompilerGeneratedAttribute",
-        "--coverlet-exclude-by-attribute",
-        "ExcludeFromCodeCoverageAttribute",
-        "--coverlet-exclude-by-attribute",
-        "GeneratedCodeAttribute",
-        "--coverlet-skip-auto-props"
-      ],
-      "dependsOn": [
-        "Build Tests: Release"
-      ],
-      "dependsOrder": "sequence",
-      "problemMatcher": []
-    },
-    {
       "label": "Build Analysis: Debug",
       "type": "process",
       "command": "dotnet",
@@ -197,28 +140,6 @@
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "Run Analysis",
-      "type": "process",
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "${workspaceFolder}/Solution/FastHashes.Analysis/FastHashes.Analysis.csproj",
-        "--configuration",
-        "Release",
-        "--framework",
-        "net10.0",
-        "--no-build",
-        "--no-restore",
-        "-p:Platform=AnyCPU"
-      ],
-      "dependsOn": [
-        "Build Analysis: Release"
-      ],
-      "dependsOrder": "sequence",
-      "problemMatcher": []
-    },
-    {
       "label": "Build Benchmarks: Debug",
       "type": "process",
       "command": "dotnet",
@@ -243,28 +164,6 @@
         "-p:Platform=AnyCPU"
       ],
       "problemMatcher": "$msCompile"
-    },
-    {
-      "label": "Run Benchmarks",
-      "type": "process",
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "${workspaceFolder}/Solution/FastHashes.Benchmarks/FastHashes.Benchmarks.csproj",
-        "--configuration",
-        "Release",
-        "--framework",
-        "net10.0",
-        "--no-build",
-        "--no-restore",
-        "-p:Platform=AnyCPU"
-      ],
-      "dependsOn": [
-        "Build Benchmarks: Release"
-      ],
-      "dependsOrder": "sequence",
-      "problemMatcher": []
     },
     {
       "label": "Create Packages",

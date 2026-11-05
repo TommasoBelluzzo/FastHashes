@@ -39,7 +39,7 @@ namespace FastHashes.Benchmarks
         #region Entry Point
         public static Int32 Main(String[] args)
         {
-            RootCommand command = new("Benchmarks algorithms using bulk and chunk speed tests.");
+            RootCommand command = new("Measures hash algorithms performance using bulk throughput and chunk latency benchmarks.");
 
             Option<Boolean> listOption = new("--list")
             {
@@ -118,8 +118,16 @@ namespace FastHashes.Benchmarks
                 if (!result.GetValue(listOption))
                     return;
 
-                if ((result.GetResult(hashOption)?.Implicit == false) || (result.GetResult(bulkLengthOption)?.Implicit == false) || (result.GetResult(bulkRepetitionsOption)?.Implicit == false) || (result.GetResult(warmupRepetitionsOption)?.Implicit == false))
-                    result.AddError("--list cannot be combined with other benchmark options.");
+                Option[] benchmarkOptions = [hashOption, bulkLengthOption, bulkRepetitionsOption, warmupRepetitionsOption];
+
+                foreach (Option option in benchmarkOptions)
+                {
+                    if (result.GetResult(option)?.Implicit == false)
+                    {
+                        result.AddError("--list cannot be combined with other options.");
+                        return;
+                    }
+                }
             });
 
             command.SetAction

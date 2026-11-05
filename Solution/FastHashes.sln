@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastHashes", "FastHashes\Fa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastHashes.Tests", "FastHashes.Tests\FastHashes.Tests.csproj", "{56B52E49-B24F-4406-A8B8-0426F4CE1AB6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastHashes.Analysis", "FastHashes.Analysis\FastHashes.Analysis.csproj", "{3D1AE038-4A9A-4863-8E22-C4F2D8D52CCB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastHashes.Analysis", "FastHashes.Analysis\FastHashes.Analysis.csproj", "{3D1AE038-4A9A-4863-8E22-C4F2D8D52CCB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastHashes.Benchmarks", "FastHashes.Benchmarks\FastHashes.Benchmarks.csproj", "{63B36156-D83C-47C3-8BC9-9FBCC685686B}"
 EndProject
