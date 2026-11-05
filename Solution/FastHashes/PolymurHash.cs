@@ -1,6 +1,5 @@
 #region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the PolymurHash implementation. This class cannot be derived.</summary>
-    public sealed class PolymurHash : Hash
+    public sealed class PolymurHash : Hash<UInt64>
     {
         #region Members
         private readonly UInt64 m_K;
@@ -20,9 +19,7 @@ namespace FastHashes
         #endregion
 
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
+
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
@@ -213,7 +210,8 @@ namespace FastHashes
 #endif
         }
 
-        private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -303,16 +301,10 @@ namespace FastHashes
             }
 
             hash = unchecked(Mix(hash) + m_KS);
-            
+
             return hash;
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            UInt64 hash = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
-        }
         #endregion
     }
 }

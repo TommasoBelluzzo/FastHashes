@@ -1,6 +1,5 @@
 ﻿#region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the HalfSipHash implementation. This class cannot be derived.</summary>
-    public sealed class HalfSipHash : Hash
+    public sealed class HalfSipHash : Hash<UInt32>
     {
         #region Constants
         private const UInt32 I0 = 0x6C796765u;
@@ -21,9 +20,7 @@ namespace FastHashes
         #endregion
 
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 32;
+
 
         /// <summary>Gets the first seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt32"/> value.</value>
@@ -80,7 +77,8 @@ namespace FastHashes
             v2 = BinaryOperations.RotateLeft(v2, 16);
         }
 
-        private UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -126,21 +124,15 @@ namespace FastHashes
                 Mix(ref v0, ref v1, ref v2, ref v3);
 
             UInt32 hash = v1 ^ v3;
-            
+
             return hash;
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            UInt32 hash = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt32LittleEndian(destination, hash);
-        }
         #endregion
     }
 
     /// <summary>Represents the SipHash implementation. This class cannot be derived.</summary>
-    public sealed class SipHash : Hash
+    public sealed class SipHash : Hash<UInt64>
     {
         #region Constants
         private const UInt64 K0 = 0x736F6D6570736575ul;
@@ -158,9 +150,7 @@ namespace FastHashes
         #endregion
 
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
+
 
         /// <summary>Gets the variant of the hashing algorithm.</summary>
         /// <value>An enumerator value of type <see cref="T:FastHashes.SipHashVariant"/>.</value>
@@ -262,7 +252,8 @@ namespace FastHashes
             v2 = BinaryOperations.RotateLeft(v2, 32);
         }
 
-        private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -308,15 +299,8 @@ namespace FastHashes
                 Mix(ref v0, ref v1, ref v2, ref v3);
 
             UInt64 hash = v0 ^ v1 ^ v2 ^ v3;
-            
-            return hash;
-        }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            UInt64 hash = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
+            return hash;
         }
 
         /// <inheritdoc/>

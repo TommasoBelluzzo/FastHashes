@@ -1,6 +1,5 @@
-﻿#region Using Directives
+#region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the MirHash implementation. This class cannot be derived.</summary>
-    public sealed class MirHash : Hash
+    public sealed class MirHash : Hash<UInt64>
     {
         #region Constants
         private const UInt64 P1 = 0X65862B62BDF5EF4Dul;
@@ -20,9 +19,7 @@ namespace FastHashes
         #endregion
 
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
+
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
@@ -83,7 +80,8 @@ namespace FastHashes
             return state;
         }
 
-        private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -125,16 +123,10 @@ namespace FastHashes
         Finalize:
 
             UInt64 hash = MirRound(r, r);
-            
+
             return hash;
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            UInt64 hash = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
-        }
         #endregion
     }
 }

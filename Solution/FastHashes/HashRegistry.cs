@@ -1,4 +1,4 @@
-﻿#region Using Directives
+#region Using Directives
 using System;
 using System.Collections.Generic;
 #endregion
@@ -256,16 +256,16 @@ namespace FastHashes
                 () => new XxHash64(),
                 seed => new XxHash64(seed)
             ),
-            ["XxHash3-O64"] =
+            ["XxHashThree64"] =
             (
-                () => new XxHash3(XxHash3Output.O64),
-                seed => new XxHash3(XxHash3Output.O64, seed)
+                () => new XxHashThree64(),
+                seed => new XxHashThree64(seed)
             ),
-            ["XxHash3-O128"] =
+            ["XxHashThree128"] =
             (
-                () => new XxHash3(XxHash3Output.O128),
-                seed => new XxHash3(XxHash3Output.O128, seed)
-            ),
+                () => new XxHashThree128(),
+                seed => new XxHashThree128(seed)
+            )
         };
         #endregion
 

@@ -1,6 +1,5 @@
 #region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the NmHash implementation. This class cannot be derived.</summary>
-    public sealed class NmHash : Hash
+    public sealed class NmHash : Hash<UInt32>
     {
         #region Members
         private readonly Engine m_Engine;
@@ -20,9 +19,6 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         public NmHashVariant Variant => m_Engine.Variant;
 
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 32;
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt32"/> value.</value>
@@ -74,9 +70,9 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        protected override UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
-            m_Engine.ComputeHash(buffer, destination);
+            return m_Engine.ComputeHashValue(buffer);
         }
 
         /// <inheritdoc/>
@@ -205,7 +201,7 @@ namespace FastHashes
                 return m;
             }
 
-            public abstract void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination);
+            public abstract UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer);
             #endregion
         }
 
@@ -328,7 +324,7 @@ namespace FastHashes
                 return x;
             }
 
-            private UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+            private UInt32 ComputeResult(ReadOnlySpan<Byte> buffer)
             {
                 Int32 count = buffer.Length;
 
@@ -386,10 +382,9 @@ namespace FastHashes
                 return hash;
             }
 
-            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+            public override UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
-                UInt32 hash = ComputeHashValue(buffer);
-                BinaryPrimitives.WriteUInt32LittleEndian(destination, hash);
+                return ComputeResult(buffer);
             }
             #endregion
         }
@@ -551,7 +546,7 @@ namespace FastHashes
                 return x;
             }
 
-            private UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+            private UInt32 ComputeResult(ReadOnlySpan<Byte> buffer)
             {
                 Int32 count = buffer.Length;
                 UInt32 seed = m_Seed;
@@ -596,10 +591,9 @@ namespace FastHashes
                 return hash;
             }
 
-            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+            public override UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
-                UInt32 hash = ComputeHashValue(buffer);
-                BinaryPrimitives.WriteUInt32LittleEndian(destination, hash);
+                return ComputeResult(buffer);
             }
             #endregion
         }

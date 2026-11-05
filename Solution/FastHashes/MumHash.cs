@@ -1,6 +1,5 @@
-﻿#region Using Directives
+#region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the MumHash implementation. This class cannot be derived.</summary>
-    public sealed class MumHash : Hash
+    public sealed class MumHash : Hash<UInt64>
     {
         #region Constants
         private const UInt64 BSP = 0xC42B5E2E6480B23Bul;
@@ -27,9 +26,7 @@ namespace FastHashes
         #endregion
 
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
+
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
@@ -86,7 +83,8 @@ namespace FastHashes
             return v;
         }
 
-        private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -141,12 +139,6 @@ namespace FastHashes
             return hash;
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            UInt64 hash = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
-        }
         #endregion
     }
 }

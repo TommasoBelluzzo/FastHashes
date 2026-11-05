@@ -1,4 +1,4 @@
-﻿namespace FastHashes
+namespace FastHashes
 {
     /// <summary>Specifies the variant of <see cref="T:FastHashes.FastPositiveHash"/>.</summary>
     public enum FastPositiveHashVariant
@@ -109,17 +109,6 @@
         V13,
         /// <summary>The variant 2-4 of <see cref="T:FastHashes.SipHash"/>.</summary>
         V24
-        #endregion
-    }
-
-    /// <summary>Specifies the output of <see cref="T:FastHashes.XxHash3"/>.</summary>
-    public enum XxHash3Output
-    {
-        #region Values
-        /// <summary>The 64-bit output of <see cref="T:FastHashes.XxHash3"/>.</summary>
-        O64,
-        /// <summary>The 128-bit output of <see cref="T:FastHashes.XxHash3"/>.</summary>
-        O128
         #endregion
     }
 }

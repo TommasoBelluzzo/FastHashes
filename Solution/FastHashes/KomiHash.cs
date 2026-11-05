@@ -1,4 +1,4 @@
-﻿#region Using Directives
+#region Using Directives
 using System;
 using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
@@ -8,69 +8,65 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
 	/// <summary>Represents the KomiHash implementation. This class cannot be derived.</summary>
-    public sealed class KomiHash : Hash
-    {
-        #region Constants
-        private const UInt64 P1 = 0x243F6A8885A308D3ul;
-        private const UInt64 P2 = 0x13198A2E03707344ul;
-        private const UInt64 P3 = 0xA4093822299F31D0ul;
-        private const UInt64 P4 = 0x082EFA98EC4E6C89ul;
-        private const UInt64 P5 = 0x452821E638D01377ul;
-        private const UInt64 P6 = 0xBE5466CF34E90C6Cul;
-        private const UInt64 P7 = 0xC0AC29B7C97C50DDul;
-        private const UInt64 P8 = 0x3F84D5B5B5470917ul;
+	public sealed class KomiHash : Hash<UInt64>
+	{
+		#region Constants
+		private const UInt64 P1 = 0x243F6A8885A308D3ul;
+		private const UInt64 P2 = 0x13198A2E03707344ul;
+		private const UInt64 P3 = 0xA4093822299F31D0ul;
+		private const UInt64 P4 = 0x082EFA98EC4E6C89ul;
+		private const UInt64 P5 = 0x452821E638D01377ul;
+		private const UInt64 P6 = 0xBE5466CF34E90C6Cul;
+		private const UInt64 P7 = 0xC0AC29B7C97C50DDul;
+		private const UInt64 P8 = 0x3F84D5B5B5470917ul;
 		#endregion
 
 		#region Members
-        private readonly UInt64 m_Seed;
+		private readonly UInt64 m_Seed;
 		#endregion
 
-        #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
+		#region Properties
+		/// <summary>Gets the seed used by the hashing algorithm.</summary>
+		/// <value>An <see cref="T:System.UInt64"/> value.</value>
+		[ExcludeFromCodeCoverage]
+		public UInt64 Seed => m_Seed;
+		#endregion
 
-        /// <summary>Gets the seed used by the hashing algorithm.</summary>
-        /// <value>An <see cref="T:System.UInt64"/> value.</value>
-        [ExcludeFromCodeCoverage]
-        public UInt64 Seed => m_Seed;
-        #endregion
+		#region Constructors
+		/// <summary>Initializes a new instance using the specified seed.</summary>
+		/// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+		[ExcludeFromCodeCoverage]
+		public KomiHash(UInt64 seed)
+		{
+			m_Seed = seed;
+		}
 
-        #region Constructors
-        /// <summary>Initializes a new instance using the specified seed.</summary>
-        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        [ExcludeFromCodeCoverage]
-        public KomiHash(UInt64 seed)
-        {
-            m_Seed = seed;
-        }
-
-        /// <summary>Initializes a new instance using a seed value of <c>0</c>.</summary>
-        [ExcludeFromCodeCoverage]
-        public KomiHash() : this(0ul) { }
+		/// <summary>Initializes a new instance using a seed value of <c>0</c>.</summary>
+		[ExcludeFromCodeCoverage]
+		public KomiHash() : this(0ul) { }
 		#endregion
 
 		#region Methods
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt64 Finalize(UInt64 r1, UInt64 r2, ref UInt64 s1, ref UInt64 s5)
-        {
-            Mix(r1, r2, ref s1, ref s5);
-            s1 ^= s5;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static UInt64 Finalize(UInt64 r1, UInt64 r2, ref UInt64 s1, ref UInt64 s5)
+		{
+			Mix(r1, r2, ref s1, ref s5);
+			s1 ^= s5;
 
-            Round(ref s1, ref s5);
+			Round(ref s1, ref s5);
 
-            return s1;
-        }
+			return s1;
+		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Hash(ReadOnlySpan<Byte> buffer, Int32 offset, ref UInt64 s1, ref UInt64 s5)
-        {
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void Hash(ReadOnlySpan<Byte> buffer, Int32 offset, ref UInt64 s1, ref UInt64 s5)
+		{
 			UInt64 u = U64(buffer, offset) ^ s1;
 			UInt64 w = U64(buffer, offset + 8) ^ s5;
 
-            Mix(u, w, ref s1, ref s5);
-            s1 ^= s5;
-        }
+			Mix(u, w, ref s1, ref s5);
+			s1 ^= s5;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static UInt64 Hash0To15(ReadOnlySpan<Byte> buffer, Int32 count, UInt64 s1, UInt64 s5)
@@ -249,10 +245,10 @@ namespace FastHashes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Mix(UInt64 a, UInt64 b, ref UInt64 lo, ref UInt64 hi)
 		{
-			#if NET5_0_OR_GREATER
+#if NET5_0_OR_GREATER
 			UInt64 high = Math.BigMul(a, b, out lo);
 			hi = unchecked(hi + high);
-			#else
+#else
 			UInt64 a0 = unchecked((UInt32)a);
 			UInt64 a1 = a >> 32;
 			UInt64 b0 = unchecked((UInt32)b);
@@ -268,29 +264,30 @@ namespace FastHashes
 
 			UInt64 high = p3 + (p1 >> 32) + (p2 >> 32) + (middle >> 32);
 			hi = unchecked(hi + high);
-			#endif
+#endif
 		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Round(ref UInt64 s1, ref UInt64 s5)
-        {
-            Mix(s1, s5, ref s1, ref s5);
-            s1 ^= s5;
-        }
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void Round(ref UInt64 s1, ref UInt64 s5)
+		{
+			Mix(s1, s5, ref s1, ref s5);
+			s1 ^= s5;
+		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt64 U32(ReadOnlySpan<Byte> buffer, Int32 offset)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static UInt64 U32(ReadOnlySpan<Byte> buffer, Int32 offset)
 		{
 			return BinaryPrimitives.ReadUInt32LittleEndian(buffer.Slice(offset, 4));
 		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UInt64 U64(ReadOnlySpan<Byte> buffer, Int32 offset)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static UInt64 U64(ReadOnlySpan<Byte> buffer, Int32 offset)
 		{
 			return BinaryPrimitives.ReadUInt64LittleEndian(buffer.Slice(offset, 8));
-		} 
+		}
 
-		private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+		/// <inheritdoc/>
+		protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
 		{
 			Int32 count = buffer.Length;
 
@@ -310,13 +307,6 @@ namespace FastHashes
 
 			return hash;
 		}
-
-		/// <inheritdoc/>
-		protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-		{
-			UInt64 hash = ComputeHashValue(buffer);
-			BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
-		}
 		#endregion
-    }
+	}
 }

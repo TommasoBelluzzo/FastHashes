@@ -1,6 +1,5 @@
 #region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the base class from which all the LaneHash implementations must derive. This class is abstract.</summary>
-    public abstract class LaneHash : Hash
+    public abstract class LaneHash<T> : Hash<T> where T : unmanaged
     {
         #region Constants
         private const UInt64 SEED0 = 0x997F2CF145907CBAul;
@@ -256,7 +255,7 @@ namespace FastHashes
     }
 
     /// <summary>Represents the LaneHash64 implementation. This class cannot be derived.</summary>
-    public sealed class LaneHash64 : LaneHash
+    public sealed class LaneHash64 : LaneHash<UInt64>
     {
         #region Constants
         private static readonly UInt64[] KF =
@@ -272,11 +271,6 @@ namespace FastHashes
         };
         #endregion
 
-        #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
-        #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance using the specified seed.</summary>
@@ -290,7 +284,8 @@ namespace FastHashes
         #endregion
 
         #region Methods
-        private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 count = buffer.Length;
 
@@ -318,17 +313,11 @@ namespace FastHashes
             return hash;
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            UInt64 hash = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
-        }
         #endregion
     }
 
     /// <summary>Represents the LaneHash128 implementation. This class cannot be derived.</summary>
-    public sealed class LaneHash128 : LaneHash
+    public sealed class LaneHash128 : LaneHash<(UInt64, UInt64)>
     {
         #region Constants
         private static readonly UInt64[] KF =
@@ -346,11 +335,6 @@ namespace FastHashes
         };
         #endregion
 
-        #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 128;
-        #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance using the specified seed.</summary>
@@ -364,7 +348,8 @@ namespace FastHashes
         #endregion
 
         #region Methods
-        private (UInt64 Hash1, UInt64 Hash2) ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 count = buffer.Length;
             UInt64 z = (UInt64)count;
@@ -401,13 +386,6 @@ namespace FastHashes
             return (hash1, hash2);
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            (UInt64 hash1, UInt64 hash2) = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
-        }
         #endregion
     }
 }

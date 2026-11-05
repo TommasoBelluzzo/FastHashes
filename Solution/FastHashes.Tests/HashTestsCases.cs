@@ -142,8 +142,8 @@ namespace FastHashes.Tests
                 ("WyHash64", "0xD37DAE9D1F46D8DB"),
                 ("XxHash32", "0x43B788BA"),
                 ("XxHash64", "0xF47C4B0200F12795"),
-                ("XxHash3-O64", "0x0564639A4BD12D32"),
-                ("XxHash3-O128", "0x848EE45A0AA19CBD18910CDBAD010930")
+                ("XxHashThree64", "0x0564639A4BD12D32"),
+                ("XxHashThree128", "0x848EE45A0AA19CBD18910CDBAD010930")
             ];
 
             foreach (var (HashName, Expected) in cases)

@@ -1,6 +1,5 @@
-﻿#region Using Directives
+#region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the base class from which all the HighwayHash implementations must derive. This class is abstract.</summary>
-    public abstract class HighwayHash : Hash
+    public abstract class HighwayHash<T> : Hash<T> where T : unmanaged
     {
         #region Constants
         private const UInt64 M00 = 0xDBE6D5D5FE4CCE2Ful;
@@ -157,8 +156,10 @@ namespace FastHashes
             hash2 = a1 ^ ((a3 << 1) | (a2 >> 63)) ^ ((a3 << 2) | (a2 >> 62));
         }
 
-        /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
-        protected (UInt64 Hash1, UInt64 Hash2, UInt64 Hash3, UInt64 Hash4) ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <summary>Computes the numeric hash value of the specified byte span.</summary>
+        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> containing the data to hash.</param>
+        /// <returns>The computed hash represented by four <see cref="T:System.UInt64"/> values.</returns>
+        protected (UInt64 Hash1, UInt64 Hash2, UInt64 Hash3, UInt64 Hash4) ComputeHighwayHash(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -267,13 +268,9 @@ namespace FastHashes
     }
 
     /// <summary>Represents the HighwayHash64 implementation. This class cannot be derived.</summary>
-    public sealed class HighwayHash64 : HighwayHash
+    public sealed class HighwayHash64 : HighwayHash<UInt64>
     {
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
-
         /// <inheritdoc/>
         [ExcludeFromCodeCoverage]
         protected override UInt32 P => 4;
@@ -307,22 +304,17 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
-            (UInt64 hash1, _, _, _) = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
+            return ComputeHighwayHash(buffer).Hash1;
         }
         #endregion
     }
 
     /// <summary>Represents the HighwayHash128 implementation. This class cannot be derived.</summary>
-    public sealed class HighwayHash128 : HighwayHash
+    public sealed class HighwayHash128 : HighwayHash<(UInt64, UInt64)>
     {
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 128;
-
         /// <inheritdoc/>
         [ExcludeFromCodeCoverage]
         protected override UInt32 P => 6;
@@ -356,23 +348,18 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        protected override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
-            (UInt64 hash1, UInt64 hash2, _, _) = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
+            (UInt64 hash1, UInt64 hash2, _, _) = ComputeHighwayHash(buffer);
+            return (hash1, hash2);
         }
         #endregion
     }
 
     /// <summary>Represents the HighwayHash256 implementation. This class cannot be derived.</summary>
-    public sealed class HighwayHash256 : HighwayHash
+    public sealed class HighwayHash256 : HighwayHash<(UInt64, UInt64, UInt64, UInt64)>
     {
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 256;
-
         /// <inheritdoc/>
         [ExcludeFromCodeCoverage]
         protected override UInt32 P => 10;
@@ -406,13 +393,9 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        protected override (UInt64, UInt64, UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
-            (UInt64 hash1, UInt64 hash2, UInt64 hash3, UInt64 hash4) = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(16), hash3);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(24), hash4);
+            return ComputeHighwayHash(buffer);
         }
         #endregion
     }

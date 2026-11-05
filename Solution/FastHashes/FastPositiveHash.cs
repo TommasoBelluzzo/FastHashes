@@ -1,6 +1,5 @@
-﻿#region Using Directives
+#region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the FastPositiveHash implementation. This class cannot be derived.</summary>
-    public sealed class FastPositiveHash : Hash
+    public sealed class FastPositiveHash : Hash<UInt64>
     {
         #region Members
         private readonly Engine m_Engine;
@@ -20,9 +19,6 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         public FastPositiveHashVariant Variant => m_Engine.Variant;
 
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
@@ -78,9 +74,9 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
-            m_Engine.ComputeHash(buffer, destination);
+            return m_Engine.ComputeHashValue(buffer);
         }
 
         /// <inheritdoc/>
@@ -147,7 +143,7 @@ namespace FastHashes
 #endif
             }
 
-            public abstract void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination);
+            public abstract UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer);
             #endregion
         }
 
@@ -197,7 +193,7 @@ namespace FastHashes
                 v2 = unchecked(v2 + (UInt32)(l >> 32));
             }
 
-            private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+            private UInt64 ComputeResult(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -294,10 +290,9 @@ namespace FastHashes
                 return hash;
             }
 
-            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+            public override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
-                UInt64 hash = ComputeHashValue(buffer);
-                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
+                return ComputeResult(buffer);
             }
             #endregion
         }
@@ -337,7 +332,7 @@ namespace FastHashes
                 return l ^ h;
             }
 
-            private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+            private UInt64 ComputeResult(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -444,10 +439,9 @@ namespace FastHashes
                 return hash;
             }
 
-            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+            public override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
-                UInt64 hash = ComputeHashValue(buffer);
-                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
+                return ComputeResult(buffer);
             }
             #endregion
         }
@@ -488,7 +482,7 @@ namespace FastHashes
                 v2 = unchecked(v2 + h);
             }
 
-            private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+            private UInt64 ComputeResult(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -598,10 +592,9 @@ namespace FastHashes
                 return hash;
             }
 
-            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+            public override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
-                UInt64 hash = ComputeHashValue(buffer);
-                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
+                return ComputeResult(buffer);
             }
             #endregion
         }

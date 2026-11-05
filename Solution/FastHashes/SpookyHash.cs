@@ -1,6 +1,5 @@
-﻿#region Using Directives
+#region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the base class from which all the SpookyHash implementations must derive. This class is abstract.</summary>
-    public abstract class SpookyHash : Hash
+    public abstract class SpookyHash<T> : Hash<T> where T : unmanaged
     {
         #region Constants
         private const UInt64 C = 0xDEADBEEFDEADBEEFul;
@@ -152,7 +151,7 @@ namespace FastHashes
             Int32 offset = 0;
             Int32 count = buffer.Length;
 
-            Span<UInt64> hashes = stackalloc UInt64[4] { m_Seed1, m_Seed2, C, C };
+            Span<UInt64> hash = stackalloc UInt64[4] { m_Seed1, m_Seed2, C, C };
 
             Int32 remainder = count % 32;
 
@@ -162,89 +161,85 @@ namespace FastHashes
 
                 for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                 {
-                    hashes[2] = unchecked(hashes[2] + BinaryOperations.Read64(buffer, offset));
+                    hash[2] = unchecked(hash[2] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
-                    hashes[3] = unchecked(hashes[3] + BinaryOperations.Read64(buffer, offset));
+                    hash[3] = unchecked(hash[3] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
 
-                    ShortMix(hashes);
+                    ShortMix(hash);
 
-                    hashes[0] = unchecked(hashes[0] + BinaryOperations.Read64(buffer, offset));
+                    hash[0] = unchecked(hash[0] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
-                    hashes[1] = unchecked(hashes[1] + BinaryOperations.Read64(buffer, offset));
+                    hash[1] = unchecked(hash[1] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
                 }
 
                 if (remainder >= 16)
                 {
-                    hashes[2] = unchecked(hashes[2] + BinaryOperations.Read64(buffer, offset));
+                    hash[2] = unchecked(hash[2] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
-                    hashes[3] = unchecked(hashes[3] + BinaryOperations.Read64(buffer, offset));
+                    hash[3] = unchecked(hash[3] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
 
-                    ShortMix(hashes);
+                    ShortMix(hash);
 
                     remainder -= 16;
                 }
             }
 
-            hashes[3] = unchecked(hashes[3] + ((UInt64)count << 56));
+            hash[3] = unchecked(hash[3] + ((UInt64)count << 56));
 
             switch (remainder)
             {
-                case 15: hashes[3] = unchecked(hashes[3] + ((UInt64)buffer[offset + 14] << 48)); goto case 14;
-                case 14: hashes[3] = unchecked(hashes[3] + ((UInt64)buffer[offset + 13] << 40)); goto case 13;
-                case 13: hashes[3] = unchecked(hashes[3] + ((UInt64)buffer[offset + 12] << 32)); goto case 12;
+                case 15: hash[3] = unchecked(hash[3] + ((UInt64)buffer[offset + 14] << 48)); goto case 14;
+                case 14: hash[3] = unchecked(hash[3] + ((UInt64)buffer[offset + 13] << 40)); goto case 13;
+                case 13: hash[3] = unchecked(hash[3] + ((UInt64)buffer[offset + 12] << 32)); goto case 12;
                 case 12:
-                    hashes[2] = unchecked(hashes[2] + BinaryOperations.Read64(buffer, offset));
+                    hash[2] = unchecked(hash[2] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
-                    hashes[3] = unchecked(hashes[3] + BinaryOperations.Read32(buffer, offset));
+                    hash[3] = unchecked(hash[3] + BinaryOperations.Read32(buffer, offset));
                     break;
-                case 11: hashes[3] = unchecked(hashes[3] + ((UInt64)buffer[offset + 10] << 16)); goto case 10;
-                case 10: hashes[3] = unchecked(hashes[3] + ((UInt64)buffer[offset + 9] << 8)); goto case 9;
-                case 9: hashes[3] = unchecked(hashes[3] + buffer[offset + 8]); goto case 8;
+                case 11: hash[3] = unchecked(hash[3] + ((UInt64)buffer[offset + 10] << 16)); goto case 10;
+                case 10: hash[3] = unchecked(hash[3] + ((UInt64)buffer[offset + 9] << 8)); goto case 9;
+                case 9: hash[3] = unchecked(hash[3] + buffer[offset + 8]); goto case 8;
                 case 8:
-                    hashes[2] = unchecked(hashes[2] + BinaryOperations.Read64(buffer, offset));
+                    hash[2] = unchecked(hash[2] + BinaryOperations.Read64(buffer, offset));
                     break;
-                case 7: hashes[2] = unchecked(hashes[2] + ((UInt64)buffer[offset + 6] << 48)); goto case 6;
-                case 6: hashes[2] = unchecked(hashes[2] + ((UInt64)buffer[offset + 5] << 40)); goto case 5;
-                case 5: hashes[2] = unchecked(hashes[2] + ((UInt64)buffer[offset + 4] << 32)); goto case 4;
+                case 7: hash[2] = unchecked(hash[2] + ((UInt64)buffer[offset + 6] << 48)); goto case 6;
+                case 6: hash[2] = unchecked(hash[2] + ((UInt64)buffer[offset + 5] << 40)); goto case 5;
+                case 5: hash[2] = unchecked(hash[2] + ((UInt64)buffer[offset + 4] << 32)); goto case 4;
                 case 4:
-                    hashes[2] = unchecked(hashes[2] + BinaryOperations.Read32(buffer, offset));
+                    hash[2] = unchecked(hash[2] + BinaryOperations.Read32(buffer, offset));
                     break;
-                case 3: hashes[2] = unchecked(hashes[2] + ((UInt64)buffer[offset + 2] << 16)); goto case 2;
-                case 2: hashes[2] = unchecked(hashes[2] + ((UInt64)buffer[offset + 1] << 8)); goto case 1;
+                case 3: hash[2] = unchecked(hash[2] + ((UInt64)buffer[offset + 2] << 16)); goto case 2;
+                case 2: hash[2] = unchecked(hash[2] + ((UInt64)buffer[offset + 1] << 8)); goto case 1;
                 case 1:
-                    hashes[2] = unchecked(hashes[2] + buffer[offset]);
+                    hash[2] = unchecked(hash[2] + buffer[offset]);
                     break;
                 case 0:
-                    hashes[2] = unchecked(hashes[2] + C);
-                    hashes[3] = unchecked(hashes[3] + C);
+                    hash[2] = unchecked(hash[2] + C);
+                    hash[3] = unchecked(hash[3] + C);
                     break;
             }
 
-            ShortEnd(hashes);
+            ShortEnd(hash);
 
-            return (hashes[0], hashes[1]);
+            return (hash[0], hash[1]);
         }
 
         /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
-        protected (UInt64 Hash1, UInt64 Hash2) ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        protected (UInt64 Hash1, UInt64 Hash2) ComputeSpookyHash(ReadOnlySpan<Byte> buffer)
         {
-            return (buffer.Length < 192) ? ComputeHashShort(buffer) : ComputeHashLong(buffer);
+            return buffer.Length < 192
+                ? ComputeHashShort(buffer)
+                : ComputeHashLong(buffer);
         }
         #endregion
     }
 
     /// <summary>Represents the SpookyHash32 implementation. This class cannot be derived.</summary>
-    public sealed class SpookyHash32 : SpookyHash
+    public sealed class SpookyHash32 : SpookyHash<UInt32>
     {
-        #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 32;
-        #endregion
-
         #region Constructors
         /// <summary>Initializes a new instance using a value of <c>0</c> for both seeds.</summary>
         [ExcludeFromCodeCoverage]
@@ -264,23 +259,17 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        protected override UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
-            (UInt64 hash, UInt64 _) = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt32LittleEndian(destination, unchecked((UInt32)hash));
+            UInt64 hash = ComputeSpookyHash(buffer).Hash1;
+            return unchecked((UInt32)hash);
         }
         #endregion
     }
 
     /// <summary>Represents the SpookyHash64 implementation. This class cannot be derived.</summary>
-    public sealed class SpookyHash64 : SpookyHash
+    public sealed class SpookyHash64 : SpookyHash<UInt64>
     {
-        #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
-        #endregion
-
         #region Constructors
         /// <summary>Initializes a new instance using a value of <c>0</c> for both seeds.</summary>
         [ExcludeFromCodeCoverage]
@@ -300,23 +289,16 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
-            (UInt64 hash, UInt64 _) = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
+            return ComputeSpookyHash(buffer).Hash1;
         }
         #endregion
     }
 
     /// <summary>Represents the SpookyHash128 implementation. This class cannot be derived.</summary>
-    public sealed class SpookyHash128 : SpookyHash
+    public sealed class SpookyHash128 : SpookyHash<(UInt64, UInt64)>
     {
-        #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 128;
-        #endregion
-
         #region Constructors
         /// <summary>Initializes a new instance using a value of <c>0</c> for both seeds.</summary>
         [ExcludeFromCodeCoverage]
@@ -336,11 +318,9 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        protected override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
-            (UInt64 hash1, UInt64 hash2) = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
+            return ComputeSpookyHash(buffer);
         }
         #endregion
     }

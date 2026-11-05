@@ -1,6 +1,5 @@
-﻿#region Using Directives
+#region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the XxHash32 implementation. This class cannot be derived.</summary>
-    public sealed class XxHash32 : Hash
+    public sealed class XxHash32 : Hash<UInt32>
     {
         #region Constants
         private const UInt32 P1 = 0x9E3779B1u;
@@ -23,9 +22,7 @@ namespace FastHashes
         #endregion
 
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 32;
+
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt32"/> value.</value>
@@ -69,7 +66,8 @@ namespace FastHashes
             return v;
         }
 
-        private UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -138,17 +136,11 @@ namespace FastHashes
             return hash;
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            UInt32 hash = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt32LittleEndian(destination, hash);
-        }
         #endregion
     }
 
     /// <summary>Represents the XxHash64 implementation. This class cannot be derived.</summary>
-    public sealed class XxHash64 : Hash
+    public sealed class XxHash64 : Hash<UInt64>
     {
         #region Constants
         private const UInt64 P1 = 0x9E3779B185EBCA87ul;
@@ -163,9 +155,7 @@ namespace FastHashes
         #endregion
 
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
+
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
@@ -260,7 +250,8 @@ namespace FastHashes
             return v1;
         }
 
-        private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -346,12 +337,6 @@ namespace FastHashes
             return hash;
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            UInt64 hash = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
-        }
         #endregion
     }
 }

@@ -1,4 +1,4 @@
-﻿
+
 #region Using Directives
 using System;
 using System.Buffers.Binary;

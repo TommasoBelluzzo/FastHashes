@@ -1,6 +1,5 @@
-﻿#region Using Directives
+#region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,16 +7,14 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the MetroHash64 implementation. This class cannot be derived.</summary>
-    public sealed class MetroHash64 : Hash
+    public sealed class MetroHash64 : Hash<UInt64>
     {
         #region Members
         private readonly Engine m_Engine;
         #endregion
 
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
+
 
         /// <summary>Gets the variant of the hashing algorithm.</summary>
         /// <value>An enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/>.</value>
@@ -65,9 +62,9 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
-            m_Engine.ComputeHash(buffer, destination);
+            return m_Engine.ComputeHashValue(buffer);
         }
 
         /// <inheritdoc/>
@@ -157,7 +154,7 @@ namespace FastHashes
                 return v1;
             }
 
-            public abstract void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination);
+            public abstract UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer);
             #endregion
         }
 
@@ -184,7 +181,7 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+            private UInt64 ComputeResult(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -284,10 +281,9 @@ namespace FastHashes
                 return hash;
             }
 
-            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+            public override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
-                UInt64 hash = ComputeHashValue(buffer);
-                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
+                return ComputeResult(buffer);
             }
             #endregion
         }
@@ -315,7 +311,7 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+            private UInt64 ComputeResult(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -415,10 +411,9 @@ namespace FastHashes
                 return hash;
             }
 
-            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+            public override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
-                UInt64 hash = ComputeHashValue(buffer);
-                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
+                return ComputeResult(buffer);
             }
             #endregion
         }
@@ -426,16 +421,14 @@ namespace FastHashes
     }
 
     /// <summary>Represents the MetroHash128 implementation. This class cannot be derived.</summary>
-    public sealed class MetroHash128 : Hash
+    public sealed class MetroHash128 : Hash<(UInt64, UInt64)>
     {
         #region Members
         private readonly Engine m_Engine;
         #endregion
 
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 128;
+
 
         /// <summary>Gets the variant of the hashing algorithm.</summary>
         /// <value>An enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/>.</value>
@@ -483,9 +476,9 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        protected override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
-            m_Engine.ComputeHash(buffer, destination);
+            return m_Engine.ComputeHashValue(buffer);
         }
 
         /// <inheritdoc/>
@@ -573,7 +566,7 @@ namespace FastHashes
                 return v;
             }
 
-            public abstract void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination);
+            public abstract (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer);
             #endregion
         }
 
@@ -600,7 +593,7 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            private (UInt64 Hash1, UInt64 Hash2) ComputeHashValue(ReadOnlySpan<Byte> buffer)
+            private (UInt64 Hash1, UInt64 Hash2) ComputeResult(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -694,11 +687,9 @@ namespace FastHashes
                 return (hash1, hash2);
             }
 
-            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+            public override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
-                (UInt64 hash1, UInt64 hash2) = ComputeHashValue(buffer);
-                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
-                BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
+                return ComputeResult(buffer);
             }
             #endregion
         }
@@ -726,7 +717,7 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            private (UInt64 Hash1, UInt64 Hash2) ComputeHashValue(ReadOnlySpan<Byte> buffer)
+            private (UInt64 Hash1, UInt64 Hash2) ComputeResult(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -820,11 +811,9 @@ namespace FastHashes
                 return (hash1, hash2);
             }
 
-            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+            public override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
-                (UInt64 hash1, UInt64 hash2) = ComputeHashValue(buffer);
-                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
-                BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
+                return ComputeResult(buffer);
             }
             #endregion
         }

@@ -1,6 +1,5 @@
 #region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the base class from which all the Umash implementations must derive. This class is abstract.</summary>
-    public abstract class Umash : Hash
+    public abstract class Umash<T> : Hash<T> where T : unmanaged
     {
         #region Constants
         /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
@@ -203,13 +202,8 @@ namespace FastHashes
     }
 
     /// <summary>Represents the Umash64 implementation. This class cannot be derived.</summary>
-    public sealed class Umash64 : Umash
+    public sealed class Umash64 : Umash<UInt64>
     {
-        #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
-        #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance using the specified seed.</summary>
@@ -282,7 +276,8 @@ namespace FastHashes
             oh1 ^= hi;
         }
 
-        private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 count = buffer.Length;
 
@@ -301,23 +296,12 @@ namespace FastHashes
             return hash;
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            UInt64 hash = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
-        }
         #endregion
     }
 
     /// <summary>Represents the Umash128 implementation. This class cannot be derived.</summary>
-    public sealed class Umash128 : Umash
+    public sealed class Umash128 : Umash<(UInt64, UInt64)>
     {
-        #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 128;
-        #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance using the specified seed.</summary>
@@ -420,7 +404,8 @@ namespace FastHashes
             tw1 ^= hi;
         }
 
-        private (UInt64 Hash1, UInt64 Hash2) ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 count = buffer.Length;
             UInt64 hash1, hash2;
@@ -446,13 +431,6 @@ namespace FastHashes
             return (hash1, hash2);
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            (UInt64 hash1, UInt64 hash2) = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
-        }
         #endregion
     }
 }

@@ -1,6 +1,5 @@
 ﻿#region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -9,7 +8,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the base class from which all the FarmHash implementations with more than 32 bits of output must derive. This class is abstract.</summary>
-    public abstract class FarmHashOver32 : Hash
+    public abstract class FarmHashOver32<T> : Hash<T> where T : unmanaged
     {
         #region Constants
         /// <summary>Represents the K0 value. This field is constant.</summary>
@@ -57,10 +56,10 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static UInt64 HashLength16(UInt64 v1, UInt64 v2, UInt64 m)
         {
-            UInt64 a = ShiftMix(unchecked((v1 ^ v2) * m));
-            UInt64 b = unchecked(ShiftMix(unchecked((v2 ^ a) * m)) * m);
+            UInt64 w = ShiftMix(unchecked((v1 ^ v2) * m));
+            UInt64 hash = unchecked(ShiftMix(unchecked((v2 ^ w) * m)) * m);
 
-            return b;
+            return hash;
         }
 
         /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
@@ -108,7 +107,7 @@ namespace FastHashes
     }
 
     /// <summary>Represents the FarmHash32 implementation. This class cannot be derived.</summary>
-    public sealed class FarmHash32 : Hash
+    public sealed class FarmHash32 : Hash<UInt32>
     {
         #region Constants
         private const UInt32 C1 = 0xCC9E2D51u;
@@ -123,9 +122,7 @@ namespace FastHashes
         #endregion
 
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 32;
+
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt32"/>? value.</value>
@@ -295,7 +292,8 @@ namespace FastHashes
             return v1;
         }
 
-        private UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -347,23 +345,12 @@ namespace FastHashes
             return hash;
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            UInt32 hash = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt32LittleEndian(destination, hash);
-        }
         #endregion
     }
 
     /// <summary>Represents the FarmHash64 implementation. This class cannot be derived.</summary>
-    public sealed class FarmHash64 : FarmHashOver32
+    public sealed class FarmHash64 : FarmHashOver32<UInt64>
     {
-        #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
-        #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance without seeds.</summary>
@@ -512,7 +499,8 @@ namespace FastHashes
             return hash;
         }
 
-        private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -540,23 +528,12 @@ namespace FastHashes
             return hash;
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            UInt64 hash = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
-        }
         #endregion
     }
 
     /// <summary>Represents the FarmHash128 implementation. This class cannot be derived.</summary>
-    public sealed class FarmHash128 : FarmHashOver32
+    public sealed class FarmHash128 : FarmHashOver32<(UInt64, UInt64)>
     {
-        #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 128;
-        #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance without seeds.</summary>
@@ -748,7 +725,8 @@ namespace FastHashes
             hash2 = HashLength16(unchecked(x + w1), unchecked(y + v1), K3);
         }
 
-        private (UInt64 Hash1, UInt64 Hash2) ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -814,13 +792,6 @@ namespace FastHashes
             return (hash1, hash2);
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            (UInt64 hash1, UInt64 hash2) = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
-        }
         #endregion
     }
 }

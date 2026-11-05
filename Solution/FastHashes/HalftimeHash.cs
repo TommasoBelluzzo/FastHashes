@@ -1,6 +1,5 @@
-﻿#region Using Directives
+#region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the HalftimeHash implementation. This class cannot be derived.</summary>
-    public sealed class HalftimeHash : Hash
+    public sealed class HalftimeHash : Hash<UInt64>
     {
         #region Members
         private static readonly UInt64[] s_DefaultEntropy = GenerateEntropy(0ul);
@@ -25,9 +24,6 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         public HalftimeHashStyle Style => m_Style;
 
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
@@ -115,7 +111,8 @@ namespace FastHashes
             return result;
         }
 
-        private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 count = buffer.Length;
 
@@ -145,7 +142,7 @@ namespace FastHashes
 
                 for (Int32 j = level - 1; j >= 0; --j)
                 {
-                    Int32 destination =  2 * (((j + 1) * 8) + stackLengths[j + 1]) * m_Lanes;
+                    Int32 destination = 2 * (((j + 1) * 8) + stackLengths[j + 1]) * m_Lanes;
                     Int32 source = 16 * j * m_Lanes;
                     Int32 entropyOffset = 533 + (14 * j);
 
@@ -268,7 +265,7 @@ namespace FastHashes
                 for (Int32 lane = 0; lane < m_Lanes; ++lane)
                 {
                     Int32 byteOffset = inputOffset + (lane * 8);
-                    
+
                     UInt64 word;
 
                     if (byteOffset + 8 <= count)
@@ -296,16 +293,11 @@ namespace FastHashes
             o1 = Tabulate(o1, 4096);
 
             UInt64 hash = Tabulate((UInt64)count, 0) ^ o0 ^ o1;
-            
+
             return hash;
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            UInt64 hash = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
-        }
+
 
         /// <inheritdoc/>
         [ExcludeFromCodeCoverage]

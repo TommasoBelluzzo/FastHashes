@@ -1,6 +1,5 @@
-﻿#region Using Directives
+#region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the base class from which all the MurmurHash implementations with more than 32 bits of output must derive. This class is abstract.</summary>
-    public abstract class MurmurHashOver32 : Hash
+    public abstract class MurmurHashOver32<T> : Hash<T> where T : unmanaged
     {
         #region Members
         private readonly Engine m_Engine;
@@ -65,11 +64,10 @@ namespace FastHashes
         #endregion
 
         #region Methods
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        /// <summary>Computes the shared 128-bit MurmurHash result.</summary>
+        protected (UInt64 Hash1, UInt64 Hash2) ComputeMurmurHash(ReadOnlySpan<Byte> buffer)
         {
-            Boolean output64 = Length == 64;
-            m_Engine.ComputeHash(buffer, output64, destination);
+            return m_Engine.ComputeHashValue(buffer);
         }
 
         /// <inheritdoc/>
@@ -105,7 +103,7 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            public abstract void ComputeHash(ReadOnlySpan<Byte> buffer, Boolean output64, Span<Byte> destination);
+            public abstract (UInt64 Hash1, UInt64 Hash2) ComputeHashValue(ReadOnlySpan<Byte> buffer);
             #endregion
         }
 
@@ -176,7 +174,7 @@ namespace FastHashes
                 return v1;
             }
 
-            private (UInt64 Hash1, UInt64 Hash2) ComputeHashValue(ReadOnlySpan<Byte> buffer)
+            private (UInt64 Hash1, UInt64 Hash2) ComputeRawValue(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -251,14 +249,9 @@ namespace FastHashes
                 return (hash1, hash2);
             }
 
-            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Boolean output64, Span<Byte> destination)
+            public override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
-                (UInt64 hash1, UInt64 hash2) = ComputeHashValue(buffer);
-
-                BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
-                
-                if (!output64)
-                    BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
+                return ComputeRawValue(buffer);
             }
             #endregion
         }
@@ -338,7 +331,7 @@ namespace FastHashes
                 return v1;
             }
 
-            private (UInt32 Hash1, UInt32 Hash2, UInt32 Hash3, UInt32 Hash4) ComputeHashValue(ReadOnlySpan<Byte> buffer)
+            private (UInt32 Hash1, UInt32 Hash2, UInt32 Hash3, UInt32 Hash4) ComputeRawValue(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -440,18 +433,12 @@ namespace FastHashes
                 return (hash1, hash2, hash3, hash4);
             }
 
-            public override void ComputeHash(ReadOnlySpan<Byte> buffer, Boolean output64, Span<Byte> destination)
+            public override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
-                (UInt32 hash1, UInt32 hash2, UInt32 hash3, UInt32 hash4) = ComputeHashValue(buffer);
-
-                BinaryPrimitives.WriteUInt32LittleEndian(destination, hash1);
-                BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(4), hash2);
-
-                if (!output64)
-                {
-                    BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(8), hash3);
-                    BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(12), hash4);
-                }
+                (UInt32 hash1, UInt32 hash2, UInt32 hash3, UInt32 hash4) = ComputeRawValue(buffer);
+                UInt64 low = ((UInt64)hash2 << 32) | hash1;
+                UInt64 high = ((UInt64)hash4 << 32) | hash3;
+                return (low, high);
             }
             #endregion
         }
@@ -459,7 +446,7 @@ namespace FastHashes
     }
 
     /// <summary>Represents the MurmurHash32 implementation. This class cannot be derived.</summary>
-    public sealed class MurmurHash32 : Hash
+    public sealed class MurmurHash32 : Hash<UInt32>
     {
         #region Constants
         private const UInt32 C1 = 0xCC9E2D51u;
@@ -474,9 +461,7 @@ namespace FastHashes
         #endregion
 
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 32;
+
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt32"/> value.</value>
@@ -519,7 +504,8 @@ namespace FastHashes
             return v1;
         }
 
-        private UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -557,23 +543,12 @@ namespace FastHashes
             return hash;
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            UInt32 hash = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt32LittleEndian(destination, hash);
-        }
         #endregion
     }
 
     /// <summary>Represents the MurmurHash64 implementation. This class cannot be derived.</summary>
-    public sealed class MurmurHash64 : MurmurHashOver32
+    public sealed class MurmurHash64 : MurmurHashOver32<UInt64>
     {
-        #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
-        #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance using the automatic engine selection and a seed value of <c>0</c>.</summary>
@@ -597,16 +572,19 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         public MurmurHash64(MurmurHashEngine engine, UInt32 seed) : base(engine, seed) { }
         #endregion
+
+        #region Methods
+        /// <inheritdoc/>
+        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        {
+            return ComputeMurmurHash(buffer).Hash1;
+        }
+        #endregion
     }
 
     /// <summary>Represents the MurmurHash128 implementation. This class cannot be derived.</summary>
-    public sealed class MurmurHash128 : MurmurHashOver32
+    public sealed class MurmurHash128 : MurmurHashOver32<(UInt64, UInt64)>
     {
-        #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 128;
-        #endregion
 
         #region Constructors
         /// <summary>Initializes a new instance using the automatic engine selection and a seed value of <c>0</c>.</summary>
@@ -629,6 +607,14 @@ namespace FastHashes
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="engine">engine</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
         public MurmurHash128(MurmurHashEngine engine, UInt32 seed) : base(engine, seed) { }
+        #endregion
+
+        #region Methods
+        /// <inheritdoc/>
+        protected override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        {
+            return ComputeMurmurHash(buffer);
+        }
         #endregion
     }
 }

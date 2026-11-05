@@ -1,6 +1,5 @@
-﻿#region Using Directives
+#region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
     /// <summary>Represents the WyHash32 implementation. This class cannot be derived.</summary>
-    public sealed class WyHash32 : Hash
+    public sealed class WyHash32 : Hash<UInt32>
     {
         #region Constants
         private const UInt32 P1 = 0X53C5CA59u;
@@ -20,9 +19,7 @@ namespace FastHashes
         #endregion
 
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 32;
+
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt32"/> value.</value>
@@ -53,7 +50,8 @@ namespace FastHashes
             b = (UInt32)(c >> 32);
         }
 
-        private UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override UInt32 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -88,21 +86,15 @@ namespace FastHashes
             WyMix(ref seed, ref s0);
 
             UInt32 hash = seed ^ s0;
-            
+
             return hash;
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            UInt32 hash = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt32LittleEndian(destination, hash);
-        }
         #endregion
     }
 
     /// <summary>Represents the WyHash64 implementation. This class cannot be derived.</summary>
-    public sealed class WyHash64 : Hash
+    public sealed class WyHash64 : Hash<UInt64>
     {
         #region Constants
         private static readonly UInt64[] DEFAULT_SECRET = new UInt64[] { 0x2D358DCCAA6C78A5ul, 0x8BB84B93962EACC9ul, 0x4B33A62ED433D4A3ul, 0x4D5A2DA51DE1AA47ul };
@@ -114,9 +106,7 @@ namespace FastHashes
         #endregion
 
         #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
+
 
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
@@ -199,7 +189,8 @@ namespace FastHashes
 #endif
         }
 
-        private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+        /// <inheritdoc/>
+        protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -279,16 +270,10 @@ namespace FastHashes
             b ^= m_Secret[1];
 
             UInt64 hash = WyMix(a, b);
-            
+
             return hash;
         }
 
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-        {
-            UInt64 hash = ComputeHashValue(buffer);
-            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
-        }
         #endregion
     }
 }

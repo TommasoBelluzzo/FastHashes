@@ -1,6 +1,5 @@
-﻿#region Using Directives
+#region Using Directives
 using System;
-using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -8,39 +7,37 @@ using System.Runtime.CompilerServices;
 namespace FastHashes
 {
 	/// <summary>Represents the Mx3Hash implementation. This class cannot be derived.</summary>
-	public sealed class Mx3Hash : Hash
-    {
+	public sealed class Mx3Hash : Hash<UInt64>
+	{
 		#region Constants
 		private const UInt64 C = 0XBEA225F9EB34556Dul;
 		#endregion
 
 		#region Members
 		private readonly UInt64 m_Seed;
-        #endregion
+		#endregion
 
-        #region Properties
-        /// <inheritdoc/>
-        [ExcludeFromCodeCoverage]
-        public override Int32 Length => 64;
+		#region Properties
 
-        /// <summary>Gets the seed used by the hashing algorithm.</summary>
-        /// <value>An <see cref="T:System.UInt64"/> value.</value>
-        [ExcludeFromCodeCoverage]
-        public UInt64 Seed => m_Seed;
-        #endregion
 
-        #region Constructors
-        /// <summary>Initializes a new instance using the specified seed.</summary>
-        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        [ExcludeFromCodeCoverage]
-        public Mx3Hash(UInt64 seed)
-        {
-            m_Seed = seed;
-        }
+		/// <summary>Gets the seed used by the hashing algorithm.</summary>
+		/// <value>An <see cref="T:System.UInt64"/> value.</value>
+		[ExcludeFromCodeCoverage]
+		public UInt64 Seed => m_Seed;
+		#endregion
 
-        /// <summary>Initializes a new instance using a seed value of <c>0</c>.</summary>
-        [ExcludeFromCodeCoverage]
-        public Mx3Hash() : this(0ul) { }
+		#region Constructors
+		/// <summary>Initializes a new instance using the specified seed.</summary>
+		/// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+		[ExcludeFromCodeCoverage]
+		public Mx3Hash(UInt64 seed)
+		{
+			m_Seed = seed;
+		}
+
+		/// <summary>Initializes a new instance using a seed value of <c>0</c>.</summary>
+		[ExcludeFromCodeCoverage]
+		public Mx3Hash() : this(0ul) { }
 		#endregion
 
 		#region Methods
@@ -95,34 +92,35 @@ namespace FastHashes
 			return hash;
 		}
 
-		private UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
+		/// <inheritdoc/>
+		protected override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
 		{
 			Int32 offset = 0;
-            Int32 count = buffer.Length;
+			Int32 count = buffer.Length;
 
 			UInt64 hash = MixStream(m_Seed, unchecked((UInt64)count + 1));
 
-            while (count >= 64)
-            {
-                hash = MixStream(
+			while (count >= 64)
+			{
+				hash = MixStream(
 					hash,
-                    BinaryOperations.Read64(buffer, offset),
-                    BinaryOperations.Read64(buffer, offset + 8),
-                    BinaryOperations.Read64(buffer, offset + 16),
-                    BinaryOperations.Read64(buffer, offset + 24)
+					BinaryOperations.Read64(buffer, offset),
+					BinaryOperations.Read64(buffer, offset + 8),
+					BinaryOperations.Read64(buffer, offset + 16),
+					BinaryOperations.Read64(buffer, offset + 24)
 				);
 
-                hash = MixStream(
+				hash = MixStream(
 					hash,
-                    BinaryOperations.Read64(buffer, offset + 32),
-                    BinaryOperations.Read64(buffer, offset + 40),
-                    BinaryOperations.Read64(buffer, offset + 48),
-                    BinaryOperations.Read64(buffer, offset + 56)
+					BinaryOperations.Read64(buffer, offset + 32),
+					BinaryOperations.Read64(buffer, offset + 40),
+					BinaryOperations.Read64(buffer, offset + 48),
+					BinaryOperations.Read64(buffer, offset + 56)
 				);
 
-                offset += 64;
-                count -= 64;
-            }
+				offset += 64;
+				count -= 64;
+			}
 
 			while (count >= 8)
 			{
@@ -178,12 +176,6 @@ namespace FastHashes
 			return hash;
 		}
 
-		/// <inheritdoc/>
-		protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
-		{
-		    UInt64 hash = ComputeHashValue(buffer);
-		    BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
-		}
-        #endregion
-    }
+		#endregion
+	}
 }
