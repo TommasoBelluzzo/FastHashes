@@ -461,8 +461,6 @@ namespace FastHashes
         #endregion
 
         #region Properties
-
-
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt32"/> value.</value>
         [ExcludeFromCodeCoverage]
@@ -549,7 +547,6 @@ namespace FastHashes
     /// <summary>Represents the MurmurHash64 implementation. This class cannot be derived.</summary>
     public sealed class MurmurHash64 : MurmurHashOver32<UInt64>
     {
-
         #region Constructors
         /// <summary>Initializes a new instance using the automatic engine selection and a seed value of <c>0</c>.</summary>
         [ExcludeFromCodeCoverage]
@@ -585,7 +582,6 @@ namespace FastHashes
     /// <summary>Represents the MurmurHash128 implementation. This class cannot be derived.</summary>
     public sealed class MurmurHash128 : MurmurHashOver32<(UInt64, UInt64)>
     {
-
         #region Constructors
         /// <summary>Initializes a new instance using the automatic engine selection and a seed value of <c>0</c>.</summary>
         [ExcludeFromCodeCoverage]

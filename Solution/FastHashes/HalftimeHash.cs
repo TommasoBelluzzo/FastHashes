@@ -36,6 +36,7 @@ namespace FastHashes
         /// <param name="style">The <see cref="T:FastHashes.HalftimeHashStyle"/> value specifying the internal processing style of the hashing algorithm.</param>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="style">style</paramref> is not a defined enumeration value.</exception>
+        [ExcludeFromCodeCoverage]
         public HalftimeHash(HalftimeHashStyle style, UInt64 seed)
         {
             if (!Enum.IsDefined(typeof(HalftimeHashStyle), style))

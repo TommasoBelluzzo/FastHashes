@@ -30,8 +30,26 @@ namespace FastHashes.Tests
 
         #region Methods
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataHashesLength), MemberType = typeof(HashTestsCases))]
-        public void LengthTest(String hashName, Func<UInt64, Hash> hashInitializer, Int32 maximumLength)
+        [MemberData(nameof(HashTestsCases.DataHashesLengthBoundary), MemberType = typeof(HashTestsCases))]
+        public void LengthBoundaryTest(String hashName, Func<UInt64, Hash> hashInitializer, Int32 length)
+        {
+            Byte[] buffer = new Byte[length];
+
+            RandomXorShift random = new(TEST_SEED);
+            random.NextBytes(buffer);
+
+            Hash hash = hashInitializer(TEST_SEED);
+            Byte[] bytes = hash.ComputeHashBytes(buffer);
+
+            Int32 expected = hash.Length / 8;
+            Int32 actual = bytes.Length;
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData(nameof(HashTestsCases.DataHashesLengthRobustness), MemberType = typeof(HashTestsCases))]
+        public void LengthRobustnessTest(String hashName, Func<UInt64, Hash> hashInitializer, Int32 maximumLength)
         {
             UInt32[] seeds = [0u, TEST_SEED];
 
@@ -59,24 +77,6 @@ namespace FastHashes.Tests
 
                 Assert.True(failed == 0, $"Length test failed for {hashName}, seed 0x{seed:X8}: {failed} of {maximumLength + 1} lengths failed.");
             }
-        }
-
-        [Theory]
-        [MemberData(nameof(HashTestsCases.DataHashesLengthExtended), MemberType = typeof(HashTestsCases))]
-        public void LengthExtendedTest(String hashName, Func<UInt64, Hash> hashInitializer, Int32 length)
-        {
-            Byte[] buffer = new Byte[length];
-
-            RandomXorShift random = new(TEST_SEED);
-            random.NextBytes(buffer);
-
-            Hash hash = hashInitializer(TEST_SEED);
-
-            Byte[] expected = hash.ComputeHashBytes(buffer);
-            Byte[] actual = hash.ComputeHashBytes(buffer);
-
-            Assert.Equal(hash.Length / 8, expected.Length);
-            Assert.Equal(expected, actual);
         }
 
         [Theory]

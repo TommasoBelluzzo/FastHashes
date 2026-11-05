@@ -23,7 +23,7 @@ namespace FastHashes.Tests
 
             if (String.IsNullOrWhiteSpace(fileDirectory))
             {
-                m_Words = Array.Empty<String>();
+                m_Words = [];
                 return;
             }
 
@@ -31,7 +31,7 @@ namespace FastHashes.Tests
 
             if (!File.Exists(filePath))
             {
-                m_Words = Array.Empty<String>();
+                m_Words = [];
                 return;
             }
 

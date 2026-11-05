@@ -99,6 +99,16 @@ namespace FastHashes.Tests
             }
         }
 
+        [Fact]
+        public void InputStringInvalidTest()
+        {
+            Hash hash = new FarmHash32();
+
+            Assert.Throws<ArgumentNullException>(() => hash.ComputeHashBytes((String)null));
+            Assert.Throws<ArgumentNullException>(() => hash.ComputeHashBytes((String)null, Encoding.UTF8));
+            Assert.Throws<ArgumentNullException>(() => hash.ComputeHashBytes("text", null));
+        }
+
         [Theory]
         [MemberData(nameof(HashTestsCases.DataHashesGeneric), MemberType = typeof(HashTestsCases))]
         public void InputStringFormattedTest(String hashName, Func<UInt64, Hash> hashInitializer)
@@ -141,6 +151,48 @@ namespace FastHashes.Tests
             Assert.Equal(expected, hash.ComputeHashBytes(new ReadOnlySpan<Byte>(paddedBuffer, 5, buffer.Length)));
         }
 
+
+        [Fact]
+        public void OutputFormattedTest()
+        {
+            Hash hash = new FarmHash32();
+            Byte[] buffer = [23, 134, 0, 237, 0, 81, 64, 64, 39, 5];
+            Byte[] paddedBuffer = new Byte[buffer.Length + 10];
+            Array.Copy(buffer, 0, paddedBuffer, 5, buffer.Length);
+
+            foreach (HashFormat format in Enum.GetValues<HashFormat>())
+            {
+                String expected = HashFormatter.Format(hash.ComputeHashBytes(buffer), format);
+
+                Assert.Equal(expected, hash.ComputeHashString(buffer, format));
+                Assert.Equal(expected, hash.ComputeHashString(buffer, buffer.Length, format));
+                Assert.Equal(expected, hash.ComputeHashString(buffer, 0, buffer.Length, format));
+                Assert.Equal(expected, hash.ComputeHashString(new ReadOnlySpan<Byte>(buffer), format));
+                Assert.Equal(expected, hash.ComputeHashString(paddedBuffer, 5, buffer.Length, format));
+            }
+        }
+
+        [Fact]
+        public void OutputFormattedInvalidTest()
+        {
+            Hash hash = new FarmHash32();
+            Byte[] buffer = new Byte[10];
+
+            Assert.Throws<ArgumentNullException>(() => hash.ComputeHashString((Byte[])null, HashFormat.Hexadecimal));
+            Assert.Throws<ArgumentNullException>(() => hash.ComputeHashString((Byte[])null, 0, HashFormat.Hexadecimal));
+            Assert.Throws<ArgumentNullException>(() => hash.ComputeHashString((Byte[])null, 0, 0, HashFormat.Hexadecimal));
+            Assert.Throws<ArgumentNullException>(() => hash.ComputeHashString((String)null, HashFormat.Hexadecimal));
+            Assert.Throws<ArgumentNullException>(() => hash.ComputeHashString((String)null, Encoding.UTF8, HashFormat.Hexadecimal));
+            Assert.Throws<ArgumentNullException>(() => hash.ComputeHashString("text", null, HashFormat.Hexadecimal));
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => hash.ComputeHashString(buffer, -1, HashFormat.Hexadecimal));
+            Assert.Throws<ArgumentException>(() => hash.ComputeHashString(buffer, 11, HashFormat.Hexadecimal));
+            Assert.Throws<ArgumentOutOfRangeException>(() => hash.ComputeHashString(buffer, -1, 0, HashFormat.Hexadecimal));
+            Assert.Throws<ArgumentOutOfRangeException>(() => hash.ComputeHashString(buffer, 11, 0, HashFormat.Hexadecimal));
+            Assert.Throws<ArgumentOutOfRangeException>(() => hash.ComputeHashString(buffer, 0, -1, HashFormat.Hexadecimal));
+            Assert.Throws<ArgumentException>(() => hash.ComputeHashString(buffer, 8, 3, HashFormat.Hexadecimal));
+            Assert.Throws<ArgumentOutOfRangeException>(() => hash.ComputeHashString(buffer, (HashFormat)(-1)));
+        }
 
         [Fact]
         public void ValueLengthTest()

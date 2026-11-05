@@ -39,13 +39,28 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         public PolymurHash(UInt64 seed, UInt64 tweak)
         {
+            (m_K, m_K2, m_K7, m_KS) = InitializeKeys(seed);
             m_Seed = seed;
             m_Tweak = tweak;
+        }
 
+        /// <summary>Initializes a new instance using seed and tweak values equal to <c>0</c>.</summary>
+        [ExcludeFromCodeCoverage]
+        public PolymurHash() : this(0ul, 0ul) { }
+
+        /// <summary>Initializes a new instance with the specified seed and a tweak value of <c>0</c>.</summary>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
+        public PolymurHash(UInt64 seed) : this(seed, 0ul) { }
+        #endregion
+
+        #region Methods
+        private static (UInt64, UInt64, UInt64, UInt64) InitializeKeys(UInt64 seed)
+        {
             UInt64 kSeed = Mix(unchecked(seed + 0x3C6EF372FE94F82Bul));
             UInt64 sSeed = Mix(unchecked(seed + 0xA54FF53A5F1D36F1ul));
 
-            m_KS = sSeed ^ 0x6A09E667F3BCC908ul;
+            UInt64 ks = sSeed ^ 0x6A09E667F3BCC908ul;
 
             Span<UInt64> powers = stackalloc UInt64[64];
             powers[0] = 37ul;
@@ -93,27 +108,10 @@ namespace FastHashes
                 UInt64 k7 = ReduceExtra(MulReduce(k3, k4));
 
                 if (k7 < k7m)
-                {
-                    m_K = k;
-                    m_K2 = k2;
-                    m_K7 = k7;
-
-                    break;
-                }
+                    return (k, k2, k7, ks);
             }
         }
 
-        /// <summary>Initializes a new instance using seed and tweak values equal to <c>0</c>.</summary>
-        [ExcludeFromCodeCoverage]
-        public PolymurHash() : this(0ul, 0ul) { }
-
-        /// <summary>Initializes a new instance with the specified seed and a tweak value of <c>0</c>.</summary>
-        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        [ExcludeFromCodeCoverage]
-        public PolymurHash(UInt64 seed) : this(seed, 0ul) { }
-        #endregion
-
-        #region Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static UInt64 Mix(UInt64 x)
         {

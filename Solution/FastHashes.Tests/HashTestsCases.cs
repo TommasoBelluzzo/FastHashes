@@ -12,14 +12,6 @@ namespace FastHashes.Tests
         #endregion
 
         #region Test Cases
-        public static IEnumerable<Object[]> DataFarmHashUnseeded()
-        {
-            Int32[] lengths = [0, 1, 4, 5, 12, 13, 15, 16, 17, 24, 25, 32, 127, 128, 144];
-
-            foreach (Int32 length in lengths)
-                yield return new Object[] { length };
-        }
-
         public static IEnumerable<Object[]> DataFormatInvalid()
         {
             yield return new Object[] { null, HashFormat.Hexadecimal, typeof(ArgumentNullException), "hash" };
@@ -74,15 +66,15 @@ namespace FastHashes.Tests
                 yield return new Object[] { hashName, Hash.GetInitializerSeeded(hashName) };
         }
 
-        public static IEnumerable<Object[]> DataHashesLength()
+        public static IEnumerable<Object[]> DataHashesLengthRobustness()
         {
             foreach (String hashName in Hash.GetAlgorithms())
                 yield return new Object[] { hashName, Hash.GetInitializerSeeded(hashName), MAXIMUM_LENGTH };
         }
 
-        public static IEnumerable<Object[]> DataHashesLengthExtended()
+        public static IEnumerable<Object[]> DataHashesLengthBoundary()
         {
-            Int32[] lengths = [1025, 4095, 4096, 4097, 16383, 16384, 16385, 65535, 65536, 65537];
+            Int32[] lengths = [0, 15, 16, 17, 31, 32, 33, 511, 512, 513, 1023, 1024, 1025, 4095, 4096, 4097, 16383, 16384, 16385, 65535, 65536, 65537];
 
             foreach (String hashName in Hash.GetAlgorithms())
                 foreach (Int32 length in lengths)
