@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Statistical quality analysis workbench for the FastHashes library.</Description>
+    <TargetFramework>net10.0</TargetFramework>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+    <StartupObject>FastHashes.Analysis.Program</StartupObject>
+    <TreatWarningsAsErrors Condition="'$(Configuration)'=='Release'">true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FastHashes\FastHashes.csproj" />
+  </ItemGroup>
+
+</Project>
