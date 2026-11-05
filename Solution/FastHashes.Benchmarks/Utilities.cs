@@ -30,6 +30,11 @@ namespace FastHashes.Benchmarks
 
             return $"{adjustedSpeed:N2} {s_SizeSuffixes[magnitude]}/s";
         }
+
+        public static String FormatVariability(Double variability)
+        {
+            return Double.IsNaN(variability) ? "N/A" : $"{variability:P2}";
+        }
         #endregion
     }
 }

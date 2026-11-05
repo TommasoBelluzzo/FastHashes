@@ -20,7 +20,14 @@ namespace FastHashes.Benchmarks
             Double sum = 0.0d;
 
             for (Int32 i = 0; i < length; ++i)
-                sum += Math.Log(values[i]);
+            {
+                Double value = values[i];
+
+                if (!Double.IsFinite(value) || (value <= 0.0d))
+                    throw new ArgumentOutOfRangeException(nameof(values), "Values must be finite and strictly positive.");
+
+                sum += Math.Log(value);
+            }
 
             return Math.Exp(sum / length);
         }
@@ -128,6 +135,24 @@ namespace FastHashes.Benchmarks
             return Median(deviations, false);
         }
 
+        public static Double RelativeMedianAbsoluteDeviation(IList<Double> values)
+        {
+            ArgumentNullException.ThrowIfNull(values, nameof(values));
+
+            if (values.Count < 3)
+                return Double.NaN;
+
+            Double median = Median(values, false);
+
+            if (!Double.IsFinite(median) || (median <= 0.0d))
+                return Double.NaN;
+
+            Double mad = MedianAbsoluteDeviation(values);
+            Double rmad = mad / median;
+
+            return rmad;
+        }
+
         public static Double StandardDeviation(IList<Double> values)
         {
             ArgumentNullException.ThrowIfNull(values, nameof(values));
@@ -148,6 +173,10 @@ namespace FastHashes.Benchmarks
 
         public static Double Throughput(Int64 bytes, Int64 ticks, Int64 frequency)
         {
+            ArgumentOutOfRangeException.ThrowIfNegative(bytes);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(ticks);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(frequency);
+
             return ((Double)bytes * frequency) / ticks;
         }
         #endregion
