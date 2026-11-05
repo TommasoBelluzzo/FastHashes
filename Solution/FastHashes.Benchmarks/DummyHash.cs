@@ -4,16 +4,12 @@ using System;
 
 namespace FastHashes.Benchmarks
 {
-    public sealed class DummyHash : Hash
+    public sealed class DummyHash : Hash<UInt64>
     {
-        #region Properties
-        public override Int32 Length => 32;
-        #endregion
-
         #region Methods
-        protected override void ComputeHashBytesInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<byte> buffer)
         {
-            destination.Clear();
+            return 0ul;
         }
         #endregion
     }

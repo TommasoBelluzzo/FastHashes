@@ -6,36 +6,15 @@ using System.Runtime;
 
 namespace FastHashes.Benchmarks
 {
-    public abstract class Optimizer : IDisposable
+    public sealed class SpeedOptimizer : IDisposable
     {
         #region Members
         private Boolean m_IsDisposed;
-        #endregion
-
-        #region Methods
-        protected virtual void DisposeInternal() { }
-
-        public void Dispose()
-        {
-            if (m_IsDisposed)
-                return;
-
-            DisposeInternal();
-            m_IsDisposed = true;
-
-            GC.SuppressFinalize(this);
-        }
-        #endregion
-    }
-
-    public sealed class SpeedOptimizer : Optimizer
-    {
-        #region Members
         private readonly Boolean m_RestoreLatency;
         private readonly Boolean m_RestorePriority;
-        private readonly Process m_Process; 
-        private readonly ProcessPriorityClass m_PriorityClass; 
-        private readonly GCLatencyMode m_LatencyMode; 
+        private readonly Process m_Process;
+        private readonly ProcessPriorityClass m_PriorityClass;
+        private readonly GCLatencyMode m_LatencyMode;
         #endregion
 
         #region Constructors
@@ -68,8 +47,11 @@ namespace FastHashes.Benchmarks
         #endregion
 
         #region Methods
-        protected override void DisposeInternal()
+        public void Dispose()
         {
+            if (m_IsDisposed)
+                return;
+
             if (m_RestorePriority)
             {
                 try
@@ -93,6 +75,10 @@ namespace FastHashes.Benchmarks
                 m_Process.Dispose();
             }
             catch { }
+
+            m_IsDisposed = true;
+
+            GC.SuppressFinalize(this);
         }
         #endregion
     }

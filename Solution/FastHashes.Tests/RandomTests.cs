@@ -7,7 +7,7 @@ namespace FastHashes.Tests
 {
     public sealed class RandomTests
     {
-        #region Buffer Operations
+        #region Tests: Buffer Operations
         [Theory]
         [InlineData(null, 0, 10, typeof(ArgumentNullException))]
         [InlineData(10, -1, 4, typeof(ArgumentOutOfRangeException))]
@@ -120,7 +120,7 @@ namespace FastHashes.Tests
         }
         #endregion
 
-        #region Value Operations
+        #region Tests: Value Operations
         [Theory]
         [InlineData(1707731u, 3589663199u)]
         [InlineData(26016u, 107436895u)]
@@ -156,7 +156,7 @@ namespace FastHashes.Tests
         }
         #endregion
 
-        #region Queue & State Management
+        #region Tests: Queue & State Management
         [Fact]
         public void QueueEmptyTest()
         {

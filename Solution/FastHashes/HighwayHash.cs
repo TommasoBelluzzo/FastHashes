@@ -159,7 +159,7 @@ namespace FastHashes
         /// <summary>Computes the numeric hash value of the specified byte span.</summary>
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> containing the data to hash.</param>
         /// <returns>The computed hash represented by four <see cref="T:System.UInt64"/> values.</returns>
-        protected (UInt64 Hash1, UInt64 Hash2, UInt64 Hash3, UInt64 Hash4) ComputeHighwayHash(ReadOnlySpan<Byte> buffer)
+        protected (UInt64, UInt64, UInt64, UInt64) ComputeHighwayHash(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -306,7 +306,8 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
-            return ComputeHighwayHash(buffer).Hash1;
+            (UInt64 hash1, _, _, _) = ComputeHighwayHash(buffer);
+            return hash1;
         }
         #endregion
     }

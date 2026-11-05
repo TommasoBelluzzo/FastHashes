@@ -280,10 +280,7 @@ namespace FastHashes
 
         internal static IReadOnlyList<String> GetIdentifiers()
         {
-            List<String> identifiers = new(s_Algorithms.Keys);
-            identifiers.Sort(StringComparer.Ordinal);
-
-            return identifiers.AsReadOnly();
+            return new List<String>(s_Algorithms.Keys).AsReadOnly();
         }
         #endregion
     }

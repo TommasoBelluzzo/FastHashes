@@ -8,7 +8,7 @@ namespace FastHashes.Tests
 {
     public sealed class HashAlgorithmTests
     {
-        #region Test Hashes
+        #region Helpers
         private sealed class TestUmash : Umash<UInt64>
         {
             public TestUmash() : base(0ul) { }
@@ -25,7 +25,7 @@ namespace FastHashes.Tests
         }
         #endregion
 
-        #region Methods
+        #region Tests
         [Theory]
         [InlineData(0)]
         [InlineData(1)]

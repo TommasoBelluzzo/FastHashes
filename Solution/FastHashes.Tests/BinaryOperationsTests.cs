@@ -11,7 +11,7 @@ namespace FastHashes.Tests
         private static readonly Byte[] s_Buffer = [174, 9, 151, 129, 39, 0, 0, 254, 147, 105, 81, 36, 59, 76, 58, 227];
         #endregion
 
-        #region Reading Operations
+        #region Tests: Reading Operations
         [Theory]
         [InlineData(16, -1)]
         [InlineData(16, 16)]
@@ -177,7 +177,7 @@ namespace FastHashes.Tests
         }
         #endregion
 
-        #region Rotation Operations
+        #region Tests: Rotation Operations
         [Theory]
         [InlineData(true, (UInt16)1027, 0, (UInt16)1027)]
         [InlineData(false, (UInt16)1027, 5, (UInt16)6176)]
@@ -259,7 +259,7 @@ namespace FastHashes.Tests
         }
         #endregion
 
-        #region Conversion Operations
+        #region Tests: Conversion Operations
         [Theory]
         [InlineData(new UInt32[] { }, "")]
         [InlineData(new UInt32[] { 0x00000000u }, "00000000")]
@@ -371,7 +371,7 @@ namespace FastHashes.Tests
         }
         #endregion
 
-        #region Swap Operations
+        #region Tests: Swap Operations
         [Theory]
         [InlineData((UInt16)7, (UInt16)4093)]
         [InlineData((UInt16)0, UInt16.MaxValue)]

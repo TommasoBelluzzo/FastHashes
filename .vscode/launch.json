@@ -42,10 +42,7 @@
       "preLaunchTask": "Build Benchmarks: Debug",
       "program": "${workspaceFolder}/Solution/Output/Debug/net10.0/FastHashes.Benchmarks.dll",
       "cwd": "${workspaceFolder}/Solution",
-      "args": [
-        "-automated",
-        "--no-launch-profile"
-      ],
+      "args": [],
       "console": "integratedTerminal",
       "stopAtEntry": true,
       "justMyCode": false,
@@ -61,9 +58,7 @@
       "preLaunchTask": "Build Benchmarks: Release",
       "program": "${workspaceFolder}/Solution/Output/Release/net10.0/FastHashes.Benchmarks.dll",
       "cwd": "${workspaceFolder}/Solution",
-      "args": [
-        "--no-launch-profile"
-      ],
+      "args": [],
       "console": "integratedTerminal",
       "stopAtEntry": false
     }

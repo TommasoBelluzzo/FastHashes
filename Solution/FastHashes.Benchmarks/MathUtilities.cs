@@ -8,6 +8,23 @@ namespace FastHashes.Benchmarks
     public static class MathUtilities
     {
         #region Methods
+        public static Double GeometricMean(IList<Double> values)
+        {
+            ArgumentNullException.ThrowIfNull(values, nameof(values));
+
+            Int32 length = values.Count;
+
+            if (length == 0)
+                return Double.NaN;
+
+            Double sum = 0.0d;
+
+            for (Int32 i = 0; i < length; ++i)
+                sum += Math.Log(values[i]);
+
+            return Math.Exp(sum / length);
+        }
+
         public static Double Mean(IList<Double> values, Boolean filter = true)
         {
             ArgumentNullException.ThrowIfNull(values, nameof(values));
@@ -127,6 +144,11 @@ namespace FastHashes.Benchmarks
                 sd += Math.Pow(values[i] - mean, 2.0d);
 
             return Math.Sqrt(sd / length);
+        }
+
+        public static Double Throughput(Int64 bytes, Int64 ticks, Int64 frequency)
+        {
+            return ((Double)bytes * frequency) / ticks;
         }
         #endregion
     }
