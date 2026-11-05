@@ -5,11 +5,11 @@ VisualStudioVersion = 16.0.32802.440
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastHashes", "FastHashes\FastHashes.csproj", "{23C0573C-FA6E-4932-A637-18B5A34BAE61}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastHashes.Tests", "FastHashes.Tests\FastHashes.Tests.csproj", "{56B52E49-B24F-4406-A8B8-0426F4CE1AB6}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastHashes.Analysis", "FastHashes.Analysis\FastHashes.Analysis.csproj", "{3D1AE038-4A9A-4863-8E22-C4F2D8D52CCB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastHashes.Benchmarks", "FastHashes.Benchmarks\FastHashes.Benchmarks.csproj", "{63B36156-D83C-47C3-8BC9-9FBCC685686B}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastHashes.Tests", "FastHashes.Tests\FastHashes.Tests.csproj", "{56B52E49-B24F-4406-A8B8-0426F4CE1AB6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0E9B9B90-4669-4501-AD12-BF06AF503055}"
 	ProjectSection(SolutionItems) = preProject

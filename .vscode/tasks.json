@@ -171,6 +171,54 @@
       "problemMatcher": []
     },
     {
+      "label": "Build Analysis: Debug",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/Solution/FastHashes.Analysis/FastHashes.Analysis.csproj",
+        "--configuration",
+        "Debug",
+        "-p:Platform=AnyCPU"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Build Analysis: Release",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/Solution/FastHashes.Analysis/FastHashes.Analysis.csproj",
+        "--configuration",
+        "Release",
+        "-p:Platform=AnyCPU"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Run Analysis",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/Solution/FastHashes.Analysis/FastHashes.Analysis.csproj",
+        "--configuration",
+        "Release",
+        "--framework",
+        "net10.0",
+        "--no-build",
+        "--no-restore",
+        "-p:Platform=AnyCPU"
+      ],
+      "dependsOn": [
+        "Build Analysis: Release"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    },
+    {
       "label": "Build Benchmarks: Debug",
       "type": "process",
       "command": "dotnet",

@@ -36,6 +36,33 @@
       "stopAtEntry": false
     },
     {
+      "name": "Debug Analysis",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Build Analysis: Debug",
+      "program": "${workspaceFolder}/Solution/Output/Debug/net10.0/FastHashes.Analysis.dll",
+      "cwd": "${workspaceFolder}/Solution",
+      "args": [],
+      "console": "integratedTerminal",
+      "stopAtEntry": true,
+      "justMyCode": false,
+      "logging": {
+        "moduleLoad": true,
+        "exceptions": false
+      }
+    },
+    {
+      "name": "Run Analysis",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Build Analysis: Release",
+      "program": "${workspaceFolder}/Solution/Output/Release/net10.0/FastHashes.Analysis.dll",
+      "cwd": "${workspaceFolder}/Solution",
+      "args": [],
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
       "name": "Debug Benchmarks",
       "type": "coreclr",
       "request": "launch",

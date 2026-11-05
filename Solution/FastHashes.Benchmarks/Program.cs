@@ -39,7 +39,12 @@ namespace FastHashes.Benchmarks
         #region Entry Point
         public static Int32 Main(String[] args)
         {
-            RootCommand command = new("Benchmark FastHashes algorithms using bulk and chunk speed tests.");
+            RootCommand command = new("Benchmarks algorithms using bulk and chunk speed tests.");
+
+            Option<Boolean> listOption = new("--list")
+            {
+                Description = "List all registered algorithms without running benchmarks."
+            };
 
             Option<String> hashOption = new("--hash")
             {
@@ -102,20 +107,41 @@ namespace FastHashes.Benchmarks
                     result.AddError($"--warmup-repetitions must be between {WARMUP_REPETITIONS_MINIMUM} and {WARMUP_REPETITIONS_MAXIMUM}.");
             });
 
+            command.Options.Add(listOption);
             command.Options.Add(hashOption);
             command.Options.Add(bulkLengthOption);
             command.Options.Add(bulkRepetitionsOption);
             command.Options.Add(warmupRepetitionsOption);
 
+            command.Validators.Add(result =>
+            {
+                if (!result.GetValue(listOption))
+                    return;
+
+                if ((result.GetResult(hashOption)?.Implicit == false) || (result.GetResult(bulkLengthOption)?.Implicit == false) || (result.GetResult(bulkRepetitionsOption)?.Implicit == false) || (result.GetResult(warmupRepetitionsOption)?.Implicit == false))
+                    result.AddError("--list cannot be combined with other benchmark options.");
+            });
+
             command.SetAction
             (
-                parseResult => RunBenchmarks
-                (
-                    parseResult.GetValue(hashOption),
-                    parseResult.GetValue(bulkLengthOption),
-                    parseResult.GetValue(bulkRepetitionsOption),
-                    parseResult.GetValue(warmupRepetitionsOption)
-                )
+                parseResult =>
+                {
+                    if (parseResult.GetValue(listOption))
+                    {
+                        foreach (String algorithm in Hash.GetAlgorithms())
+                            Console.WriteLine(algorithm);
+
+                        return 0;
+                    }
+
+                    return RunBenchmarks
+                    (
+                        parseResult.GetValue(hashOption),
+                        parseResult.GetValue(bulkLengthOption),
+                        parseResult.GetValue(bulkRepetitionsOption),
+                        parseResult.GetValue(warmupRepetitionsOption)
+                    );
+                }
             );
 
             return command.Parse(args).Invoke();
