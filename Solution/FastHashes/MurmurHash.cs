@@ -253,7 +253,7 @@ namespace FastHashes
 
             public override void ComputeHash(ReadOnlySpan<Byte> buffer, Boolean output64, Span<Byte> destination)
             {
-                var (hash1, hash2) = ComputeHashValue(buffer);
+                (UInt64 hash1, UInt64 hash2) = ComputeHashValue(buffer);
 
                 BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
                 
@@ -442,7 +442,7 @@ namespace FastHashes
 
             public override void ComputeHash(ReadOnlySpan<Byte> buffer, Boolean output64, Span<Byte> destination)
             {
-                var (hash1, hash2, hash3, hash4) = ComputeHashValue(buffer);
+                (UInt32 hash1, UInt32 hash2, UInt32 hash3, UInt32 hash4) = ComputeHashValue(buffer);
 
                 BinaryPrimitives.WriteUInt32LittleEndian(destination, hash1);
                 BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(4), hash2);

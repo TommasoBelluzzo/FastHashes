@@ -566,12 +566,12 @@ namespace FastHashes
             private (UInt64 Hash1, UInt64 Hash2) ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
                 Int32 count = buffer.Length;
-                UInt64 lo, hi;
+                UInt64 hash1, hash2;
 
                 if (count <= 16)
-                    ComputeShort(buffer, Seed, out lo, out hi);
+                    ComputeShort(buffer, Seed, out hash1, out hash2);
                 else if (count <= 240)
-                    ComputeMedium(buffer, Seed, out lo, out hi);
+                    ComputeMedium(buffer, Seed, out hash1, out hash2);
                 else
                 {
                     Span<UInt64> accumulator = stackalloc UInt64[8];
@@ -580,16 +580,16 @@ namespace FastHashes
                     UInt64 loStart = unchecked((UInt64)count * P64_1);
                     UInt64 hiStart = ~unchecked((UInt64)count * P64_2);
 
-                    lo = Merge(accumulator, LongSecret, 11, loStart);
-                    hi = Merge(accumulator, LongSecret, 117, hiStart);
+                    hash1 = Merge(accumulator, LongSecret, 11, loStart);
+                    hash2 = Merge(accumulator, LongSecret, 117, hiStart);
                 }
 
-                return (lo, hi);
+                return (hash1, hash2);
             }
 
             public override void ComputeHash(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
             {
-                var (hash1, hash2) = ComputeHashValue(buffer);
+                (UInt64 hash1, UInt64 hash2) = ComputeHashValue(buffer);
                 BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
                 BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
             }

@@ -423,7 +423,6 @@ namespace FastHashes
         private (UInt64 Hash1, UInt64 Hash2) ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
             Int32 count = buffer.Length;
-
             UInt64 hash1, hash2;
 
             if (count <= 8)
@@ -450,7 +449,7 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
         {
-            var (hash1, hash2) = ComputeHashValue(buffer);
+            (UInt64 hash1, UInt64 hash2) = ComputeHashValue(buffer);
             BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
             BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
         }

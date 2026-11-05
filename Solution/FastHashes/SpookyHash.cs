@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endregion
@@ -103,7 +104,7 @@ namespace FastHashes
             }
         }
 
-        private void ComputeHashLong(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        private (UInt64 Hash1, UInt64 Hash2) ComputeHashLong(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -143,15 +144,15 @@ namespace FastHashes
             for (Int32 i = 0; i < 3; ++i)
                 LongEnd(hash);
 
-            WriteHash(hash, destination);
+            return (hash[0], hash[1]);
         }
 
-        private void ComputeHashShort(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        private (UInt64 Hash1, UInt64 Hash2) ComputeHashShort(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
 
-            Span<UInt64> hash = stackalloc UInt64[4] { m_Seed1, m_Seed2, C, C };
+            Span<UInt64> hashes = stackalloc UInt64[4] { m_Seed1, m_Seed2, C, C };
 
             Int32 remainder = count % 32;
 
@@ -161,84 +162,76 @@ namespace FastHashes
 
                 for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
                 {
-                    hash[2] = unchecked(hash[2] + BinaryOperations.Read64(buffer, offset));
+                    hashes[2] = unchecked(hashes[2] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
-                    hash[3] = unchecked(hash[3] + BinaryOperations.Read64(buffer, offset));
+                    hashes[3] = unchecked(hashes[3] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
 
-                    ShortMix(hash);
+                    ShortMix(hashes);
 
-                    hash[0] = unchecked(hash[0] + BinaryOperations.Read64(buffer, offset));
+                    hashes[0] = unchecked(hashes[0] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
-                    hash[1] = unchecked(hash[1] + BinaryOperations.Read64(buffer, offset));
+                    hashes[1] = unchecked(hashes[1] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
                 }
 
                 if (remainder >= 16)
                 {
-                    hash[2] = unchecked(hash[2] + BinaryOperations.Read64(buffer, offset));
+                    hashes[2] = unchecked(hashes[2] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
-                    hash[3] = unchecked(hash[3] + BinaryOperations.Read64(buffer, offset));
+                    hashes[3] = unchecked(hashes[3] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
 
-                    ShortMix(hash);
+                    ShortMix(hashes);
 
                     remainder -= 16;
                 }
             }
 
-            hash[3] = unchecked(hash[3] + ((UInt64)count << 56));
+            hashes[3] = unchecked(hashes[3] + ((UInt64)count << 56));
 
             switch (remainder)
             {
-                case 15: hash[3] = unchecked(hash[3] + ((UInt64)buffer[offset + 14] << 48)); goto case 14;
-                case 14: hash[3] = unchecked(hash[3] + ((UInt64)buffer[offset + 13] << 40)); goto case 13;
-                case 13: hash[3] = unchecked(hash[3] + ((UInt64)buffer[offset + 12] << 32)); goto case 12;
+                case 15: hashes[3] = unchecked(hashes[3] + ((UInt64)buffer[offset + 14] << 48)); goto case 14;
+                case 14: hashes[3] = unchecked(hashes[3] + ((UInt64)buffer[offset + 13] << 40)); goto case 13;
+                case 13: hashes[3] = unchecked(hashes[3] + ((UInt64)buffer[offset + 12] << 32)); goto case 12;
                 case 12:
-                    hash[2] = unchecked(hash[2] + BinaryOperations.Read64(buffer, offset));
+                    hashes[2] = unchecked(hashes[2] + BinaryOperations.Read64(buffer, offset));
                     offset += 8;
-                    hash[3] = unchecked(hash[3] + BinaryOperations.Read32(buffer, offset));
+                    hashes[3] = unchecked(hashes[3] + BinaryOperations.Read32(buffer, offset));
                     break;
-                case 11: hash[3] = unchecked(hash[3] + ((UInt64)buffer[offset + 10] << 16)); goto case 10;
-                case 10: hash[3] = unchecked(hash[3] + ((UInt64)buffer[offset + 9] << 8)); goto case 9;
-                case 9: hash[3] = unchecked(hash[3] + buffer[offset + 8]); goto case 8;
+                case 11: hashes[3] = unchecked(hashes[3] + ((UInt64)buffer[offset + 10] << 16)); goto case 10;
+                case 10: hashes[3] = unchecked(hashes[3] + ((UInt64)buffer[offset + 9] << 8)); goto case 9;
+                case 9: hashes[3] = unchecked(hashes[3] + buffer[offset + 8]); goto case 8;
                 case 8:
-                    hash[2] = unchecked(hash[2] + BinaryOperations.Read64(buffer, offset));
+                    hashes[2] = unchecked(hashes[2] + BinaryOperations.Read64(buffer, offset));
                     break;
-                case 7: hash[2] = unchecked(hash[2] + ((UInt64)buffer[offset + 6] << 48)); goto case 6;
-                case 6: hash[2] = unchecked(hash[2] + ((UInt64)buffer[offset + 5] << 40)); goto case 5;
-                case 5: hash[2] = unchecked(hash[2] + ((UInt64)buffer[offset + 4] << 32)); goto case 4;
+                case 7: hashes[2] = unchecked(hashes[2] + ((UInt64)buffer[offset + 6] << 48)); goto case 6;
+                case 6: hashes[2] = unchecked(hashes[2] + ((UInt64)buffer[offset + 5] << 40)); goto case 5;
+                case 5: hashes[2] = unchecked(hashes[2] + ((UInt64)buffer[offset + 4] << 32)); goto case 4;
                 case 4:
-                    hash[2] = unchecked(hash[2] + BinaryOperations.Read32(buffer, offset));
+                    hashes[2] = unchecked(hashes[2] + BinaryOperations.Read32(buffer, offset));
                     break;
-                case 3: hash[2] = unchecked(hash[2] + ((UInt64)buffer[offset + 2] << 16)); goto case 2;
-                case 2: hash[2] = unchecked(hash[2] + ((UInt64)buffer[offset + 1] << 8)); goto case 1;
+                case 3: hashes[2] = unchecked(hashes[2] + ((UInt64)buffer[offset + 2] << 16)); goto case 2;
+                case 2: hashes[2] = unchecked(hashes[2] + ((UInt64)buffer[offset + 1] << 8)); goto case 1;
                 case 1:
-                    hash[2] = unchecked(hash[2] + buffer[offset]);
+                    hashes[2] = unchecked(hashes[2] + buffer[offset]);
                     break;
                 case 0:
-                    hash[2] = unchecked(hash[2] + C);
-                    hash[3] = unchecked(hash[3] + C);
+                    hashes[2] = unchecked(hashes[2] + C);
+                    hashes[3] = unchecked(hashes[3] + C);
                     break;
             }
 
-            ShortEnd(hash);
+            ShortEnd(hashes);
 
-            WriteHash(hash, destination);
+            return (hashes[0], hashes[1]);
         }
 
-        /// <summary>Finalizes any partial computation and writes the hash code into the destination.</summary>
-        /// <param name="hashData">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;ulong&gt;</see> representing the hash data.</param>
-        /// <param name="destination">The <see cref="T:System.Span`1{T}">Span&lt;byte&gt;</see> receiving the hash code.</param>
-        protected abstract void WriteHash(ReadOnlySpan<UInt64> hashData, Span<Byte> destination);
-
-        /// <inheritdoc/>
-        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
+        /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
+        protected (UInt64 Hash1, UInt64 Hash2) ComputeHashValue(ReadOnlySpan<Byte> buffer)
         {
-            if (buffer.Length < 192)
-                ComputeHashShort(buffer, destination);
-            else
-                ComputeHashLong(buffer, destination);
+            return (buffer.Length < 192) ? ComputeHashShort(buffer) : ComputeHashLong(buffer);
         }
         #endregion
     }
@@ -271,10 +264,10 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override void WriteHash(ReadOnlySpan<UInt64> hashData, Span<Byte> destination)
+        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
         {
-            UInt64 hash = hashData[0];
-            System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(destination, unchecked((UInt32)hash));
+            (UInt64 hash, UInt64 _) = ComputeHashValue(buffer);
+            BinaryPrimitives.WriteUInt32LittleEndian(destination, unchecked((UInt32)hash));
         }
         #endregion
     }
@@ -307,10 +300,10 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override void WriteHash(ReadOnlySpan<UInt64> hashData, Span<Byte> destination)
+        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
         {
-            UInt64 hash = hashData[0];
-            System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
+            (UInt64 hash, UInt64 _) = ComputeHashValue(buffer);
+            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash);
         }
         #endregion
     }
@@ -343,10 +336,11 @@ namespace FastHashes
 
         #region Methods
         /// <inheritdoc/>
-        protected override void WriteHash(ReadOnlySpan<UInt64> hashData, Span<Byte> destination)
+        protected override void ComputeHashInternal(ReadOnlySpan<Byte> buffer, Span<Byte> destination)
         {
-            System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(destination, hashData[0]);
-            System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hashData[1]);
+            (UInt64 hash1, UInt64 hash2) = ComputeHashValue(buffer);
+            BinaryPrimitives.WriteUInt64LittleEndian(destination, hash1);
+            BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(8), hash2);
         }
         #endregion
     }
