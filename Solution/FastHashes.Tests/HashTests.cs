@@ -10,6 +10,7 @@ namespace FastHashes.Tests
     public sealed class HashTests : IClassFixture<ConformanceFixture>
     {
         #region Constants
+        private const Int32 MAXIMUM_LENGTH = 1024;
         private const UInt32 TEST_SEED = 0x9E3779B9u;
         #endregion
 
@@ -24,28 +25,30 @@ namespace FastHashes.Tests
         }
         #endregion
 
-        #region Methods
+        #region Tests: Length
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataHashesLengthBoundary), MemberType = typeof(HashTestsCases))]
-        public void LengthBoundaryTest(String hashName, Func<UInt64, Hash> hashInitializer, Int32 length)
+        [MemberData(nameof(TestsCases.Hashes), MemberType = typeof(TestsCases))]
+        public void LengthBoundaryTest(String hashName, Func<UInt64, Hash> hashInitializer, String _)
         {
-            Byte[] buffer = new Byte[length];
+            Int32[] lengths = [0, 15, 16, 17, 31, 32, 33, 511, 512, 513, 1023, 1024, 1025, 4095, 4096, 4097, 16383, 16384, 16385, 65535, 65536, 65537];
 
             RandomXorShift random = new(TEST_SEED);
-            random.NextBytes(buffer);
-
             Hash hash = hashInitializer(TEST_SEED);
-            Byte[] bytes = hash.ComputeHashBytes(buffer);
 
-            Int32 expected = hash.Length / 8;
-            Int32 actual = bytes.Length;
+            foreach (Int32 length in lengths)
+            {
+                Byte[] buffer = new Byte[length];
+                random.NextBytes(buffer);
 
-            Assert.Equal(expected, actual);
+                Byte[] bytes = hash.ComputeHashBytes(buffer);
+
+                Assert.Equal(hash.Length / 8, bytes.Length);
+            }
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataHashesLengthRobustness), MemberType = typeof(HashTestsCases))]
-        public void LengthRobustnessTest(String hashName, Func<UInt64, Hash> hashInitializer, Int32 maximumLength)
+        [MemberData(nameof(TestsCases.Hashes), MemberType = typeof(TestsCases))]
+        public void LengthRobustnessTest(String hashName, Func<UInt64, Hash> hashInitializer, String _)
         {
             UInt32[] seeds = [0u, TEST_SEED];
 
@@ -56,7 +59,7 @@ namespace FastHashes.Tests
 
                 Int32 failed = 0;
 
-                for (Int32 i = 0; i <= maximumLength; ++i)
+                for (Int32 i = 0; i <= MAXIMUM_LENGTH; ++i)
                 {
                     Byte[] buffer = new Byte[i];
                     random.NextBytes(buffer);
@@ -71,12 +74,14 @@ namespace FastHashes.Tests
                     }
                 }
 
-                Assert.True(failed == 0, $"Length test failed for {hashName}, seed 0x{seed:X8}: {failed} of {maximumLength + 1} lengths failed.");
+                Assert.True(failed == 0, $"Length test failed for {hashName}, seed 0x{seed:X8}: {failed} of {MAXIMUM_LENGTH + 1} lengths failed.");
             }
         }
+        #endregion
 
+        #region Tests: Correctness
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataHashesValidation), MemberType = typeof(HashTestsCases))]
+        [MemberData(nameof(TestsCases.Hashes), MemberType = typeof(TestsCases))]
         public void ValidationTest(String hashName, Func<UInt64, Hash> hashInitializer, String expected)
         {
             Hash hash0 = hashInitializer(0u);
@@ -101,8 +106,8 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(HashTestsCases.DataHashesGeneric), MemberType = typeof(HashTestsCases))]
-        public void ConformanceTest(String hashName, Func<UInt64, Hash> hashInitializer)
+        [MemberData(nameof(TestsCases.Hashes), MemberType = typeof(TestsCases))]
+        public void ConformanceTest(String hashName, Func<UInt64, Hash> hashInitializer, String _)
         {
             var cases = m_ConformanceFixture.GetCases(hashName);
 

@@ -86,11 +86,16 @@ namespace FastHashes.Tests
         [Fact]
         public void RegistryCoverageTest()
         {
-            IReadOnlyList<String> registered = Hash.GetAlgorithms();
-            String[] validated = [.. HashTestsCases.DataHashesValidation().Select(x => (String)x[0])];
+            Type[] implementations = [.. typeof(Hash).Assembly.GetTypes()
+                .Where(x => x.IsClass && !x.IsAbstract && typeof(Hash).IsAssignableFrom(x))
+                .OrderBy(x => x.Name, StringComparer.Ordinal)];
 
-            Assert.Equal(validated.Length, validated.Distinct(StringComparer.Ordinal).Count());
-            Assert.Equal(registered.OrderBy(x => x, StringComparer.Ordinal), validated.OrderBy(x => x, StringComparer.Ordinal));
+            Type[] registered = [.. Hash.GetAlgorithms()
+                .Select(x => Hash.Create(x).GetType()).Distinct()
+                .OrderBy(x => x.Name, StringComparer.Ordinal)];
+
+            Assert.NotEmpty(implementations);
+            Assert.Equal(implementations, registered);
         }
         #endregion
 
