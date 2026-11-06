@@ -12,20 +12,30 @@ namespace FastHashes.Analysis
     internal static class AnalysisRunner
     {
         #region Methods
-        public static String Run(String hashName, String analysis, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength, String outputDirectory)
+        public static String Run(String hashName, String analysis, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength)
         {
-            if (analysis != "smoke")
-                throw new NotSupportedException($"Analysis '{analysis}' is not implemented in AN-000. Available: smoke.");
+            if ((analysis != "smoke") && (analysis != "avalanche"))
+                throw new NotSupportedException($"Analysis '{analysis}' is not implemented.");
 
             Hash hash = hashSeed.HasValue
                 ? Hash.Create(hashName, hashSeed.Value)
                 : Hash.Create(hashName);
 
-            String root = Path.GetFullPath(outputDirectory);
+            // Validate the workload before creating any output files.
+            if (analysis == "avalanche")
+                AvalancheAnalysis.Validate(hash.Length, samples, keyLength);
+
+            String root = Path.Combine(Environment.CurrentDirectory, "Analysis");
             String safeHashName = SanitizeDirectoryName(hashName);
             String runId = DateTimeOffset.UtcNow.ToString("yyyyMMddTHHmmssfffffffZ", CultureInfo.InvariantCulture) + "-" + Guid.NewGuid().ToString("N")[..8];
             String directory = Path.Combine(root, safeHashName, runId);
             Directory.CreateDirectory(directory);
+
+            if (analysis == "avalanche")
+            {
+                AvalancheAnalysis.Run(hash, hashName, hashSeed, generatorSeed, samples, keyLength, directory);
+                return directory;
+            }
 
             InputGenerator generator = new(generatorSeed);
             Byte[] key = new Byte[keyLength];
@@ -66,7 +76,7 @@ namespace FastHashes.Analysis
             JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
             File.WriteAllText(Path.Combine(directory, "summary.json"), JsonSerializer.Serialize(metadata, jsonOptions) + "\n", new UTF8Encoding(false));
             File.WriteAllText(Path.Combine(directory, "summary.txt"),
-                $"Hash: {hashName}\nAnalysis: smoke\nStatus: Completed\nQuality assessment: Not performed (AN-000)\nSamples: {samples}\nKey length: {keyLength} bytes\nGenerator seed: {generatorSeed}\nHash seed: {(hashSeed.HasValue ? hashSeed.Value.ToString(CultureInfo.InvariantCulture) : "default configuration")}\n",
+                $"Hash: {hash.GetType().Name}\nAnalysis: smoke\nStatus: Completed\nQuality assessment: Not performed (AN-000)\nSamples: {samples}\nKey length: {keyLength} bytes\nGenerator seed: {generatorSeed}\n",
                 new UTF8Encoding(false));
 
             return directory;

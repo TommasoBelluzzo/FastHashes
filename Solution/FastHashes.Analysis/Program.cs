@@ -11,9 +11,9 @@ namespace FastHashes.Analysis
     public static class Program
     {
         #region Setup
-        private const String ANALYSIS = "smoke";
+        private const String ANALYSIS = "avalanche";
         private const UInt64 GENERATOR_SEED = 1ul;
-        private const Int32 SAMPLES = 32;
+        private const Int32 SAMPLES = 1000;
         private const Int32 SAMPLES_MINIMUM = 1;
         private const Int32 SAMPLES_MAXIMUM = 10000;
         private const Int32 KEY_LENGTH = 64;
@@ -28,18 +28,17 @@ namespace FastHashes.Analysis
 
             Option<Boolean> listOption = new("--list")
             {
-                Description = "Lists all registered algorithms without running benchmarks."
+                Description = "Lists all registered algorithms without running an analysis."
             };
 
             Option<String> hashOption = new("--hash")
             {
-                Description = "The registered hash to analyze.",
+                Description = "The registered hash to analyze."
             };
 
             Option<String> analysisOption = new("--analysis")
             {
-                Description = "The analysis to perform.",
-                DefaultValueFactory = _ => ANALYSIS
+                Description = "The analysis to perform: avalanche or smoke.",
             };
 
             Option<UInt64?> hashSeedOption = new("--hash-seed")
@@ -55,14 +54,14 @@ namespace FastHashes.Analysis
 
             Option<Int32> samplesOption = new("--samples")
             {
-                Description = $"Number of smoke samples. [valid range: {SAMPLES_MINIMUM}-{SAMPLES_MAXIMUM}]",
+                Description = $"Number of independent base inputs. [valid range: {SAMPLES_MINIMUM}-{SAMPLES_MAXIMUM}]",
                 DefaultValueFactory = _ => SAMPLES
             };
 
             Option<Int32> keyLengthOption = new("--key-length")
             {
                 Description = $"Input key length in bytes. [valid range: {KEY_LENGTH_MINIMUM}-{KEY_LENGTH_MAXIMUM}]",
-                DefaultValueFactory = _ => KEY_LENGTH,
+                DefaultValueFactory = _ => KEY_LENGTH
             };
 
             hashOption.Validators.Add(result =>
@@ -70,21 +69,19 @@ namespace FastHashes.Analysis
                 String hashName = result.GetValueOrDefault<String>();
 
                 if (String.IsNullOrWhiteSpace(hashName))
-                {
-                    result.AddError("--hash requires a non-empty name.");
-                    return;
-                }
-
-                if (!Hash.GetAlgorithms().Contains(hashName))
+                    result.AddError("Parameter --hash requires a non-empty value.");
+                else if (!Hash.GetAlgorithms().Contains(hashName))
                     result.AddError($"Unknown hash: {hashName}; hash names are case-sensitive and must match the registry.");
             });
 
             analysisOption.Validators.Add(result =>
             {
-                String value = result.GetValueOrDefault<String>();
+                String analysisName = result.GetValueOrDefault<String>();
 
-                if (!String.Equals(value, ANALYSIS, StringComparison.Ordinal))
-                    result.AddError($"--analysis must be {ANALYSIS}; quality drivers are not implemented in AN-000.");
+                if (String.IsNullOrWhiteSpace(analysisName))
+                    result.AddError("Parameter --analysis requires a non-empty value.");
+                else if ((analysisName != "avalanche") && (analysisName != "smoke"))
+                    result.AddError($"Unknown --hash parameter value: {analysisName}.");
             });
 
             samplesOption.Validators.Add(result =>
@@ -103,12 +100,23 @@ namespace FastHashes.Analysis
                     result.AddError($"--key-length must be between {KEY_LENGTH_MINIMUM} and {KEY_LENGTH_MAXIMUM}.");
             });
 
+            command.Options.Add(listOption);
+            command.Options.Add(hashOption);
+            command.Options.Add(analysisOption);
+            command.Options.Add(hashSeedOption);
+            command.Options.Add(generatorSeedOption);
+            command.Options.Add(samplesOption);
+            command.Options.Add(keyLengthOption);
+
             command.Validators.Add(result =>
             {
                 if (!result.GetValue(listOption))
                 {
                     if (result.GetResult(hashOption)?.Implicit != false)
-                        result.AddError("--hash is required.");
+                        result.AddError("Parameter --hash is required.");
+
+                    if (result.GetResult(analysisOption)?.Implicit != false)
+                        result.AddError("Parameter --analysis is required.");
 
                     return;
                 }
@@ -119,19 +127,11 @@ namespace FastHashes.Analysis
                 {
                     if (result.GetResult(option)?.Implicit == false)
                     {
-                        result.AddError("--list cannot be combined with other analysis options.");
+                        result.AddError("Parameter --list cannot be combined with other options.");
                         return;
                     }
                 }
             });
-
-            command.Options.Add(hashOption);
-            command.Options.Add(analysisOption);
-            command.Options.Add(hashSeedOption);
-            command.Options.Add(generatorSeedOption);
-            command.Options.Add(samplesOption);
-            command.Options.Add(keyLengthOption);
-            command.Options.Add(listOption);
 
             command.SetAction
             (
@@ -180,10 +180,11 @@ namespace FastHashes.Analysis
             Console.WriteLine($"Hash: {selectedHash}");
             Console.WriteLine($"Analysis: {analysis}");
             Console.WriteLine($"Hash Seed: {(hashSeed.HasValue ? hashSeed.Value.ToString() : "Default Configuration")}");
-            Console.WriteLine($"Generator: SplitMix64");
+            Console.WriteLine("Generator: SplitMix64");
             Console.WriteLine($"Generator Seed: {generatorSeed}");
             Console.WriteLine($"Samples: {samples}");
             Console.WriteLine($"Key Length: {keyLength} Bytes");
+            Console.WriteLine($"Output Root: {System.IO.Path.Combine(Environment.CurrentDirectory, "Analysis")}");
             Console.WriteLine();
 
             String title = $"# HASH: {selectedHash} #";
@@ -198,9 +199,13 @@ namespace FastHashes.Analysis
             {
                 String directory = AnalysisRunner.Run(selectedHash, analysis, hashSeed, generatorSeed, samples, keyLength);
 
-                Console.WriteLine("[INFRASTRUCTURE SMOKE TEST]");
+                Console.WriteLine(analysis == "avalanche" ? "[AVALANCHE ANALYSIS]" : "[INFRASTRUCTURE SMOKE TEST]");
                 Console.WriteLine($"Output: {directory}");
-                Console.WriteLine("Quality Assessment: Not Performed (AN-000)");
+                if (analysis == "smoke")
+                    Console.WriteLine("Quality Assessment: Not Performed (AN-000)");
+                else
+                    Console.WriteLine("Results: avalanche.csv, hamming.csv, avalanche.svg, hamming.svg, summary.json, summary.txt");
+
                 return 0;
             }
             catch (Exception exception) when (exception is ArgumentException || exception is NotSupportedException || exception is OverflowException)

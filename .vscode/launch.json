@@ -46,7 +46,7 @@
         "--hash",
         "XxHash64",
         "--analysis",
-        "smoke"
+        "avalanche"
       ],
       "console": "integratedTerminal",
       "stopAtEntry": true,
@@ -67,7 +67,7 @@
         "--hash",
         "XxHash64",
         "--analysis",
-        "smoke"
+        "avalanche"
       ],
       "console": "integratedTerminal",
       "stopAtEntry": false

@@ -29,7 +29,7 @@ namespace FastHashes.Analysis
 
                 for (Int32 i = 0; i < 8 && position < buffer.Length; ++i)
                 {
-                    buffer[position++] = (Byte)value;
+                    buffer[position++] = unchecked((Byte)value);
                     value >>= 8;
                 }
             }

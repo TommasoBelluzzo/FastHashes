@@ -74,13 +74,9 @@ namespace FastHashes.Benchmarks
                 String hashName = result.GetValueOrDefault<String>();
 
                 if (String.IsNullOrWhiteSpace(hashName))
-                {
-                    result.AddError("--hash requires a nonempty name.");
-                    return;
-                }
-
-                if (!Hash.GetAlgorithms().Contains(hashName))
-                    result.AddError($"Unknown hash: {hashName}; hash names are case-sensitive and must match the registry.");
+                    result.AddError("Parameter --hash requires a non-empty value.");
+                else if (!Hash.GetAlgorithms().Contains(hashName))
+                    result.AddError($"Unknown --hash parameter value: {hashName}; hash names are case-sensitive and must match the registry.");
             });
 
             bulkLengthOption.Validators.Add(result =>
@@ -88,7 +84,7 @@ namespace FastHashes.Benchmarks
                 Int32 value = result.GetValueOrDefault<Int32>();
 
                 if ((value < BULK_KEYS_LENGTH_MINIMUM) || value > (BULK_KEYS_LENGTH_MAXIMUM))
-                    result.AddError($"--bulk-length must be between {BULK_KEYS_LENGTH_MINIMUM} and {BULK_KEYS_LENGTH_MAXIMUM}.");
+                    result.AddError($"Parameter --bulk-length must be between {BULK_KEYS_LENGTH_MINIMUM} and {BULK_KEYS_LENGTH_MAXIMUM}.");
             });
 
             bulkRepetitionsOption.Validators.Add(result =>
@@ -96,7 +92,7 @@ namespace FastHashes.Benchmarks
                 Int32 value = result.GetValueOrDefault<Int32>();
 
                 if ((value < BULK_REPETITIONS_MINIMUM) || (value > BULK_REPETITIONS_MAXIMUM))
-                    result.AddError($"--bulk-repetitions must be between {BULK_REPETITIONS_MINIMUM} and {BULK_REPETITIONS_MAXIMUM}.");
+                    result.AddError($"Parameter --bulk-repetitions must be between {BULK_REPETITIONS_MINIMUM} and {BULK_REPETITIONS_MAXIMUM}.");
             });
 
             warmupRepetitionsOption.Validators.Add(result =>
@@ -104,7 +100,7 @@ namespace FastHashes.Benchmarks
                 Int32 value = result.GetValueOrDefault<Int32>();
 
                 if ((value < WARMUP_REPETITIONS_MINIMUM) || (value > WARMUP_REPETITIONS_MAXIMUM))
-                    result.AddError($"--warmup-repetitions must be between {WARMUP_REPETITIONS_MINIMUM} and {WARMUP_REPETITIONS_MAXIMUM}.");
+                    result.AddError($"Parameter --warmup-repetitions must be between {WARMUP_REPETITIONS_MINIMUM} and {WARMUP_REPETITIONS_MAXIMUM}.");
             });
 
             command.Options.Add(listOption);
@@ -124,7 +120,7 @@ namespace FastHashes.Benchmarks
                 {
                     if (result.GetResult(option)?.Implicit == false)
                     {
-                        result.AddError("--list cannot be combined with other options.");
+                        result.AddError("Parameter --list cannot be combined with other options.");
                         return;
                     }
                 }
