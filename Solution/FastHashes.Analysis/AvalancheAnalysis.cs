@@ -41,7 +41,7 @@ namespace FastHashes.Analysis
                 throw new ArgumentOutOfRangeException(nameof(keyLength), $"Avalanche matrix exceeds {MAXIMUM_MATRIX_CELLS} cells; reduce --key-length.");
         }
 
-        public static String Run(Hash hash, String hashName, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength)
+        public static String Run(Hash hash, String hashName, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength, String outputDirectory = null)
         {
             Validate(hash.Length, samples, keyLength);
 
@@ -168,7 +168,7 @@ namespace FastHashes.Analysis
                 OutputFiles = new[] { "avalanche.csv", "avalanche-hamming.csv", "avalanche-heatmap.svg", "avalanche-hamming.svg", "avalanche.json", "avalanche.txt" }
             };
 
-            return AnalysisRunner.WriteArtifacts(hashName, directory =>
+            return Utilities.WriteArtifacts(hashName, directory =>
             {
                 using (StreamWriter writer = CreateWriter(Path.Combine(directory, "avalanche.csv")))
                 {
@@ -212,7 +212,7 @@ namespace FastHashes.Analysis
                 File.WriteAllText(Path.Combine(directory, "avalanche.txt"),
                     $"Analysis: avalanche (AN-001)\nHash: {hashName}\nHash seed: {(hashSeed.HasValue ? hashSeed.Value.ToString(CultureInfo.InvariantCulture) : "default configuration")}\nGenerator seed: {generatorSeed}\nSamples per input bit: {samples}\nInput bits: {inputBits}\nOutput bits: {outputBits}\nHash evaluations: {metadata.HashEvaluations}\nBit-flip trials: {trials}\nSAC cells: {tests}\nMean absolute SAC bias: {Format(meanAbsoluteBias)}\nMaximum absolute SAC bias: {Format(maximumBias)} (input bit {maximumBiasInputBit}, output bit {maximumBiasOutputBit})\nBonferroni-significant cells (family-wise alpha 0.05): {significant}\nMean flipped output bits: {Format(observedHammingMean)} (ideal {Format(outputBits / 2.0d)})\nSignificance: exact two-sided binomial, Bonferroni adjusted\nNote: a non-significant result does not establish SAC compliance.\n",
                     new UTF8Encoding(false));
-            });
+            }, outputDirectory);
         }
 
         private static void CheckDigest(Byte[] digest, Int32 expectedBytes)

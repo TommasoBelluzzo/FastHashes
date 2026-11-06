@@ -51,9 +51,9 @@ namespace FastHashes.Benchmarks
                 Description = "Run only the specified registered hash; by default, all registered hashes are benchmarked, with a dummy hash used as the baseline."
             };
 
-            Option<Int32> bulkLengthOption = new("--bulk-length")
+            Option<Int32> bulkKeysLengthOption = new("--bulk-keys-length")
             {
-                Description = $"Bulk key length in bytes. [valid range: {BULK_KEYS_LENGTH_MINIMUM}-{BULK_KEYS_LENGTH_MAXIMUM}]",
+                Description = $"Bulk keys length in bytes. [valid range: {BULK_KEYS_LENGTH_MINIMUM}-{BULK_KEYS_LENGTH_MAXIMUM}]",
                 DefaultValueFactory = _ => BULK_KEYS_LENGTH
             };
 
@@ -79,12 +79,12 @@ namespace FastHashes.Benchmarks
                     result.AddError($"Unknown --hash parameter value: {hashName}; hash names are case-sensitive and must match the registry.");
             });
 
-            bulkLengthOption.Validators.Add(result =>
+            bulkKeysLengthOption.Validators.Add(result =>
             {
                 Int32 value = result.GetValueOrDefault<Int32>();
 
-                if ((value < BULK_KEYS_LENGTH_MINIMUM) || value > (BULK_KEYS_LENGTH_MAXIMUM))
-                    result.AddError($"Parameter --bulk-length must be between {BULK_KEYS_LENGTH_MINIMUM} and {BULK_KEYS_LENGTH_MAXIMUM}.");
+                if ((value < BULK_KEYS_LENGTH_MINIMUM) || (value > BULK_KEYS_LENGTH_MAXIMUM))
+                    result.AddError($"Parameter --bulk-keys-length must be between {BULK_KEYS_LENGTH_MINIMUM} and {BULK_KEYS_LENGTH_MAXIMUM}.");
             });
 
             bulkRepetitionsOption.Validators.Add(result =>
@@ -105,7 +105,7 @@ namespace FastHashes.Benchmarks
 
             command.Options.Add(listOption);
             command.Options.Add(hashOption);
-            command.Options.Add(bulkLengthOption);
+            command.Options.Add(bulkKeysLengthOption);
             command.Options.Add(bulkRepetitionsOption);
             command.Options.Add(warmupRepetitionsOption);
 
@@ -114,7 +114,7 @@ namespace FastHashes.Benchmarks
                 if (!result.GetValue(listOption))
                     return;
 
-                Option[] benchmarkOptions = [hashOption, bulkLengthOption, bulkRepetitionsOption, warmupRepetitionsOption];
+                Option[] benchmarkOptions = [hashOption, bulkKeysLengthOption, bulkRepetitionsOption, warmupRepetitionsOption];
 
                 foreach (Option option in benchmarkOptions)
                 {
@@ -141,7 +141,7 @@ namespace FastHashes.Benchmarks
                     return RunBenchmarks
                     (
                         parseResult.GetValue(hashOption),
-                        parseResult.GetValue(bulkLengthOption),
+                        parseResult.GetValue(bulkKeysLengthOption),
                         parseResult.GetValue(bulkRepetitionsOption),
                         parseResult.GetValue(warmupRepetitionsOption)
                     );
@@ -176,32 +176,30 @@ namespace FastHashes.Benchmarks
             Console.WriteLine();
 
             Console.WriteLine("[BENCHMARK CONFIGURATION]");
-            Console.WriteLine($"Mode: {(selectedHash == null ? "All registered hashes with DummyHash baseline" : $"Single hash ({selectedHash})")}");
-            Console.WriteLine($"Bulk Key Length: {bulkKeysLength} Bytes");
-            Console.WriteLine($"Bulk Repetitions per Alignment: {bulkRepetitions}");
-            Console.WriteLine($"Bulk Alignments: 8 (0-7), 2 Passes");
-            Console.WriteLine($"Warmup Repetitions per Length: {warmupRepetitions}");
+            Console.WriteLine($"Mode: {(selectedHash == null ? "All Hashes" : "Single Hash")}");
             Console.WriteLine($"Batch Maximum Operations: {BATCH_MAXIMUM_OPERATIONS}");
             Console.WriteLine($"Batch Maximum Bytes: {BATCH_MAXIMUM_BYTES}");
+            Console.WriteLine($"Warmup Repetitions/Length: {warmupRepetitions}");
+            Console.WriteLine("Bulk Parameters:");
+            Console.WriteLine($" - Keys Length: {bulkKeysLength} Bytes");
+            Console.WriteLine($" - Repetitions/Alignment: {bulkRepetitions}");
+            Console.WriteLine($" - Alignments: 8 (0-7), 2 Passes");
             Console.WriteLine("Chunk Parameters:");
 
             Int32 chunkStart = 1;
 
             foreach (var (_, keySize, repetitions) in s_ChunkParameters)
             {
-                Console.WriteLine($" - {chunkStart}-{keySize - 1} Bytes: {repetitions} repetitions per sampled length");
+                Console.WriteLine($" - {chunkStart}-{keySize - 1} Bytes ({repetitions} Repetitions/Length)");
                 chunkStart = keySize;
             }
 
-            Console.WriteLine($" - Final Endpoint: {s_ChunkParameters[^1].KeySize} Bytes ({s_ChunkParameters[^1].Repetitions} repetitions)");
+            Console.WriteLine($" - Endpoint: {s_ChunkParameters[^1].KeySize} Bytes ({s_ChunkParameters[^1].Repetitions} Repetitions)");
             Console.WriteLine();
             Console.WriteLine();
 
+            List<String> selectedAlgorithms = (selectedHash == null) ? ["DummyHash", .. algorithms] : [selectedHash];
             List<(String HashName, String BulkMedianSpeedFormatted, String ChunkNormalizedSpeedFormatted)> results = new(algorithms.Count + 1);
-
-            List<String> selectedAlgorithms = selectedHash == null
-                ? ["DummyHash", .. algorithms.Where(x => !String.Equals(x, "DummyHash", StringComparison.OrdinalIgnoreCase))]
-                : [selectedHash];
 
             for (Int32 i = 0; i < selectedAlgorithms.Count; ++i)
             {

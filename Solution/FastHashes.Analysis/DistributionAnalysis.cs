@@ -31,7 +31,7 @@ namespace FastHashes.Analysis
                 throw new ArgumentOutOfRangeException(nameof(keyLength), "Distribution analysis requires a nonempty input key.");
         }
 
-        public static String Run(Hash hash, String hashName, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength)
+        public static String Run(Hash hash, String hashName, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength, String outputDirectory = null)
         {
             Validate(hash.Length, samples, keyLength);
 
@@ -130,7 +130,7 @@ namespace FastHashes.Analysis
             Double observedOneFraction = (Double)totalSetBits / ((Int64)samples * outputBits);
             Boolean byteChiSquareEligible = samples / 256.0d >= MINIMUM_EXPECTED_FREQUENCY;
 
-            return AnalysisRunner.WriteArtifacts(hashName, directory =>
+            return Utilities.WriteArtifacts(hashName, directory =>
             {
                 using (StreamWriter writer = Writer(Path.Combine(directory, "distribution-bits.csv")))
                 {
@@ -230,7 +230,7 @@ namespace FastHashes.Analysis
                     $"Empirical pooled byte entropy: {Format(pooledEntropy)} bits\nPooled byte chi-square: {Format(pooledChiSquare)} (descriptive only)\n" +
                     $"Per-position chi-square eligible (expected frequency >= {Format(MINIMUM_EXPECTED_FREQUENCY)}): {byteChiSquareEligible}\n" +
                     "Note: significance and descriptive entropy estimates do not establish random or independent output.\n", new UTF8Encoding(false));
-            });
+            }, outputDirectory);
         }
 
         private static Double Entropy(Int32[] counts, Int64 total)

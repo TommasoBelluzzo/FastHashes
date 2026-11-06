@@ -35,7 +35,7 @@ namespace FastHashes.Analysis
                 throw new FileNotFoundException("The shared Words.txt corpus was not found beside the application (Data/Words.txt).", WordsPath());
         }
 
-        public static String Run(Hash hash, String hashName, UInt64? hashSeed, UInt64 generatorSeed, Int32 corpusSize, Int32 keyLength)
+        public static String Run(Hash hash, String hashName, UInt64? hashSeed, UInt64 generatorSeed, Int32 corpusSize, Int32 keyLength, String outputDirectory = null)
         {
             Validate(hash.Length, corpusSize, keyLength);
             List<CorpusResult> results = [];
@@ -78,7 +78,7 @@ namespace FastHashes.Analysis
             results.Add(random);
 
             // Everything above, including file loading and hashing, completes before the output directory is created.
-            return AnalysisRunner.WriteArtifacts(hashName, directory => WriteReports(directory, hashName, hashSeed, generatorSeed, corpusSize, keyLength, hash.Length, results));
+            return Utilities.WriteArtifacts(hashName, directory => WriteReports(directory, hashName, hashSeed, generatorSeed, corpusSize, keyLength, hash.Length, results));
         }
 
         private static String WordsPath()

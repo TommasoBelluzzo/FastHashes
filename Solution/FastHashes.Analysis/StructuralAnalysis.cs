@@ -34,7 +34,7 @@ namespace FastHashes.Analysis
                 throw new ArgumentOutOfRangeException(nameof(keyLength), "Structural workload exceeds the probe cap; reduce --key-length.");
         }
 
-        public static String Run(Hash hash, String hashName, UInt64? hashSeed, Int32 keyLength)
+        public static String Run(Hash hash, String hashName, UInt64? hashSeed, Int32 keyLength, String outputDirectory = null)
         {
             Validate(hash.Length, keyLength);
             List<StructuralResult> results = [];
@@ -48,7 +48,7 @@ namespace FastHashes.Analysis
             Evaluate(hash, StructuralInputGenerator.Boundaries(keyLength), "boundaries", results, observations);
             EvaluateSeeds(hashName, keyLength, hash.Length, results, observations);
 
-            return AnalysisRunner.WriteArtifacts(hashName, directory => WriteReports(directory, hashName, hashSeed, keyLength, hash.Length, results, observations));
+            return Utilities.WriteArtifacts(hashName, directory => WriteReports(directory, hashName, hashSeed, keyLength, hash.Length, results, observations), outputDirectory);
         }
 
         private static void Evaluate(Hash hash, IEnumerable<StructuralPair> pairs, String family, List<StructuralResult> results, List<StructuralObservation> observations)
