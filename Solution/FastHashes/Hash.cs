@@ -31,13 +31,13 @@ namespace FastHashes
             Int32 bufferLength = buffer.Length;
 
             if ((offset < 0) || (offset > bufferLength))
-                throw new ArgumentOutOfRangeException(nameof(offset), "The offset parameter must be within the bou\nds of the data array.");
+                throw new ArgumentOutOfRangeException(nameof(offset), "The offset parameter must be within the bounds of the array.");
 
             if (count < 0)
                 throw new ArgumentOutOfRangeException(nameof(count), "The count parameter must be greater than or equal to 0.");
 
             if (count > (bufferLength - offset))
-                throw new ArgumentException("The block defined by offset and count parameters must be within the bounds of the data array.");
+                throw new ArgumentException("The block defined by offset and count parameters must be within the bounds of the array.");
 
             return new ReadOnlySpan<Byte>(buffer, offset, count);
         }

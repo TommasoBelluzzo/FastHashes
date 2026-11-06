@@ -35,7 +35,7 @@ namespace FastHashes.Analysis
                 throw new FileNotFoundException("The shared Words.txt corpus was not found beside the application (Data/Words.txt).", WordsPath());
         }
 
-        public static String Run(Hash hash, String hashName, UInt64? hashSeed, UInt64 generatorSeed, Int32 corpusSize, Int32 keyLength, String outputDirectory = null)
+        public static String Run(Hash hash, String hashName, UInt64? hashSeed, String hashVersion, UInt64 generatorSeed, Int32 corpusSize, Int32 keyLength, String outputDirectory = null)
         {
             Validate(hash.Length, corpusSize, keyLength);
             List<CorpusResult> results = [];
@@ -60,7 +60,7 @@ namespace FastHashes.Analysis
             results.Add(numbers);
 
             CorpusResult random = new("random-bytes", hash.Length);
-            InputGenerator generator = new(generatorSeed);
+            RandomSplitMix generator = new(generatorSeed);
             Byte[] buffer = new Byte[keyLength];
             // Exactly corpusSize distinct inputs are requested; duplicates are regenerated.
             // A one-byte key cannot provide more than 256 distinct values.
@@ -78,7 +78,7 @@ namespace FastHashes.Analysis
             results.Add(random);
 
             // Everything above, including file loading and hashing, completes before the output directory is created.
-            return Utilities.WriteArtifacts(hashName, directory => WriteReports(directory, hashName, hashSeed, generatorSeed, corpusSize, keyLength, hash.Length, results));
+            return Utilities.WriteArtifacts(hashName, directory => WriteReports(directory, hashName, hashSeed, hashVersion, generatorSeed, corpusSize, keyLength, hash.Length, results), outputDirectory);
         }
 
         private static String WordsPath()
@@ -133,7 +133,7 @@ namespace FastHashes.Analysis
             ++corpus.Buckets[bucket];
         }
 
-        private static void WriteReports(String directory, String hashName, UInt64? hashSeed, UInt64 generatorSeed, Int32 corpusSize, Int32 keyLength, Int32 hashBits, List<CorpusResult> results)
+        private static void WriteReports(String directory, String hashName, UInt64? hashSeed, String hashVersion, UInt64 generatorSeed, Int32 corpusSize, Int32 keyLength, Int32 hashBits, List<CorpusResult> results)
         {
             using (StreamWriter writer = CreateWriter(Path.Combine(directory, "collision-summary.csv")))
             {
@@ -201,7 +201,7 @@ namespace FastHashes.Analysis
                 ExamplesPerCorpusPerTypeLimit = MAXIMUM_EXAMPLES_PER_TYPE,
                 ExpectedModel = "Independent uniform hash outputs; expected pair collisions N(N-1)/(2*2^bits)",
                 UtcTimestamp = DateTimeOffset.UtcNow,
-                LibraryVersion = typeof(Hash).Assembly.GetName().Version?.ToString(),
+                LibraryVersion = hashVersion,
                 Runtime = RuntimeInformation.FrameworkDescription,
                 OperatingSystem = RuntimeInformation.OSDescription,
                 ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),

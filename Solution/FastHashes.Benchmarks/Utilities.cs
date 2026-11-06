@@ -4,7 +4,7 @@ using System;
 
 namespace FastHashes.Benchmarks
 {
-    public static class Utilities
+    internal static class Utilities
     {
         #region Members
         private static readonly String[] s_SizeSuffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];

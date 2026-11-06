@@ -155,8 +155,6 @@ namespace FastHashes.Benchmarks
         #region Methods
         private static Int32 RunBenchmarks(String selectedHash, Int32 bulkKeysLength, Int32 bulkRepetitions, Int32 warmupRepetitions)
         {
-            IReadOnlyList<String> algorithms = Hash.GetAlgorithms();
-
             Assembly hashAssembly = typeof(Hash).Assembly;
             String hashVersion = hashAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
                 ?? hashAssembly.GetName().Version?.ToString()
@@ -198,6 +196,7 @@ namespace FastHashes.Benchmarks
             Console.WriteLine();
             Console.WriteLine();
 
+            IReadOnlyList<String> algorithms = Hash.GetAlgorithms();
             List<String> selectedAlgorithms = (selectedHash == null) ? ["DummyHash", .. algorithms] : [selectedHash];
             List<(String HashName, String BulkMedianSpeedFormatted, String ChunkNormalizedSpeedFormatted)> results = new(algorithms.Count + 1);
 

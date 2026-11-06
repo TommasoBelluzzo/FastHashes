@@ -34,7 +34,7 @@ namespace FastHashes.Analysis
                 throw new ArgumentOutOfRangeException(nameof(keyLength), "Structural workload exceeds the probe cap; reduce --key-length.");
         }
 
-        public static String Run(Hash hash, String hashName, UInt64? hashSeed, Int32 keyLength, String outputDirectory = null)
+        public static String Run(Hash hash, String hashName, UInt64? hashSeed, String hashVersion, Int32 keyLength, String outputDirectory = null)
         {
             Validate(hash.Length, keyLength);
             List<StructuralResult> results = [];
@@ -48,7 +48,7 @@ namespace FastHashes.Analysis
             Evaluate(hash, StructuralInputGenerator.Boundaries(keyLength), "boundaries", results, observations);
             EvaluateSeeds(hashName, keyLength, hash.Length, results, observations);
 
-            return Utilities.WriteArtifacts(hashName, directory => WriteReports(directory, hashName, hashSeed, keyLength, hash.Length, results, observations), outputDirectory);
+            return Utilities.WriteArtifacts(hashName, directory => WriteReports(directory, hashName, hashSeed, hashVersion, keyLength, hash.Length, results, observations), outputDirectory);
         }
 
         private static void Evaluate(Hash hash, IEnumerable<StructuralPair> pairs, String family, List<StructuralResult> results, List<StructuralObservation> observations)
@@ -108,7 +108,7 @@ namespace FastHashes.Analysis
                 Convert.ToHexString(pair.InputA), Convert.ToHexString(pair.InputB), Convert.ToHexString(a), Convert.ToHexString(b)));
         }
 
-        private static void WriteReports(String directory, String hashName, UInt64? hashSeed, Int32 keyLength, Int32 hashBits, List<StructuralResult> results, List<StructuralObservation> observations)
+        private static void WriteReports(String directory, String hashName, UInt64? hashSeed, String hashVersion, Int32 keyLength, Int32 hashBits, List<StructuralResult> results, List<StructuralObservation> observations)
         {
             UTF8Encoding utf8 = new(false);
             using (StreamWriter writer = new(Path.Combine(directory, "structural-summary.csv"), false, utf8))
@@ -174,7 +174,7 @@ namespace FastHashes.Analysis
                     Notes = result.Notes
                 }),
                 UtcTimestamp = DateTimeOffset.UtcNow,
-                LibraryVersion = typeof(Hash).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? typeof(Hash).Assembly.GetName().Version?.ToString(),
+                LibraryVersion = hashVersion,
                 Runtime = RuntimeInformation.FrameworkDescription,
                 OperatingSystem = RuntimeInformation.OSDescription,
                 ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),

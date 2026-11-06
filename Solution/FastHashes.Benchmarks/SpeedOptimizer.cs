@@ -6,7 +6,7 @@ using System.Runtime;
 
 namespace FastHashes.Benchmarks
 {
-    public sealed class SpeedOptimizer : IDisposable
+    internal sealed class SpeedOptimizer : IDisposable
     {
         #region Members
         private Boolean m_IsDisposed;

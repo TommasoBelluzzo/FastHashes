@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace FastHashes.Benchmarks
 {
-    public static class MathUtilities
+    internal static class MathUtilities
     {
         #region Methods
         public static Double GeometricMean(IList<Double> values)

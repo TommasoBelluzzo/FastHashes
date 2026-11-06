@@ -19,7 +19,7 @@ namespace FastHashes.Analysis
         private const Int32 SAMPLES_MINIMUM = 1000;
         private const Int32 SAMPLES_MAXIMUM = 50000;
         private const Int32 KEYS_LENGTH = 64;
-        private const Int32 KEYS_LENGTH_MINIMUM = 0;
+        private const Int32 KEYS_LENGTH_MINIMUM = 16;
         private const Int32 KEYS_LENGTH_MAXIMUM = 4096;
         private const Int32 CORPUS_SIZE = 70000;
         private const Int32 CORPUS_SIZE_MINIMUM = 10000;
@@ -224,11 +224,11 @@ namespace FastHashes.Analysis
 
                     String result = analysisNameCurrent switch
                     {
-                        "avalanche" => AvalancheAnalysis.Run(hash, hashName, hashSeed, generatorSeed, samples, keysLength, directory),
-                        "collision" => CollisionAnalysis.Run(hash, hashName, hashSeed, generatorSeed, corpusSize, keysLength, directory),
-                        "distribution" => DistributionAnalysis.Run(hash, hashName, hashSeed, generatorSeed, samples, keysLength, directory),
-                        "independence" => IndependenceAnalysis.Run(hash, hashName, hashSeed, generatorSeed, samples, keysLength, directory),
-                        "structural" => StructuralAnalysis.Run(hash, hashName, hashSeed, keysLength, directory),
+                        "avalanche" => AvalancheAnalysis.Run(hash, hashName, hashSeed, hashVersion, generatorSeed, samples, keysLength, directory),
+                        "collision" => CollisionAnalysis.Run(hash, hashName, hashSeed, hashVersion, generatorSeed, corpusSize, keysLength, directory),
+                        "distribution" => DistributionAnalysis.Run(hash, hashName, hashSeed, hashVersion, generatorSeed, samples, keysLength, directory),
+                        "independence" => IndependenceAnalysis.Run(hash, hashName, hashSeed, hashVersion, generatorSeed, samples, keysLength, directory),
+                        "structural" => StructuralAnalysis.Run(hash, hashName, hashSeed, hashVersion, keysLength, directory),
                         _ => throw new NotSupportedException($"Unsupported analysis: {analysisNameCurrent}.")
                     };
 
@@ -244,8 +244,7 @@ namespace FastHashes.Analysis
             foreach ((String label, Boolean completed, String error) in results)
                 Console.WriteLine($"{label} Analysis: {(completed ? "Completed" : $"Failed ({error})")}");
 
-            if (directory is not null)
-                Console.WriteLine($"Output: {directory}");
+            Console.WriteLine($"Output: {directory ?? "Not Created"}");
 
             return ((results.Count > 0) && results.TrueForAll(status => status.Completed)) ? 0 : 1;
         }

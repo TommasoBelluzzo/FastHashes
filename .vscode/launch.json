@@ -39,7 +39,7 @@
       "cwd": "${workspaceFolder}/Solution",
       "args": [
         "--hash",
-        "XxHash64",
+        "LaneHash128",
         "--analysis",
         "all"
       ],

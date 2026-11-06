@@ -41,7 +41,7 @@ namespace FastHashes.Analysis
                 throw new ArgumentOutOfRangeException(nameof(keyLength), $"Avalanche matrix exceeds {MAXIMUM_MATRIX_CELLS} cells; reduce --key-length.");
         }
 
-        public static String Run(Hash hash, String hashName, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength, String outputDirectory = null)
+        public static String Run(Hash hash, String hashName, UInt64? hashSeed, String hashVersion, UInt64 generatorSeed, Int32 samples, Int32 keyLength, String outputDirectory = null)
         {
             Validate(hash.Length, samples, keyLength);
 
@@ -50,7 +50,7 @@ namespace FastHashes.Analysis
             Int32 outputBytes = outputBits / 8;
             Int32[] changed = new Int32[checked(inputBits * outputBits)];
             Int64[] hamming = new Int64[outputBits + 1];
-            InputGenerator generator = new(generatorSeed);
+            RandomSplitMix generator = new(generatorSeed);
             Byte[] key = new Byte[keyLength];
 
             for (Int32 sample = 0; sample < samples; ++sample)
@@ -161,7 +161,7 @@ namespace FastHashes.Analysis
                 MeanChangedOutputBits = observedHammingMean,
                 IdealMeanChangedOutputBits = outputBits / 2.0d,
                 UtcTimestamp = DateTimeOffset.UtcNow,
-                LibraryVersion = typeof(Hash).Assembly.GetName().Version?.ToString(),
+                LibraryVersion = hashVersion,
                 Runtime = RuntimeInformation.FrameworkDescription,
                 OperatingSystem = RuntimeInformation.OSDescription,
                 ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),

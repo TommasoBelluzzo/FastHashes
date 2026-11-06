@@ -47,7 +47,7 @@ namespace FastHashes.Analysis
                 throw new ArgumentOutOfRangeException(nameof(samples), "Independence workload exceeds the permitted pair trials; reduce --samples or --key-length.");
         }
 
-        public static String Run(Hash hash, String hashName, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength, String outputDirectory = null)
+        public static String Run(Hash hash, String hashName, UInt64? hashSeed, String hashVersion, UInt64 generatorSeed, Int32 samples, Int32 keyLength, String outputDirectory = null)
         {
             Validate(hash.Length, samples, keyLength);
 
@@ -59,7 +59,7 @@ namespace FastHashes.Analysis
             Int32[] jointCounts = new Int32[checked(inputBits * pairCount)];
             Int32[] flippedBits = new Int32[outputBits];
             Byte[] key = new Byte[keyLength];
-            InputGenerator generator = new(generatorSeed);
+            RandomSplitMix generator = new(generatorSeed);
 
             // Sampling is completed before any directory or report is created.
             for (Int32 sample = 0; sample < samples; ++sample)
@@ -205,7 +205,9 @@ namespace FastHashes.Analysis
             }
 
             Int64 significantTests = 0;
-            Double meanAbsolute = degenerateTests == testCount ? Double.NaN : sumAbsoluteCorrelation / (testCount - degenerateTests);
+            Double meanAbsolute = (degenerateTests == testCount) ? Double.NaN : (sumAbsoluteCorrelation / (testCount - degenerateTests));
+            Boolean hasDefinedCorrelations = degenerateTests < testCount;
+
             String[] outputFiles = ["independence-pairs.csv", "independence-inputs.csv", "independence-extremes.csv", "independence-heatmap.svg", "independence.json", "independence.txt"];
 
             var metadata = new
@@ -236,13 +238,13 @@ namespace FastHashes.Analysis
                 DegenerateTests = degenerateTests,
                 InsufficientExpectedTests = insufficientExpectedTests,
                 MeanAbsoluteCorrelation = Double.IsNaN(meanAbsolute) ? (Double?)null : meanAbsolute,
-                MaximumAbsoluteCorrelation = maximumAbsoluteCorrelation,
-                MaximumCorrelationInputBit = maximumInputBit,
-                MaximumCorrelationOutputBitA = maximumOutputA,
-                MaximumCorrelationOutputBitB = maximumOutputB,
+                MaximumAbsoluteCorrelation = hasDefinedCorrelations ? (Double?)maximumAbsoluteCorrelation : null,
+                MaximumCorrelationInputBit = hasDefinedCorrelations ? (Int32?)maximumInputBit : null,
+                MaximumCorrelationOutputBitA = hasDefinedCorrelations ? (Int32?)maximumOutputA : null,
+                MaximumCorrelationOutputBitB = hasDefinedCorrelations ? (Int32?)maximumOutputB : null,
                 // Filled consistently after CSV emission below; calculate significant count beforehand.
                 UtcTimestamp = DateTimeOffset.UtcNow,
-                LibraryVersion = typeof(Hash).Assembly.GetName().Version?.ToString(),
+                LibraryVersion = hashVersion,
                 Runtime = RuntimeInformation.FrameworkDescription,
                 OperatingSystem = RuntimeInformation.OSDescription,
                 ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),

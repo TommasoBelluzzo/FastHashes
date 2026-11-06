@@ -31,7 +31,7 @@ namespace FastHashes.Analysis
                 throw new ArgumentOutOfRangeException(nameof(keyLength), "Distribution analysis requires a nonempty input key.");
         }
 
-        public static String Run(Hash hash, String hashName, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength, String outputDirectory = null)
+        public static String Run(Hash hash, String hashName, UInt64? hashSeed, String hashVersion, UInt64 generatorSeed, Int32 samples, Int32 keyLength, String outputDirectory = null)
         {
             Validate(hash.Length, samples, keyLength);
 
@@ -40,7 +40,7 @@ namespace FastHashes.Analysis
             Int32[] bitOnes = new Int32[outputBits];
             Int32[] byteCounts = new Int32[checked(outputBytes * 256)];
             Int32[] pooledByteCounts = new Int32[256];
-            InputGenerator generator = new(generatorSeed);
+            RandomSplitMix generator = new(generatorSeed);
             Byte[] key = new Byte[keyLength];
 
             // Complete all hashing and numerical calculations before creating report directories.
@@ -210,8 +210,7 @@ namespace FastHashes.Analysis
                     BytePositionChiSquareDegreesOfFreedom = 255,
                     EntropyInterpretation = "Empirical plug-in entropy is downward biased at finite sample sizes; 8 bits is an ideal uniform byte reference",
                     UtcTimestamp = DateTimeOffset.UtcNow,
-                    LibraryVersion = typeof(Hash).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-                        ?? typeof(Hash).Assembly.GetName().Version?.ToString(),
+                    LibraryVersion = hashVersion,
                     Runtime = RuntimeInformation.FrameworkDescription,
                     OperatingSystem = RuntimeInformation.OSDescription,
                     ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),

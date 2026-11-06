@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace FastHashes.Analysis
 {
-    /// <summary>Small deterministic input-pair families for targeted structural stress analysis.</summary>
+   /// <summary>Small deterministic input-pair families for targeted structural stress analysis.</summary>
     internal static class StructuralInputGenerator
     {
         #region Methods
@@ -39,25 +39,33 @@ namespace FastHashes.Analysis
             if (keyLength < 2)
                 yield break;
 
-            Int32[] positions = [0, 1, keyLength / 2, keyLength - 2, keyLength - 1];
+            SortedSet<Int32> positions = [0, 1, keyLength / 2, keyLength - 2, keyLength - 1];
             Byte[] values = [1, 0x80, 0xFF];
-            for (Int32 i = 0; i < positions.Length; ++i)
+            foreach (Int32 p in positions)
             {
-                for (Int32 j = i + 1; j < positions.Length; ++j)
+                foreach (Int32 q in positions)
                 {
-                    Int32 p = positions[i];
-                    Int32 q = positions[j];
-                    if (p == q)
+                    if (q <= p)
                         continue;
+
                     foreach (Byte value in values)
                     {
                         Byte[] a = new Byte[keyLength];
-                        Byte[] b = new Byte[keyLength];
                         a[p] = value;
                         a[q] = value;
-                        b[p] = value;
-                        b[q] = (Byte)(value ^ 0xFF);
-                        yield return new StructuralPair("twobytes", $"positions:{p}:{q}:value:{value:X2}", a, b);
+
+                        Byte[] first = (Byte[])a.Clone();
+                        first[p] ^= 0xFF;
+                        yield return new StructuralPair("twobytes", $"positions:{p}:{q}:value:{value:X2}:first", a, first);
+
+                        Byte[] second = (Byte[])a.Clone();
+                        second[q] ^= 0xFF;
+                        yield return new StructuralPair("twobytes", $"positions:{p}:{q}:value:{value:X2}:second", a, second);
+
+                        Byte[] both = (Byte[])a.Clone();
+                        both[p] ^= 0xFF;
+                        both[q] ^= 0xFF;
+                        yield return new StructuralPair("twobytes", $"positions:{p}:{q}:value:{value:X2}:both", a, both);
                     }
                 }
             }
@@ -65,17 +73,23 @@ namespace FastHashes.Analysis
 
         public static IEnumerable<StructuralPair> Cyclic(Int32 keyLength)
         {
-            Byte[][] patterns = [[0x00], [0xFF], [0xAA, 0x55], [0x01, 0x02, 0x03], [0x00, 0x01, 0x00, 0xFF]];
+            Byte[][] patterns = [[0x00, 0xFF], [0xAA, 0x55], [0x01, 0x02, 0x03], [0x00, 0x01, 0x00, 0xFF], [0x10, 0x20, 0x30, 0x40, 0x50]];
             foreach (Byte[] pattern in patterns)
             {
+                if (pattern.Length > keyLength)
+                    continue;
+
                 Byte[] a = Repeat(pattern, keyLength, 0);
-                Byte[] b = Repeat(pattern, keyLength, 1);
-                if (Equal(a, b))
+                for (Int32 phase = 1; phase < Math.Min(pattern.Length, 3); ++phase)
                 {
-                    b = (Byte[])a.Clone();
-                    b[^1] ^= 1;
+                    Byte[] shifted = Repeat(pattern, keyLength, phase);
+                    yield return new StructuralPair("cyclic", $"period:{pattern.Length}:phase:{phase}", a, shifted);
                 }
-                yield return new StructuralPair("cyclic", $"period:{pattern.Length}:phase-or-tail", a, b);
+
+                Byte[] shorter = new Byte[pattern.Length - 1];
+                Array.Copy(pattern, shorter, shorter.Length);
+                Byte[] changedPeriod = Repeat(shorter, keyLength, 0);
+                yield return new StructuralPair("cyclic", $"period:{pattern.Length}:shortened:{shorter.Length}", a, changedPeriod);
             }
         }
 
@@ -182,10 +196,6 @@ namespace FastHashes.Analysis
             return result;
         }
 
-        private static Boolean Equal(Byte[] a, Byte[] b)
-        {
-            return a.AsSpan().SequenceEqual(b);
-        }
         #endregion
     }
 

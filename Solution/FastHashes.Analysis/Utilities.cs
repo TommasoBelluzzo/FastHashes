@@ -8,7 +8,7 @@ using System.Text;
 
 namespace FastHashes.Analysis
 {
-    public static class Utilities
+    internal static class Utilities
     {
         #region Methods
         public static String CreateRunDirectory(String hashName)
@@ -65,18 +65,14 @@ namespace FastHashes.Analysis
                 }
                 else
                 {
-                    try
+                    foreach (String file in Directory.GetFiles(directory))
                     {
-                        foreach (String file in Directory.GetFiles(directory))
-                        {
-                            if (existingFiles.Contains(file))
-                                continue;
+                        if (existingFiles.Contains(file))
+                            continue;
 
-                            try { File.Delete(file); }
-                            catch { }
-                        }
+                        try { File.Delete(file); }
+                        catch { }
                     }
-                    catch { }
                 }
 
                 throw;

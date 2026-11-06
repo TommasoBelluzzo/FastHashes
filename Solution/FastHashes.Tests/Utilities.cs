@@ -4,7 +4,7 @@ using System;
 
 namespace FastHashes.Tests
 {
-    public static class Utilities
+    internal static class Utilities
     {
         #region Methods
         public static String FormatNumericArray<T>(T[] array) where T : struct, IComparable, IConvertible, IFormattable
