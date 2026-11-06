@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
-using System.IO;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -25,14 +25,7 @@ namespace FastHashes.Analysis
         private const Int32 CORPUS_SIZE_MINIMUM = 10000;
         private const Int32 CORPUS_SIZE_MAXIMUM = 1000000;
 
-        private static readonly (String Name, String Label)[] s_Analyses =
-        [
-            ("avalanche", "Avalanche"),
-            ("independence", "Independence"),
-            ("collision", "Collision"),
-            ("distribution", "Distribution"),
-            ("structural", "Structural")
-        ];
+        private static readonly String[] s_Analyses = ["avalanche", "collision", "distribution", "independence", "structural"];
         #endregion
 
         #region Entry Point
@@ -47,7 +40,7 @@ namespace FastHashes.Analysis
 
             Option<String> analysisOption = new("--analysis")
             {
-                Description = "The analysis to perform: all, avalanche, collision, distribution, independence or structural.",
+                Description = $"The analysis to perform: all, {String.Join(", ", s_Analyses)}",
                 DefaultValueFactory = _ => ANALYSIS
             };
 
@@ -101,7 +94,7 @@ namespace FastHashes.Analysis
 
                 if (String.IsNullOrWhiteSpace(analysisName))
                     result.AddError("Parameter --analysis requires a non-empty value.");
-                else if (analysisName is not ("all" or "avalanche" or "collision" or "distribution" or "independence" or "structural"))
+                else if ((analysisName != "all") && !s_Analyses.Contains(analysisName))
                     result.AddError($"Unknown --analysis parameter value: {analysisName}.");
             });
 
@@ -211,45 +204,50 @@ namespace FastHashes.Analysis
             Console.WriteLine($"Samples: {samples}");
             Console.WriteLine($"Keys Length: {keysLength} Bytes");
             Console.WriteLine($"Corpus Size: {corpusSize}");
-            Console.WriteLine($"Root: {Path.Combine(Environment.CurrentDirectory, "Analysis")}");
             Console.WriteLine();
 
-            String directory = null;
-            List<(String Label, Boolean Completed, String Error)> statuses = [];
+            TextInfo ti = CultureInfo.InvariantCulture.TextInfo;
 
-            foreach ((String name, String label) in s_Analyses)
+            String directory = null;
+            List<(String Label, Boolean Completed, String Error)> results = [];
+
+            foreach (String analysisNameCurrent in s_Analyses)
             {
-                if ((analysisName != "all") && (analysisName != name))
+                if ((analysisName != "all") && (analysisName != analysisNameCurrent))
                     continue;
+
+                String label = ti.ToTitleCase(analysisNameCurrent);
 
                 try
                 {
                     Hash hash = hashSeed.HasValue ? Hash.Create(hashName, hashSeed.Value) : Hash.Create(hashName);
-                    String result = name switch
+
+                    String result = analysisNameCurrent switch
                     {
                         "avalanche" => AvalancheAnalysis.Run(hash, hashName, hashSeed, generatorSeed, samples, keysLength, directory),
-                        "independence" => IndependenceAnalysis.Run(hash, hashName, hashSeed, generatorSeed, samples, keysLength, directory),
                         "collision" => CollisionAnalysis.Run(hash, hashName, hashSeed, generatorSeed, corpusSize, keysLength, directory),
                         "distribution" => DistributionAnalysis.Run(hash, hashName, hashSeed, generatorSeed, samples, keysLength, directory),
+                        "independence" => IndependenceAnalysis.Run(hash, hashName, hashSeed, generatorSeed, samples, keysLength, directory),
                         "structural" => StructuralAnalysis.Run(hash, hashName, hashSeed, keysLength, directory),
-                        _ => throw new NotSupportedException($"Analysis '{name}' is not implemented.")
+                        _ => throw new NotSupportedException($"Unsupported analysis: {analysisNameCurrent}.")
                     };
 
                     directory ??= result;
-                    statuses.Add((label, true, null));
+                    results.Add((label, true, null));
                 }
                 catch (Exception exception)
                 {
-                    statuses.Add((label, false, exception.Message));
+                    results.Add((label, false, exception.Message));
                 }
             }
 
-            foreach ((String label, Boolean completed, String error) in statuses)
+            foreach ((String label, Boolean completed, String error) in results)
                 Console.WriteLine($"{label} Analysis: {(completed ? "Completed" : $"Failed ({error})")}");
 
-            Console.WriteLine($"Output: {directory ?? "Not created (no analysis completed)"}");
+            if (directory is not null)
+                Console.WriteLine($"Output: {directory}");
 
-            return statuses.Count > 0 && statuses.TrueForAll(status => status.Completed) ? 0 : 1;
+            return ((results.Count > 0) && results.TrueForAll(status => status.Completed)) ? 0 : 1;
         }
         #endregion
     }
