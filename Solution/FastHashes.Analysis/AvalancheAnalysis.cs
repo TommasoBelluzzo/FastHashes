@@ -41,7 +41,7 @@ namespace FastHashes.Analysis
                 throw new ArgumentOutOfRangeException(nameof(keyLength), $"Avalanche matrix exceeds {MAXIMUM_MATRIX_CELLS} cells; reduce --key-length.");
         }
 
-        public static void Run(Hash hash, String hashName, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength, String directory)
+        public static String Run(Hash hash, String hashName, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength)
         {
             Validate(hash.Length, samples, keyLength);
 
@@ -106,56 +106,29 @@ namespace FastHashes.Analysis
             Double sumDistance = 0.0d;
             Int64 trials = (Int64)samples * inputBits;
 
-            using (StreamWriter writer = CreateWriter(Path.Combine(directory, "avalanche.csv")))
+            for (Int32 inputBit = 0; inputBit < inputBits; ++inputBit)
             {
-                writer.WriteLine("InputBit,OutputBit,Changed,Trials,Probability,Bias,AbsoluteBias,PValue,BonferroniPValue");
-
-                for (Int32 inputBit = 0; inputBit < inputBits; ++inputBit)
+                for (Int32 outputBit = 0; outputBit < outputBits; ++outputBit)
                 {
-                    for (Int32 outputBit = 0; outputBit < outputBits; ++outputBit)
+                    Int32 count = changed[inputBit * outputBits + outputBit];
+                    Double absoluteBias = Math.Abs((Double)count / samples - 0.5d);
+                    Double pValue = probabilities[Math.Min(count, samples - count)];
+
+                    if (Math.Min(1.0d, pValue * tests) < SIGNIFICANCE_LEVEL)
+                        ++significant;
+
+                    sumAbsoluteBias += absoluteBias;
+                    if (absoluteBias > maximumBias)
                     {
-                        Int32 count = changed[inputBit * outputBits + outputBit];
-                        Double probability = (Double)count / samples;
-                        Double bias = probability - 0.5d;
-                        Double absoluteBias = Math.Abs(bias);
-                        Double pValue = probabilities[Math.Min(count, samples - count)];
-                        Double adjusted = Math.Min(1.0d, pValue * tests);
-
-                        if (adjusted < SIGNIFICANCE_LEVEL)
-                            ++significant;
-
-                        sumAbsoluteBias += absoluteBias;
-
-                        if (absoluteBias > maximumBias)
-                        {
-                            maximumBias = absoluteBias;
-                            maximumBiasInputBit = inputBit;
-                            maximumBiasOutputBit = outputBit;
-                        }
-
-                        writer.WriteLine(String.Join(",",
-                            inputBit.ToString(CultureInfo.InvariantCulture),
-                            outputBit.ToString(CultureInfo.InvariantCulture),
-                            count.ToString(CultureInfo.InvariantCulture),
-                            samples.ToString(CultureInfo.InvariantCulture),
-                            Format(probability), Format(bias), Format(absoluteBias), Format(pValue), Format(adjusted)));
+                        maximumBias = absoluteBias;
+                        maximumBiasInputBit = inputBit;
+                        maximumBiasOutputBit = outputBit;
                     }
                 }
             }
 
-            using (StreamWriter writer = CreateWriter(Path.Combine(directory, "hamming.csv")))
-            {
-                writer.WriteLine("ChangedBits,Count,Probability");
-
-                for (Int32 distance = 0; distance <= outputBits; ++distance)
-                {
-                    sumDistance += distance * (Double)hamming[distance];
-                    writer.WriteLine($"{distance},{hamming[distance].ToString(CultureInfo.InvariantCulture)},{Format((Double)hamming[distance] / trials)}");
-                }
-            }
-
-            AvalancheSvg.WriteHeatmap(Path.Combine(directory, "avalanche.svg"), changed, inputBits, outputBits, samples);
-            AvalancheSvg.WriteHistogram(Path.Combine(directory, "hamming.svg"), hamming, trials, outputBits);
+            for (Int32 distance = 0; distance <= outputBits; ++distance)
+                sumDistance += distance * (Double)hamming[distance];
 
             Double meanAbsoluteBias = sumAbsoluteBias / tests;
             Double observedHammingMean = sumDistance / trials;
@@ -192,13 +165,54 @@ namespace FastHashes.Analysis
                 Runtime = RuntimeInformation.FrameworkDescription,
                 OperatingSystem = RuntimeInformation.OSDescription,
                 ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
-                OutputFiles = new[] { "avalanche.csv", "hamming.csv", "avalanche.svg", "hamming.svg", "summary.txt" }
+                OutputFiles = new[] { "avalanche.csv", "avalanche-hamming.csv", "avalanche-heatmap.svg", "avalanche-hamming.svg", "avalanche.json", "avalanche.txt" }
             };
 
-            File.WriteAllText(Path.Combine(directory, "summary.json"), JsonSerializer.Serialize(metadata, new JsonSerializerOptions { WriteIndented = true }) + "\n", new UTF8Encoding(false));
-            File.WriteAllText(Path.Combine(directory, "summary.txt"),
-                $"Analysis: avalanche (AN-001)\nHash: {hashName}\nHash seed: {(hashSeed.HasValue ? hashSeed.Value.ToString(CultureInfo.InvariantCulture) : "default configuration")}\nGenerator seed: {generatorSeed}\nSamples per input bit: {samples}\nInput bits: {inputBits}\nOutput bits: {outputBits}\nHash evaluations: {metadata.HashEvaluations}\nBit-flip trials: {trials}\nSAC cells: {tests}\nMean absolute SAC bias: {Format(meanAbsoluteBias)}\nMaximum absolute SAC bias: {Format(maximumBias)} (input bit {maximumBiasInputBit}, output bit {maximumBiasOutputBit})\nBonferroni-significant cells (family-wise alpha 0.05): {significant}\nMean flipped output bits: {Format(observedHammingMean)} (ideal {Format(outputBits / 2.0d)})\nSignificance: exact two-sided binomial, Bonferroni adjusted\nNote: a non-significant result does not establish SAC compliance.\n",
-                new UTF8Encoding(false));
+            return AnalysisRunner.WriteArtifacts(hashName, directory =>
+            {
+                using (StreamWriter writer = CreateWriter(Path.Combine(directory, "avalanche.csv")))
+                {
+                    writer.WriteLine("InputBit,OutputBit,Changed,Trials,Probability,Bias,AbsoluteBias,PValue,BonferroniPValue");
+    
+                    for (Int32 inputBit = 0; inputBit < inputBits; ++inputBit)
+                    {
+                        for (Int32 outputBit = 0; outputBit < outputBits; ++outputBit)
+                        {
+                            Int32 count = changed[inputBit * outputBits + outputBit];
+                            Double probability = (Double)count / samples;
+                            Double bias = probability - 0.5d;
+                            Double absoluteBias = Math.Abs(bias);
+                            Double pValue = probabilities[Math.Min(count, samples - count)];
+                            Double adjusted = Math.Min(1.0d, pValue * tests);
+    
+                            writer.WriteLine(String.Join(",",
+                                inputBit.ToString(CultureInfo.InvariantCulture),
+                                outputBit.ToString(CultureInfo.InvariantCulture),
+                                count.ToString(CultureInfo.InvariantCulture),
+                                samples.ToString(CultureInfo.InvariantCulture),
+                                Format(probability), Format(bias), Format(absoluteBias), Format(pValue), Format(adjusted)));
+                        }
+                    }
+                }
+    
+                using (StreamWriter writer = CreateWriter(Path.Combine(directory, "avalanche-hamming.csv")))
+                {
+                    writer.WriteLine("ChangedBits,Count,Probability");
+    
+                    for (Int32 distance = 0; distance <= outputBits; ++distance)
+                    {
+                        writer.WriteLine($"{distance},{hamming[distance].ToString(CultureInfo.InvariantCulture)},{Format((Double)hamming[distance] / trials)}");
+                    }
+                }
+    
+                AvalancheSvg.WriteHeatmap(Path.Combine(directory, "avalanche-heatmap.svg"), changed, inputBits, outputBits, samples, meanAbsoluteBias, maximumBias, significant);
+                AvalancheSvg.WriteHistogram(Path.Combine(directory, "avalanche-hamming.svg"), hamming, trials, outputBits);
+
+                File.WriteAllText(Path.Combine(directory, "avalanche.json"), JsonSerializer.Serialize(metadata, new JsonSerializerOptions { WriteIndented = true }) + "\n", new UTF8Encoding(false));
+                File.WriteAllText(Path.Combine(directory, "avalanche.txt"),
+                    $"Analysis: avalanche (AN-001)\nHash: {hashName}\nHash seed: {(hashSeed.HasValue ? hashSeed.Value.ToString(CultureInfo.InvariantCulture) : "default configuration")}\nGenerator seed: {generatorSeed}\nSamples per input bit: {samples}\nInput bits: {inputBits}\nOutput bits: {outputBits}\nHash evaluations: {metadata.HashEvaluations}\nBit-flip trials: {trials}\nSAC cells: {tests}\nMean absolute SAC bias: {Format(meanAbsoluteBias)}\nMaximum absolute SAC bias: {Format(maximumBias)} (input bit {maximumBiasInputBit}, output bit {maximumBiasOutputBit})\nBonferroni-significant cells (family-wise alpha 0.05): {significant}\nMean flipped output bits: {Format(observedHammingMean)} (ideal {Format(outputBits / 2.0d)})\nSignificance: exact two-sided binomial, Bonferroni adjusted\nNote: a non-significant result does not establish SAC compliance.\n",
+                    new UTF8Encoding(false));
+            });
         }
 
         private static void CheckDigest(Byte[] digest, Int32 expectedBytes)

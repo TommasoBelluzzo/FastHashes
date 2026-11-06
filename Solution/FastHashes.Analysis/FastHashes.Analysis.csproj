@@ -81,4 +81,10 @@
     <ProjectReference Include="..\FastHashes\FastHashes.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Data\Words.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

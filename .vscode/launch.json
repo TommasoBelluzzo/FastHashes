@@ -9,9 +9,7 @@
       "program": "${workspaceFolder}/Solution/Output/Debug/net10.0/FastHashes.Tests.dll",
       "cwd": "${workspaceFolder}/Solution/Output/Debug/net10.0",
       "args": [
-        "-automated",
-        "--filter-not-method",
-        "*Collision*"
+        "-automated"
       ],
       "console": "integratedTerminal",
       "stopAtEntry": true,
@@ -28,33 +26,9 @@
       "preLaunchTask": "Build Tests: Release",
       "program": "${workspaceFolder}/Solution/Output/Release/net10.0/FastHashes.Tests.dll",
       "cwd": "${workspaceFolder}/Solution/Output/Release/net10.0",
-      "args": [
-        "--filter-not-method",
-        "*Collision*"
-      ],
+      "args": [],
       "console": "integratedTerminal",
       "stopAtEntry": false
-    },
-    {
-      "name": "Debug Analysis",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "Build Analysis: Debug",
-      "program": "${workspaceFolder}/Solution/Output/Debug/net10.0/FastHashes.Analysis.dll",
-      "cwd": "${workspaceFolder}/Solution",
-      "args": [
-        "--hash",
-        "XxHash64",
-        "--analysis",
-        "avalanche"
-      ],
-      "console": "integratedTerminal",
-      "stopAtEntry": true,
-      "justMyCode": false,
-      "logging": {
-        "moduleLoad": true,
-        "exceptions": false
-      }
     },
     {
       "name": "Run Analysis",
@@ -67,26 +41,10 @@
         "--hash",
         "XxHash64",
         "--analysis",
-        "avalanche"
+        "collision"
       ],
       "console": "integratedTerminal",
       "stopAtEntry": false
-    },
-    {
-      "name": "Debug Benchmarks",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "Build Benchmarks: Debug",
-      "program": "${workspaceFolder}/Solution/Output/Debug/net10.0/FastHashes.Benchmarks.dll",
-      "cwd": "${workspaceFolder}/Solution",
-      "args": [],
-      "console": "integratedTerminal",
-      "stopAtEntry": true,
-      "justMyCode": false,
-      "logging": {
-        "moduleLoad": true,
-        "exceptions": false
-      }
     },
     {
       "name": "Run Benchmarks",

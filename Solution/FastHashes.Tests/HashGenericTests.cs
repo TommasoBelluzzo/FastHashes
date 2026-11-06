@@ -1,29 +1,25 @@
 ﻿#region Using Directives
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using Xunit;
 #endregion
 
 namespace FastHashes.Tests
 {
-    public sealed class HashTests : IClassFixture<ConformanceFixture>, IClassFixture<CollisionFixture>
+    public sealed class HashTests : IClassFixture<ConformanceFixture>
     {
         #region Constants
         private const UInt32 TEST_SEED = 0x9E3779B9u;
         #endregion
 
         #region Members
-        private readonly CollisionFixture m_CollisionFixture;
         private readonly ConformanceFixture m_ConformanceFixture;
         #endregion
 
         #region Constructors
-        public HashTests(ConformanceFixture conformanceFixture, CollisionFixture collisionFixture)
+        public HashTests(ConformanceFixture conformanceFixture)
         {
-            m_CollisionFixture = collisionFixture;
             m_ConformanceFixture = conformanceFixture;
         }
         #endregion
@@ -102,36 +98,6 @@ namespace FastHashes.Tests
             String actual = hash0.ComputeHashString(bufferFinal, HashFormat.HexadecimalPrefixed);
 
             Assert.Equal(expected, actual);
-        }
-
-        [Theory]
-        [MemberData(nameof(HashTestsCases.DataHashesGeneric), MemberType = typeof(HashTestsCases))]
-        public void CollisionTest(String hashName, Func<UInt64, Hash> hashInitializer)
-        {
-            Int32 wordsCount = m_CollisionFixture.Words.Count();
-            Assert.False(wordsCount == 0, "Fixture contains no words.");
-
-            Hash hash = hashInitializer(TEST_SEED);
-            Int32 hashBytes = hash.Length / 8;
-
-            List<Byte[]> hashes = new(wordsCount * 6);
-
-            foreach (String word in m_CollisionFixture.Words)
-            {
-                Byte[] lineBytes = Encoding.UTF8.GetBytes(word);
-                Int32 lineBytesLength = lineBytes.Length;
-
-                Byte[] buffer = new Byte[lineBytesLength + 5];
-                Array.Fill(buffer, (Byte)'!');
-                Buffer.BlockCopy(lineBytes, 0, buffer, 0, lineBytesLength);
-
-                for (Int32 j = 0; j <= 5; ++j)
-                    hashes.Add(hash.ComputeHashBytes(buffer, 0, lineBytesLength + j));
-            }
-
-            Boolean cte = MathUtilities.CollisionsThresholdExceeded(hashes, hashBytes);
-
-            Assert.False(cte, $"Collisions threshold exceeded for {hashName}, seed 0x{TEST_SEED:X8}.");
         }
 
         [Theory]

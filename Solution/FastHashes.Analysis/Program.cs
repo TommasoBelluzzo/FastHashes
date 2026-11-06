@@ -17,6 +17,7 @@ namespace FastHashes.Analysis
         private const Int32 SAMPLES_MINIMUM = 1;
         private const Int32 SAMPLES_MAXIMUM = 10000;
         private const Int32 KEY_LENGTH = 64;
+        private const Int32 CORPUS_SIZE = 65536;
         private const Int32 KEY_LENGTH_MINIMUM = 0;
         private const Int32 KEY_LENGTH_MAXIMUM = 4096;
         #endregion
@@ -38,7 +39,7 @@ namespace FastHashes.Analysis
 
             Option<String> analysisOption = new("--analysis")
             {
-                Description = "The analysis to perform: avalanche or smoke.",
+                Description = "The analysis to perform: avalanche, independence, collision or smoke."
             };
 
             Option<UInt64?> hashSeedOption = new("--hash-seed")
@@ -64,6 +65,12 @@ namespace FastHashes.Analysis
                 DefaultValueFactory = _ => KEY_LENGTH
             };
 
+            Option<Int32> corpusSizeOption = new("--corpus-size")
+            {
+                Description = "Number of sequential-number and distinct random-byte keys for collision analysis. [valid range: 1-1000000]",
+                DefaultValueFactory = _ => CORPUS_SIZE
+            };
+
             hashOption.Validators.Add(result =>
             {
                 String hashName = result.GetValueOrDefault<String>();
@@ -80,8 +87,8 @@ namespace FastHashes.Analysis
 
                 if (String.IsNullOrWhiteSpace(analysisName))
                     result.AddError("Parameter --analysis requires a non-empty value.");
-                else if ((analysisName != "avalanche") && (analysisName != "smoke"))
-                    result.AddError($"Unknown --hash parameter value: {analysisName}.");
+                else if ((analysisName != "avalanche") && (analysisName != "collision") && (analysisName != "independence") && (analysisName != "smoke"))
+                    result.AddError($"Unknown --analysis parameter value: {analysisName}.");
             });
 
             samplesOption.Validators.Add(result =>
@@ -99,6 +106,13 @@ namespace FastHashes.Analysis
                 if ((value < KEY_LENGTH_MINIMUM) || (value > KEY_LENGTH_MAXIMUM))
                     result.AddError($"--key-length must be between {KEY_LENGTH_MINIMUM} and {KEY_LENGTH_MAXIMUM}.");
             });
+            
+            corpusSizeOption.Validators.Add(result =>
+            {
+                Int32 value = result.GetValueOrDefault<Int32>();
+                if ((value < 1) || (value > 1000000))
+                    result.AddError("--corpus-size must be between 1 and 1000000.");
+            });
 
             command.Options.Add(listOption);
             command.Options.Add(hashOption);
@@ -107,6 +121,7 @@ namespace FastHashes.Analysis
             command.Options.Add(generatorSeedOption);
             command.Options.Add(samplesOption);
             command.Options.Add(keyLengthOption);
+            command.Options.Add(corpusSizeOption);
 
             command.Validators.Add(result =>
             {
@@ -118,10 +133,13 @@ namespace FastHashes.Analysis
                     if (result.GetResult(analysisOption)?.Implicit != false)
                         result.AddError("Parameter --analysis is required.");
 
+                    if (result.GetResult(corpusSizeOption)?.Implicit == false && result.GetValue(analysisOption) != "collision")
+                        result.AddError("Parameter --corpus-size is only valid for collision analysis.");
+
                     return;
                 }
 
-                Option[] analysisOptions = [hashOption, analysisOption, hashSeedOption, generatorSeedOption, samplesOption, keyLengthOption];
+                Option[] analysisOptions = [hashOption, analysisOption, hashSeedOption, generatorSeedOption, samplesOption, keyLengthOption, corpusSizeOption];
 
                 foreach (Option option in analysisOptions)
                 {
@@ -152,15 +170,18 @@ namespace FastHashes.Analysis
                         parseResult.GetValue(hashSeedOption),
                         parseResult.GetValue(generatorSeedOption),
                         parseResult.GetValue(samplesOption),
-                        parseResult.GetValue(keyLengthOption)
+                        parseResult.GetValue(keyLengthOption),
+                        parseResult.GetValue(corpusSizeOption)
                     );
                 }
             );
 
             return command.Parse(args).Invoke();
         }
+        #endregion
 
-        private static Int32 RunAnalysis(String selectedHash, String analysis, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength)
+        #region Methods
+        private static Int32 RunAnalysis(String selectedHash, String analysis, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength, Int32 corpusSize)
         {
             Assembly hashAssembly = typeof(Hash).Assembly;
             String hashVersion = hashAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
@@ -184,6 +205,8 @@ namespace FastHashes.Analysis
             Console.WriteLine($"Generator Seed: {generatorSeed}");
             Console.WriteLine($"Samples: {samples}");
             Console.WriteLine($"Key Length: {keyLength} Bytes");
+            if (analysis == "collision")
+                Console.WriteLine($"Corpus Size (numbers/random): {corpusSize}");
             Console.WriteLine($"Output Root: {System.IO.Path.Combine(Environment.CurrentDirectory, "Analysis")}");
             Console.WriteLine();
 
@@ -197,14 +220,18 @@ namespace FastHashes.Analysis
 
             try
             {
-                String directory = AnalysisRunner.Run(selectedHash, analysis, hashSeed, generatorSeed, samples, keyLength);
+                String directory = AnalysisRunner.Run(selectedHash, analysis, hashSeed, generatorSeed, samples, keyLength, corpusSize);
 
-                Console.WriteLine(analysis == "avalanche" ? "[AVALANCHE ANALYSIS]" : "[INFRASTRUCTURE SMOKE TEST]");
+                Console.WriteLine(analysis == "avalanche" ? "[AVALANCHE ANALYSIS]" : analysis == "independence" ? "[BIT INDEPENDENCE ANALYSIS]" : analysis == "collision" ? "[COLLISION ANALYSIS]" : "[INFRASTRUCTURE SMOKE TEST]");
                 Console.WriteLine($"Output: {directory}");
                 if (analysis == "smoke")
                     Console.WriteLine("Quality Assessment: Not Performed (AN-000)");
+                else if (analysis == "avalanche")
+                    Console.WriteLine("Results: avalanche.csv, avalanche-hamming.csv, avalanche-heatmap.svg, avalanche-hamming.svg, avalanche.json, avalanche.txt");
+                else if (analysis == "independence")
+                    Console.WriteLine("Results: independence.csv, independence-pairs.csv, independence-heatmap.svg, independence.json, independence.txt");
                 else
-                    Console.WriteLine("Results: avalanche.csv, hamming.csv, avalanche.svg, hamming.svg, summary.json, summary.txt");
+                    Console.WriteLine("Results: collision-summary.csv, collision-buckets.csv, collision-examples.csv, six occupancy maps, collision.json, collision.txt");
 
                 return 0;
             }
