@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Linq;
 #endregion
 
 namespace FastHashes.Analysis
@@ -133,9 +134,24 @@ namespace FastHashes.Analysis
                 }
             }
 
+            List<StructuralSvg.WindowObservation> windowObservations = observations
+                .Where(item => item.Family == "window")
+                .Select(item =>
+                {
+                    if (!TryParseWindowCase(item.Case, out Int32 offset, out String value))
+                        throw new InvalidOperationException($"Unexpected window case format: {item.Case}");
+                    return new StructuralSvg.WindowObservation(offset, value, item.HammingDistance);
+                })
+                .OrderBy(item => item.Offset)
+                .ThenBy(item => item.Value, StringComparer.Ordinal)
+                .ToList();
+
+            if (windowObservations.Count > 0)
+                StructuralSvg.WriteWindowProfile(Path.Combine(directory, "structural-window.svg"), hashName, hashBits, keyLength, windowObservations);
+
             String[] files = ["structural-summary.csv", "structural-sparse.csv", "structural-twobytes.csv", "structural-cyclic.csv",
                 "structural-permutation.csv", "structural-window.csv", "structural-zeroes.csv", "structural-seed.csv",
-                "structural-boundaries.csv", "structural.json", "structural.txt"];
+                "structural-boundaries.csv", "structural-window.svg", "structural.json", "structural.txt"];
             var metadata = new
             {
                 SchemaVersion = 1,
@@ -180,6 +196,19 @@ namespace FastHashes.Analysis
                     report.AppendLine($"Note: {note}");
             }
             File.WriteAllText(Path.Combine(directory, "structural.txt"), report.ToString(), utf8);
+        }
+
+        private static Boolean TryParseWindowCase(String value, out Int32 offset, out String windowValue)
+        {
+            offset = 0;
+            windowValue = String.Empty;
+            String[] parts = value.Split(':');
+            if ((parts.Length != 4) || (parts[0] != "offset") || (parts[2] != "value"))
+                return false;
+            if (!Int32.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out offset))
+                return false;
+            windowValue = parts[3];
+            return true;
         }
 
         private static String F(Double value)

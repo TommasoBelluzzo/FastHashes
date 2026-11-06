@@ -11,7 +11,6 @@ namespace FastHashes.Analysis
     public static class Program
     {
         #region Setup
-        private const String ANALYSIS = "avalanche";
         private const UInt64 GENERATOR_SEED = 1ul;
         private const Int32 SAMPLES = 1000;
         private const Int32 SAMPLES_MINIMUM = 1;
