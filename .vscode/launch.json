@@ -41,7 +41,7 @@
         "--hash",
         "XxHash64",
         "--analysis",
-        "collision"
+        "structural"
       ],
       "console": "integratedTerminal",
       "stopAtEntry": false

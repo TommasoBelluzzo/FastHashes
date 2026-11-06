@@ -14,7 +14,7 @@ namespace FastHashes.Analysis
         #region Methods
         public static String Run(String hashName, String analysis, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keyLength, Int32 corpusSize)
         {
-            if ((analysis != "smoke") && (analysis != "avalanche") && (analysis != "independence") && (analysis != "collision"))
+            if ((analysis != "smoke") && (analysis != "avalanche") && (analysis != "independence") && (analysis != "collision") && (analysis != "distribution") && (analysis != "structural"))
                 throw new NotSupportedException($"Analysis '{analysis}' is not implemented.");
 
             Hash hash = hashSeed.HasValue
@@ -26,6 +26,18 @@ namespace FastHashes.Analysis
                 AvalancheAnalysis.Validate(hash.Length, samples, keyLength);
             else if (analysis == "independence")
                 IndependenceAnalysis.Validate(hash.Length, samples, keyLength);
+
+            if (analysis == "structural")
+                StructuralAnalysis.Validate(hash.Length, keyLength);
+
+            if (analysis == "distribution")
+                DistributionAnalysis.Validate(hash.Length, samples, keyLength);
+
+            if (analysis == "structural")
+                return StructuralAnalysis.Run(hash, hashName, hashSeed, keyLength);
+
+            if (analysis == "distribution")
+                return DistributionAnalysis.Run(hash, hashName, hashSeed, generatorSeed, samples, keyLength);
 
             if (analysis == "collision")
                 return CollisionAnalysis.Run(hash, hashName, hashSeed, generatorSeed, corpusSize, keyLength);
