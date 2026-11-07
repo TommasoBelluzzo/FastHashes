@@ -3,14 +3,44 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 #endregion
 
 namespace FastHashes.Analysis
 {
     internal static class Utilities
     {
+        #region Constants
+        private static readonly JsonSerializerOptions s_JsonOptions = new()
+        {
+            WriteIndented = true,
+            IndentSize = 2,
+            AllowTrailingCommas = false
+        };
+        #endregion
+
         #region Methods
+        public static Dictionary<String, Object> CreateMetadata(String analysisName, Config config)
+        {
+            return new Dictionary<String, Object>
+            {
+                ["Analysis"] = analysisName,
+                ["Hash"] = $"{config.HashName} ({(config.HashSeed.HasValue ? config.HashSeed.Value.ToString() : "DEFAULT")})",
+                ["UtcTimestamp"] = DateTimeOffset.UtcNow,
+                ["OperatingSystem"] = RuntimeInformation.OSDescription,
+                ["OperatingSystemArchitecture"] = RuntimeInformation.OSArchitecture.ToString(),
+                ["ProcessArchitecture"] = RuntimeInformation.ProcessArchitecture.ToString(),
+                ["Runtime"] = RuntimeInformation.FrameworkDescription,
+                ["LibraryVersion"] = config.LibraryVersion,
+                ["GeneratorSeed"] = config.GeneratorSeed,
+                ["Samples"] = config.Samples,
+                ["KeysLength"] = config.KeysLength,
+                ["CorpusSize"] = config.CorpusSize
+            };
+        }
+
         public static String CreateRunDirectory(String hashName)
         {
             StringBuilder hashReferenceBuilder = new(hashName.Length);
@@ -45,19 +75,24 @@ namespace FastHashes.Analysis
             }
         }
 
-        public static String FormatDouble(Double value)
+        public static String FormatCsvDouble(Double value)
         {
             return value.ToString("G17", CultureInfo.InvariantCulture);
         }
 
-        public static String FormatInteger(Int32 value)
+        public static String FormatCsvInteger(Int32 value)
         {
             return value.ToString(CultureInfo.InvariantCulture);
         }
 
-        public static String FormatInteger(Int64 value)
+        public static String FormatCsvInteger(Int64 value)
         {
             return value.ToString(CultureInfo.InvariantCulture);
+        }
+
+        public static String SerializeJson(Object value)
+        {
+            return JsonSerializer.Serialize(value, s_JsonOptions);
         }
 
         public static String WriteArtifacts(String hashName, Action<String> writeFunction, String existingDirectory = null)

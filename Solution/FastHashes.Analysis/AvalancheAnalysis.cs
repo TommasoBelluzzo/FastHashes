@@ -1,12 +1,9 @@
 #region Using Directives
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Numerics;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.Json;
 #endregion
 
 namespace FastHashes.Analysis
@@ -56,9 +53,9 @@ namespace FastHashes.Analysis
 
             Double ceiling = Math.Max(maximumCount, expectedMaximum) * 1.12d;
 
-            using SvgPlot plot = new(path, 1200, 770);
+            using SvgPlot plot = new(path, 1200, 805);
 
-            plot.PlotArea(120, 178, 980, 465);
+            plot.PlotArea(120, 178, 980, 500);
             plot.DataRange(0.0d, k, 0.0d, ceiling);
 
             Int32 xStep = outputBits <= 64 ? 8 : outputBits <= 128 ? 16 : 32;
@@ -72,7 +69,7 @@ namespace FastHashes.Analysis
             ]);
 
             plot.Title("OUTPUT HAMMING DISTANCE");
-            plot.Subtitle("Observed distribution versus the ideal Binomial(output bits, 0.5) model.");
+            plot.Subtitle("Observed distribution versus the ideal ~Binomial(output bits, 0.5) model.");
             plot.Metadata(
                 $"Trials: {trials:N0} | Peak Count: {maximumCount:N0}",
                 $"Observed Mean: {mean:0.00} | Ideal Mean: {outputBits / 2.0d:0.00}",
@@ -182,10 +179,10 @@ namespace FastHashes.Analysis
             Int64 cells = (Int64)inputBits * hashLength;
 
             if (evaluations > MAXIMUM_HASH_EVALUATIONS)
-                throw new ArgumentException($"Avalanche workload exceeds {MAXIMUM_HASH_EVALUATIONS} hash evaluations; reduce --samples and/or --keys-length parameter.");
+                throw new ArgumentException($"Avalanche workload exceeds {MAXIMUM_HASH_EVALUATIONS} hash evaluations; reduce --samples and/or --keys-length parameter value.");
 
             if (cells > MAXIMUM_MATRIX_CELLS)
-                throw new ArgumentException($"Avalanche matrix exceeds {MAXIMUM_MATRIX_CELLS} cells; reduce --keys-length parameter.");
+                throw new ArgumentException($"Avalanche matrix exceeds {MAXIMUM_MATRIX_CELLS} cells; reduce the --keys-length parameter value.");
 
             Int32 outputBits = hash.Length;
             Int32 outputBytes = outputBits / 8;
@@ -245,8 +242,8 @@ namespace FastHashes.Analysis
                 }
             }
 
-            Int64 tests = (Int64)inputBits * outputBits;
-            Int64 trials = (Int64)samples * inputBits;
+            Int64 sacCells = (Int64)inputBits * outputBits;
+            Int64 bitFlipTrials = (Int64)samples * inputBits;
             Double[] probabilities = MathUtilities.BinomialTailProbabilities(samples);
             
             Int64 significantCells = 0;
@@ -264,7 +261,7 @@ namespace FastHashes.Analysis
                     Double absoluteBias = Math.Abs(((Double)count / samples) - 0.5d);
                     Double pValue = probabilities[Math.Min(count, samples - count)];
 
-                    if (Math.Min(1.0d, pValue * tests) < SIGNIFICANCE_LEVEL)
+                    if (Math.Min(1.0d, pValue * sacCells) < SIGNIFICANCE_LEVEL)
                         ++significantCells;
 
                     sumAbsoluteBias += absoluteBias;
@@ -281,46 +278,34 @@ namespace FastHashes.Analysis
             for (Int32 d = 0; d <= outputBits; ++d)
                 sumDistance += d * (Double)hamming[d];
 
-            Double meanAbsoluteBias = sumAbsoluteBias / tests;
-            Double meanChangedOutputBits = sumDistance / trials;
+            Double meanAbsoluteBias = sumAbsoluteBias / sacCells;
+            Double meanChangedOutputBits = sumDistance / bitFlipTrials;
 
-            var metadata = new
-            {
-                Analysis = "avalanche",
-                HashName = hashName,
-                HashSeed = hashSeed,
-                UtcTimestamp = DateTimeOffset.UtcNow,
-                OperatingSystem = RuntimeInformation.OSDescription,
-                OperatingSystemArchitecture = RuntimeInformation.OSArchitecture.ToString(),
-                ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
-                Runtime = RuntimeInformation.FrameworkDescription.ToString(),
-                LibraryVersion = libraryVersion,
-                GeneratorSeed = generatorSeed,
-                Samples = samples,
-                KeysLength = keysLength,
-                InputBits = inputBits,
-                OutputBits = outputBits,
-                Evaluations = evaluations,
-                SacCells = tests,
-                BitFlipTrials = trials,
-                SignificanceLevel = SIGNIFICANCE_LEVEL,
-                SignificantCells = significantCells,
-                MaximumAbsoluteBias = maximumAbsoluteBias,
-                MeanAbsoluteBias = meanAbsoluteBias,
-                MaximumBiasInputBit = maximumBiasInputBit,
-                MaximumBiasOutputBit = maximumBiasOutputBit,
-                MeanChangedOutputBits = meanChangedOutputBits,
-                MeanChangedOutputBitsIdeal = outputBits / 2.0d,
-                SignificanceTest = "Exact two-sided binomial test, null p=0.5, Bonferroni family-wise correction",
-                OutputFiles = new[] { "avalanche.csv", "avalanche-hamming.csv", "avalanche-heatmap.svg", "avalanche-hamming.svg", "avalanche.json" }
-            };
+            Dictionary<String, Object> metadata = Utilities.CreateMetadata("avalanche", config);
+            metadata["SignificanceLevel"] = SIGNIFICANCE_LEVEL;
+            metadata["InputBits"] = inputBits;
+            metadata["OutputBits"] = outputBits;
+            metadata["Evaluations"] = evaluations;
+            metadata["SacCells"] = sacCells;
+            metadata["BitFlipTrials"] = bitFlipTrials;
+            metadata["SignificantCells"] = significantCells;
+            metadata["MaximumAbsoluteBias"] = maximumAbsoluteBias;
+            metadata["MeanAbsoluteBias"] = meanAbsoluteBias;
+            metadata["MaximumBiasInputBit"] = maximumBiasInputBit;
+            metadata["MaximumBiasOutputBit"] = maximumBiasOutputBit;
+            metadata["MeanChangedOutputBits"] = meanChangedOutputBits;
+            metadata["MeanChangedOutputBitsIdeal"] = outputBits / 2.0d;
+            metadata["OutputFiles"] = new[] { "avalanche.csv", "avalanche-hamming.csv", "avalanche-hd.svg", "avalanche-sac.svg" };
 
             void writeFunction(String directory)
             {
+                String filePath;
                 Encoding encoding = new UTF8Encoding(false);
-                JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
 
-                String filePath = Path.Combine(directory, "avalanche.csv");
+                filePath = Path.Combine(directory, "avalanche.json");
+                File.WriteAllText(filePath, Utilities.SerializeJson(metadata) + "\n", encoding);
+
+                filePath = Path.Combine(directory, "avalanche.csv");
 
                 using (StreamWriter writer = new(filePath, false, encoding))
                 {
@@ -335,18 +320,18 @@ namespace FastHashes.Analysis
                             Double bias = probability - 0.5d;
                             Double absoluteBias = Math.Abs(bias);
                             Double pValue = probabilities[Math.Min(count, samples - count)];
-                            Double pValueBonferroni = Math.Min(1.0d, pValue * tests);
+                            Double pValueBonferroni = Math.Min(1.0d, pValue * sacCells);
 
                             writer.WriteLine(String.Join(",",
-                                Utilities.FormatInteger(ib),
-                                Utilities.FormatInteger(ob),
-                                Utilities.FormatInteger(count),
-                                Utilities.FormatInteger(samples),
-                                Utilities.FormatDouble(probability),
-                                Utilities.FormatDouble(bias),
-                                Utilities.FormatDouble(absoluteBias),
-                                Utilities.FormatDouble(pValue),
-                                Utilities.FormatDouble(pValueBonferroni)
+                                Utilities.FormatCsvInteger(ib),
+                                Utilities.FormatCsvInteger(ob),
+                                Utilities.FormatCsvInteger(count),
+                                Utilities.FormatCsvInteger(samples),
+                                Utilities.FormatCsvDouble(probability),
+                                Utilities.FormatCsvDouble(bias),
+                                Utilities.FormatCsvDouble(absoluteBias),
+                                Utilities.FormatCsvDouble(pValue),
+                                Utilities.FormatCsvDouble(pValueBonferroni)
                             ));
                         }
                     }
@@ -361,24 +346,21 @@ namespace FastHashes.Analysis
                     for (Int32 d = 0; d <= outputBits; ++d)
                     {
                         Int64 hammingCurrent = hamming[d];
-                        Double probability = (Double)hammingCurrent / trials;
+                        Double probability = (Double)hammingCurrent / bitFlipTrials;
 
                         writer.WriteLine(String.Join(",",
-                            Utilities.FormatInteger(d),
-                            Utilities.FormatInteger(hammingCurrent),
-                            Utilities.FormatDouble(probability)
+                            Utilities.FormatCsvInteger(d),
+                            Utilities.FormatCsvInteger(hammingCurrent),
+                            Utilities.FormatCsvDouble(probability)
                         ));
                     }
                 }
 
                 filePath = Path.Combine(directory, "avalanche-hd.svg");
-                PlotHd(filePath, hamming, trials, outputBits);
+                PlotHd(filePath, hamming, bitFlipTrials, outputBits);
 
                 filePath = Path.Combine(directory, "avalanche-sac.svg");
                 PlotSac(filePath, changed, inputBits, outputBits, samples, meanAbsoluteBias, maximumAbsoluteBias, significantCells);
-
-                filePath = Path.Combine(directory, "avalanche.json");
-                File.WriteAllText(filePath, JsonSerializer.Serialize(metadata, jsonOptions) + "\n", new UTF8Encoding(false));
             }
 
             return Utilities.WriteArtifacts(hashName, writeFunction, outputDirectory);

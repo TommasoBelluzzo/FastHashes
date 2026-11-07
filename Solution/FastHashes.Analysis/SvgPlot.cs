@@ -8,15 +8,9 @@ using System.Text;
 
 namespace FastHashes.Analysis
 {
-    /// <summary>
-    /// Shared SVG renderer for FastHashes.Analysis. Layout should be configured and
-    /// prepared before drawing. Drawing primitives accept SVG canvas coordinates;
-    /// X and Y convert data coordinates to canvas coordinates.
-    /// </summary>
     internal sealed class SvgPlot : IDisposable
     {
         #region Setup
-        private const String DEFAULT_FONT = "Arial, Helvetica, sans-serif";
         private const String CLIP_ID = "fasthashes-plot-clip";
         private readonly StreamWriter writer;
         private readonly Dictionary<String, String[]> palettes = new(StringComparer.Ordinal);
@@ -61,7 +55,7 @@ namespace FastHashes.Analysis
         public Double PlotWidth { get; private set; }
         public Double PlotHeight { get; private set; }
 
-        public String FontFamily { get; set; } = DEFAULT_FONT;
+        public String FontFamily { get; set; } = "Arial, Helvetica, sans-serif";
         public String BackgroundColor { get; set; } = "#ffffff";
         public String TitleColor { get; set; } = "#172235";
         public String TextColor { get; set; } = "#303c50";
@@ -98,19 +92,17 @@ namespace FastHashes.Analysis
         #region Constructors
         public SvgPlot(String path, Int32 width = 1200, Int32 height = 900, String description = null)
         {
-            if (String.IsNullOrWhiteSpace(path))
-                throw new ArgumentException("An SVG output path is required.", nameof(path));
-            if (width <= 0)
-                throw new ArgumentOutOfRangeException(nameof(width));
-            if (height <= 0)
-                throw new ArgumentOutOfRangeException(nameof(height));
+            ArgumentException.ThrowIfNullOrWhiteSpace(path, nameof(path));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width, nameof(width));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height, nameof(height));
 
             Width = width;
             Height = height;
-            writer = new StreamWriter(path, false, new UTF8Encoding(false));
+            
             PlotArea(125.0d, 180.0d, Math.Max(1.0d, width - 250.0d), Math.Max(1.0d, height - 290.0d));
             DataRange(0.0d, 1.0d, 0.0d, 1.0d);
 
+            writer = new StreamWriter(path, false, new UTF8Encoding(false));
             writer.WriteLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\" role=\"img\"{(description == null ? String.Empty : $" aria-label=\"{Escape(description)}\"")}>");
             writer.WriteLine($"<rect width=\"100%\" height=\"100%\" fill=\"{BackgroundColor}\"/>");
         }
