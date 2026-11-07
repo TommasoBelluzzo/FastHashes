@@ -1,12 +1,9 @@
-﻿
-#region Using Directives
+﻿#region Using Directives
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-
-using ReferenceCase = (System.String Algorithm, System.String Name, System.String Seed, System.String Input, System.String Expected, System.String Provenance);
 #endregion
 
 namespace FastHashes.Tests
@@ -14,7 +11,7 @@ namespace FastHashes.Tests
     public sealed class ConformanceFixture
     {
         #region Members
-        private readonly Dictionary<String,List<ReferenceCase>> m_CasesByAlgorithm = new(StringComparer.Ordinal);
+        private readonly Dictionary<String, List<CollisionCase>> m_CasesByAlgorithm = new(StringComparer.Ordinal);
         #endregion
 
         #region Constructors
@@ -31,6 +28,7 @@ namespace FastHashes.Tests
             foreach (String file in files)
             {
                 using JsonDocument document = JsonDocument.Parse(File.ReadAllText(file));
+                
                 JsonElement root = document.RootElement;
 
                 String algorithm = RequiredString(root, "algorithm");
@@ -48,7 +46,7 @@ namespace FastHashes.Tests
                 if (!root.TryGetProperty("cases", out JsonElement testCases) || (testCases.ValueKind != JsonValueKind.Array))
                     throw new InvalidDataException($"Invalid reference cases in {file}");
 
-                List<ReferenceCase> algorithmCases = new List<ReferenceCase>();
+                List<CollisionCase> algorithmCases = [];
 
                 foreach (JsonElement testCase in testCases.EnumerateArray())
                 {
@@ -57,7 +55,7 @@ namespace FastHashes.Tests
                     String input = RequiredString(testCase, "input", true);
                     String expected = RequiredString(testCase, "expected");
 
-                    algorithmCases.Add((algorithm, name, seed, input, expected, provenance));
+                    algorithmCases.Add(new(algorithm, name, seed, input, expected, provenance));
                 }
 
                 m_CasesByAlgorithm.Add(algorithm, algorithmCases);
@@ -79,17 +77,17 @@ namespace FastHashes.Tests
             return value;
         }
 
-        public IEnumerable<ReferenceCase> GetCases()
+        internal IEnumerable<CollisionCase> GetCases()
         {
             return m_CasesByAlgorithm.Values.SelectMany(cases => cases);
         }
 
-        public IEnumerable<ReferenceCase> GetCases(String algorithm)
+        internal IEnumerable<CollisionCase> GetCases(String algorithm)
         {
-            if (m_CasesByAlgorithm.TryGetValue(algorithm, out List<ReferenceCase> cases))
+            if (m_CasesByAlgorithm.TryGetValue(algorithm, out List<CollisionCase> cases))
                 return cases;
 
-            return Array.Empty<ReferenceCase>();
+            return [];
         }
         #endregion
     }

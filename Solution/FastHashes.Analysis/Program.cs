@@ -165,9 +165,11 @@ namespace FastHashes.Analysis
                         return 0;
                     }
 
-                    return RunAnalysis
+                    Config config = new
                     (
+                        String.Empty,
                         parseResult.GetValue(analysisOption),
+                        null,
                         parseResult.GetValue(hashOption),
                         parseResult.GetValue(hashSeedOption),
                         parseResult.GetValue(generatorSeedOption),
@@ -175,18 +177,28 @@ namespace FastHashes.Analysis
                         parseResult.GetValue(keysLengthOption),
                         parseResult.GetValue(corpusSizeOption)
                     );
+
+                    return RunAnalysis(config);
                 }
             );
 
             return command.Parse(args).Invoke();
         }
 
-        private static Int32 RunAnalysis(String analysisName, String hashName, UInt64? hashSeed, UInt64 generatorSeed, Int32 samples, Int32 keysLength, Int32 corpusSize)
+        private static Int32 RunAnalysis(Config config)
         {
-            Assembly hashAssembly = typeof(Hash).Assembly;
-            String hashVersion = hashAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-                ?? hashAssembly.GetName().Version?.ToString()
+            Assembly assembly = typeof(Hash).Assembly;
+            String libraryVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                ?? assembly.GetName().Version?.ToString()
                 ?? "Unknown";
+
+            Hash hash = config.HashSeed.HasValue
+                ? Hash.Create(config.HashName, config.HashSeed.Value)
+                : Hash.Create(config.HashName);
+
+            TextInfo ti = CultureInfo.InvariantCulture.TextInfo;
+
+            config = config with { LibraryVersion = libraryVersion, Hash = hash };
 
             Console.WriteLine("[SYSTEM CONFIGURATION]");
             Console.WriteLine($"Timestamp: {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}");
@@ -194,55 +206,51 @@ namespace FastHashes.Analysis
             Console.WriteLine($"OS Architecture: {RuntimeInformation.OSArchitecture}");
             Console.WriteLine($"Process Architecture: {RuntimeInformation.ProcessArchitecture}");
             Console.WriteLine($"Runtime: {RuntimeInformation.FrameworkDescription}");
-            Console.WriteLine($"FastHashes Version: {hashVersion}");
+            Console.WriteLine($"Library Version: {libraryVersion}");
             Console.WriteLine();
 
             Console.WriteLine("[ANALYSIS CONFIGURATION]");
-            Console.WriteLine($"Analysis: {analysisName}");
-            Console.WriteLine($"Hash: {hashName} ({(hashSeed.HasValue ? hashSeed.Value.ToString() : "DEFAULT")})");
-            Console.WriteLine($"Generator Seed: {generatorSeed}");
-            Console.WriteLine($"Samples: {samples}");
-            Console.WriteLine($"Keys Length: {keysLength} Bytes");
-            Console.WriteLine($"Corpus Size: {corpusSize}");
+            Console.WriteLine($"Analysis: {config.AnalysisName}");
+            Console.WriteLine($"Hash: {config.HashName} ({(config.HashSeed.HasValue ? config.HashSeed.Value.ToString() : "DEFAULT")})");
+            Console.WriteLine($"Generator Seed: {config.GeneratorSeed}");
+            Console.WriteLine($"Samples: {config.Samples}");
+            Console.WriteLine($"Keys Length: {config.KeysLength} Bytes");
+            Console.WriteLine($"Corpus Size: {config.CorpusSize}");
             Console.WriteLine();
-
-            TextInfo ti = CultureInfo.InvariantCulture.TextInfo;
-
+            
             String directory = null;
-            List<(String Label, Boolean Completed, String Error)> results = [];
+            List<Result> results = [];
 
             foreach (String analysisNameCurrent in s_Analyses)
             {
-                if ((analysisName != "all") && (analysisName != analysisNameCurrent))
+                if ((config.AnalysisName != "all") && (config.AnalysisName != analysisNameCurrent))
                     continue;
 
                 String label = ti.ToTitleCase(analysisNameCurrent);
 
                 try
                 {
-                    Hash hash = hashSeed.HasValue ? Hash.Create(hashName, hashSeed.Value) : Hash.Create(hashName);
-
                     String result = analysisNameCurrent switch
                     {
-                        "avalanche" => AvalancheAnalysis.Run(hash, hashName, hashSeed, hashVersion, generatorSeed, samples, keysLength, directory),
-                        "collision" => CollisionAnalysis.Run(hash, hashName, hashSeed, hashVersion, generatorSeed, corpusSize, keysLength, directory),
-                        "distribution" => DistributionAnalysis.Run(hash, hashName, hashSeed, hashVersion, generatorSeed, samples, keysLength, directory),
-                        "independence" => IndependenceAnalysis.Run(hash, hashName, hashSeed, hashVersion, generatorSeed, samples, keysLength, directory),
-                        "structural" => StructuralAnalysis.Run(hash, hashName, hashSeed, hashVersion, keysLength, directory),
+                        "avalanche" => AvalancheAnalysis.Run(config, directory),
+                        "collision" => CollisionAnalysis.Run(config, directory),
+                        "distribution" => DistributionAnalysis.Run(config, directory),
+                        "independence" => IndependenceAnalysis.Run(config, directory),
+                        "structural" => StructuralAnalysis.Run(config, directory),
                         _ => throw new NotSupportedException($"Unsupported analysis: {analysisNameCurrent}.")
                     };
 
                     directory ??= result;
-                    results.Add((label, true, null));
+                    results.Add(new (label, true, null));
                 }
                 catch (Exception exception)
                 {
-                    results.Add((label, false, exception.Message));
+                    results.Add(new (label, false, exception.Message));
                 }
             }
 
-            foreach ((String label, Boolean completed, String error) in results)
-                Console.WriteLine($"{label} Analysis: {(completed ? "Completed" : $"Failed ({error})")}");
+            foreach (Result result in results)
+                Console.WriteLine($"{result.Label} Analysis: {(result.Completed ? "Completed" : $"Failed ({result.Error})")}");
 
             Console.WriteLine($"Output: {directory ?? "Not Created"}");
 

@@ -34,21 +34,30 @@ namespace FastHashes.Analysis
                 throw new ArgumentOutOfRangeException(nameof(keyLength), "Structural workload exceeds the probe cap; reduce --key-length.");
         }
 
-        public static String Run(Hash hash, String hashName, UInt64? hashSeed, String hashVersion, Int32 keyLength, String outputDirectory = null)
+        public static String Run(Config config, String outputDirectory = null)
         {
-            Validate(hash.Length, keyLength);
+            Hash hash = config.Hash;
+            UInt64? hashSeed = config.HashSeed;
+            String hashName = config.HashName;
+            Int32 keysLength = config.KeysLength;
+            UInt64 generatorSeed = config.GeneratorSeed;
+            Int32 samples = config.Samples;
+            String libraryVersion = config.LibraryVersion;
+
+            Validate(hash.Length, keysLength);
+
             List<StructuralResult> results = [];
             List<StructuralObservation> observations = [];
-            Evaluate(hash, StructuralInputGenerator.Sparse(keyLength), "sparse", results, observations);
-            Evaluate(hash, StructuralInputGenerator.TwoBytes(keyLength), "twobytes", results, observations);
-            Evaluate(hash, StructuralInputGenerator.Cyclic(keyLength), "cyclic", results, observations);
-            Evaluate(hash, StructuralInputGenerator.Permutation(keyLength), "permutation", results, observations);
-            Evaluate(hash, StructuralInputGenerator.Window(keyLength), "window", results, observations);
-            Evaluate(hash, StructuralInputGenerator.Zeroes(keyLength), "zeroes", results, observations);
-            Evaluate(hash, StructuralInputGenerator.Boundaries(keyLength), "boundaries", results, observations);
-            EvaluateSeeds(hashName, keyLength, hash.Length, results, observations);
+            Evaluate(hash, StructuralInputGenerator.Sparse(keysLength), "sparse", results, observations);
+            Evaluate(hash, StructuralInputGenerator.TwoBytes(keysLength), "twobytes", results, observations);
+            Evaluate(hash, StructuralInputGenerator.Cyclic(keysLength), "cyclic", results, observations);
+            Evaluate(hash, StructuralInputGenerator.Permutation(keysLength), "permutation", results, observations);
+            Evaluate(hash, StructuralInputGenerator.Window(keysLength), "window", results, observations);
+            Evaluate(hash, StructuralInputGenerator.Zeroes(keysLength), "zeroes", results, observations);
+            Evaluate(hash, StructuralInputGenerator.Boundaries(keysLength), "boundaries", results, observations);
+            EvaluateSeeds(hashName, keysLength, hash.Length, results, observations);
 
-            return Utilities.WriteArtifacts(hashName, directory => WriteReports(directory, hashName, hashSeed, hashVersion, keyLength, hash.Length, results, observations), outputDirectory);
+            return Utilities.WriteArtifacts(hashName, directory => WriteReports(directory, hashName, hashSeed, libraryVersion, keysLength, hash.Length, results, observations), outputDirectory);
         }
 
         private static void Evaluate(Hash hash, IEnumerable<StructuralPair> pairs, String family, List<StructuralResult> results, List<StructuralObservation> observations)

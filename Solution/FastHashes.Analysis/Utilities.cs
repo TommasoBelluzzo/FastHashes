@@ -45,7 +45,22 @@ namespace FastHashes.Analysis
             }
         }
 
-        public static String WriteArtifacts(String hashName, Action<String> write, String existingDirectory = null)
+        public static String FormatDouble(Double value)
+        {
+            return value.ToString("G17", CultureInfo.InvariantCulture);
+        }
+
+        public static String FormatInteger(Int32 value)
+        {
+            return value.ToString(CultureInfo.InvariantCulture);
+        }
+
+        public static String FormatInteger(Int64 value)
+        {
+            return value.ToString(CultureInfo.InvariantCulture);
+        }
+
+        public static String WriteArtifacts(String hashName, Action<String> writeFunction, String existingDirectory = null)
         {
             Boolean created = existingDirectory == null;
             String directory = created ? CreateRunDirectory(hashName) : existingDirectory;
@@ -53,7 +68,7 @@ namespace FastHashes.Analysis
 
             try
             {
-                write(directory);
+                writeFunction(directory);
                 return directory;
             }
             catch

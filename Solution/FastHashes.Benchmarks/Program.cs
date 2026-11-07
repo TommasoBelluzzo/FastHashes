@@ -155,9 +155,9 @@ namespace FastHashes.Benchmarks
         #region Methods
         private static Int32 RunBenchmarks(String selectedHash, Int32 bulkKeysLength, Int32 bulkRepetitions, Int32 warmupRepetitions)
         {
-            Assembly hashAssembly = typeof(Hash).Assembly;
-            String hashVersion = hashAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-                ?? hashAssembly.GetName().Version?.ToString()
+            Assembly assembly = typeof(Hash).Assembly;
+            String libraryVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                ?? assembly.GetName().Version?.ToString()
                 ?? "Unknown";
 
             Console.WriteLine("[SYSTEM CONFIGURATION]");
@@ -166,7 +166,7 @@ namespace FastHashes.Benchmarks
             Console.WriteLine($"OS Architecture: {RuntimeInformation.OSArchitecture}");
             Console.WriteLine($"Process Architecture: {RuntimeInformation.ProcessArchitecture}");
             Console.WriteLine($"Runtime: {RuntimeInformation.FrameworkDescription}");
-            Console.WriteLine($"FastHashes Version: {hashVersion}");
+            Console.WriteLine($"Library Version: {libraryVersion}");
             Console.WriteLine($"Available Processors: {Environment.ProcessorCount}");
             Console.WriteLine($"Server GC: {GCSettings.IsServerGC}");
             Console.WriteLine($"Initial GC Latency Mode: {GCSettings.LatencyMode}");
@@ -198,7 +198,7 @@ namespace FastHashes.Benchmarks
 
             IReadOnlyList<String> algorithms = Hash.GetAlgorithms();
             List<String> selectedAlgorithms = (selectedHash == null) ? ["DummyHash", .. algorithms] : [selectedHash];
-            List<(String HashName, String BulkMedianSpeedFormatted, String ChunkNormalizedSpeedFormatted)> results = new(algorithms.Count + 1);
+            List<Result> results = new(algorithms.Count + 1);
 
             for (Int32 i = 0; i < selectedAlgorithms.Count; ++i)
             {
@@ -221,37 +221,37 @@ namespace FastHashes.Benchmarks
                 Console.WriteLine($"Keys Length: {bulkKeysLength} Bytes");
                 Console.WriteLine($"Repetitions: {bulkRepetitions} (2 Passes)");
 
-                (Double[] bulkAlignSpeeds, Double[] bulkVariability, Double bulkMedianSpeed, String bulkMedianSpeedFormatted) = BulkSpeedTest(hashInitializer, bulkKeysLength, bulkRepetitions);
+                BulkSpeedOutput bso = BulkSpeedTest(hashInitializer, bulkKeysLength, bulkRepetitions);
 
-                for (Int32 j = 0; j < bulkAlignSpeeds.Length; ++j)
+                for (Int32 j = 0; j < bso.BulkAlignSpeeds.Length; ++j)
                 {
-                    Console.WriteLine($" - Aggregate Speed Alignment {j}: {Utilities.FormatSpeed(bulkAlignSpeeds[j])}");
-                    Console.WriteLine($"   Batch MAD: {Utilities.FormatVariability(bulkVariability[j])}");
+                    Console.WriteLine($" - Aggregate Speed Alignment {j}: {Utilities.FormatSpeed(bso.BulkAlignSpeeds[j])}");
+                    Console.WriteLine($"   Batch MAD: {Utilities.FormatVariability(bso.BulkVariability[j])}");
                 }
 
-                Console.WriteLine($" - Median Speed Overall: {bulkMedianSpeedFormatted}");
-                Console.WriteLine($" - Alignment MAD: {Utilities.FormatVariability(MathUtilities.RelativeMedianAbsoluteDeviation(bulkAlignSpeeds))}");
+                Console.WriteLine($" - Median Speed Overall: {bso.BulkMedianSpeedFormatted}");
+                Console.WriteLine($" - Alignment MAD: {Utilities.FormatVariability(MathUtilities.RelativeMedianAbsoluteDeviation(bso.BulkAlignSpeeds))}");
 
                 Console.WriteLine();
                 Console.WriteLine("[CHUNKS SPEED TEST]");
                 Console.WriteLine($"Keys Length Span: 1-{s_ChunkParameters.Max(x => x.KeySize)} Bytes");
                 Console.WriteLine($"Repetitions Span: {s_ChunkParameters.Min(x => x.Repetitions)}-{s_ChunkParameters.Max(x => x.Repetitions)}");
 
-                (List<(Int32 Start, Int32 End, Double Speed, Double Variability)> chunkSpeeds, Double chunkAggregateSpeed, String chunkAggregateSpeedFormatted, Double chunkNormalizedSpeed, String chunkNormalizedSpeedFormatted) = ChunksSpeedTest(hashInitializer);
+                ChunkSpeedOutput cso = ChunksSpeedTest(hashInitializer);
 
-                foreach ((Int32 chunkLengthStart, Int32 chunkLengthEnd, Double chunkSpeed, Double chunkVariability) in chunkSpeeds)
+                foreach (ChunkSpeedEntry entry in cso.ChunkSpeeds)
                 {
-                    Console.WriteLine($" - Aggregate Speed {chunkLengthStart}-{chunkLengthEnd} Bytes: {Utilities.FormatSpeed(chunkSpeed)}");
-                    Console.WriteLine($"   Median Batch MAD: {Utilities.FormatVariability(chunkVariability)}");
+                    Console.WriteLine($" - Aggregate Speed {entry.Start}-{entry.End} Bytes: {Utilities.FormatSpeed(entry.Speed)}");
+                    Console.WriteLine($"   Median Batch MAD: {Utilities.FormatVariability(entry.Variability)}");
                 }
 
-                Console.WriteLine($" - Aggregate Speed Overall: {chunkAggregateSpeedFormatted}");
-                Console.WriteLine($" - Geometric Mean Speed: {chunkNormalizedSpeedFormatted}");
+                Console.WriteLine($" - Aggregate Speed Overall: {cso.ChunkAggregateSpeedFormatted}");
+                Console.WriteLine($" - Geometric Mean Speed: {cso.ChunkNormalizedSpeedFormatted}");
 
                 Console.WriteLine();
                 Console.WriteLine();
 
-                results.Add((hashName, bulkMedianSpeedFormatted, chunkNormalizedSpeedFormatted));
+                results.Add(new (hashName, bso.BulkMedianSpeedFormatted, cso.ChunkNormalizedSpeedFormatted));
             }
 
             if (selectedHash != null)
@@ -292,7 +292,7 @@ namespace FastHashes.Benchmarks
         #endregion
 
         #region Methods
-        private static (Int64 Bytes, Int64 Ticks, List<Double> BatchSpeeds) GetSpeed(Func<UInt64, Hash> hashInitializer, Int32 length, Int32 repetitions, Int32 align)
+        private static SpeedOutput GetSpeed(Func<UInt64, Hash> hashInitializer, Int32 length, Int32 repetitions, Int32 align)
         {
             RandomXorShift r = new();
 
@@ -352,10 +352,10 @@ namespace FastHashes.Benchmarks
                 }
             }
 
-            return (totalBytes, totalTicks, batchSpeeds);
+            return new (totalBytes, totalTicks, batchSpeeds);
         }
 
-        private static (Double[], Double[], Double, String) BulkSpeedTest(Func<UInt64, Hash> hashInitializer, Int32 bulkKeysLength, Int32 bulkRepetitions)
+        private static BulkSpeedOutput BulkSpeedTest(Func<UInt64, Hash> hashInitializer, Int32 bulkKeysLength, Int32 bulkRepetitions)
         {
             using (new SpeedOptimizer())
             {
@@ -373,11 +373,11 @@ namespace FastHashes.Benchmarks
                     for (Int32 position = 0; position < 8; ++position)
                     {
                         Int32 align = pass == 0 ? position : 7 - position;
-                        var (bytes, ticks, batchSpeeds) = GetSpeed(hashInitializer, bulkKeysLength, bulkRepetitions, align);
+                        SpeedOutput so = GetSpeed(hashInitializer, bulkKeysLength, bulkRepetitions, align);
 
-                        alignBytes[align] += bytes;
-                        alignTicks[align] += ticks;
-                        alignBatchSpeeds[align].AddRange(batchSpeeds);
+                        alignBytes[align] += so.Bytes;
+                        alignTicks[align] += so.Ticks;
+                        alignBatchSpeeds[align].AddRange(so.BatchSpeeds);
                     }
                 }
 
@@ -390,18 +390,18 @@ namespace FastHashes.Benchmarks
                 Double medianSpeed = MathUtilities.Median(alignSpeeds, false);
                 String medianSpeedFormatted = Utilities.FormatSpeed(medianSpeed);
 
-                return (alignSpeeds, alignVariability, medianSpeed, medianSpeedFormatted);
+                return new (alignSpeeds, alignVariability, medianSpeed, medianSpeedFormatted);
             }
         }
 
-        private static (List<(Int32 Start, Int32 End, Double Speed, Double Variability)>, Double, String, Double, String) ChunksSpeedTest(Func<UInt64, Hash> hashInitializer)
+        private static ChunkSpeedOutput ChunksSpeedTest(Func<UInt64, Hash> hashInitializer)
         {
             using (new SpeedOptimizer())
             {
                 Int32 length = 1;
                 Int64 totalBytes = 0;
                 Int64 totalTicks = 0;
-                List<(Int32 Start, Int32 End, Double Speed, Double Variability)> chunkSpeeds = new(s_ChunkParameters.Count);
+                List<ChunkSpeedEntry> chunkSpeeds = new(s_ChunkParameters.Count);
 
                 foreach ((Func<Int32, Int32> increment, Int32 keySize, Int32 repetitions) in s_ChunkParameters)
                 {
@@ -412,14 +412,14 @@ namespace FastHashes.Benchmarks
 
                     while (length < keySize)
                     {
-                        var (bytes, ticks, batchSpeeds) = GetSpeed(hashInitializer, length, repetitions, 0);
-                        Double variability = MathUtilities.RelativeMedianAbsoluteDeviation(batchSpeeds);
+                        SpeedOutput so = GetSpeed(hashInitializer, length, repetitions, 0);
+                        Double variability = MathUtilities.RelativeMedianAbsoluteDeviation(so.BatchSpeeds);
 
                         if (Double.IsFinite(variability))
                             lengthVariability.Add(variability);
 
-                        rangeBytes += bytes;
-                        rangeTicks += ticks;
+                        rangeBytes += so.Bytes;
+                        rangeTicks += so.Ticks;
                         length = increment(length);
                     }
 
@@ -427,14 +427,14 @@ namespace FastHashes.Benchmarks
 
                     if (keySize == s_ChunkParameters[^1].KeySize)
                     {
-                        var (bytes, ticks, batchSpeeds) = GetSpeed(hashInitializer, length, repetitions, 0);
-                        Double variability = MathUtilities.RelativeMedianAbsoluteDeviation(batchSpeeds);
+                        SpeedOutput so = GetSpeed(hashInitializer, length, repetitions, 0);
+                        Double variability = MathUtilities.RelativeMedianAbsoluteDeviation(so.BatchSpeeds);
 
                         if (Double.IsFinite(variability))
                             lengthVariability.Add(variability);
 
-                        rangeBytes += bytes;
-                        rangeTicks += ticks;
+                        rangeBytes += so.Bytes;
+                        rangeTicks += so.Ticks;
                         lengthEnd = keySize;
                     }
 
@@ -444,7 +444,7 @@ namespace FastHashes.Benchmarks
 
                     Double rangeSpeed = MathUtilities.Throughput(rangeBytes, rangeTicks, Stopwatch.Frequency);
                     Double rangeVariability = lengthVariability.Count == 0 ? Double.NaN : MathUtilities.Median(lengthVariability, false);
-                    chunkSpeeds.Add((lengthStart, lengthEnd, rangeSpeed, rangeVariability));
+                    chunkSpeeds.Add(new (lengthStart, lengthEnd, rangeSpeed, rangeVariability));
                 }
 
                 Double aggregateSpeed = MathUtilities.Throughput(totalBytes, totalTicks, Stopwatch.Frequency);
@@ -453,7 +453,7 @@ namespace FastHashes.Benchmarks
                 Double normalizedSpeed = MathUtilities.GeometricMean([.. chunkSpeeds.Select(x => x.Speed)]);
                 String normalizedSpeedFormatted = Utilities.FormatSpeed(normalizedSpeed);
 
-                return (chunkSpeeds, aggregateSpeed, aggregateSpeedFormatted, normalizedSpeed, normalizedSpeedFormatted);
+                return new (chunkSpeeds, aggregateSpeed, aggregateSpeedFormatted, normalizedSpeed, normalizedSpeedFormatted);
             }
         }
 

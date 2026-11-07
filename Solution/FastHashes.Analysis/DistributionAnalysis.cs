@@ -31,9 +31,17 @@ namespace FastHashes.Analysis
                 throw new ArgumentOutOfRangeException(nameof(keyLength), "Distribution analysis requires a nonempty input key.");
         }
 
-        public static String Run(Hash hash, String hashName, UInt64? hashSeed, String hashVersion, UInt64 generatorSeed, Int32 samples, Int32 keyLength, String outputDirectory = null)
+        public static String Run(Config config, String outputDirectory = null)
         {
-            Validate(hash.Length, samples, keyLength);
+            Hash hash = config.Hash;
+            String hashName = config.HashName;
+            UInt64? hashSeed = config.HashSeed;
+            Int32 keysLength = config.KeysLength;
+            UInt64 generatorSeed = config.GeneratorSeed;
+            Int32 samples = config.Samples;
+            String libraryVersion = config.LibraryVersion;
+
+            Validate(hash.Length, samples, keysLength);
 
             Int32 outputBits = hash.Length;
             Int32 outputBytes = outputBits / 8;
@@ -41,7 +49,7 @@ namespace FastHashes.Analysis
             Int32[] byteCounts = new Int32[checked(outputBytes * 256)];
             Int32[] pooledByteCounts = new Int32[256];
             RandomSplitMix generator = new(generatorSeed);
-            Byte[] key = new Byte[keyLength];
+            Byte[] key = new Byte[keysLength];
 
             // Complete all hashing and numerical calculations before creating report directories.
             for (Int32 sample = 0; sample < samples; ++sample)
@@ -188,7 +196,7 @@ namespace FastHashes.Analysis
                     GeneratorAlgorithm = "SplitMix64",
                     GeneratorSeed = generatorSeed,
                     Samples = samples,
-                    KeyLengthBytes = keyLength,
+                    KeyLengthBytes = keysLength,
                     InputCorpus = "Deterministic SplitMix64 random byte strings, one hash evaluation per sample",
                     HashEvaluations = samples,
                     BitNumbering = "Least significant bit first within each byte; bytes follow ComputeHashBytes order",
@@ -210,7 +218,7 @@ namespace FastHashes.Analysis
                     BytePositionChiSquareDegreesOfFreedom = 255,
                     EntropyInterpretation = "Empirical plug-in entropy is downward biased at finite sample sizes; 8 bits is an ideal uniform byte reference",
                     UtcTimestamp = DateTimeOffset.UtcNow,
-                    LibraryVersion = hashVersion,
+                    LibraryVersion = libraryVersion,
                     Runtime = RuntimeInformation.FrameworkDescription,
                     OperatingSystem = RuntimeInformation.OSDescription,
                     ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
@@ -221,7 +229,7 @@ namespace FastHashes.Analysis
                     JsonSerializer.Serialize(metadata, new JsonSerializerOptions { WriteIndented = true }) + "\n", new UTF8Encoding(false));
                 File.WriteAllText(Path.Combine(directory, "distribution.txt"),
                     $"Analysis: distribution (AN-004)\nHash: {hashName}\nHash seed: {(hashSeed.HasValue ? hashSeed.Value.ToString(CultureInfo.InvariantCulture) : "default configuration")}\n" +
-                    $"Generator seed: {generatorSeed}\nSamples: {samples}\nKey length: {keyLength} bytes\nOutput bits: {outputBits}\n" +
+                    $"Generator seed: {generatorSeed}\nSamples: {samples}\nKey length: {keysLength} bytes\nOutput bits: {outputBits}\n" +
                     $"Mean absolute bit bias: {Format(meanAbsoluteBias)}\nMaximum absolute bit bias: {Format(maximumAbsoluteBias)} at output bit {maximumBiasBit}\n" +
                     $"Bonferroni-significant output bits: {significantBits}/{outputBits} (family-wise alpha {Format(SIGNIFICANCE_LEVEL)})\n" +
                     $"Observed fraction of output one-bits: {Format(observedOneFraction)} (ideal 0.5)\n" +

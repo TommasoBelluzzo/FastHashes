@@ -63,6 +63,86 @@ namespace FastHashes.Analysis
             writer.WriteLine("</svg>");
         }
 
+        public static void WriteHistogram(String path, String corpus, Int32[] buckets, Int64 inputs)
+        {
+            if (buckets.Length != CELLS)
+                throw new ArgumentException("A collision histogram requires 65,536 bucket loads.", nameof(buckets));
+
+            Int32 maximum = 0;
+            foreach (Int32 load in buckets)
+                maximum = Math.Max(maximum, load);
+
+            Int32 lastExact = Math.Min(20, Math.Max(4, maximum));
+            Boolean hasTail = maximum > lastExact;
+            Int32 groups = lastExact + 1 + (hasTail ? 1 : 0);
+            Int32[] observed = new Int32[groups];
+            Double[] expected = new Double[groups];
+
+            foreach (Int32 load in buckets)
+                ++observed[Math.Min(load, groups - 1)];
+
+            Double lambda = (Double)inputs / CELLS;
+            Double probability = Math.Exp(-lambda);
+            Double cumulative = 0.0d;
+            for (Int32 load = 0; load <= lastExact; ++load)
+            {
+                expected[load] = CELLS * probability;
+                cumulative += probability;
+                probability *= lambda / (load + 1.0d);
+            }
+            if (hasTail)
+                expected[^1] = CELLS * Math.Max(0.0d, 1.0d - cumulative);
+
+            Double ceiling = 1.0d;
+            for (Int32 i = 0; i < groups; ++i)
+                ceiling = Math.Max(ceiling, Math.Max(observed[i], expected[i]));
+            ceiling *= 1.1d;
+
+            const Int32 left = 105;
+            const Int32 top = 150;
+            const Int32 width = 980;
+            const Int32 height = 430;
+            Double step = (Double)width / groups;
+            StringBuilder expectedPath = new();
+
+            using StreamWriter writer = new(path, false, new UTF8Encoding(false));
+            writer.WriteLine("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1200 740\" role=\"img\" aria-label=\"Collision bucket-load frequency histogram\">");
+            writer.WriteLine("<rect width=\"100%\" height=\"100%\" fill=\"#ffffff\"/>");
+            Text(writer, 72, 52, $"Collision analysis | {corpus} | bucket-load histogram", 25, true);
+            Text(writer, 72, 84, $"{CELLS:N0} projected buckets | {inputs:N0} distinct inputs | Poisson mean = {lambda.ToString("0.###", CultureInfo.InvariantCulture)}", 15);
+            Text(writer, 72, 110, "Bars: observed bucket count | Orange line: approximate Poisson expectation | Fixed input count", 14);
+
+            for (Int32 tick = 0; tick <= 4; ++tick)
+            {
+                Int32 y = top + height - (tick * height / 4);
+                writer.WriteLine($"<line x1=\"{left}\" y1=\"{y}\" x2=\"{left + width}\" y2=\"{y}\" stroke=\"#e5e7eb\" stroke-width=\"1\"/>");
+                Text(writer, 18, y + 5, (ceiling * tick / 4.0d).ToString("N0", CultureInfo.InvariantCulture), 13);
+            }
+
+            for (Int32 load = 0; load < groups; ++load)
+            {
+                Int32 center = left + (Int32)Math.Round((load + 0.5d) * step);
+                Int32 observedHeight = (Int32)Math.Round(observed[load] / ceiling * height);
+                Int32 observedY = top + height - observedHeight;
+                Int32 barWidth = Math.Max(2, (Int32)Math.Floor(step) - 8);
+                writer.WriteLine($"<rect x=\"{center - barWidth / 2}\" y=\"{observedY}\" width=\"{barWidth}\" height=\"{observedHeight}\" fill=\"#508fca\"/>");
+
+                Int32 expectedY = top + height - (Int32)Math.Round(expected[load] / ceiling * height);
+                expectedPath.Append(load == 0 ? "M " : " L ").Append(center).Append(' ').Append(expectedY);
+                if ((load % 2 == 0) || (load == groups - 1))
+                    Text(writer, center - 7, top + height + 23, hasTail && load == groups - 1 ? $"{lastExact + 1}+" : load.ToString(CultureInfo.InvariantCulture), 12);
+            }
+
+            writer.WriteLine($"<path d=\"{expectedPath}\" fill=\"none\" stroke=\"#e28b3d\" stroke-width=\"3\" stroke-linejoin=\"round\"/>");
+            writer.WriteLine($"<line x1=\"{left}\" y1=\"{top}\" x2=\"{left}\" y2=\"{top + height}\" stroke=\"#6b7280\" stroke-width=\"1.5\"/>");
+            writer.WriteLine($"<line x1=\"{left}\" y1=\"{top + height}\" x2=\"{left + width}\" y2=\"{top + height}\" stroke=\"#6b7280\" stroke-width=\"1.5\"/>");
+            Text(writer, 105, 625, "X: inputs per projected bucket (load)", 15);
+            Text(writer, 105, 651, "Y: number of projected buckets", 15);
+            Text(writer, 105, 695, hasTail ? $"The final bin groups all loads >= {lastExact + 1}. Poisson is an approximation to fixed-N occupancy." : "Poisson is an approximation to fixed-N occupancy; comparisons are descriptive.", 14);
+            writer.WriteLine("</svg>");
+        }
+
+
         // Standard Hilbert distance-to-coordinate mapping for a 256x256 square.
         internal static (Int32 X, Int32 Y) HilbertCoordinates(Int32 distance)
         {

@@ -39,9 +39,9 @@
       "cwd": "${workspaceFolder}/Solution",
       "args": [
         "--hash",
-        "LaneHash128",
+        "FarmHash32",
         "--analysis",
-        "all"
+        "avalanche"
       ],
       "console": "integratedTerminal",
       "stopAtEntry": false

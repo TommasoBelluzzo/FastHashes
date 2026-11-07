@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Xunit;
@@ -109,7 +110,7 @@ namespace FastHashes.Tests
         [MemberData(nameof(TestsCases.Hashes), MemberType = typeof(TestsCases))]
         public void ConformanceTest(String hashName, Func<UInt64, Hash> hashInitializer, String _)
         {
-            var cases = m_ConformanceFixture.GetCases(hashName);
+            IEnumerable<CollisionCase> cases = m_ConformanceFixture.GetCases(hashName);
 
             Assert.SkipWhen(!cases.Any(), $"No reference vectors available for {hashName}.");
 

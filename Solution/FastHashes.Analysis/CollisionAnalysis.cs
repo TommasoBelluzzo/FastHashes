@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Net.Mail;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
@@ -35,9 +36,18 @@ namespace FastHashes.Analysis
                 throw new FileNotFoundException("The shared Words.txt corpus was not found beside the application (Data/Words.txt).", WordsPath());
         }
 
-        public static String Run(Hash hash, String hashName, UInt64? hashSeed, String hashVersion, UInt64 generatorSeed, Int32 corpusSize, Int32 keyLength, String outputDirectory = null)
+        public static String Run(Config config, String outputDirectory = null)
         {
-            Validate(hash.Length, corpusSize, keyLength);
+            Hash hash = config.Hash;
+            UInt64? hashSeed = config.HashSeed;
+            String hashName = config.HashName;
+            Int32 keysLength = config.KeysLength;
+            UInt64 generatorSeed = config.GeneratorSeed;
+            Int32 samples = config.Samples;
+            Int32 corpusSize = config.CorpusSize;
+            String libraryVersion = config.LibraryVersion;
+
+            Validate(hash.Length, corpusSize, keysLength);
             List<CorpusResult> results = [];
 
             CorpusResult words = new("words-padded", hash.Length);
@@ -61,10 +71,10 @@ namespace FastHashes.Analysis
 
             CorpusResult random = new("random-bytes", hash.Length);
             RandomSplitMix generator = new(generatorSeed);
-            Byte[] buffer = new Byte[keyLength];
+            Byte[] buffer = new Byte[keysLength];
             // Exactly corpusSize distinct inputs are requested; duplicates are regenerated.
             // A one-byte key cannot provide more than 256 distinct values.
-            if (keyLength == 1 && corpusSize > 256)
+            if (keysLength == 1 && corpusSize > 256)
                 throw new ArgumentOutOfRangeException(nameof(corpusSize), "A one-byte random corpus cannot contain more than 256 distinct keys.");
 
             Int64 attempts = 0;
@@ -78,7 +88,7 @@ namespace FastHashes.Analysis
             results.Add(random);
 
             // Everything above, including file loading and hashing, completes before the output directory is created.
-            return Utilities.WriteArtifacts(hashName, directory => WriteReports(directory, hashName, hashSeed, hashVersion, generatorSeed, corpusSize, keyLength, hash.Length, results), outputDirectory);
+            return Utilities.WriteArtifacts(hashName, directory => WriteReports(directory, hashName, hashSeed, libraryVersion, generatorSeed, corpusSize, keysLength, hash.Length, results), outputDirectory);
         }
 
         private static String WordsPath()
@@ -170,6 +180,7 @@ namespace FastHashes.Analysis
             {
                 CollisionSvg.WriteMap(Path.Combine(directory, $"collision-{result.Name}-linear.svg"), result.Name, result.Buckets, false, result.DistinctInputs);
                 CollisionSvg.WriteMap(Path.Combine(directory, $"collision-{result.Name}-hilbert.svg"), result.Name, result.Buckets, true, result.DistinctInputs);
+                CollisionSvg.WriteHistogram(Path.Combine(directory, $"collision-{result.Name}-histogram.svg"), result.Name, result.Buckets, result.DistinctInputs);
             }
 
             List<String> files = ["collision-summary.csv", "collision-buckets.csv", "collision-examples.csv"];
@@ -177,6 +188,7 @@ namespace FastHashes.Analysis
             {
                 files.Add($"collision-{result.Name}-linear.svg");
                 files.Add($"collision-{result.Name}-hilbert.svg");
+                files.Add($"collision-{result.Name}-histogram.svg");
             }
             files.Add("collision.json");
             files.Add("collision.txt");

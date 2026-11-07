@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace FastHashes.Tests
 {
-    public static class TestsCases
+    internal static class TestsCases
     {
         #region Constants
         private static readonly Dictionary<String, String> VALIDATION_CASES = new(StringComparer.Ordinal)

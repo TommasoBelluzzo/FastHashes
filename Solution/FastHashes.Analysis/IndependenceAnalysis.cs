@@ -47,18 +47,26 @@ namespace FastHashes.Analysis
                 throw new ArgumentOutOfRangeException(nameof(samples), "Independence workload exceeds the permitted pair trials; reduce --samples or --key-length.");
         }
 
-        public static String Run(Hash hash, String hashName, UInt64? hashSeed, String hashVersion, UInt64 generatorSeed, Int32 samples, Int32 keyLength, String outputDirectory = null)
+        public static String Run(Config config, String outputDirectory = null)
         {
-            Validate(hash.Length, samples, keyLength);
+            Hash hash = config.Hash;
+            String hashName = config.HashName;
+            UInt64? hashSeed = config.HashSeed;
+            Int32 keysLength = config.KeysLength;
+            UInt64 generatorSeed = config.GeneratorSeed;
+            Int32 samples = config.Samples;
+            String libraryVersion = config.LibraryVersion;
 
-            Int32 inputBits = checked(keyLength * 8);
+            Validate(hash.Length, samples, keysLength);
+
+            Int32 inputBits = checked(keysLength * 8);
             Int32 outputBits = hash.Length;
             Int32 outputBytes = outputBits / 8;
             Int32 pairCount = checked(outputBits * (outputBits - 1) / 2);
             Int32[] flipCounts = new Int32[checked(inputBits * outputBits)];
             Int32[] jointCounts = new Int32[checked(inputBits * pairCount)];
             Int32[] flippedBits = new Int32[outputBits];
-            Byte[] key = new Byte[keyLength];
+            Byte[] key = new Byte[keysLength];
             RandomSplitMix generator = new(generatorSeed);
 
             // Sampling is completed before any directory or report is created.
@@ -222,7 +230,7 @@ namespace FastHashes.Analysis
                 GeneratorAlgorithm = "SplitMix64",
                 GeneratorSeed = generatorSeed,
                 SamplesPerInputBit = samples,
-                InputLengthBytes = keyLength,
+                InputLengthBytes = keysLength,
                 InputBits = inputBits,
                 OutputBits = outputBits,
                 OutputPairs = pairCount,
@@ -244,7 +252,7 @@ namespace FastHashes.Analysis
                 MaximumCorrelationOutputBitB = hasDefinedCorrelations ? (Int32?)maximumOutputB : null,
                 // Filled consistently after CSV emission below; calculate significant count beforehand.
                 UtcTimestamp = DateTimeOffset.UtcNow,
-                LibraryVersion = hashVersion,
+                LibraryVersion = libraryVersion,
                 Runtime = RuntimeInformation.FrameworkDescription,
                 OperatingSystem = RuntimeInformation.OSDescription,
                 ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),

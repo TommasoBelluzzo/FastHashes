@@ -1,5 +1,6 @@
 #region Using Directives
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Numerics;
@@ -13,57 +14,204 @@ namespace FastHashes.Analysis
     internal static class AvalancheAnalysis
     {
         #region Setup
-        private const Double SIGNIFICANCE_LEVEL = 0.05d;
+        private const Double HEATMAP_SCALE = 0.10d;
         private const Int64 MAXIMUM_HASH_EVALUATIONS = 20000000;
         private const Int64 MAXIMUM_MATRIX_CELLS = 1000000;
+        private const Double SIGNIFICANCE_LEVEL = 0.05d;
         #endregion
 
         #region Methods
-        public static void Validate(Int32 hashLength, Int32 samples, Int32 keyLength)
+        private static void PlotHd(String path, Int64[] hamming, Int64 trials, Int32 outputBits)
         {
-            if (keyLength < 1)
-                throw new ArgumentOutOfRangeException(nameof(keyLength), "Avalanche analysis requires a nonempty key.");
+            Int32 k = hamming.Length;
 
-            if (samples < 1)
-                throw new ArgumentOutOfRangeException(nameof(samples), "At least one base input is required.");
+            Double mean = 0.0d;
+            Double secondMoment = 0.0d;
+            Int64 maximumCount = 0;
 
-            if ((hashLength <= 0) || ((hashLength % 8) != 0))
-                throw new NotSupportedException("Avalanche analysis requires a positive, byte-aligned hash length.");
+            for (Int32 i = 0; i < k; ++i)
+            {
+                mean += (Double)i * hamming[i];
+                secondMoment += (Double)i * i * hamming[i];
+                maximumCount = Math.Max(maximumCount, hamming[i]);
+            }
 
-            Int64 inputBits = (Int64)keyLength * 8;
-            Int64 evaluations = (Int64)samples * (1 + inputBits);
-            Int64 cells = inputBits * hashLength;
+            mean /= trials;
 
-            if (evaluations > MAXIMUM_HASH_EVALUATIONS)
-                throw new ArgumentOutOfRangeException(nameof(samples), $"Avalanche workload exceeds {MAXIMUM_HASH_EVALUATIONS} hash evaluations; reduce --samples or --key-length.");
+            Double standardDeviation = Math.Sqrt(Math.Max(0.0d, (secondMoment / trials) - (mean * mean)));
 
-            if (cells > MAXIMUM_MATRIX_CELLS)
-                throw new ArgumentOutOfRangeException(nameof(keyLength), $"Avalanche matrix exceeds {MAXIMUM_MATRIX_CELLS} cells; reduce --key-length.");
+            Double[] logFactorials = new Double[outputBits + 1];
+
+            for (Int32 i = 2; i <= outputBits; ++i)
+                logFactorials[i] = logFactorials[i - 1] + Math.Log(i);
+
+            Double[] expected = new Double[outputBits + 1];
+            Double expectedMaximum = 0.0d;
+
+            for (Int32 i = 0; i <= outputBits; ++i)
+            {
+                expected[i] = trials * Math.Exp(logFactorials[outputBits] - logFactorials[i] - logFactorials[outputBits - i] - outputBits * Math.Log(2.0d));
+                expectedMaximum = Math.Max(expectedMaximum, expected[i]);
+            }
+
+            Double ceiling = Math.Max(maximumCount, expectedMaximum) * 1.12d;
+
+            using SvgPlot plot = new(path, 1200, 770);
+
+            plot.PlotArea(120, 178, 980, 465);
+            plot.DataRange(0.0d, k, 0.0d, ceiling);
+
+            Int32 xStep = outputBits <= 64 ? 8 : outputBits <= 128 ? 16 : 32;
+            plot.ConfigureIndexedXAxis("Changed Output Bits", k, xStep);
+            plot.ConfigureDiscreteYAxis("Number of Trials", 0.0d, ceiling, intervals: 5, format: "N0");
+
+            plot.ConfigureBottomLegend([
+                new SvgPlot.LegendItem("Observed", plot.ObservedColor, false),
+                new SvgPlot.LegendItem("Ideal Binomial", plot.ReferenceColor, true),
+                new SvgPlot.LegendItem("Ideal Mean", plot.HighlightColor, true, true)
+            ]);
+
+            plot.Title("OUTPUT HAMMING DISTANCE");
+            plot.Subtitle("Observed distribution versus the ideal Binomial(output bits, 0.5) model.");
+            plot.Metadata(
+                $"Trials: {trials:N0} | Peak Count: {maximumCount:N0}",
+                $"Observed Mean: {mean:0.00} | Ideal Mean: {outputBits / 2.0d:0.00}",
+                $"Observed SD: {standardDeviation:0.00} | Ideal SD: {Math.Sqrt(outputBits * 0.25d):0.00}"
+            );
+
+            plot.PrepareLayout();
+            plot.DrawGrid();
+
+            plot.BeginPlot();
+
+            for (Int32 i = 0; i < k; ++i)
+                plot.Bar(i, k, hamming[i], plot.ObservedColor);
+
+            List<(Double X, Double Y)> expectedPoints = new(outputBits + 1);
+
+            for (Int32 i = 0; i <= outputBits; ++i)
+                expectedPoints.Add((i + 0.5d, expected[i]));
+
+            plot.Polyline(expectedPoints, plot.ReferenceColor, 2.8d);
+            plot.VerticalReference(outputBits / 2.0d + 0.5d, plot.HighlightColor, 2.0d, true);
+
+            plot.EndPlot();
+
+            plot.DrawBorder();
+            plot.DrawAxes();
+            plot.DrawBottomLegend();
         }
 
-        public static String Run(Hash hash, String hashName, UInt64? hashSeed, String hashVersion, UInt64 generatorSeed, Int32 samples, Int32 keyLength, String outputDirectory = null)
+        public static void PlotSac(String path, Int32[] changed, Int32 inputBits, Int32 outputBits, Int32 samples, Double meanAbsoluteBias, Double maximumAbsoluteBias, Int64 significantCells)
         {
-            Validate(hash.Length, samples, keyLength);
+            using SvgPlot plot = new(path, 1200, 900);
 
-            Int32 inputBits = checked(keyLength * 8);
+            plot.PlotArea(125, 180, 850, 610);
+            plot.DataRange(0.0d, outputBits, 0.0d, inputBits);
+
+            Int32 xStep = (outputBits <= 64) ? 8 : (outputBits <= 128) ? 16 : 32;
+            plot.ConfigureIndexedXAxis("Output Bit Index (LSB-first)", outputBits, xStep);
+
+            Int32 yStep = (inputBits <= 64) ? 8 : (inputBits <= 256) ? 32 : 64;
+            plot.ConfigureIndexedYAxis("Input Bit Index", inputBits, yStep);
+
+            plot.ConfigureRightColorbar(
+                "Absolute Bias",
+                0.0d, HEATMAP_SCALE * 100.0d,
+                "#ffffff", plot.ObservedColor,
+                intervals: 5, saturated: true, format: "0.##", suffix: "%"
+            );
+
+            plot.Title("STRICT AVALANCHE CRITERION");
+            plot.Subtitle("Absolute bit-flip bias: |P(output bit changes) - 0.5| for each input/output bit pair.");
+            plot.Metadata(
+                $"Samples: {samples:N0} | Input Bits: {inputBits:N0} | Output Bits: {outputBits:N0}",
+                $"Mean Bias: {meanAbsoluteBias:P2} | Maximum Bias: {maximumAbsoluteBias:P2} | Significant Cells: {significantCells:N0}"
+            );
+
+            plot.PrepareLayout();
+
+            plot.BeginPlot();
+
+            for (Int32 ib = 0; ib < inputBits; ++ib)
+            {
+                for (Int32 ob = 0; ob < outputBits; ++ob)
+                {
+                    Double probability = (Double)changed[(ib * outputBits) + ob] / samples;
+                    Double absoluteBias = Math.Abs(probability - 0.5d);
+
+                    plot.HeatmapCell(
+                        ob, ib, outputBits, inputBits,
+                        plot.Color(absoluteBias, 0.0d, HEATMAP_SCALE, "#ffffff", plot.ObservedColor)
+                    );
+                }
+            }
+
+            for (Int32 bit = 8; bit < outputBits; bit += 8)
+            {
+                Double x = plot.PlotLeft + bit * plot.PlotWidth / outputBits;
+                plot.Line(x, plot.PlotTop, x, plot.PlotTop + plot.PlotHeight, plot.MutedColor, 0.8d, opacity: 0.25d);
+            }
+
+            for (Int32 bit = 64; bit < inputBits; bit += 64)
+            {
+                Double y = plot.PlotTop + bit * plot.PlotHeight / inputBits;
+                plot.Line(plot.PlotLeft, y, plot.PlotLeft + plot.PlotWidth, y, plot.MutedColor, 0.8d, opacity: 0.25d);
+            }
+
+            plot.EndPlot();
+
+            plot.DrawBorder();
+            plot.DrawAxes();
+            plot.DrawRightColorbar();
+        }
+
+        public static String Run(Config config, String outputDirectory = null)
+        {
+            String libraryVersion = config.LibraryVersion;
+            Hash hash = config.Hash;
+            Int32 hashLength = hash.Length;
+            String hashName = config.HashName;
+            UInt64? hashSeed = config.HashSeed;
+            UInt64 generatorSeed = config.GeneratorSeed;
+            Int32 samples = config.Samples;
+            Int32 keysLength = config.KeysLength;
+
+            Int32 inputBits = checked(keysLength * 8);
+            Int64 evaluations = (Int64)samples * (1L + inputBits);
+            Int64 cells = (Int64)inputBits * hashLength;
+
+            if (evaluations > MAXIMUM_HASH_EVALUATIONS)
+                throw new ArgumentException($"Avalanche workload exceeds {MAXIMUM_HASH_EVALUATIONS} hash evaluations; reduce --samples and/or --keys-length parameter.");
+
+            if (cells > MAXIMUM_MATRIX_CELLS)
+                throw new ArgumentException($"Avalanche matrix exceeds {MAXIMUM_MATRIX_CELLS} cells; reduce --keys-length parameter.");
+
             Int32 outputBits = hash.Length;
             Int32 outputBytes = outputBits / 8;
+
             Int32[] changed = new Int32[checked(inputBits * outputBits)];
             Int64[] hamming = new Int64[outputBits + 1];
-            RandomSplitMix generator = new(generatorSeed);
-            Byte[] key = new Byte[keyLength];
 
-            for (Int32 sample = 0; sample < samples; ++sample)
+            RandomSplitMix generator = new(generatorSeed);
+            Byte[] key = new Byte[keysLength];
+
+            for (Int32 s = 0; s < samples; ++s)
             {
                 generator.NextBytes(key);
-                Byte[] baseline = hash.ComputeHashBytes(key);
-                CheckDigest(baseline, outputBytes);
 
-                for (Int32 inputBit = 0; inputBit < inputBits; ++inputBit)
+                Byte[] baseline = hash.ComputeHashBytes(key);
+
+                if ((baseline == null) || (baseline.Length != outputBytes))
+                    throw new InvalidOperationException("The hash returned an invalid digest length.");
+
+                for (Int32 ib = 0; ib < inputBits; ++ib)
                 {
-                    Int32 keyIndex = inputBit / 8;
-                    Byte mask = (Byte)(1 << (inputBit % 8));
+                    Int32 keyIndex = ib / 8;
+
+                    Byte mask = (Byte)(1 << (ib % 8));
                     key[keyIndex] ^= mask;
+
                     Byte[] mutated;
 
                     try
@@ -75,19 +223,21 @@ namespace FastHashes.Analysis
                         key[keyIndex] ^= mask;
                     }
 
-                    CheckDigest(mutated, outputBytes);
-                    Int32 distance = 0;
-                    Int32 rowStart = inputBit * outputBits;
+                    if ((mutated == null) || (mutated.Length != outputBytes))
+                        throw new InvalidOperationException("The hash returned an invalid digest length.");
 
-                    for (Int32 outputByte = 0; outputByte < outputBytes; ++outputByte)
+                    Int32 distance = 0;
+                    Int32 rowStart = ib * outputBits;
+
+                    for (Int32 ob = 0; ob < outputBytes; ++ob)
                     {
-                        Byte difference = (Byte)(baseline[outputByte] ^ mutated[outputByte]);
+                        Byte difference = (Byte)(baseline[ob] ^ mutated[ob]);
                         distance += BitOperations.PopCount((UInt32)difference);
 
                         for (Int32 bit = 0; bit < 8; ++bit)
                         {
                             if ((difference & (1 << bit)) != 0)
-                                ++changed[rowStart + outputByte * 8 + bit];
+                                ++changed[rowStart + ob * 8 + bit];
                         }
                     }
 
@@ -95,167 +245,143 @@ namespace FastHashes.Analysis
                 }
             }
 
-            // The exact two-sided Binomial(n, 0.5) tail is shared by every SAC cell.
-            Double[] probabilities = BinomialTailProbabilities(samples);
             Int64 tests = (Int64)inputBits * outputBits;
-            Int64 significant = 0;
-            Double maximumBias = 0.0d;
+            Int64 trials = (Int64)samples * inputBits;
+            Double[] probabilities = MathUtilities.BinomialTailProbabilities(samples);
+            
+            Int64 significantCells = 0;
+            Double maximumAbsoluteBias = 0.0d;
             Double sumAbsoluteBias = 0.0d;
             Int32 maximumBiasInputBit = 0;
             Int32 maximumBiasOutputBit = 0;
             Double sumDistance = 0.0d;
-            Int64 trials = (Int64)samples * inputBits;
 
-            for (Int32 inputBit = 0; inputBit < inputBits; ++inputBit)
+            for (Int32 ib = 0; ib < inputBits; ++ib)
             {
-                for (Int32 outputBit = 0; outputBit < outputBits; ++outputBit)
+                for (Int32 ob = 0; ob < outputBits; ++ob)
                 {
-                    Int32 count = changed[inputBit * outputBits + outputBit];
-                    Double absoluteBias = Math.Abs((Double)count / samples - 0.5d);
+                    Int32 count = changed[ib * outputBits + ob];
+                    Double absoluteBias = Math.Abs(((Double)count / samples) - 0.5d);
                     Double pValue = probabilities[Math.Min(count, samples - count)];
 
                     if (Math.Min(1.0d, pValue * tests) < SIGNIFICANCE_LEVEL)
-                        ++significant;
+                        ++significantCells;
 
                     sumAbsoluteBias += absoluteBias;
-                    if (absoluteBias > maximumBias)
+
+                    if (absoluteBias > maximumAbsoluteBias)
                     {
-                        maximumBias = absoluteBias;
-                        maximumBiasInputBit = inputBit;
-                        maximumBiasOutputBit = outputBit;
+                        maximumAbsoluteBias = absoluteBias;
+                        maximumBiasInputBit = ib;
+                        maximumBiasOutputBit = ob;
                     }
                 }
             }
 
-            for (Int32 distance = 0; distance <= outputBits; ++distance)
-                sumDistance += distance * (Double)hamming[distance];
+            for (Int32 d = 0; d <= outputBits; ++d)
+                sumDistance += d * (Double)hamming[d];
 
             Double meanAbsoluteBias = sumAbsoluteBias / tests;
-            Double observedHammingMean = sumDistance / trials;
+            Double meanChangedOutputBits = sumDistance / trials;
+
             var metadata = new
             {
-                SchemaVersion = 1,
                 Analysis = "avalanche",
-                Status = "Completed",
-                QualityAssessment = "StatisticalEvidenceOnly",
                 HashName = hashName,
                 HashSeed = hashSeed,
-                HashLengthBits = outputBits,
-                GeneratorAlgorithm = "SplitMix64",
+                UtcTimestamp = DateTimeOffset.UtcNow,
+                OperatingSystem = RuntimeInformation.OSDescription,
+                OperatingSystemArchitecture = RuntimeInformation.OSArchitecture.ToString(),
+                ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
+                Runtime = RuntimeInformation.FrameworkDescription.ToString(),
+                LibraryVersion = libraryVersion,
                 GeneratorSeed = generatorSeed,
-                SamplesPerInputBit = samples,
-                InputLengthBytes = keyLength,
+                Samples = samples,
+                KeysLength = keysLength,
                 InputBits = inputBits,
                 OutputBits = outputBits,
-                HashEvaluations = (Int64)samples * (inputBits + 1L),
-                BitFlipTrials = trials,
+                Evaluations = evaluations,
                 SacCells = tests,
-                BitNumbering = "Least significant bit first within each byte; bytes follow ComputeHashBytes order",
-                SignificanceTest = "Exact two-sided binomial test, null p=0.5, Bonferroni family-wise correction",
+                BitFlipTrials = trials,
                 SignificanceLevel = SIGNIFICANCE_LEVEL,
-                SignificantCells = significant,
+                SignificantCells = significantCells,
+                MaximumAbsoluteBias = maximumAbsoluteBias,
                 MeanAbsoluteBias = meanAbsoluteBias,
-                MaximumAbsoluteBias = maximumBias,
                 MaximumBiasInputBit = maximumBiasInputBit,
                 MaximumBiasOutputBit = maximumBiasOutputBit,
-                MeanChangedOutputBits = observedHammingMean,
-                IdealMeanChangedOutputBits = outputBits / 2.0d,
-                UtcTimestamp = DateTimeOffset.UtcNow,
-                LibraryVersion = hashVersion,
-                Runtime = RuntimeInformation.FrameworkDescription,
-                OperatingSystem = RuntimeInformation.OSDescription,
-                ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
-                OutputFiles = new[] { "avalanche.csv", "avalanche-hamming.csv", "avalanche-heatmap.svg", "avalanche-hamming.svg", "avalanche.json", "avalanche.txt" }
+                MeanChangedOutputBits = meanChangedOutputBits,
+                MeanChangedOutputBitsIdeal = outputBits / 2.0d,
+                SignificanceTest = "Exact two-sided binomial test, null p=0.5, Bonferroni family-wise correction",
+                OutputFiles = new[] { "avalanche.csv", "avalanche-hamming.csv", "avalanche-heatmap.svg", "avalanche-hamming.svg", "avalanche.json" }
             };
 
-            return Utilities.WriteArtifacts(hashName, directory =>
+            void writeFunction(String directory)
             {
-                using (StreamWriter writer = CreateWriter(Path.Combine(directory, "avalanche.csv")))
+                Encoding encoding = new UTF8Encoding(false);
+                JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
+
+                String filePath = Path.Combine(directory, "avalanche.csv");
+
+                using (StreamWriter writer = new(filePath, false, encoding))
                 {
-                    writer.WriteLine("InputBit,OutputBit,Changed,Trials,Probability,Bias,AbsoluteBias,PValue,BonferroniPValue");
-    
-                    for (Int32 inputBit = 0; inputBit < inputBits; ++inputBit)
+                    writer.WriteLine("InputBit,OutputBit,Changed,Trials,Probability,Bias,AbsoluteBias,PValue,PValueBonferroni");
+
+                    for (Int32 ib = 0; ib < inputBits; ++ib)
                     {
-                        for (Int32 outputBit = 0; outputBit < outputBits; ++outputBit)
+                        for (Int32 ob = 0; ob < outputBits; ++ob)
                         {
-                            Int32 count = changed[inputBit * outputBits + outputBit];
+                            Int32 count = changed[(ib * outputBits) + ob];
                             Double probability = (Double)count / samples;
                             Double bias = probability - 0.5d;
                             Double absoluteBias = Math.Abs(bias);
                             Double pValue = probabilities[Math.Min(count, samples - count)];
-                            Double adjusted = Math.Min(1.0d, pValue * tests);
-    
+                            Double pValueBonferroni = Math.Min(1.0d, pValue * tests);
+
                             writer.WriteLine(String.Join(",",
-                                inputBit.ToString(CultureInfo.InvariantCulture),
-                                outputBit.ToString(CultureInfo.InvariantCulture),
-                                count.ToString(CultureInfo.InvariantCulture),
-                                samples.ToString(CultureInfo.InvariantCulture),
-                                Format(probability), Format(bias), Format(absoluteBias), Format(pValue), Format(adjusted)));
+                                Utilities.FormatInteger(ib),
+                                Utilities.FormatInteger(ob),
+                                Utilities.FormatInteger(count),
+                                Utilities.FormatInteger(samples),
+                                Utilities.FormatDouble(probability),
+                                Utilities.FormatDouble(bias),
+                                Utilities.FormatDouble(absoluteBias),
+                                Utilities.FormatDouble(pValue),
+                                Utilities.FormatDouble(pValueBonferroni)
+                            ));
                         }
                     }
                 }
-    
-                using (StreamWriter writer = CreateWriter(Path.Combine(directory, "avalanche-hamming.csv")))
+
+                filePath = Path.Combine(directory, "avalanche-hamming.csv");
+
+                using (StreamWriter writer = new(filePath, false, encoding))
                 {
                     writer.WriteLine("ChangedBits,Count,Probability");
-    
-                    for (Int32 distance = 0; distance <= outputBits; ++distance)
+
+                    for (Int32 d = 0; d <= outputBits; ++d)
                     {
-                        writer.WriteLine($"{distance},{hamming[distance].ToString(CultureInfo.InvariantCulture)},{Format((Double)hamming[distance] / trials)}");
+                        Int64 hammingCurrent = hamming[d];
+                        Double probability = (Double)hammingCurrent / trials;
+
+                        writer.WriteLine(String.Join(",",
+                            Utilities.FormatInteger(d),
+                            Utilities.FormatInteger(hammingCurrent),
+                            Utilities.FormatDouble(probability)
+                        ));
                     }
                 }
-    
-                AvalancheSvg.WriteHeatmap(Path.Combine(directory, "avalanche-heatmap.svg"), changed, inputBits, outputBits, samples, meanAbsoluteBias, maximumBias, significant);
-                AvalancheSvg.WriteHistogram(Path.Combine(directory, "avalanche-hamming.svg"), hamming, trials, outputBits);
 
-                File.WriteAllText(Path.Combine(directory, "avalanche.json"), JsonSerializer.Serialize(metadata, new JsonSerializerOptions { WriteIndented = true }) + "\n", new UTF8Encoding(false));
-                File.WriteAllText(Path.Combine(directory, "avalanche.txt"),
-                    $"Analysis: avalanche (AN-001)\nHash: {hashName}\nHash seed: {(hashSeed.HasValue ? hashSeed.Value.ToString(CultureInfo.InvariantCulture) : "default configuration")}\nGenerator seed: {generatorSeed}\nSamples per input bit: {samples}\nInput bits: {inputBits}\nOutput bits: {outputBits}\nHash evaluations: {metadata.HashEvaluations}\nBit-flip trials: {trials}\nSAC cells: {tests}\nMean absolute SAC bias: {Format(meanAbsoluteBias)}\nMaximum absolute SAC bias: {Format(maximumBias)} (input bit {maximumBiasInputBit}, output bit {maximumBiasOutputBit})\nBonferroni-significant cells (family-wise alpha 0.05): {significant}\nMean flipped output bits: {Format(observedHammingMean)} (ideal {Format(outputBits / 2.0d)})\nSignificance: exact two-sided binomial, Bonferroni adjusted\nNote: a non-significant result does not establish SAC compliance.\n",
-                    new UTF8Encoding(false));
-            }, outputDirectory);
-        }
+                filePath = Path.Combine(directory, "avalanche-hd.svg");
+                PlotHd(filePath, hamming, trials, outputBits);
 
-        private static void CheckDigest(Byte[] digest, Int32 expectedBytes)
-        {
-            if ((digest == null) || (digest.Length != expectedBytes))
-                throw new InvalidOperationException("The hash returned an invalid digest length.");
-        }
+                filePath = Path.Combine(directory, "avalanche-sac.svg");
+                PlotSac(filePath, changed, inputBits, outputBits, samples, meanAbsoluteBias, maximumAbsoluteBias, significantCells);
 
-        // P(X <= k), for k <= floor(n/2), with X distributed Binomial(n, 0.5).
-        // The central mass is computed using a log-factorial table and lower masses by recurrence.
-        private static Double[] BinomialTailProbabilities(Int32 samples)
-        {
-            Double[] logFactorials = new Double[samples + 1];
-
-            for (Int32 i = 2; i <= samples; ++i)
-                logFactorials[i] = logFactorials[i - 1] + Math.Log(i);
-
-            Int32 middle = samples / 2;
-            Double[] masses = new Double[middle + 1];
-            Double[] tails = new Double[middle + 1];
-            masses[middle] = Math.Exp(logFactorials[samples] - logFactorials[middle] - logFactorials[samples - middle] - samples * Math.Log(2.0d));
-
-            for (Int32 k = middle; k > 0; --k)
-                masses[k - 1] = masses[k] * k / (samples - k + 1.0d);
-
-            Double cumulative = 0.0d;
-            for (Int32 k = 0; k <= middle; ++k)
-            {
-                cumulative += masses[k];
-                tails[k] = Math.Min(1.0d, 2.0d * cumulative);
+                filePath = Path.Combine(directory, "avalanche.json");
+                File.WriteAllText(filePath, JsonSerializer.Serialize(metadata, jsonOptions) + "\n", new UTF8Encoding(false));
             }
 
-            return tails;
-        }
-
-        private static StreamWriter CreateWriter(String path)
-        {
-            return new StreamWriter(path, false, new UTF8Encoding(false));
-        }
-
-        private static String Format(Double value)
-        {
-            return value.ToString("G17", CultureInfo.InvariantCulture);
+            return Utilities.WriteArtifacts(hashName, writeFunction, outputDirectory);
         }
         #endregion
     }
