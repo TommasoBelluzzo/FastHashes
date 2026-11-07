@@ -8,10 +8,20 @@ using System.Text.Json;
 
 namespace FastHashes.Tests
 {
+    public readonly record struct ConformanceCase
+    (
+        String Algorithm,
+        String Name,
+        String Seed,
+        String Input,
+        String Expected,
+        String Provenance
+    );
+
     public sealed class ConformanceFixture
     {
         #region Members
-        private readonly Dictionary<String, List<CollisionCase>> m_CasesByAlgorithm = new(StringComparer.Ordinal);
+        private readonly Dictionary<String, List<ConformanceCase>> m_CasesByAlgorithm = new(StringComparer.Ordinal);
         #endregion
 
         #region Constructors
@@ -46,7 +56,7 @@ namespace FastHashes.Tests
                 if (!root.TryGetProperty("cases", out JsonElement testCases) || (testCases.ValueKind != JsonValueKind.Array))
                     throw new InvalidDataException($"Invalid reference cases in {file}");
 
-                List<CollisionCase> algorithmCases = [];
+                List<ConformanceCase> algorithmCases = [];
 
                 foreach (JsonElement testCase in testCases.EnumerateArray())
                 {
@@ -77,14 +87,14 @@ namespace FastHashes.Tests
             return value;
         }
 
-        internal IEnumerable<CollisionCase> GetCases()
+        public IEnumerable<ConformanceCase> GetCases()
         {
             return m_CasesByAlgorithm.Values.SelectMany(cases => cases);
         }
 
-        internal IEnumerable<CollisionCase> GetCases(String algorithm)
+        public IEnumerable<ConformanceCase> GetCases(String algorithm)
         {
-            if (m_CasesByAlgorithm.TryGetValue(algorithm, out List<CollisionCase> cases))
+            if (m_CasesByAlgorithm.TryGetValue(algorithm, out List<ConformanceCase> cases))
                 return cases;
 
             return [];

@@ -18,151 +18,6 @@ namespace FastHashes.Analysis
         #endregion
 
         #region Methods
-        private static void PlotHd(String path, Int64[] hamming, Int64 trials, Int32 outputBits)
-        {
-            Int32 k = hamming.Length;
-
-            Double mean = 0.0d;
-            Double secondMoment = 0.0d;
-            Int64 maximumCount = 0;
-
-            for (Int32 i = 0; i < k; ++i)
-            {
-                mean += (Double)i * hamming[i];
-                secondMoment += (Double)i * i * hamming[i];
-                maximumCount = Math.Max(maximumCount, hamming[i]);
-            }
-
-            mean /= trials;
-
-            Double standardDeviation = Math.Sqrt(Math.Max(0.0d, (secondMoment / trials) - (mean * mean)));
-
-            Double[] logFactorials = new Double[outputBits + 1];
-
-            for (Int32 i = 2; i <= outputBits; ++i)
-                logFactorials[i] = logFactorials[i - 1] + Math.Log(i);
-
-            Double[] expected = new Double[outputBits + 1];
-            Double expectedMaximum = 0.0d;
-
-            for (Int32 i = 0; i <= outputBits; ++i)
-            {
-                expected[i] = trials * Math.Exp(logFactorials[outputBits] - logFactorials[i] - logFactorials[outputBits - i] - outputBits * Math.Log(2.0d));
-                expectedMaximum = Math.Max(expectedMaximum, expected[i]);
-            }
-
-            Double ceiling = Math.Max(maximumCount, expectedMaximum) * 1.12d;
-
-            using SvgPlot plot = new(path, 1200, 805);
-
-            plot.PlotArea(120, 178, 980, 500);
-            plot.DataRange(0.0d, k, 0.0d, ceiling);
-
-            Int32 xStep = outputBits <= 64 ? 8 : outputBits <= 128 ? 16 : 32;
-            plot.ConfigureIndexedXAxis("Changed Output Bits", k, xStep);
-            plot.ConfigureDiscreteYAxis("Number of Trials", 0.0d, ceiling, intervals: 5, format: "N0");
-
-            plot.ConfigureBottomLegend([
-                new SvgPlot.LegendItem("Observed", plot.ObservedColor, false),
-                new SvgPlot.LegendItem("Ideal Binomial", plot.ReferenceColor, true),
-                new SvgPlot.LegendItem("Ideal Mean", plot.HighlightColor, true, true)
-            ]);
-
-            plot.Title("OUTPUT HAMMING DISTANCE");
-            plot.Subtitle("Observed distribution versus the ideal ~Binomial(output bits, 0.5) model.");
-            plot.Metadata(
-                $"Trials: {trials:N0} | Peak Count: {maximumCount:N0}",
-                $"Observed Mean: {mean:0.00} | Ideal Mean: {outputBits / 2.0d:0.00}",
-                $"Observed SD: {standardDeviation:0.00} | Ideal SD: {Math.Sqrt(outputBits * 0.25d):0.00}"
-            );
-
-            plot.PrepareLayout();
-            plot.DrawGrid();
-
-            plot.BeginPlot();
-
-            for (Int32 i = 0; i < k; ++i)
-                plot.Bar(i, k, hamming[i], plot.ObservedColor);
-
-            List<(Double X, Double Y)> expectedPoints = new(outputBits + 1);
-
-            for (Int32 i = 0; i <= outputBits; ++i)
-                expectedPoints.Add((i + 0.5d, expected[i]));
-
-            plot.Polyline(expectedPoints, plot.ReferenceColor, 2.8d);
-            plot.VerticalReference(outputBits / 2.0d + 0.5d, plot.HighlightColor, 2.0d, true);
-
-            plot.EndPlot();
-
-            plot.DrawBorder();
-            plot.DrawAxes();
-            plot.DrawBottomLegend();
-        }
-
-        public static void PlotSac(String path, Int32[] changed, Int32 inputBits, Int32 outputBits, Int32 samples, Double meanAbsoluteBias, Double maximumAbsoluteBias, Int64 significantCells)
-        {
-            using SvgPlot plot = new(path, 1200, 900);
-
-            plot.PlotArea(125, 180, 850, 610);
-            plot.DataRange(0.0d, outputBits, 0.0d, inputBits);
-
-            Int32 xStep = (outputBits <= 64) ? 8 : (outputBits <= 128) ? 16 : 32;
-            plot.ConfigureIndexedXAxis("Output Bit Index (LSB-first)", outputBits, xStep);
-
-            Int32 yStep = (inputBits <= 64) ? 8 : (inputBits <= 256) ? 32 : 64;
-            plot.ConfigureIndexedYAxis("Input Bit Index", inputBits, yStep);
-
-            plot.ConfigureRightColorbar(
-                "Absolute Bias",
-                0.0d, HEATMAP_SCALE * 100.0d,
-                "#ffffff", plot.ObservedColor,
-                intervals: 5, saturated: true, format: "0.##", suffix: "%"
-            );
-
-            plot.Title("STRICT AVALANCHE CRITERION");
-            plot.Subtitle("Absolute bit-flip bias: |P(output bit changes) - 0.5| for each input/output bit pair.");
-            plot.Metadata(
-                $"Samples: {samples:N0} | Input Bits: {inputBits:N0} | Output Bits: {outputBits:N0}",
-                $"Mean Bias: {meanAbsoluteBias:P2} | Maximum Bias: {maximumAbsoluteBias:P2} | Significant Cells: {significantCells:N0}"
-            );
-
-            plot.PrepareLayout();
-
-            plot.BeginPlot();
-
-            for (Int32 ib = 0; ib < inputBits; ++ib)
-            {
-                for (Int32 ob = 0; ob < outputBits; ++ob)
-                {
-                    Double probability = (Double)changed[(ib * outputBits) + ob] / samples;
-                    Double absoluteBias = Math.Abs(probability - 0.5d);
-
-                    plot.HeatmapCell(
-                        ob, ib, outputBits, inputBits,
-                        plot.Color(absoluteBias, 0.0d, HEATMAP_SCALE, "#ffffff", plot.ObservedColor)
-                    );
-                }
-            }
-
-            for (Int32 bit = 8; bit < outputBits; bit += 8)
-            {
-                Double x = plot.PlotLeft + bit * plot.PlotWidth / outputBits;
-                plot.Line(x, plot.PlotTop, x, plot.PlotTop + plot.PlotHeight, plot.MutedColor, 0.8d, opacity: 0.25d);
-            }
-
-            for (Int32 bit = 64; bit < inputBits; bit += 64)
-            {
-                Double y = plot.PlotTop + bit * plot.PlotHeight / inputBits;
-                plot.Line(plot.PlotLeft, y, plot.PlotLeft + plot.PlotWidth, y, plot.MutedColor, 0.8d, opacity: 0.25d);
-            }
-
-            plot.EndPlot();
-
-            plot.DrawBorder();
-            plot.DrawAxes();
-            plot.DrawRightColorbar();
-        }
-
         public static String Run(Config config, String outputDirectory = null)
         {
             String libraryVersion = config.LibraryVersion;
@@ -295,7 +150,7 @@ namespace FastHashes.Analysis
             metadata["MaximumBiasOutputBit"] = maximumBiasOutputBit;
             metadata["MeanChangedOutputBits"] = meanChangedOutputBits;
             metadata["MeanChangedOutputBitsIdeal"] = outputBits / 2.0d;
-            metadata["OutputFiles"] = new[] { "avalanche.csv", "avalanche-hamming.csv", "avalanche-hd.svg", "avalanche-sac.svg" };
+            metadata["OutputFiles"] = new[] { "avalanche.json", "avalanche.csv", "avalanche-hamming.csv", "avalanche-hd.svg", "avalanche-sac.svg" };
 
             void writeFunction(String directory)
             {
@@ -364,6 +219,153 @@ namespace FastHashes.Analysis
             }
 
             return Utilities.WriteArtifacts(hashName, writeFunction, outputDirectory);
+        }
+        #endregion
+
+        #region Plots
+        private static void PlotHd(String path, Int64[] hamming, Int64 trials, Int32 outputBits)
+        {
+            Int32 k = hamming.Length;
+
+            Double mean = 0.0d;
+            Double secondMoment = 0.0d;
+            Int64 maximumCount = 0;
+
+            for (Int32 i = 0; i < k; ++i)
+            {
+                mean += (Double)i * hamming[i];
+                secondMoment += (Double)i * i * hamming[i];
+                maximumCount = Math.Max(maximumCount, hamming[i]);
+            }
+
+            mean /= trials;
+
+            Double standardDeviation = Math.Sqrt(Math.Max(0.0d, (secondMoment / trials) - (mean * mean)));
+
+            Double[] logFactorials = new Double[outputBits + 1];
+
+            for (Int32 i = 2; i <= outputBits; ++i)
+                logFactorials[i] = logFactorials[i - 1] + Math.Log(i);
+
+            Double[] expected = new Double[outputBits + 1];
+            Double expectedMaximum = 0.0d;
+
+            for (Int32 i = 0; i <= outputBits; ++i)
+            {
+                expected[i] = trials * Math.Exp(logFactorials[outputBits] - logFactorials[i] - logFactorials[outputBits - i] - outputBits * Math.Log(2.0d));
+                expectedMaximum = Math.Max(expectedMaximum, expected[i]);
+            }
+
+            Double ceiling = Math.Max(maximumCount, expectedMaximum) * 1.12d;
+            Int32 xStep = outputBits <= 64 ? 8 : outputBits <= 128 ? 16 : 32;
+
+            List<(Double, Double)> expectedPoints = new(outputBits + 1);
+
+            for (Int32 i = 0; i <= outputBits; ++i)
+                expectedPoints.Add((i + 0.5d, expected[i]));
+
+            using SvgPlot plot = new(path, 1200, 805);
+
+            plot.PlotArea(120, 178, 980, 500);
+            plot.DataRange(0.0d, k, 0.0d, ceiling);
+
+            plot.ConfigureIndexedXAxis("Changed Output Bits", k, xStep);
+            plot.ConfigureDiscreteYAxis("Number of Trials", 0.0d, ceiling, intervals: 5, format: "N0");
+
+            plot.ConfigureBottomLegend([
+                new SvgPlot.LegendItem("Observed", plot.ObservedColor, false),
+                new SvgPlot.LegendItem("Ideal Binomial", plot.ReferenceColor, true),
+                new SvgPlot.LegendItem("Ideal Mean", plot.HighlightColor, true, true)
+            ]);
+
+            plot.Title("OUTPUT HAMMING DISTANCE");
+            plot.Subtitle("Observed distribution versus the ideal ~Binomial(output bits, 0.5) model.");
+            plot.Metadata(
+                $"Trials: {trials:N0} | Peak Count: {maximumCount:N0}",
+                $"Observed Mean: {mean:0.00} | Ideal Mean: {outputBits / 2.0d:0.00}",
+                $"Observed SD: {standardDeviation:0.00} | Ideal SD: {Math.Sqrt(outputBits * 0.25d):0.00}"
+            );
+
+            plot.PrepareLayout();
+            plot.DrawGrid();
+
+            plot.BeginPlot();
+
+            for (Int32 i = 0; i < k; ++i)
+                plot.Bar(i, k, hamming[i], plot.ObservedColor);
+
+            plot.Polyline(expectedPoints, plot.ReferenceColor, 2.8d);
+            plot.VerticalReference(outputBits / 2.0d + 0.5d, plot.HighlightColor, 2.0d, true);
+
+            plot.EndPlot();
+
+            plot.DrawBorder();
+            plot.DrawAxes();
+            plot.DrawBottomLegend();
+        }
+
+        private static void PlotSac(String path, Int32[] changed, Int32 inputBits, Int32 outputBits, Int32 samples, Double meanAbsoluteBias, Double maximumAbsoluteBias, Int64 significantCells)
+        {
+            using SvgPlot plot = new(path, 1200, 900);
+
+            plot.PlotArea(125, 180, 850, 610);
+            plot.DataRange(0.0d, outputBits, 0.0d, inputBits);
+
+            Int32 xStep = (outputBits <= 64) ? 8 : (outputBits <= 128) ? 16 : 32;
+            plot.ConfigureIndexedXAxis("Output Bit Index (LSB-first)", outputBits, xStep);
+
+            Int32 yStep = (inputBits <= 64) ? 8 : (inputBits <= 256) ? 32 : 64;
+            plot.ConfigureIndexedYAxis("Input Bit Index", inputBits, yStep);
+
+            plot.ConfigureRightColorbar(
+                "Absolute Bias",
+                0.0d, HEATMAP_SCALE * 100.0d,
+                "#ffffff", plot.ObservedColor,
+                intervals: 5, saturated: true, format: "0.##", suffix: "%"
+            );
+
+            plot.Title("STRICT AVALANCHE CRITERION");
+            plot.Subtitle("Absolute bit-flip bias: |P(output bit changes) - 0.5| for each input/output bit pair.");
+            plot.Metadata(
+                $"Samples: {samples:N0} | Input Bits: {inputBits:N0} | Output Bits: {outputBits:N0}",
+                $"Mean Bias: {meanAbsoluteBias:P2} | Maximum Bias: {maximumAbsoluteBias:P2} | Significant Cells: {significantCells:N0}"
+            );
+
+            plot.PrepareLayout();
+
+            plot.BeginPlot();
+
+            for (Int32 ib = 0; ib < inputBits; ++ib)
+            {
+                for (Int32 ob = 0; ob < outputBits; ++ob)
+                {
+                    Double probability = (Double)changed[(ib * outputBits) + ob] / samples;
+                    Double absoluteBias = Math.Abs(probability - 0.5d);
+
+                    plot.HeatmapCell(
+                        ob, ib, outputBits, inputBits,
+                        plot.Color(absoluteBias, 0.0d, HEATMAP_SCALE, "#ffffff", plot.ObservedColor)
+                    );
+                }
+            }
+
+            for (Int32 bit = 8; bit < outputBits; bit += 8)
+            {
+                Double x = plot.PlotLeft + bit * plot.PlotWidth / outputBits;
+                plot.Line(x, plot.PlotTop, x, plot.PlotTop + plot.PlotHeight, plot.MutedColor, 0.8d, opacity: 0.25d);
+            }
+
+            for (Int32 bit = 64; bit < inputBits; bit += 64)
+            {
+                Double y = plot.PlotTop + bit * plot.PlotHeight / inputBits;
+                plot.Line(plot.PlotLeft, y, plot.PlotLeft + plot.PlotWidth, y, plot.MutedColor, 0.8d, opacity: 0.25d);
+            }
+
+            plot.EndPlot();
+
+            plot.DrawBorder();
+            plot.DrawAxes();
+            plot.DrawRightColorbar();
         }
         #endregion
     }

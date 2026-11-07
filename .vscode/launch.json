@@ -41,7 +41,7 @@
         "--hash",
         "FarmHash32",
         "--analysis",
-        "avalanche"
+        "collision"
       ],
       "console": "integratedTerminal",
       "stopAtEntry": false

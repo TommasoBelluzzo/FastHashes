@@ -33,6 +33,33 @@ namespace FastHashes.Analysis
 
             return tails;
         }
+
+        public static Double ExpectedCollisionPairs(Double count, Int32 bits)
+        {
+            return count * (count - 1.0d) * Math.Pow(2.0d, -bits - 1.0d);
+        }
+
+        public static Double ExpectedCollisionDuplicates(Double count, Int32 bits)
+        {
+            Double space = Math.Pow(2.0d, bits);
+
+            if (count / space < 1.0e-6d)
+                return ExpectedCollisionPairs(count, bits);
+
+            Double probability = 1.0d / space;
+
+            Double log = probability < 1.0e-4d
+                ? -probability * (1.0d + probability * (0.5d + probability / 3.0d))
+                : Math.Log(1.0d - probability);
+
+            Double value = count * log;
+
+            Double occupiedFraction = Math.Abs(value) < 1.0e-4d
+                ? -value * (1.0d + value * (0.5d + value * (1.0d / 6.0d + value / 24.0d)))
+                : 1.0d - Math.Exp(value);
+
+            return Math.Max(0.0d, count - (space * occupiedFraction));
+        }
         #endregion
     }
 }

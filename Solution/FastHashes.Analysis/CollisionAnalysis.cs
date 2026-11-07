@@ -15,115 +15,87 @@ namespace FastHashes.Analysis
         private const Int32 MAXIMUM_CORPUS_EXAMPLES = 1000;
         private const Int32 PROJECTION_BITS = 16;
         private const Int32 PROJECTION_BUCKETS = 1 << PROJECTION_BITS;
+        private const Int32 PLOT_SIZE = 256;
+        private const Int32 PLOT_CELLS = PROJECTION_BUCKETS;
         #endregion
 
         #region Methods
-        public static String Run(Config config, String outputDirectory = null)
+        private static IEnumerable<Byte[]> GenerateNumbers(Int32 count)
         {
-            String libraryVersion = config.LibraryVersion;
-            Hash hash = config.Hash;
-            Int32 hashLength = hash.Length;
-            String hashName = config.HashName;
-            UInt64? hashSeed = config.HashSeed;
-            UInt64 generatorSeed = config.GeneratorSeed;
-            Int32 samples = config.Samples;
-            Int32 keysLength = config.KeysLength;
-            Int32 corpusSize = config.CorpusSize;
+            for (Int64 i = 1; i <= count; ++i)
+                yield return Encoding.UTF8.GetBytes(i.ToString(CultureInfo.InvariantCulture));
+        }
 
-            List<CorpusResult> results = [];
+        private static IEnumerable<Byte[]> GenerateRandomBytes(Int32 length, UInt64 seed)
+        {
+            RandomSplitMix generator = new(seed);
+            Byte[] buffer = new Byte[length];
 
-
-            RandomSplitMix generator = new(generatorSeed);
-            
-            CorpusResult random = new("random-bytes", hash.Length);
-
-            Byte[] buffer = new Byte[keysLength];
-
-            Int64 attempts = 0;
-            
-            while (random.DistinctInputs < corpusSize)
+            while (true)
             {
-                if (++attempts > (((Int64)corpusSize * 100) + 1000))
-                    throw new InvalidOperationException("Could not generate the requested number of distinct random keys.");
-                
                 generator.NextBytes(buffer);
-                Observe(random, hash, buffer);
+                yield return buffer;
             }
+        }
 
-            results.Add(random);
-
-
-
-
+        private static IEnumerable<Byte[]> GeneratePaddedWords()
+        {
             String wordsPath = Path.Combine(AppContext.BaseDirectory, "Data", "Words.txt");
-            CorpusResult words = new("words-padded", hashLength);
-            
+
             foreach (String word in File.ReadLines(wordsPath))
             {
                 Byte[] input = Encoding.UTF8.GetBytes(word);
-                
                 Byte[] padded = new Byte[input.Length + 5];
                 Array.Fill(padded, (Byte)'!');
-                
                 input.CopyTo(padded, 0);
-                
+
                 for (Int32 suffix = 0; suffix <= 5; ++suffix)
-                    Observe(words, hash, padded.AsSpan(0, input.Length + suffix).ToArray());
+                {
+                    Byte[] output = new Byte[input.Length + suffix];
+                    Array.Copy(padded, output, output.Length);
+                    yield return output;
+                }
             }
+        }
 
-            results.Add(words);
+        public static String Run(Config config, String outputDirectory = null)
+        {
+            Hash hash = config.Hash;
+            String hashName = config.HashName;
+            Int32 corpusSize = config.CorpusSize;
 
-            CorpusResult numbers = new("numbers", hashLength);
-            
-            for (Int32 i = 1; i <= corpusSize; ++i)
-                Observe(numbers, hash, Encoding.UTF8.GetBytes(i.ToString(CultureInfo.InvariantCulture)));
-            
-            results.Add(numbers);
-
-
+            List<CorpusResult> results =
+            [
+                AnalyzeCorpus("numbers", hash, GenerateNumbers(corpusSize), null, null),
+                AnalyzeCorpus("random-bytes", hash, GenerateRandomBytes(config.KeysLength, config.GeneratorSeed), corpusSize, ((Int64)corpusSize * 100) + 1000),
+                AnalyzeCorpus("padded-words", hash, GeneratePaddedWords(), null, null)
+            ];
 
             Dictionary<String, Object> metadata = Utilities.CreateMetadata("collision", config);
+            metadata["SchemaVersion"] = 3;
             metadata["ProjectionBits"] = PROJECTION_BITS;
             metadata["ProjectionBuckets"] = PROJECTION_BUCKETS;
             metadata["MaximumCorpusExamples"] = MAXIMUM_CORPUS_EXAMPLES;
-            metadata["Corpora"] = results.ConvertAll(result =>
+            metadata["Corpora"] = results.ConvertAll(result => new
             {
-                BucketStats stats = ComputeStats(result);
-
-                return new
-                {
-                    result.Name,
-                    result.TotalInputs,
-                    result.DistinctInputs,
-                    result.DuplicateInputs,
-                    result.FullDuplicateOutputs,
-                    result.FullCollidingPairs,
-                    ExpectedFullCollidingPairs = ExpectedPairs(result.DistinctInputs, hash.Length),
-                    ExpectedFullDuplicateOutputs = ExpectedDuplicateOutputs(result.DistinctInputs, hashLength),
-                    ProjectedDuplicateOutputs = result.DistinctInputs - PROJECTION_BUCKETS + stats.Empty,
-                    result.ProjectedCollidingPairs,
-                    ExpectedProjectedCollidingPairs = ExpectedPairs(result.DistinctInputs, PROJECTION_BITS),
-                    ExpectedProjectedDuplicateOutputs = ExpectedDuplicateOutputs(result.DistinctInputs, PROJECTION_BITS),
-                    EmptyBuckets = stats.Empty,
-                    SingletonBuckets = stats.Singleton, 
-                    CollidingBuckets = stats.Colliding,
-                    MaximumBucketLoad = stats.Maximum,
-                    MeanBucketLoad = stats.Mean,
-                    BucketLoadVariance = stats.Variance,
-                    OccupancyChiSquare = stats.ChiSquare
-                };
+                result.Name,
+                result.Inputs,
+                result.Full,
+                result.Projected,
+                result.Buckets
             });
             metadata["OutputFiles"] = new String[]
             {
+                "collision.json",
                 "collision-summary.csv",
                 "collision-buckets.csv",
                 "collision-examples.csv"
             }
             .Concat(results.SelectMany(result => new String[]
             {
-                $"collision-{result.Name}-linear.svg",
-                $"collision-{result.Name}-hilbert.svg",
-                $"collision-{result.Name}-histogram.svg"
+                $"collision-{result.Name}-hg.svg",
+                $"collision-{result.Name}-omh.svg",
+                $"collision-{result.Name}-oml.svg"
             }))
             .ToArray();
 
@@ -135,174 +107,473 @@ namespace FastHashes.Analysis
                 filePath = Path.Combine(directory, "collision.json");
                 File.WriteAllText(filePath, Utilities.SerializeJson(metadata) + "\n", encoding);
 
-                using (StreamWriter writer = CreateWriter(Path.Combine(directory, "collision-summary.csv")))
+                filePath = Path.Combine(directory, "collision-summary.csv");
+
+                using (StreamWriter writer = new(filePath, false, encoding))
                 {
-                    writer.WriteLine("Corpus,TotalInputs,DistinctInputs,DuplicateInputs,FullDuplicateOutputs,ExpectedFullDuplicateOutputs,FullCollidingPairs,ExpectedFullPairs,ProjectedBits,Buckets,EmptyBuckets,SingletonBuckets,CollisionBuckets,MaximumBucketLoad,ProjectedDuplicateOutputs,ExpectedProjectedDuplicateOutputs,ProjectedCollisionPairs,ExpectedProjectedPairs,ChiSquare,MeanLoad,LoadVariance");
+                    writer.WriteLine("Corpus,InputsTotal,InputsDistinct,InputsDuplicate,FullDuplicates,FullExpectedDuplicates,FullPairs,FullExpectedPairs,ProjectedDuplicates,ProjectedExpectedDuplicates,ProjectedPairs,ProjectedExpectedPairs,EmptyBuckets,SingletonBuckets,CollidingBuckets,MaximumBucketLoad,MeanBucketLoad,BucketLoadVariance,OccupancyChiSquare");
+
                     foreach (CorpusResult result in results)
                     {
-                        BucketStats stats = ComputeStats(result);
-                        Double n = result.DistinctInputs;
-                        writer.WriteLine(String.Join(",", result.Name, result.TotalInputs, result.DistinctInputs, result.DuplicateInputs,
-                            result.FullDuplicateOutputs, F(ExpectedDuplicateOutputs(n, hashLength)), result.FullCollidingPairs, F(ExpectedPairs(n, hashLength)), PROJECTION_BITS, PROJECTION_BUCKETS,
-                            stats.Empty, stats.Singleton, stats.Colliding, stats.Maximum,
-                            result.DistinctInputs - PROJECTION_BUCKETS + stats.Empty, F(ExpectedDuplicateOutputs(n, PROJECTION_BITS)),
-                            result.ProjectedCollidingPairs, F(ExpectedPairs(n, PROJECTION_BITS)), F(stats.ChiSquare), F(stats.Mean), F(stats.Variance)));
+                        writer.WriteLine(String.Join(",",
+                            result.Name,
+                            Utilities.FormatCsvInteger(result.Inputs.Total),
+                            Utilities.FormatCsvInteger(result.Inputs.Distinct),
+                            Utilities.FormatCsvInteger(result.Inputs.Duplicates),
+                            Utilities.FormatCsvInteger(result.Full.Duplicates),
+                            Utilities.FormatCsvDouble(result.Full.ExpectedDuplicates),
+                            Utilities.FormatCsvInteger(result.Full.Pairs),
+                            Utilities.FormatCsvDouble(result.Full.ExpectedPairs),
+                            Utilities.FormatCsvInteger(result.Projected.Duplicates),
+                            Utilities.FormatCsvDouble(result.Projected.ExpectedDuplicates),
+                            Utilities.FormatCsvInteger(result.Projected.Pairs),
+                            Utilities.FormatCsvDouble(result.Projected.ExpectedPairs),
+                            Utilities.FormatCsvInteger(result.Buckets.Empty),
+                            Utilities.FormatCsvInteger(result.Buckets.Singleton),
+                            Utilities.FormatCsvInteger(result.Buckets.Colliding),
+                            Utilities.FormatCsvInteger(result.Buckets.Maximum),
+                            Utilities.FormatCsvDouble(result.Buckets.Mean),
+                            Utilities.FormatCsvDouble(result.Buckets.Variance),
+                            Utilities.FormatCsvDouble(result.Buckets.ChiSquare)
+                        ));
                     }
                 }
 
-                using (StreamWriter writer = CreateWriter(Path.Combine(directory, "collision-buckets.csv")))
+                filePath = Path.Combine(directory, "collision-buckets.csv");
+
+                using (StreamWriter writer = new(filePath, false, encoding))
                 {
                     writer.WriteLine("Corpus,Bucket,Load");
+                    
                     foreach (CorpusResult result in results)
-                        for (Int32 bucket = 0; bucket < PROJECTION_BUCKETS; ++bucket)
-                            writer.WriteLine($"{result.Name},{bucket},{result.Buckets[bucket]}");
+                        for (Int32 b = 0; b < PROJECTION_BUCKETS; ++b)
+                            writer.WriteLine(String.Join(",",
+                                result.Name,
+                                Utilities.FormatCsvInteger(b),
+                                Utilities.FormatCsvInteger(result.Loads[b])
+                            ));
                 }
 
-                using (StreamWriter writer = CreateWriter(Path.Combine(directory, "collision-examples.csv")))
+                filePath = Path.Combine(directory, "collision-examples.csv");
+
+                using (StreamWriter writer = new(filePath, false, encoding))
                 {
                     writer.WriteLine("Corpus,CollisionType,HashHex,ProjectedBucket,InputAHex,InputBHex");
+                    
                     foreach (CorpusResult result in results)
                         foreach (CollisionExample example in result.Examples)
-                            writer.WriteLine($"{example.Corpus},{example.Type},{example.Hash},{example.Bucket},{example.InputA},{example.InputB}");
+                            writer.WriteLine(String.Join(",",
+                                example.Corpus,
+                                example.Type,
+                                example.Hash,
+                                Utilities.FormatCsvInteger(example.Bucket),
+                                example.InputA,
+                                example.InputB
+                            ));
                 }
 
                 foreach (CorpusResult result in results)
                 {
-                    CollisionSvg.WriteMap(Path.Combine(directory, $"collision-{result.Name}-linear.svg"), result.Name, result.Buckets, false, result.DistinctInputs);
-                    CollisionSvg.WriteMap(Path.Combine(directory, $"collision-{result.Name}-hilbert.svg"), result.Name, result.Buckets, true, result.DistinctInputs);
-                    CollisionSvg.WriteHistogram(Path.Combine(directory, $"collision-{result.Name}-histogram.svg"), result.Name, result.Buckets, result.DistinctInputs);
+                    filePath = Path.Combine(directory, $"collision-{result.Name}-hg.svg");
+                    PlotHistogram(filePath, result);
+
+                    filePath = Path.Combine(directory, $"collision-{result.Name}-omh.svg");
+                    PlotOccupancyMap(filePath, true, result);
+
+                    filePath = Path.Combine(directory, $"collision-{result.Name}-oml.svg");
+                    PlotOccupancyMap(filePath, false, result);
                 }
             }
 
             return Utilities.WriteArtifacts(hashName, writeFunction, outputDirectory);
         }
 
-        private static String WordsPath()
+        private static CorpusResult AnalyzeCorpus(String name, Hash hash, IEnumerable<Byte[]> inputs, Int64? distinctLimit = null, Int64? attemptsLimit = null)
         {
-            return Path.Combine(AppContext.BaseDirectory, "Data", "Words.txt");
-        }
+            Int64 totalInputs = 0;
+            Int64 distinctInputs = 0;
+            Int64 duplicateInputs = 0;
+            Int64 fullDuplicateOutputs = 0;
+            Int64 fullCollidingPairs = 0;
+            Int64 projectedCollidingPairs = 0;
+            Int32 fullExamples = 0;
+            Int32 projectedExamples = 0;
 
-        private static void Observe(CorpusResult corpus, Hash hash, Byte[] input)
-        {
-            Observe(corpus, hash, (ReadOnlySpan<Byte>)input);
-        }
+            Int32[] loads = new Int32[PROJECTION_BUCKETS];
+            String[] firstBucketInputs = new String[PROJECTION_BUCKETS];
+            HashSet<String> uniqueInputs = new(StringComparer.Ordinal);
+            Dictionary<String, (String FirstInput, Int32 Count)> fullGroups = new(StringComparer.Ordinal);
+            List<CollisionExample> examples = [];
 
-        private static void Observe(CorpusResult corpus, Hash hash, ReadOnlySpan<Byte> input)
-        {
-            ++corpus.TotalInputs;
-            String inputHex = Convert.ToHexString(input);
-            if (!corpus.Inputs.Add(inputHex))
+            using IEnumerator<Byte[]> enumerator = inputs.GetEnumerator();
+
+            while (!distinctLimit.HasValue || distinctInputs < distinctLimit.Value)
             {
-                ++corpus.DuplicateInputs;
-                return;
-            }
+                if (attemptsLimit.HasValue && totalInputs >= attemptsLimit.Value)
+                    throw new InvalidOperationException("Could not generate the requested number of distinct random keys.");
 
-            ++corpus.DistinctInputs;
-            Byte[] digest = hash.ComputeHashBytes(input);
-            if (digest == null || digest.Length != corpus.HashBits / 8)
-                throw new InvalidOperationException("Hash returned an invalid digest length.");
-            String hashHex = Convert.ToHexString(digest);
-            Int32 bucket = digest[0] | (digest[1] << 8);
+                if (!enumerator.MoveNext())
+                    break;
 
-            if (corpus.FullGroups.TryGetValue(hashHex, out CollisionGroup group))
-            {
-                corpus.FullCollidingPairs += group.Count;
-                ++corpus.FullDuplicateOutputs;
-                if (corpus.FullExamples < MAXIMUM_CORPUS_EXAMPLES)
+                Byte[] input = enumerator.Current;
+                ++totalInputs;
+
+                String inputHex = Convert.ToHexString(input);
+
+                if (!uniqueInputs.Add(inputHex))
                 {
-                    corpus.Examples.Add(new CollisionExample(corpus.Name, "Full", hashHex, bucket, group.FirstInput, inputHex));
-                    ++corpus.FullExamples;
+                    ++duplicateInputs;
+                    continue;
                 }
-                group.Count++;
-            }
-            else
-                corpus.FullGroups.Add(hashHex, new CollisionGroup(inputHex));
 
-            if (corpus.Buckets[bucket] > 0 && corpus.ProjectedExamples < MAXIMUM_CORPUS_EXAMPLES)
-            {
-                corpus.Examples.Add(new CollisionExample(corpus.Name, "Projected16", hashHex, bucket, corpus.FirstBucketInputs[bucket], inputHex));
-                ++corpus.ProjectedExamples;
-            }
-            if (corpus.Buckets[bucket] == 0)
-                corpus.FirstBucketInputs[bucket] = inputHex;
-            corpus.ProjectedCollidingPairs += corpus.Buckets[bucket];
-            ++corpus.Buckets[bucket];
-        }
+                ++distinctInputs;
 
-        private static BucketStats ComputeStats(CorpusResult result)
-        {
+                Byte[] hashBytes = hash.ComputeHashBytes(input);
+                if (hashBytes == null || hashBytes.Length != hash.Length / 8 || hashBytes.Length < 2)
+                    throw new InvalidOperationException("Hash returned an invalid digest length.");
+
+                String hashHex = Convert.ToHexString(hashBytes);
+                Int32 bucket = hashBytes[0] | (hashBytes[1] << 8);
+
+                if (fullGroups.TryGetValue(hashHex, out var group))
+                {
+                    fullCollidingPairs += group.Count;
+                    ++fullDuplicateOutputs;
+
+                    if (fullExamples < MAXIMUM_CORPUS_EXAMPLES)
+                    {
+                        examples.Add(new CollisionExample(name, "Full", hashHex, bucket, group.FirstInput, inputHex));
+                        ++fullExamples;
+                    }
+
+                    fullGroups[hashHex] = (group.FirstInput, group.Count + 1);
+                }
+                else
+                    fullGroups.Add(hashHex, (inputHex, 1));
+
+                if ((loads[bucket] > 0) && (projectedExamples < MAXIMUM_CORPUS_EXAMPLES))
+                {
+                    examples.Add(new CollisionExample(name, "Projected16", hashHex, bucket, firstBucketInputs[bucket], inputHex));
+                    ++projectedExamples;
+                }
+
+                if (loads[bucket] == 0)
+                    firstBucketInputs[bucket] = inputHex;
+
+                projectedCollidingPairs += loads[bucket];
+                ++loads[bucket];
+            }
+
+            if (distinctLimit.HasValue && distinctInputs < distinctLimit.Value)
+                throw new InvalidOperationException("Could not generate the requested number of distinct random keys.");
+
             Int32 empty = 0, singleton = 0, colliding = 0, maximum = 0;
-            Double mean = (Double)result.DistinctInputs / PROJECTION_BUCKETS;
+            Double mean = (Double)distinctInputs / PROJECTION_BUCKETS;
             Double squared = 0.0d;
-            foreach (Int32 load in result.Buckets)
+
+            foreach (Int32 load in loads)
             {
-                if (load == 0) ++empty;
-                else if (load == 1) ++singleton;
-                else ++colliding;
+                if (load == 0)
+                    ++empty;
+                else if (load == 1)
+                    ++singleton;
+                else
+                    ++colliding;
+
                 maximum = Math.Max(maximum, load);
+
                 Double difference = load - mean;
                 squared += difference * difference;
             }
-            return new BucketStats(empty, singleton, colliding, maximum, mean, squared / PROJECTION_BUCKETS,
-                mean == 0.0d ? 0.0d : squared / mean);
+
+            BucketStats buckets = new(
+                empty,
+                singleton,
+                colliding,
+                maximum,
+                mean,
+                squared / PROJECTION_BUCKETS,
+                mean == 0.0d ? 0.0d : squared / mean
+            );
+
+            CorpusObservations observations = new(totalInputs, distinctInputs, duplicateInputs);
+            CollisionMetrics full = new(
+                fullDuplicateOutputs,
+                MathUtilities.ExpectedCollisionDuplicates(distinctInputs, hash.Length),
+                fullCollidingPairs,
+                MathUtilities.ExpectedCollisionPairs(distinctInputs, hash.Length)
+            );
+            CollisionMetrics projected = new(
+                distinctInputs - PROJECTION_BUCKETS + empty,
+                MathUtilities.ExpectedCollisionDuplicates(distinctInputs, PROJECTION_BITS),
+                projectedCollidingPairs,
+                MathUtilities.ExpectedCollisionPairs(distinctInputs, PROJECTION_BITS)
+            );
+
+            return new CorpusResult(name, observations, full, projected, buckets, loads, examples);
         }
-
-        private static Double ExpectedPairs(Double count, Int32 bits)
-        {
-            return count * (count - 1.0d) * Math.Pow(2.0d, -bits - 1.0d);
-        }
-
-        private static Double ExpectedDuplicateOutputs(Double count, Int32 bits)
-        {
-            Double space = Math.Pow(2.0d, bits);
-            if (count / space < 1.0e-6d)
-                return ExpectedPairs(count, bits);
-
-            Double probability = 1.0d / space;
-            Double log = probability < 1.0e-4d
-                ? -probability - probability * probability / 2.0d - probability * probability * probability / 3.0d
-                : Math.Log(1.0d - probability);
-            Double value = count * log;
-            Double occupiedFraction = Math.Abs(value) < 1.0e-4d
-                ? -value - value * value / 2.0d - value * value * value / 6.0d - value * value * value * value / 24.0d
-                : 1.0d - Math.Exp(value);
-            return Math.Max(0.0d, count - space * occupiedFraction);
-        }
-
-        private static StreamWriter CreateWriter(String path) => new(path, false, new UTF8Encoding(false));
-        private static String F(Double value) => value.ToString("G17", CultureInfo.InvariantCulture);
         #endregion
 
-        #region Nested Types
-        private sealed class CorpusResult
+        #region Plots
+        private static void PlotHistogram(String path, CorpusResult result)
         {
-            public readonly String Name;
-            public readonly Int32 HashBits;
-            public readonly Int32[] Buckets = new Int32[PROJECTION_BUCKETS];
-            public readonly String[] FirstBucketInputs = new String[PROJECTION_BUCKETS];
-            public readonly HashSet<String> Inputs = new(StringComparer.Ordinal);
-            public readonly Dictionary<String, CollisionGroup> FullGroups = new(StringComparer.Ordinal);
-            public readonly List<CollisionExample> Examples = [];
-            public Int64 TotalInputs;
-            public Int64 DistinctInputs;
-            public Int64 DuplicateInputs;
-            public Int64 FullDuplicateOutputs;
-            public Int64 FullCollidingPairs;
-            public Int64 ProjectedCollidingPairs;
-            public Int32 FullExamples;
-            public Int32 ProjectedExamples;
-            public CorpusResult(String name, Int32 hashBits) { Name = name; HashBits = hashBits; }
+            Int32 maximumLoad = result.Buckets.Maximum;
+
+            Int32 lastExact = Math.Min(20, Math.Max(4, maximumLoad));
+            Boolean hasTail = maximumLoad > lastExact;
+            Int32 groups = lastExact + 1 + (hasTail ? 1 : 0);
+
+            Int32[] observed = new Int32[groups];
+
+            foreach (Int32 load in result.Loads)
+                ++observed[Math.Min(load, groups - 1)];
+
+            Double lambda = result.Buckets.Mean;
+
+            Double[] expected = new Double[groups];
+            Double probability = Math.Exp(-lambda);
+            Double cumulativeProbability = 0.0d;
+
+            for (Int32 load = 0; load <= lastExact; ++load)
+            {
+                expected[load] = PLOT_CELLS * probability;
+                cumulativeProbability += probability;
+                probability *= lambda / (load + 1.0d);
+            }
+
+            if (hasTail)
+                expected[^1] = PLOT_CELLS * Math.Max(0.0d, 1.0d - cumulativeProbability);
+
+            Double ceiling = 1.0d;
+
+            for (Int32 i = 0; i < groups; ++i)
+                ceiling = Math.Max(ceiling, Math.Max(observed[i], expected[i]));
+
+            ceiling *= 1.1d;
+
+            List<(Double, String)> ticks = [];
+            
+            for (Int32 i = 0; i < groups; ++i)
+            {
+                Boolean last = i == (groups - 1);
+
+                if (((i % 2) == 0) || last)
+                {
+                    Double value = i + 0.5d;
+                    String label = (hasTail && last) ? $"{lastExact + 1}+" : i.ToString(CultureInfo.InvariantCulture);
+                    ticks.Add((value, label));
+                }
+            }
+
+            List<(Double, Double)> expectedPoints = new(groups);
+            
+            for (Int32 load = 0; load < groups; ++load)
+                expectedPoints.Add((load + 0.5d, expected[load]));
+
+            using SvgPlot plot = new(path, 1200, 770, "Collision bucket-load frequency histogram");
+
+            plot.PlotArea(120.0d, 178.0d, 980.0d, 430.0d);
+            plot.DataRange(0.0d, groups, 0.0d, ceiling);
+            
+            plot.ConfigureDiscreteYAxis("Number of Buckets", 0.0d, ceiling, intervals: 4, format: "N0");
+
+            plot.ConfigureXTicks("Inputs per Projected Bucket", ticks);
+
+            plot.ConfigureBottomLegend([
+                new SvgPlot.LegendItem("Observed", plot.ObservedColor, false),
+                new SvgPlot.LegendItem("Expected", plot.ReferenceColor, true)
+            ]);
+
+            plot.Title("COLLISION BUCKET-LOAD HISTOGRAM");
+            plot.Subtitle("Observed bucket occupancy versus the theoretical Poisson approximation.");
+            plot.Metadata(
+                $"Corpus: {result.Name} | Distinct Inputs: {result.Inputs.Distinct:N0} | Buckets: {PLOT_CELLS:N0}",
+                $"Mean Load: {lambda:0.###} | Maximum Load: {maximumLoad:N0}"
+            );
+
+            plot.PrepareLayout();
+            plot.DrawGrid();
+
+            plot.BeginPlot();
+
+            for (Int32 load = 0; load < groups; ++load)
+                plot.Bar(load, groups, observed[load], plot.ObservedColor, 8.0d);
+
+            plot.Polyline(expectedPoints, plot.ReferenceColor, 3.0d);
+
+            plot.EndPlot();
+
+            plot.DrawBorder();
+            plot.DrawAxes();
+            plot.DrawBottomLegend();
         }
 
-        private sealed class CollisionGroup
+        private static void PlotOccupancyMap(String path, Boolean hilbert, CorpusResult result)
         {
-            public readonly String FirstInput;
-            public Int32 Count = 1;
-            public CollisionGroup(String firstInput) { FirstInput = firstInput; }
-        }
+            Int32 occupiedBuckets = PROJECTION_BUCKETS - result.Buckets.Empty;
+            Int32 maximumLoad = result.Buckets.Maximum;
 
-        private readonly record struct CollisionExample(String Corpus, String Type, String Hash, Int32 Bucket, String InputA, String InputB);
-        private readonly record struct BucketStats(Int32 Empty, Int32 Singleton, Int32 Colliding, Int32 Maximum, Double Mean, Double Variance, Double ChiSquare);
+            Double occupiedBucketsFraction = (Double)occupiedBuckets / PLOT_CELLS;
+
+            List<(Int32, Int32, String)> cellsData = new(occupiedBuckets);
+
+            for (Int32 i = 0; i < PLOT_CELLS; ++i)
+            {
+                Int32 load = result.Loads[i];
+                
+                if (load == 0)
+                    continue;
+
+                Int32 x, y;
+
+                if (hilbert)
+                {
+                    Int32 t = i;
+                    x = 0; y = 0;
+
+                    for (Int32 s = 1; s < PLOT_SIZE; s *= 2)
+                    {
+                        Int32 rx = 1 & (t / 2);
+                        Int32 ry = 1 & (t ^ rx);
+                        
+                        if (ry == 0)
+                        {
+                            if (rx == 1)
+                            {
+                                x = s - 1 - x;
+                                y = s - 1 - y;
+                            }
+                            
+                            (x, y) = (y, x);
+                        }
+                        
+                        x += s * rx;
+                        y += s * ry;
+                        
+                        t /= 4;
+                    }
+                }
+                else
+                {
+                    x = i % PLOT_SIZE;
+                    y = i / PLOT_SIZE;
+                }
+
+                Double hue = 360.0d * i / PLOT_CELLS;
+                Double saturation = 0.55d + 0.45d * Math.Min(1.0d, Math.Log2(load + 1.0d) / 3.0d);
+                Double lightness = 0.78d - 0.35d * Math.Min(1.0d, Math.Log2(load + 1.0d) / 4.0d);
+
+                Double chroma = (1.0d - Math.Abs(2.0d * lightness - 1.0d)) * saturation;
+                Double secondary = chroma * (1.0d - Math.Abs(hue / 60.0d % 2.0d - 1.0d));
+
+                Double red = 0.0d, green = 0.0d, blue = 0.0d;
+                
+                if (hue < 60.0d)
+                {
+                    red = chroma;
+                    green = secondary;
+                }
+                else if (hue < 120.0d)
+                {
+                    red = secondary;
+                    green = chroma;
+                }
+                else if (hue < 180.0d)
+                {
+                    green = chroma;
+                    blue = secondary;
+                }
+                else if (hue < 240.0d)
+                {
+                    green = secondary;
+                    blue = chroma;
+                }
+                else if (hue < 300.0d)
+                {
+                    red = secondary;
+                    blue = chroma;
+                }
+                else
+                {
+                    red = chroma;
+                    blue = secondary;
+                }
+
+                Double offset = lightness - chroma / 2.0d;
+                Int32 r = Math.Clamp((Int32)Math.Round(255.0d * (red + offset)), 0, 255);
+                Int32 g = Math.Clamp((Int32)Math.Round(255.0d * (green + offset)), 0, 255);
+                Int32 b = Math.Clamp((Int32)Math.Round(255.0d * (blue + offset)), 0, 255);
+                String color = $"#{r:X2}{g:X2}{b:X2}";
+
+                cellsData.Add((x, y, color));
+            }
+
+            using SvgPlot plot = new(path, 1000, 820, "Collision bucket occupancy map");
+
+            plot.PlotArea(85.0d, 165.0d, 540.0d, 540.0d);
+            
+            plot.Title($"COLLISION OCCUPANCY MAP ({(hilbert ? "HILBERT" : "LINEAR")})");
+            plot.Subtitle("Hue identifies bucket index; color intensity reflects bucket load; white indicates empty buckets.");
+            plot.Metadata(
+                $"Corpus: {result.Name} | Distinct Inputs: {result.Inputs.Distinct:N0} | Buckets: {PLOT_CELLS:N0}",
+                $"Occupied Buckets: {occupiedBuckets:N0} ({occupiedBucketsFraction:P2}) | Maximum Load: {maximumLoad:N0}"
+            );
+            
+            plot.PrepareLayout();
+
+            plot.BeginPlot();
+
+            foreach (var (x, y, color) in cellsData)
+                plot.HeatmapCell(x, y, PLOT_SIZE, PLOT_SIZE, color, 0.0d);
+
+            plot.EndPlot();
+            
+            plot.DrawBorder();
+        }
+        #endregion
+
+        #region Records
+        private readonly record struct BucketStats(
+            Int32 Empty,
+            Int32 Singleton,
+            Int32 Colliding,
+            Int32 Maximum,
+            Double Mean,
+            Double Variance,
+            Double ChiSquare
+        );
+
+        private readonly record struct CollisionExample(
+            String Corpus,
+            String Type,
+            String Hash,
+            Int32 Bucket,
+            String InputA,
+            String InputB
+        );
+
+        private readonly record struct CollisionMetrics(
+            Int64 Duplicates,
+            Double ExpectedDuplicates,
+            Int64 Pairs,
+            Double ExpectedPairs
+        );
+
+        private readonly record struct CorpusObservations(
+            Int64 Total,
+            Int64 Distinct,
+            Int64 Duplicates
+        );
+
+        private readonly record struct CorpusResult(
+            String Name,
+            CorpusObservations Inputs,
+            CollisionMetrics Full,
+            CollisionMetrics Projected,
+            BucketStats Buckets,
+            Int32[] Loads,
+            IReadOnlyList<CollisionExample> Examples
+        );
         #endregion
     }
 }

@@ -110,7 +110,7 @@ namespace FastHashes.Tests
         [MemberData(nameof(TestsCases.Hashes), MemberType = typeof(TestsCases))]
         public void ConformanceTest(String hashName, Func<UInt64, Hash> hashInitializer, String _)
         {
-            IEnumerable<CollisionCase> cases = m_ConformanceFixture.GetCases(hashName);
+            IEnumerable<ConformanceCase> cases = m_ConformanceFixture.GetCases(hashName);
 
             Assert.SkipWhen(!cases.Any(), $"No reference vectors available for {hashName}.");
 
