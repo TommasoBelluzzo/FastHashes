@@ -20,20 +20,146 @@ namespace FastHashes.Analysis
         #endregion
 
         #region Methods
+        private static CorpusResult AnalyzeCorpus(String name, Hash hash, IEnumerable<Byte[]> inputs, Int64? distinctLimit = null)
+        {
+            Int32 hashLength = hash.Length;
+
+            Int64 inputsTotal = 0;
+            Int64 inputsDistinct = 0;
+            Int64 inputsDuplicates = 0;
+            Int64 fullDuplicates = 0;
+            Int64 fullPairs = 0;
+            Int64 projectedPairs = 0;
+            
+            Int32 fullExamples = 0;
+            Int32 projectedExamples = 0;
+
+            Int32[] loads = new Int32[PROJECTION_BUCKETS];
+            List<CollisionExample> examples = [];
+
+            String[] firstBucketInputs = new String[PROJECTION_BUCKETS];
+            HashSet<String> uniqueInputs = new(StringComparer.Ordinal);
+            Dictionary<String, (String FirstInput, Int32 Count)> fullGroups = new(StringComparer.Ordinal);
+
+            foreach (Byte[] input in inputs)
+            {
+                ++inputsTotal;
+
+                String inputHex = Convert.ToHexString(input);
+
+                if (!uniqueInputs.Add(inputHex))
+                {
+                    ++inputsDuplicates;
+                    continue;
+                }
+
+                ++inputsDistinct;
+
+                Byte[] hashBytes = hash.ComputeHashBytes(input);
+                Int32 bucket = hashBytes[0] | (hashBytes[1] << 8);
+
+                String hashHex = Convert.ToHexString(hashBytes);
+
+                if (fullGroups.TryGetValue(hashHex, out var group))
+                {
+                    fullPairs += group.Count;
+                    ++fullDuplicates;
+
+                    if (fullExamples < MAXIMUM_CORPUS_EXAMPLES)
+                    {
+                        examples.Add(new CollisionExample(name, "full", bucket, hashHex, group.FirstInput, inputHex));
+                        ++fullExamples;
+                    }
+
+                    fullGroups[hashHex] = (group.FirstInput, group.Count + 1);
+                }
+                else
+                    fullGroups.Add(hashHex, (inputHex, 1));
+
+                if ((loads[bucket] > 0) && (projectedExamples < MAXIMUM_CORPUS_EXAMPLES))
+                {
+                    examples.Add(new CollisionExample(name, "projected_16", bucket, hashHex, firstBucketInputs[bucket], inputHex));
+                    ++projectedExamples;
+                }
+
+                if (loads[bucket] == 0)
+                    firstBucketInputs[bucket] = inputHex;
+
+                projectedPairs += loads[bucket];
+                ++loads[bucket];
+
+                if (distinctLimit.HasValue && (inputsDistinct >= distinctLimit.Value))
+                    break;
+            }
+
+            if (distinctLimit.HasValue && (inputsDistinct < distinctLimit.Value))
+                throw new InvalidOperationException("Could not generate the requested number of distinct random keys.");
+
+            Int32 empty = 0, singleton = 0, colliding = 0, maximum = 0;
+            Double mean = (Double)inputsDistinct / PROJECTION_BUCKETS;
+            Double squared = 0.0d;
+
+            foreach (Int32 load in loads)
+            {
+                if (load == 0)
+                    ++empty;
+                else if (load == 1)
+                    ++singleton;
+                else
+                    ++colliding;
+
+                maximum = Math.Max(maximum, load);
+
+                Double difference = load - mean;
+                squared += difference * difference;
+            }
+
+            BucketStats buckets = new(
+                empty, singleton, colliding, maximum, mean,
+                squared / PROJECTION_BUCKETS,
+                (mean == 0.0d) ? 0.0d : (squared / mean)
+            );
+
+            CorpusObservations observations = new(inputsTotal, inputsDistinct, inputsDuplicates);
+            
+            CollisionMetrics full = new(
+                fullDuplicates,
+                MathUtilities.ExpectedCollisionDuplicates(inputsDistinct, hashLength),
+                fullPairs,
+                MathUtilities.ExpectedCollisionPairs(inputsDistinct, hashLength)
+            );
+
+            CollisionMetrics projected = new(
+                inputsDistinct - PROJECTION_BUCKETS + empty,
+                MathUtilities.ExpectedCollisionDuplicates(inputsDistinct, PROJECTION_BITS),
+                projectedPairs,
+                MathUtilities.ExpectedCollisionPairs(inputsDistinct, PROJECTION_BITS)
+            );
+
+            return new CorpusResult(name, observations, full, projected, buckets, loads, examples);
+        }
+
         private static IEnumerable<Byte[]> GenerateNumbers(Int32 count)
         {
             for (Int64 i = 1; i <= count; ++i)
-                yield return Encoding.UTF8.GetBytes(i.ToString(CultureInfo.InvariantCulture));
+            {
+                String s = i.ToString(CultureInfo.InvariantCulture);
+                Byte[] buffer = Encoding.UTF8.GetBytes(s);
+                
+                yield return buffer;
+            }
+                
         }
 
-        private static IEnumerable<Byte[]> GenerateRandomBytes(Int32 length, UInt64 seed)
+        private static IEnumerable<Byte[]> GenerateRandomBytes(Int32 length, UInt64 seed, Int64 maximumAttempts)
         {
             RandomSplitMix generator = new(seed);
-            Byte[] buffer = new Byte[length];
 
-            while (true)
+            for (Int64 attempt = 0; attempt < maximumAttempts; ++attempt)
             {
+                Byte[] buffer = new Byte[length];
                 generator.NextBytes(buffer);
+                
                 yield return buffer;
             }
         }
@@ -45,14 +171,17 @@ namespace FastHashes.Analysis
             foreach (String word in File.ReadLines(wordsPath))
             {
                 Byte[] input = Encoding.UTF8.GetBytes(word);
+                
                 Byte[] padded = new Byte[input.Length + 5];
                 Array.Fill(padded, (Byte)'!');
+                
                 input.CopyTo(padded, 0);
 
                 for (Int32 suffix = 0; suffix <= 5; ++suffix)
                 {
                     Byte[] output = new Byte[input.Length + suffix];
                     Array.Copy(padded, output, output.Length);
+                    
                     yield return output;
                 }
             }
@@ -62,20 +191,23 @@ namespace FastHashes.Analysis
         {
             Hash hash = config.Hash;
             String hashName = config.HashName;
+            UInt64 generatorSeed = config.GeneratorSeed;
+            Int32 keysLength = config.KeysLength;
             Int32 corpusSize = config.CorpusSize;
+            
+            Int64 maximumAttempts = ((Int64)corpusSize * 100) + 1000;
 
             List<CorpusResult> results =
             [
-                AnalyzeCorpus("numbers", hash, GenerateNumbers(corpusSize), null, null),
-                AnalyzeCorpus("random-bytes", hash, GenerateRandomBytes(config.KeysLength, config.GeneratorSeed), corpusSize, ((Int64)corpusSize * 100) + 1000),
-                AnalyzeCorpus("padded-words", hash, GeneratePaddedWords(), null, null)
+                AnalyzeCorpus("numbers", hash, GenerateNumbers(corpusSize)),
+                AnalyzeCorpus("random-bytes", hash, GenerateRandomBytes(keysLength, generatorSeed, maximumAttempts), corpusSize),
+                AnalyzeCorpus("padded-words", hash, GeneratePaddedWords())
             ];
 
             Dictionary<String, Object> metadata = Utilities.CreateMetadata("collision", config);
             metadata["SchemaVersion"] = 3;
             metadata["ProjectionBits"] = PROJECTION_BITS;
             metadata["ProjectionBuckets"] = PROJECTION_BUCKETS;
-            metadata["MaximumCorpusExamples"] = MAXIMUM_CORPUS_EXAMPLES;
             metadata["Corpora"] = results.ConvertAll(result => new
             {
                 result.Name,
@@ -111,7 +243,7 @@ namespace FastHashes.Analysis
 
                 using (StreamWriter writer = new(filePath, false, encoding))
                 {
-                    writer.WriteLine("Corpus,InputsTotal,InputsDistinct,InputsDuplicate,FullDuplicates,FullExpectedDuplicates,FullPairs,FullExpectedPairs,ProjectedDuplicates,ProjectedExpectedDuplicates,ProjectedPairs,ProjectedExpectedPairs,EmptyBuckets,SingletonBuckets,CollidingBuckets,MaximumBucketLoad,MeanBucketLoad,BucketLoadVariance,OccupancyChiSquare");
+                    writer.WriteLine("Corpus,InputsTotal,InputsDistinct,InputsDuplicates,FullDuplicates,FullExpectedDuplicates,FullPairs,FullExpectedPairs,ProjectedDuplicates,ProjectedExpectedDuplicates,ProjectedPairs,ProjectedExpectedPairs,EmptyBuckets,SingletonBuckets,CollidingBuckets,MaximumBucketLoad,MeanBucketLoad,BucketLoadVariance,OccupancyChiSquare");
 
                     foreach (CorpusResult result in results)
                     {
@@ -158,15 +290,15 @@ namespace FastHashes.Analysis
 
                 using (StreamWriter writer = new(filePath, false, encoding))
                 {
-                    writer.WriteLine("Corpus,CollisionType,HashHex,ProjectedBucket,InputAHex,InputBHex");
+                    writer.WriteLine("Corpus,CollisionType,ProjectedBucket,Hash,InputA,InputB");
                     
                     foreach (CorpusResult result in results)
                         foreach (CollisionExample example in result.Examples)
                             writer.WriteLine(String.Join(",",
                                 example.Corpus,
                                 example.Type,
-                                example.Hash,
                                 Utilities.FormatCsvInteger(example.Bucket),
+                                example.Hash,
                                 example.InputA,
                                 example.InputB
                             ));
@@ -186,131 +318,6 @@ namespace FastHashes.Analysis
             }
 
             return Utilities.WriteArtifacts(hashName, writeFunction, outputDirectory);
-        }
-
-        private static CorpusResult AnalyzeCorpus(String name, Hash hash, IEnumerable<Byte[]> inputs, Int64? distinctLimit = null, Int64? attemptsLimit = null)
-        {
-            Int64 totalInputs = 0;
-            Int64 distinctInputs = 0;
-            Int64 duplicateInputs = 0;
-            Int64 fullDuplicateOutputs = 0;
-            Int64 fullCollidingPairs = 0;
-            Int64 projectedCollidingPairs = 0;
-            Int32 fullExamples = 0;
-            Int32 projectedExamples = 0;
-
-            Int32[] loads = new Int32[PROJECTION_BUCKETS];
-            String[] firstBucketInputs = new String[PROJECTION_BUCKETS];
-            HashSet<String> uniqueInputs = new(StringComparer.Ordinal);
-            Dictionary<String, (String FirstInput, Int32 Count)> fullGroups = new(StringComparer.Ordinal);
-            List<CollisionExample> examples = [];
-
-            using IEnumerator<Byte[]> enumerator = inputs.GetEnumerator();
-
-            while (!distinctLimit.HasValue || distinctInputs < distinctLimit.Value)
-            {
-                if (attemptsLimit.HasValue && totalInputs >= attemptsLimit.Value)
-                    throw new InvalidOperationException("Could not generate the requested number of distinct random keys.");
-
-                if (!enumerator.MoveNext())
-                    break;
-
-                Byte[] input = enumerator.Current;
-                ++totalInputs;
-
-                String inputHex = Convert.ToHexString(input);
-
-                if (!uniqueInputs.Add(inputHex))
-                {
-                    ++duplicateInputs;
-                    continue;
-                }
-
-                ++distinctInputs;
-
-                Byte[] hashBytes = hash.ComputeHashBytes(input);
-                if (hashBytes == null || hashBytes.Length != hash.Length / 8 || hashBytes.Length < 2)
-                    throw new InvalidOperationException("Hash returned an invalid digest length.");
-
-                String hashHex = Convert.ToHexString(hashBytes);
-                Int32 bucket = hashBytes[0] | (hashBytes[1] << 8);
-
-                if (fullGroups.TryGetValue(hashHex, out var group))
-                {
-                    fullCollidingPairs += group.Count;
-                    ++fullDuplicateOutputs;
-
-                    if (fullExamples < MAXIMUM_CORPUS_EXAMPLES)
-                    {
-                        examples.Add(new CollisionExample(name, "Full", hashHex, bucket, group.FirstInput, inputHex));
-                        ++fullExamples;
-                    }
-
-                    fullGroups[hashHex] = (group.FirstInput, group.Count + 1);
-                }
-                else
-                    fullGroups.Add(hashHex, (inputHex, 1));
-
-                if ((loads[bucket] > 0) && (projectedExamples < MAXIMUM_CORPUS_EXAMPLES))
-                {
-                    examples.Add(new CollisionExample(name, "Projected16", hashHex, bucket, firstBucketInputs[bucket], inputHex));
-                    ++projectedExamples;
-                }
-
-                if (loads[bucket] == 0)
-                    firstBucketInputs[bucket] = inputHex;
-
-                projectedCollidingPairs += loads[bucket];
-                ++loads[bucket];
-            }
-
-            if (distinctLimit.HasValue && distinctInputs < distinctLimit.Value)
-                throw new InvalidOperationException("Could not generate the requested number of distinct random keys.");
-
-            Int32 empty = 0, singleton = 0, colliding = 0, maximum = 0;
-            Double mean = (Double)distinctInputs / PROJECTION_BUCKETS;
-            Double squared = 0.0d;
-
-            foreach (Int32 load in loads)
-            {
-                if (load == 0)
-                    ++empty;
-                else if (load == 1)
-                    ++singleton;
-                else
-                    ++colliding;
-
-                maximum = Math.Max(maximum, load);
-
-                Double difference = load - mean;
-                squared += difference * difference;
-            }
-
-            BucketStats buckets = new(
-                empty,
-                singleton,
-                colliding,
-                maximum,
-                mean,
-                squared / PROJECTION_BUCKETS,
-                mean == 0.0d ? 0.0d : squared / mean
-            );
-
-            CorpusObservations observations = new(totalInputs, distinctInputs, duplicateInputs);
-            CollisionMetrics full = new(
-                fullDuplicateOutputs,
-                MathUtilities.ExpectedCollisionDuplicates(distinctInputs, hash.Length),
-                fullCollidingPairs,
-                MathUtilities.ExpectedCollisionPairs(distinctInputs, hash.Length)
-            );
-            CollisionMetrics projected = new(
-                distinctInputs - PROJECTION_BUCKETS + empty,
-                MathUtilities.ExpectedCollisionDuplicates(distinctInputs, PROJECTION_BITS),
-                projectedCollidingPairs,
-                MathUtilities.ExpectedCollisionPairs(distinctInputs, PROJECTION_BITS)
-            );
-
-            return new CorpusResult(name, observations, full, projected, buckets, loads, examples);
         }
         #endregion
 
@@ -546,8 +553,8 @@ namespace FastHashes.Analysis
         private readonly record struct CollisionExample(
             String Corpus,
             String Type,
-            String Hash,
             Int32 Bucket,
+            String Hash,
             String InputA,
             String InputB
         );
@@ -565,7 +572,7 @@ namespace FastHashes.Analysis
             Int64 Duplicates
         );
 
-        private readonly record struct CorpusResult(
+        private sealed record CorpusResult(
             String Name,
             CorpusObservations Inputs,
             CollisionMetrics Full,

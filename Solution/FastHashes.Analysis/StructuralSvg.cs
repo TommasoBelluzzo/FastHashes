@@ -164,6 +164,6 @@ namespace FastHashes.Analysis
         }
         #endregion
 
-        internal sealed record WindowObservation(Int32 Offset, String Value, Int32 HammingDistance);
+        internal readonly record struct WindowObservation(Int32 Offset, String Value, Int32 HammingDistance);
     }
 }
