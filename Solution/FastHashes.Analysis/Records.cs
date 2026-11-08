@@ -14,6 +14,7 @@ namespace FastHashes.Analysis
         UInt64 GeneratorSeed,
         Int32 Samples,
         Int32 KeysLength,
+        Double Significance,
         Int32 CorpusSize
     );
 

@@ -1,6 +1,7 @@
 #region Using Directives
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 #endregion
@@ -14,10 +15,98 @@ namespace FastHashes.Analysis
         private const Int64 MAXIMUM_HASH_EVALUATIONS = 20000000;
         private const Int64 MAXIMUM_PAIR_CELLS = 20000000;
         private const Int64 MAXIMUM_PAIR_TRIALS = 2000000000;
-        private const Double SIGNIFICANCE_LEVEL = 0.05d;
+        private const Double PLOT_HEATMAP_SCALE = 0.10d;
         #endregion
 
         #region Methods
+        private static Boolean ExpectedCountsSufficient(Int32 n00, Int32 n01, Int32 n10, Int32 n11, Int32 samples)
+        {
+            Int32 rowZero = n00 + n01;
+            Int32 rowOne = n10 + n11;
+            Int32 columnZero = n00 + n10;
+            Int32 columnOne = n01 + n11;
+
+            Boolean sufficient =
+                    (Double)rowZero * columnZero / samples >= 5.0d &&
+                   (Double)rowZero * columnOne / samples >= 5.0d &&
+                   (Double)rowOne * columnZero / samples >= 5.0d &&
+                   (Double)rowOne * columnOne / samples >= 5.0d;
+
+            return sufficient;
+        }
+
+        private static void PlotBic(
+            String path, Int32 samples, Int32 inputBits, Int32 outputBits,
+            Int64 validTests, Int64 significantTests,
+            Int32[] outputDefinedPhi, Double[] outputMeanAbsolutePhi,
+            Double meanAbsolutePhi, Double maximumAbsolutePhi
+        )
+        {
+            String mean = Double.IsNaN(meanAbsolutePhi) ? "N/A" : meanAbsolutePhi.ToString("0.######", CultureInfo.InvariantCulture);
+            String maximum = Double.IsNaN(maximumAbsolutePhi) ? "N/A" : maximumAbsolutePhi.ToString("0.######", CultureInfo.InvariantCulture);
+
+            using SvgPlot plot = new(path, 1200, 900);
+
+            plot.PlotArea(125.0d, 180.0d, 610.0d, 610.0d);
+            plot.DataRange(0.0d, outputBits, 0.0d, outputBits);
+
+            Int32 step = outputBits <= 64 ? 8 : outputBits <= 128 ? 16 : 32;
+            plot.ConfigureIndexedXAxis("Output Bit A (LSB-first)", outputBits, step);
+            plot.ConfigureIndexedYAxis("Output Bit B (LSB-first)", outputBits, step);
+            
+            plot.ConfigureRightColorbar("Mean |phi|", 0.0d, PLOT_HEATMAP_SCALE, "#ffffff", plot.ObservedColor,
+                intervals: 3, saturated: true, format: "0.##");
+
+            plot.Title("BIT INDEPENDENCE CRITERION");
+            plot.Subtitle("Mean absolute phi across input-bit perturbations; black denotes undefined pairs and the excluded diagonal.");
+
+            plot.Metadata(
+                $"Samples: {samples:N0} | Input Bits: {inputBits:N0} | Output Bits: {outputBits:N0}",
+                $"Significant Tests: {significantTests:N0} / {validTests:N0}",
+                $"Mean |phi|: {mean} | Maximum |phi|: {maximum}"
+            );
+
+            plot.PrepareLayout();
+            
+            plot.BeginPlot();
+
+            plot.Rectangle(plot.PlotLeft, plot.PlotTop, plot.PlotWidth, plot.PlotHeight, "#000000");
+
+            Int32 pairIndex = 0;
+
+            for (Int32 a = 0; a < outputBits; ++a)
+            {
+                for (Int32 b = a + 1; b < outputBits; ++b)
+                {
+                    if (outputDefinedPhi[pairIndex] > 0)
+                    {
+                        String color = plot.Color(outputMeanAbsolutePhi[pairIndex], 0.0d, PLOT_HEATMAP_SCALE, "#ffffff", plot.ObservedColor);
+                        plot.HeatmapCell(a, b, outputBits, outputBits, color);
+                        plot.HeatmapCell(b, a, outputBits, outputBits, color);
+                    }
+
+                    ++pairIndex;
+                }
+            }
+
+            for (Int32 bit = 0; bit < outputBits; ++bit)
+                plot.HeatmapCell(bit, bit, outputBits, outputBits, "#000000", 0.0d);
+
+            for (Int32 bit = 8; bit < outputBits; bit += 8)
+            {
+                Double x = plot.PlotLeft + bit * plot.PlotWidth / outputBits;
+                Double y = plot.PlotTop + bit * plot.PlotHeight / outputBits;
+                plot.Line(x, plot.PlotTop, x, plot.PlotTop + plot.PlotHeight, plot.MutedColor, 0.8d, opacity: 0.22d);
+                plot.Line(plot.PlotLeft, y, plot.PlotLeft + plot.PlotWidth, y, plot.MutedColor, 0.8d, opacity: 0.22d);
+            }
+
+            plot.EndPlot();
+
+            plot.DrawBorder();
+            plot.DrawAxes();
+            plot.DrawRightColorbar();
+        }
+
         public static String Run(Config config, String outputDirectory = null)
         {
             Hash hash = config.Hash;
@@ -25,26 +114,30 @@ namespace FastHashes.Analysis
             UInt64 generatorSeed = config.GeneratorSeed;
             Int32 samples = config.Samples;
             Int32 keysLength = config.KeysLength;
+            Double significance = config.Significance;
 
             Int32 inputBits = checked(keysLength * 8);
             Int32 outputBits = hash.Length;
             Int32 outputBytes = outputBits / 8;
-            Int32 outputPairs = checked(outputBits * (outputBits - 1) / 2);
+            Int32 outputPairs = checked((outputBits * (outputBits - 1)) / 2);
 
-            Int64 evaluations = (Int64)samples * (inputBits + 1L);
+            Int64 bitFlipTrials = (Int64)samples * inputBits;
+            Int64 hashEvaluations = samples + bitFlipTrials;
+            Int64 flipCells = (Int64)inputBits * outputBits;
             Int64 pairCells = (Int64)inputBits * outputPairs;
-            Int64 pairTrials = pairCells * samples;
 
-            if (evaluations > MAXIMUM_HASH_EVALUATIONS)
+            if (hashEvaluations > MAXIMUM_HASH_EVALUATIONS)
                 throw new ArgumentException($"Independence workload exceeds {MAXIMUM_HASH_EVALUATIONS} hash evaluations; reduce --samples and/or --keys-length parameter value.");
 
             if (pairCells > MAXIMUM_PAIR_CELLS)
                 throw new ArgumentException($"Independence matrix exceeds {MAXIMUM_PAIR_CELLS} pair cells; reduce the --keys-length parameter value.");
 
+            Int64 pairTrials = pairCells * samples;
+
             if (pairTrials > MAXIMUM_PAIR_TRIALS)
                 throw new ArgumentException($"Independence workload exceeds {MAXIMUM_PAIR_TRIALS} pair trials; reduce --samples and/or --keys-length parameter value.");
 
-            Int32[] flipCounts = new Int32[checked(inputBits * outputBits)];
+            Int32[] flipCounts = new Int32[checked((Int32)flipCells)];
             Int32[] jointCounts = new Int32[checked((Int32)pairCells)];
             Int32[] flippedBits = new Int32[outputBits];
 
@@ -105,34 +198,38 @@ namespace FastHashes.Analysis
                 }
             }
 
-            // Compute complete pair statistics without writing partial reports.
-            Int64 testCount = (Int64)inputBits * outputPairs;
-            Double[] meanAbsoluteCorrelation = new Double[outputPairs];
-            Int32[] pairValid = new Int32[outputPairs];
             Int64 validTests = 0;
             Int64 degenerateTests = 0;
-            Int64 insufficientExpectedTests = 0;
-            Double sumAbsoluteCorrelation = 0.0d;
-            Double maximumAbsoluteCorrelation = 0.0d;
-            Int32 maximumInputBit = 0;
-            Int32 maximumOutputA = 0;
-            Int32 maximumOutputB = 1;
+            Int64 insufficientTests = 0;
+            Int64 significantTests = 0;
+
             Int64[] inputValidTests = new Int64[inputBits];
             Int64[] inputDegenerateTests = new Int64[inputBits];
             Int64[] inputInsufficientTests = new Int64[inputBits];
             Int64[] inputSignificantTests = new Int64[inputBits];
-            Int32[] inputDefinedCorrelations = new Int32[inputBits];
-            Double[] inputSumAbsoluteCorrelation = new Double[inputBits];
-            Double[] inputMaximumAbsoluteCorrelation = new Double[inputBits];
-            Int32[] inputMaximumOutputA = new Int32[inputBits];
-            Int32[] inputMaximumOutputB = new Int32[inputBits];
+
+            Int32[] outputDefinedPhi = new Int32[outputPairs];
+            Double[] outputMeanAbsolutePhi = new Double[outputPairs];
+
+            Int32[] inputDefinedPhi = new Int32[inputBits];
+            Double[] inputSumAbsolutePhi = new Double[inputBits];
+            Double[] inputMaximumAbsolutePhi = new Double[inputBits];
+            Int32[] inputMaximumPhiOutputBitA = new Int32[inputBits];
+            Int32[] inputMaximumPhiOutputBitB = new Int32[inputBits];
+
+            Double sumAbsolutePhi = 0.0d;
+            Double maximumAbsolutePhi = 0.0d;
+            Int32 maximumPhiInputBit = 0;
+            Int32 maximumPhiOutputBitA = 0;
+            Int32 maximumPhiOutputBitB = 1;
+
             PriorityQueue<IndependenceExtreme, Double> extremes = new();
 
-            for (Int32 inputBit = 0; inputBit < inputBits; ++inputBit)
+            for (Int32 ib = 0; ib < inputBits; ++ib)
             {
                 Int32 pairIndex = 0;
-                Int32 flipOffset = inputBit * outputBits;
-                Int32 jointOffset = inputBit * outputPairs;
+                Int32 flipOffset = ib * outputBits;
+                Int32 jointOffset = ib * outputPairs;
 
                 for (Int32 a = 0; a < outputBits; ++a)
                 {
@@ -142,52 +239,55 @@ namespace FastHashes.Analysis
                         Int32 n10 = flipCounts[flipOffset + a] - n11;
                         Int32 n01 = flipCounts[flipOffset + b] - n11;
                         Int32 n00 = samples - n11 - n10 - n01;
-                        Double correlation = Phi(n00, n01, n10, n11);
+                        Double phi = MathUtilities.PhiCoefficient(n00, n01, n10, n11);
 
-                        if (Double.IsNaN(correlation))
+                        if (Double.IsNaN(phi))
                         {
                             ++degenerateTests;
-                            ++inputDegenerateTests[inputBit];
+                            ++inputDegenerateTests[ib];
                         }
                         else
                         {
-                            Double absolute = Math.Abs(correlation);
-                            sumAbsoluteCorrelation += absolute;
-                            meanAbsoluteCorrelation[pairIndex] += absolute;
-                            ++pairValid[pairIndex];
-                            inputSumAbsoluteCorrelation[inputBit] += absolute;
-                            ++inputDefinedCorrelations[inputBit];
+                            Double phiAbsolute = Math.Abs(phi);
+                            sumAbsolutePhi += phiAbsolute;
 
-                            if (inputDefinedCorrelations[inputBit] == 1 || absolute > inputMaximumAbsoluteCorrelation[inputBit])
+                            ++outputDefinedPhi[pairIndex];
+                            outputMeanAbsolutePhi[pairIndex] += phiAbsolute;
+
+                            ++inputDefinedPhi[ib];
+                            inputSumAbsolutePhi[ib] += phiAbsolute;
+
+                            if ((inputDefinedPhi[ib] == 1) || (phiAbsolute > inputMaximumAbsolutePhi[ib]))
                             {
-                                inputMaximumAbsoluteCorrelation[inputBit] = absolute;
-                                inputMaximumOutputA[inputBit] = a;
-                                inputMaximumOutputB[inputBit] = b;
+                                inputMaximumAbsolutePhi[ib] = phiAbsolute;
+                                inputMaximumPhiOutputBitA[ib] = a;
+                                inputMaximumPhiOutputBitB[ib] = b;
                             }
 
-                            IndependenceExtreme extreme = new(inputBit, a, b, n00, n01, n10, n11, correlation);
+                            IndependenceExtreme extreme = new(ib, a, b, n00, n01, n10, n11, phi);
+                            
                             if (extremes.Count < MAXIMUM_EXTREMES)
-                                extremes.Enqueue(extreme, absolute);
-                            else if (extremes.TryPeek(out _, out Double smallest) && absolute > smallest)
-                                extremes.DequeueEnqueue(extreme, absolute);
+                                extremes.Enqueue(extreme, phiAbsolute);
+                            else if (extremes.TryPeek(out _, out Double smallestExtreme) && (phiAbsolute > smallestExtreme))
+                                extremes.DequeueEnqueue(extreme, phiAbsolute);
 
-                            if (absolute > maximumAbsoluteCorrelation)
+                            if (phiAbsolute > maximumAbsolutePhi)
                             {
-                                maximumAbsoluteCorrelation = absolute;
-                                maximumInputBit = inputBit;
-                                maximumOutputA = a;
-                                maximumOutputB = b;
+                                maximumAbsolutePhi = phiAbsolute;
+                                maximumPhiInputBit = ib;
+                                maximumPhiOutputBitA = a;
+                                maximumPhiOutputBitB = b;
                             }
 
-                            if (ExpectedCountsValid(n00, n01, n10, n11, samples))
+                            if (ExpectedCountsSufficient(n00, n01, n10, n11, samples))
                             {
                                 ++validTests;
-                                ++inputValidTests[inputBit];
+                                ++inputValidTests[ib];
                             }
                             else
                             {
-                                ++insufficientExpectedTests;
-                                ++inputInsufficientTests[inputBit];
+                                ++insufficientTests;
+                                ++inputInsufficientTests[ib];
                             }
                         }
 
@@ -196,22 +296,22 @@ namespace FastHashes.Analysis
                 }
             }
 
-            Int64 significantTests = 0;
-            Double meanAbsolute = (degenerateTests == testCount) ? Double.NaN : (sumAbsoluteCorrelation / (testCount - degenerateTests));
-            Boolean hasDefinedCorrelations = degenerateTests < testCount;
+            Double meanAbsolutePhi = degenerateTests == pairCells
+                ? Double.NaN
+                : (sumAbsolutePhi / (pairCells - degenerateTests));
 
             for (Int32 i = 0; i < outputPairs; ++i)
-                if (pairValid[i] != 0)
-                    meanAbsoluteCorrelation[i] /= pairValid[i];
+                if (outputDefinedPhi[i] != 0)
+                    outputMeanAbsolutePhi[i] /= outputDefinedPhi[i];
 
-            // Bonferroni significance requires the total valid-test count from the first pass.
             if (validTests > 0)
             {
-                for (Int32 inputBit = 0; inputBit < inputBits; ++inputBit)
+                for (Int32 ib = 0; ib < inputBits; ++ib)
                 {
                     Int32 pairIndex = 0;
-                    Int32 flipOffset = inputBit * outputBits;
-                    Int32 jointOffset = inputBit * outputPairs;
+                    Int32 flipOffset = ib * outputBits;
+                    Int32 jointOffset = ib * outputPairs;
+                    
                     for (Int32 a = 0; a < outputBits; ++a)
                     {
                         for (Int32 b = a + 1; b < outputBits; ++b)
@@ -220,13 +320,17 @@ namespace FastHashes.Analysis
                             Int32 n10 = flipCounts[flipOffset + a] - n11;
                             Int32 n01 = flipCounts[flipOffset + b] - n11;
                             Int32 n00 = samples - n11 - n10 - n01;
-                            if (!ExpectedCountsValid(n00, n01, n10, n11, samples))
+                            
+                            if (!ExpectedCountsSufficient(n00, n01, n10, n11, samples))
                                 continue;
-                            Double phi = Phi(n00, n01, n10, n11);
-                            if (Math.Min(1.0d, PValue(phi, samples) * validTests) < SIGNIFICANCE_LEVEL)
+                            
+                            Double phi = MathUtilities.PhiCoefficient(n00, n01, n10, n11);
+                            Double pValue = MathUtilities.Erfc(Math.Sqrt(samples / 2.0d) * Math.Abs(phi));
+                            
+                            if (Math.Min(1.0d, pValue * validTests) < significance)
                             {
                                 ++significantTests;
-                                ++inputSignificantTests[inputBit];
+                                ++inputSignificantTests[ib];
                             }
                         }
                     }
@@ -241,49 +345,55 @@ namespace FastHashes.Analysis
             strongest.Sort((left, right) =>
             {
                 Int32 comparison = Math.Abs(right.Phi).CompareTo(Math.Abs(left.Phi));
-                if (comparison != 0) return comparison;
+                
+                if (comparison != 0)
+                    return comparison;
+
                 comparison = left.InputBit.CompareTo(right.InputBit);
-                if (comparison != 0) return comparison;
+                
+                if (comparison != 0)
+                    return comparison;
+
                 comparison = left.OutputBitA.CompareTo(right.OutputBitA);
-                return comparison != 0 ? comparison : left.OutputBitB.CompareTo(right.OutputBitB);
+                comparison = (comparison != 0) ? comparison : left.OutputBitB.CompareTo(right.OutputBitB);
+
+                return comparison;
             });
 
+            Boolean hasDefinedPhi = degenerateTests < pairCells;
+
             Dictionary<String, Object> metadata = Utilities.CreateMetadata("independence", config);
-            metadata["SignificanceLevel"] = SIGNIFICANCE_LEVEL;
+            metadata["Significance"] = significance;
             metadata["InputBits"] = inputBits;
             metadata["OutputBits"] = outputBits;
-            metadata["Evaluations"] = evaluations;
-
-
-
-
             metadata["OutputPairs"] = outputPairs;
-            metadata["PairCells"] = testCount;
-            metadata["HashEvaluations"] = (Int64)samples * (inputBits + 1L);
-            metadata["BitFlipTrials"] = (Int64)samples * inputBits;
-            metadata["BitNumbering"] = "Least significant bit first within each byte; bytes follow ComputeHashBytes order";
-            metadata["Statistic"] = "Phi coefficient for pairwise output-bit flip indicators conditioned on each input bit";
-            metadata["SignificanceTest"] = "Asymptotic Pearson chi-square (one degree of freedom), upper tail computed as erfc(sqrt(n/2)*abs(phi)); Bonferroni correction across valid tests";
-            metadata["SignificanceLevel"] = SIGNIFICANCE_LEVEL;
-            metadata["MinimumExpectedCellCount"] = 5;
+            metadata["BitFlipTrials"] = bitFlipTrials;
+            metadata["HashEvaluations"] = hashEvaluations;
+            metadata["PairCells"] = pairCells;
             metadata["ValidTests"] = validTests;
             metadata["DegenerateTests"] = degenerateTests;
-            metadata["InsufficientExpectedTests"] = insufficientExpectedTests;
+            metadata["InsufficientTests"] = insufficientTests;
             metadata["SignificantTests"] = significantTests;
-            metadata["MeanAbsoluteCorrelation"] = hasDefinedCorrelations ? (Double?)meanAbsolute : null;
-            metadata["MaximumAbsoluteCorrelation"] = hasDefinedCorrelations ? (Double?)maximumAbsoluteCorrelation : null;
-            metadata["MaximumCorrelationInputBit"] = hasDefinedCorrelations ? (Int32?)maximumInputBit : null;
-            metadata["MaximumCorrelationOutputBitA"] = hasDefinedCorrelations ? (Int32?)maximumOutputA : null;
-            metadata["MaximumCorrelationOutputBitB"] = hasDefinedCorrelations ? (Int32?)maximumOutputB : null;
-            metadata["InterpretationNotes"] = "No significant result does not prove bit independence; the heatmap is descriptive and testing uses each input-bit/output-pair contingency table";
-            metadata["OutputFiles"] = new String[]
+            metadata["HasDefinedPhi"] = hasDefinedPhi;
+
+            if (hasDefinedPhi)
             {
-                "independence.json",
-                "independence-inputs.csv",
-                "independence-pairs.csv",
-                "independence-extremes.csv",
-                "independence-heatmap.svg"
-            };
+                metadata["MeanAbsolutePhi"] = meanAbsolutePhi;
+                metadata["MaximumAbsolutePhi"] = maximumAbsolutePhi;
+                metadata["MaximumPhiInputBit"] = maximumPhiInputBit;
+                metadata["MaximumPhiOutputBitA"] = maximumPhiOutputBitA;
+                metadata["MaximumPhiOutputBitB"] = maximumPhiOutputBitB;
+            }
+            else
+            {
+                metadata["MeanAbsolutePhi"] = null;
+                metadata["MaximumAbsolutePhi"] = null;
+                metadata["MaximumPhiInputBit"] = null;
+                metadata["MaximumPhiOutputBitA"] = null;
+                metadata["MaximumPhiOutputBitB"] = null;
+            }
+
+            metadata["OutputFiles"] = new[] { "independence.json", "independence-inputs.csv", "independence-pairs.csv", "independence-extremes.csv", "independence-bic.svg" };
 
             void writeFunction(String directory)
             {
@@ -297,22 +407,23 @@ namespace FastHashes.Analysis
 
                 using (StreamWriter writer = new(filePath, false, encoding))
                 {
-                    writer.WriteLine("InputBit,ValidTests,DegenerateTests,InsufficientExpectedTests,MeanAbsolutePhi,MaximumAbsolutePhi,MaximumOutputBitA,MaximumOutputBitB,SignificantTests");
+                    writer.WriteLine("InputBit,ValidTests,DegenerateTests,InsufficientTests,SignificantTests,DefinedPhi,MeanAbsolutePhi,MaximumAbsolutePhi,MaximumOutputBitA,MaximumOutputBitB");
 
                     for (Int32 inputBit = 0; inputBit < inputBits; ++inputBit)
                     {
-                        Int32 count = inputDefinedCorrelations[inputBit];
+                        Int32 count = inputDefinedPhi[inputBit];
 
                         writer.WriteLine(String.Join(",",
                             Utilities.FormatCsvInteger(inputBit),
                             Utilities.FormatCsvInteger(inputValidTests[inputBit]),
                             Utilities.FormatCsvInteger(inputDegenerateTests[inputBit]),
                             Utilities.FormatCsvInteger(inputInsufficientTests[inputBit]),
-                            count == 0 ? "" : Utilities.FormatCsvDouble(inputSumAbsoluteCorrelation[inputBit] / count),
-                            count == 0 ? "" : Utilities.FormatCsvDouble(inputMaximumAbsoluteCorrelation[inputBit]),
-                            count == 0 ? "" : Utilities.FormatCsvInteger(inputMaximumOutputA[inputBit]),
-                            count == 0 ? "" : Utilities.FormatCsvInteger(inputMaximumOutputB[inputBit]),
-                            Utilities.FormatCsvInteger(inputSignificantTests[inputBit])
+                            Utilities.FormatCsvInteger(inputSignificantTests[inputBit]),
+                            Utilities.FormatCsvInteger(count),
+                            (count == 0) ? String.Empty : Utilities.FormatCsvDouble(inputSumAbsolutePhi[inputBit] / count),
+                            (count == 0) ? String.Empty : Utilities.FormatCsvDouble(inputMaximumAbsolutePhi[inputBit]),
+                            (count == 0) ? String.Empty : Utilities.FormatCsvInteger(inputMaximumPhiOutputBitA[inputBit]),
+                            (count == 0) ? String.Empty : Utilities.FormatCsvInteger(inputMaximumPhiOutputBitB[inputBit])
                         ));
                     }
                 }
@@ -321,7 +432,8 @@ namespace FastHashes.Analysis
 
                 using (StreamWriter writer = new(filePath, false, encoding))
                 {
-                    writer.WriteLine("OutputBitA,OutputBitB,MeanAbsolutePhi,DefinedInputBits");
+                    writer.WriteLine("OutputBitA,OutputBitB,DefinedPhi,MeanAbsolutePhi");
+
                     Int32 pairIndex = 0;
 
                     for (Int32 a = 0; a < outputBits; ++a)
@@ -331,9 +443,10 @@ namespace FastHashes.Analysis
                             writer.WriteLine(String.Join(",",
                                 Utilities.FormatCsvInteger(a),
                                 Utilities.FormatCsvInteger(b),
-                                pairValid[pairIndex] == 0 ? "" : Utilities.FormatCsvDouble(meanAbsoluteCorrelation[pairIndex]),
-                                Utilities.FormatCsvInteger(pairValid[pairIndex])
+                                Utilities.FormatCsvInteger(outputDefinedPhi[pairIndex]),
+                                (outputDefinedPhi[pairIndex] == 0) ? String.Empty : Utilities.FormatCsvDouble(outputMeanAbsolutePhi[pairIndex])
                             ));
+
                             ++pairIndex;
                         }
                     }
@@ -343,99 +456,50 @@ namespace FastHashes.Analysis
 
                 using (StreamWriter writer = new(filePath, false, encoding))
                 {
-                    writer.WriteLine("InputBit,OutputBitA,OutputBitB,N00,N01,N10,N11,Trials,Phi,AbsolutePhi,PValue,BonferroniPValue,TestStatus");
+                    writer.WriteLine("InputBit,OutputBitA,OutputBitB,Trials,N00,N01,N10,N11,TestStatus,Phi,AbsolutePhi,PValue,BonferroniPValue");
 
                     foreach (IndependenceExtreme extreme in strongest)
                     {
-                        Boolean valid = ExpectedCountsValid(extreme.N00, extreme.N01, extreme.N10, extreme.N11, samples);
-                        Double p = valid ? PValue(extreme.Phi, samples) : Double.NaN;
+                        Boolean valid = ExpectedCountsSufficient(extreme.N00, extreme.N01, extreme.N10, extreme.N11, samples);
+                        Double pValue = valid ? MathUtilities.Erfc(Math.Sqrt(samples / 2.0d) * Math.Abs(extreme.Phi)) : Double.NaN;
+
                         writer.WriteLine(String.Join(",",
                             Utilities.FormatCsvInteger(extreme.InputBit),
                             Utilities.FormatCsvInteger(extreme.OutputBitA),
                             Utilities.FormatCsvInteger(extreme.OutputBitB),
+                            Utilities.FormatCsvInteger(samples),
                             Utilities.FormatCsvInteger(extreme.N00),
                             Utilities.FormatCsvInteger(extreme.N01),
                             Utilities.FormatCsvInteger(extreme.N10),
                             Utilities.FormatCsvInteger(extreme.N11),
-                            Utilities.FormatCsvInteger(samples),
+                            valid ? "Valid" : "InsufficientExpectedCounts",
                             Utilities.FormatCsvDouble(extreme.Phi),
                             Utilities.FormatCsvDouble(Math.Abs(extreme.Phi)),
-                            valid ? Utilities.FormatCsvDouble(p) : "",
-                            valid ? Utilities.FormatCsvDouble(Math.Min(1.0d, p * validTests)) : "",
-                            valid ? "Valid" : "InsufficientExpectedCounts"
+                            valid ? Utilities.FormatCsvDouble(pValue) : String.Empty,
+                            valid ? Utilities.FormatCsvDouble(Math.Min(1.0d, pValue * validTests)) : String.Empty
                         ));
                     }
                 }
 
-                filePath = Path.Combine(directory, "independence-heatmap.svg");
-                IndependenceSvg.WriteHeatmap(filePath, meanAbsoluteCorrelation, pairValid, outputBits, samples, inputBits,
-                    meanAbsolute, maximumAbsoluteCorrelation, significantTests, validTests);
+                filePath = Path.Combine(directory, "independence-bic.svg");
+                PlotBic(filePath, samples, inputBits, outputBits, validTests, significantTests, outputDefinedPhi, outputMeanAbsolutePhi, meanAbsolutePhi, maximumAbsolutePhi);
             }
 
             return Utilities.WriteArtifacts(hashName, writeFunction, outputDirectory);
         }
+        #endregion
 
-        private readonly record struct IndependenceExtreme(Int32 InputBit, Int32 OutputBitA, Int32 OutputBitB,
-            Int32 N00, Int32 N01, Int32 N10, Int32 N11, Double Phi);
-
-        private static Double Phi(Int32 n00, Int32 n01, Int32 n10, Int32 n11)
-        {
-            Double a = (Double)(n10 + n11) * (n00 + n01);
-            Double b = (Double)(n01 + n11) * (n00 + n10);
-            if (a == 0.0d || b == 0.0d)
-                return Double.NaN;
-            return ((Double)n11 * n00 - (Double)n10 * n01) / Math.Sqrt(a * b);
-        }
-
-        private static Boolean ExpectedCountsValid(Int32 n00, Int32 n01, Int32 n10, Int32 n11, Int32 samples)
-        {
-            Int32 rowZero = n00 + n01;
-            Int32 rowOne = n10 + n11;
-            Int32 columnZero = n00 + n10;
-            Int32 columnOne = n01 + n11;
-            return (Double)rowZero * columnZero / samples >= 5.0d &&
-                   (Double)rowZero * columnOne / samples >= 5.0d &&
-                   (Double)rowOne * columnZero / samples >= 5.0d &&
-                   (Double)rowOne * columnOne / samples >= 5.0d;
-        }
-
-        // P(ChiSquare_1 >= n*phi^2) = erfc(sqrt(n)*abs(phi)/sqrt(2)).
-        // Use the nonalternating erf series at small z and the Laplace continued
-        // fraction for erfc at large z, avoiding cancellation in the upper tail.
-        private static Double PValue(Double phi, Int32 samples)
-        {
-            Double z = Math.Sqrt(samples / 2.0d) * Math.Abs(phi);
-            const Double TWO_OVER_SQRT_PI = 1.1283791670955126d;
-            const Double INV_SQRT_PI = 0.5641895835477563d;
-
-            if (z == 0.0d)
-                return 1.0d;
-
-            if (z < 2.0d)
-            {
-                Double term = z;
-                Double sum = z;
-                for (Int32 n = 0; n < 100; ++n)
-                {
-                    term *= 2.0d * z * z / (2 * n + 3);
-                    sum += term;
-                    if (term <= sum * 1.0e-16d)
-                        break;
-                }
-                return Math.Max(0.0d, 1.0d - TWO_OVER_SQRT_PI * Math.Exp(-z * z) * sum);
-            }
-
-            // erfc(z) = exp(-z*z)/sqrt(pi) / (z + 1/(2z + 2/(z + 3/(2z + ...)))).
-            // Truncation counts are chosen to preserve double precision at the
-            // low end of each interval while keeping repeated BIC tests economical.
-            Int32 terms = z < 3.0d ? 64 : z < 4.0d ? 32 : z < 5.0d ? 24 : 16;
-            Double fraction = 0.0d;
-            for (Int32 n = terms; n >= 1; --n)
-                fraction = n / ((n % 2 == 1 ? 2.0d * z : z) + fraction);
-
-            return Math.Max(0.0d, Math.Min(1.0d, Math.Exp(-z * z) * INV_SQRT_PI / (z + fraction)));
-        }
-
+        #region Records
+        private readonly record struct IndependenceExtreme(
+            Int32 InputBit,
+            Int32 OutputBitA,
+            Int32 OutputBitB,
+            Int32 N00,
+            Int32 N01,
+            Int32 N10,
+            Int32 N11,
+            Double Phi
+        );
         #endregion
     }
 }

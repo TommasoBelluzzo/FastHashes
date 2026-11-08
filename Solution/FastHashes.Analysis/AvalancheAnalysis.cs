@@ -11,10 +11,9 @@ namespace FastHashes.Analysis
     internal static class AvalancheAnalysis
     {
         #region Setup
-        private const Double HEATMAP_SCALE = 0.10d;
         private const Int64 MAXIMUM_HASH_EVALUATIONS = 20000000;
         private const Int64 MAXIMUM_MATRIX_CELLS = 1000000;
-        private const Double SIGNIFICANCE_LEVEL = 0.05d;
+        private const Double PLOT_HEATMAP_SCALE = 0.10d;
         #endregion
 
         #region Methods
@@ -28,21 +27,23 @@ namespace FastHashes.Analysis
             UInt64 generatorSeed = config.GeneratorSeed;
             Int32 samples = config.Samples;
             Int32 keysLength = config.KeysLength;
+            Double significance = config.Significance;
 
             Int32 inputBits = checked(keysLength * 8);
-            Int64 evaluations = (Int64)samples * (1L + inputBits);
-            Int64 cells = (Int64)inputBits * hashLength;
-
-            if (evaluations > MAXIMUM_HASH_EVALUATIONS)
-                throw new ArgumentException($"Avalanche workload exceeds {MAXIMUM_HASH_EVALUATIONS} hash evaluations; reduce --samples and/or --keys-length parameter value.");
-
-            if (cells > MAXIMUM_MATRIX_CELLS)
-                throw new ArgumentException($"Avalanche matrix exceeds {MAXIMUM_MATRIX_CELLS} cells; reduce the --keys-length parameter value.");
-
-            Int32 outputBits = hash.Length;
+            Int32 outputBits = hashLength;
             Int32 outputBytes = outputBits / 8;
 
-            Int32[] changed = new Int32[checked(inputBits * outputBits)];
+            Int64 bitFlipTrials = (Int64)samples * inputBits;
+            Int64 hashEvaluations = samples + bitFlipTrials;
+            Int64 sacCells = (Int64)inputBits * outputBits;
+
+            if (hashEvaluations > MAXIMUM_HASH_EVALUATIONS)
+                throw new ArgumentException($"Avalanche workload exceeds {MAXIMUM_HASH_EVALUATIONS} hash evaluations; reduce --samples and/or --keys-length parameter value.");
+
+            if (sacCells > MAXIMUM_MATRIX_CELLS)
+                throw new ArgumentException($"Avalanche matrix exceeds {MAXIMUM_MATRIX_CELLS} cells; reduce the --keys-length parameter value.");
+
+            Int32[] changed = new Int32[checked((Int32)sacCells)];
             Int64[] hamming = new Int64[outputBits + 1];
 
             RandomSplitMix generator = new(generatorSeed);
@@ -83,7 +84,7 @@ namespace FastHashes.Analysis
                         for (Int32 bit = 0; bit < 8; ++bit)
                         {
                             if ((difference & (1 << bit)) != 0)
-                                ++changed[rowStart + ob * 8 + bit];
+                                ++changed[rowStart + (ob * 8) + bit];
                         }
                     }
 
@@ -91,8 +92,6 @@ namespace FastHashes.Analysis
                 }
             }
 
-            Int64 sacCells = (Int64)inputBits * outputBits;
-            Int64 bitFlipTrials = (Int64)samples * inputBits;
             Double[] probabilities = MathUtilities.BinomialTailProbabilities(samples);
             
             Int64 significantCells = 0;
@@ -110,7 +109,7 @@ namespace FastHashes.Analysis
                     Double absoluteBias = Math.Abs(((Double)count / samples) - 0.5d);
                     Double pValue = probabilities[Math.Min(count, samples - count)];
 
-                    if (Math.Min(1.0d, pValue * sacCells) < SIGNIFICANCE_LEVEL)
+                    if (Math.Min(1.0d, pValue * sacCells) < significance)
                         ++significantCells;
 
                     sumAbsoluteBias += absoluteBias;
@@ -131,12 +130,12 @@ namespace FastHashes.Analysis
             Double meanChangedOutputBits = sumDistance / bitFlipTrials;
 
             Dictionary<String, Object> metadata = Utilities.CreateMetadata("avalanche", config);
-            metadata["SignificanceLevel"] = SIGNIFICANCE_LEVEL;
+            metadata["Significance"] = significance;
             metadata["InputBits"] = inputBits;
             metadata["OutputBits"] = outputBits;
-            metadata["Evaluations"] = evaluations;
-            metadata["SacCells"] = sacCells;
             metadata["BitFlipTrials"] = bitFlipTrials;
+            metadata["HashEvaluations"] = hashEvaluations;
+            metadata["SacCells"] = sacCells;
             metadata["SignificantCells"] = significantCells;
             metadata["MaximumAbsoluteBias"] = maximumAbsoluteBias;
             metadata["MeanAbsoluteBias"] = meanAbsoluteBias;
@@ -313,7 +312,7 @@ namespace FastHashes.Analysis
 
             plot.ConfigureRightColorbar(
                 "Absolute Bias",
-                0.0d, HEATMAP_SCALE * 100.0d,
+                0.0d, PLOT_HEATMAP_SCALE * 100.0d,
                 "#ffffff", plot.ObservedColor,
                 intervals: 5, saturated: true, format: "0.##", suffix: "%"
             );
@@ -338,7 +337,7 @@ namespace FastHashes.Analysis
 
                     plot.HeatmapCell(
                         ob, ib, outputBits, inputBits,
-                        plot.Color(absoluteBias, 0.0d, HEATMAP_SCALE, "#ffffff", plot.ObservedColor)
+                        plot.Color(absoluteBias, 0.0d, PLOT_HEATMAP_SCALE, "#ffffff", plot.ObservedColor)
                     );
                 }
             }

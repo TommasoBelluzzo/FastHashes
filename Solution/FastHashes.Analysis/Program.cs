@@ -18,6 +18,9 @@ namespace FastHashes.Analysis
         private const Int32 SAMPLES = 1000;
         private const Int32 SAMPLES_MINIMUM = 1000;
         private const Int32 SAMPLES_MAXIMUM = 50000;
+        private const Double SIGNIFICANCE = 0.05d;
+        private const Double SIGNIFICANCE_MINIMUM = 0.01d;
+        private const Double SIGNIFICANCE_MAXIMUM = 0.10d;
         private const Int32 KEYS_LENGTH = 64;
         private const Int32 KEYS_LENGTH_MINIMUM = 16;
         private const Int32 KEYS_LENGTH_MAXIMUM = 4096;
@@ -41,12 +44,36 @@ namespace FastHashes.Analysis
             Option<String> analysisOption = new("--analysis")
             {
                 Description = $"The analysis to perform: all, {String.Join(", ", s_Analyses)}",
-                DefaultValueFactory = _ => ANALYSIS
+                DefaultValueFactory = _ => ANALYSIS,
+                Validators =
+                {
+                    result =>
+                    {
+                        String analysisName = result.GetValueOrDefault<String>();
+
+                        if (String.IsNullOrWhiteSpace(analysisName))
+                            result.AddError("Parameter --analysis requires a non-empty value.");
+                        else if ((analysisName != "all") && !s_Analyses.Contains(analysisName))
+                            result.AddError($"Unknown --analysis parameter value: {analysisName}.");
+                    }
+                }
             };
 
             Option<String> hashOption = new("--hash")
             {
-                Description = "The registered hash to analyze."
+                Description = "The registered hash to analyze.",
+                Validators =
+                {
+                    result =>
+                    {
+                        String hashName = result.GetValueOrDefault<String>();
+
+                        if (String.IsNullOrWhiteSpace(hashName))
+                            result.AddError("Parameter --hash requires a non-empty value.");
+                        else if (!Hash.GetAlgorithms().Contains(hashName))
+                            result.AddError($"Unknown --hash parameter value: {hashName}; hash names are case-sensitive and must match the registry.");
+                    }
+                }
             };
 
             Option<UInt64?> hashSeedOption = new("--hash-seed")
@@ -63,64 +90,66 @@ namespace FastHashes.Analysis
             Option<Int32> samplesOption = new("--samples")
             {
                 Description = $"Number of independent base inputs. [valid range: {SAMPLES_MINIMUM}-{SAMPLES_MAXIMUM}]",
-                DefaultValueFactory = _ => SAMPLES
+                DefaultValueFactory = _ => SAMPLES,
+                Validators =
+                {
+                    result =>
+                    {
+                        Int32 value = result.GetValueOrDefault<Int32>();
+
+                        if ((value < SAMPLES_MINIMUM) || (value > SAMPLES_MAXIMUM))
+                            result.AddError($"Value of parameter --samples must be between {SAMPLES_MINIMUM} and {SAMPLES_MAXIMUM}.");
+                    }
+                }
             };
 
             Option<Int32> keysLengthOption = new("--keys-length")
             {
                 Description = $"Input keys length in bytes. [valid range: {KEYS_LENGTH_MINIMUM}-{KEYS_LENGTH_MAXIMUM}]",
-                DefaultValueFactory = _ => KEYS_LENGTH
+                DefaultValueFactory = _ => KEYS_LENGTH,
+                Validators =
+                {
+                    result =>
+                    {
+                        Int32 value = result.GetValueOrDefault<Int32>();
+
+                        if ((value < KEYS_LENGTH_MINIMUM) || (value > KEYS_LENGTH_MAXIMUM))
+                            result.AddError($"Value of parameter --keys-length must be between {KEYS_LENGTH_MINIMUM} and {KEYS_LENGTH_MAXIMUM}.");
+                    }
+                }
+            };
+
+            Option<Double> significanceOption = new("--significance")
+            {
+                Description = $"Statistical significance level used for hypothesis testing. [valid range: {SIGNIFICANCE_MINIMUM:0.##}-{SIGNIFICANCE_MAXIMUM:0.##}]",
+                DefaultValueFactory = _ => SIGNIFICANCE,
+                Validators =
+                {
+                    result =>
+                    {
+                        Double value = result.GetValueOrDefault<Double>();
+
+                        if (!Double.IsFinite(value) || (value < SIGNIFICANCE_MINIMUM) || (value > SIGNIFICANCE_MAXIMUM))
+                            result.AddError($"Value of parameter --significance must be finite, and between {SIGNIFICANCE_MINIMUM:0.##} and {SIGNIFICANCE_MAXIMUM:0.##}.");
+                    }
+                }
             };
 
             Option<Int32> corpusSizeOption = new("--corpus-size")
             {
                 Description = $"Number of sequential-number and distinct random-byte keys for collision analysis. [valid range: {CORPUS_SIZE_MINIMUM}-{CORPUS_SIZE_MAXIMUM}]",
-                DefaultValueFactory = _ => CORPUS_SIZE
+                DefaultValueFactory = _ => CORPUS_SIZE,
+                Validators =
+                {
+                    result =>
+                    {
+                        Int32 value = result.GetValueOrDefault<Int32>();
+
+                        if ((value < CORPUS_SIZE_MINIMUM) || (value > CORPUS_SIZE_MAXIMUM))
+                            result.AddError($"Value of parameter --corpus-size must be between {CORPUS_SIZE_MINIMUM} and {CORPUS_SIZE_MAXIMUM}.");
+                    }
+                }
             };
-
-            hashOption.Validators.Add(result =>
-            {
-                String hashName = result.GetValueOrDefault<String>();
-
-                if (String.IsNullOrWhiteSpace(hashName))
-                    result.AddError("Parameter --hash requires a non-empty value.");
-                else if (!Hash.GetAlgorithms().Contains(hashName))
-                    result.AddError($"Unknown --hash parameter value: {hashName}; hash names are case-sensitive and must match the registry.");
-            });
-
-            analysisOption.Validators.Add(result =>
-            {
-                String analysisName = result.GetValueOrDefault<String>();
-
-                if (String.IsNullOrWhiteSpace(analysisName))
-                    result.AddError("Parameter --analysis requires a non-empty value.");
-                else if ((analysisName != "all") && !s_Analyses.Contains(analysisName))
-                    result.AddError($"Unknown --analysis parameter value: {analysisName}.");
-            });
-
-            samplesOption.Validators.Add(result =>
-            {
-                Int32 value = result.GetValueOrDefault<Int32>();
-
-                if ((value < SAMPLES_MINIMUM) || (value > SAMPLES_MAXIMUM))
-                    result.AddError($"Parameter --samples must be between {SAMPLES_MINIMUM} and {SAMPLES_MAXIMUM}.");
-            });
-
-            keysLengthOption.Validators.Add(result =>
-            {
-                Int32 value = result.GetValueOrDefault<Int32>();
-
-                if ((value < KEYS_LENGTH_MINIMUM) || (value > KEYS_LENGTH_MAXIMUM))
-                    result.AddError($"Parameter --keys-length must be between {KEYS_LENGTH_MINIMUM} and {KEYS_LENGTH_MAXIMUM}.");
-            });
-
-            corpusSizeOption.Validators.Add(result =>
-            {
-                Int32 value = result.GetValueOrDefault<Int32>();
-
-                if ((value < CORPUS_SIZE_MINIMUM) || (value > CORPUS_SIZE_MAXIMUM))
-                    result.AddError($"Parameter --corpus-size must be between {CORPUS_SIZE_MINIMUM} and {CORPUS_SIZE_MAXIMUM}.");
-            });
 
             command.Options.Add(listOption);
             command.Options.Add(analysisOption);
@@ -129,6 +158,7 @@ namespace FastHashes.Analysis
             command.Options.Add(generatorSeedOption);
             command.Options.Add(samplesOption);
             command.Options.Add(keysLengthOption);
+            command.Options.Add(significanceOption);
             command.Options.Add(corpusSizeOption);
 
             command.Validators.Add(result =>
@@ -141,7 +171,7 @@ namespace FastHashes.Analysis
                     return;
                 }
 
-                Option[] analysisOptions = [analysisOption, hashOption, hashSeedOption, generatorSeedOption, samplesOption, keysLengthOption, corpusSizeOption];
+                Option[] analysisOptions = [analysisOption, hashOption, hashSeedOption, generatorSeedOption, samplesOption, keysLengthOption, significanceOption, corpusSizeOption];
 
                 foreach (Option option in analysisOptions)
                 {
@@ -175,6 +205,7 @@ namespace FastHashes.Analysis
                         parseResult.GetValue(generatorSeedOption),
                         parseResult.GetValue(samplesOption),
                         parseResult.GetValue(keysLengthOption),
+                        parseResult.GetValue(significanceOption),
                         parseResult.GetValue(corpusSizeOption)
                     );
 
@@ -215,6 +246,7 @@ namespace FastHashes.Analysis
             Console.WriteLine($"Generator Seed: {config.GeneratorSeed}");
             Console.WriteLine($"Samples: {config.Samples}");
             Console.WriteLine($"Keys Length: {config.KeysLength} Bytes");
+            Console.WriteLine($"Significance: {config.Significance:0.##}");
             Console.WriteLine($"Corpus Size: {config.CorpusSize}");
             Console.WriteLine();
             
