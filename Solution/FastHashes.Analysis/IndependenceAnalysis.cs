@@ -363,7 +363,6 @@ namespace FastHashes.Analysis
             Boolean hasDefinedPhi = degenerateTests < pairCells;
 
             Dictionary<String, Object> metadata = Utilities.CreateMetadata("independence", config);
-            metadata["Significance"] = significance;
             metadata["InputBits"] = inputBits;
             metadata["OutputBits"] = outputBits;
             metadata["OutputPairs"] = outputPairs;
@@ -375,25 +374,16 @@ namespace FastHashes.Analysis
             metadata["InsufficientTests"] = insufficientTests;
             metadata["SignificantTests"] = significantTests;
             metadata["HasDefinedPhi"] = hasDefinedPhi;
-
-            if (hasDefinedPhi)
-            {
-                metadata["MeanAbsolutePhi"] = meanAbsolutePhi;
-                metadata["MaximumAbsolutePhi"] = maximumAbsolutePhi;
-                metadata["MaximumPhiInputBit"] = maximumPhiInputBit;
-                metadata["MaximumPhiOutputBitA"] = maximumPhiOutputBitA;
-                metadata["MaximumPhiOutputBitB"] = maximumPhiOutputBitB;
-            }
-            else
-            {
-                metadata["MeanAbsolutePhi"] = null;
-                metadata["MaximumAbsolutePhi"] = null;
-                metadata["MaximumPhiInputBit"] = null;
-                metadata["MaximumPhiOutputBitA"] = null;
-                metadata["MaximumPhiOutputBitB"] = null;
-            }
-
-            metadata["OutputFiles"] = new[] { "independence.json", "independence-inputs.csv", "independence-pairs.csv", "independence-extremes.csv", "independence-bic.svg" };
+            metadata["MeanAbsolutePhi"] = hasDefinedPhi ? meanAbsolutePhi : null;
+            metadata["MaximumAbsolutePhi"] = hasDefinedPhi ? maximumAbsolutePhi : null;
+            metadata["MaximumPhiInputBit"] = hasDefinedPhi ? maximumPhiInputBit : null;
+            metadata["MaximumPhiOutputBitA"] = hasDefinedPhi ? maximumPhiOutputBitA : null;
+            metadata["MaximumPhiOutputBitB"] = hasDefinedPhi ? maximumPhiOutputBitB : null;
+            metadata["OutputFiles"] = new[] {
+                "independence.json",
+                "independence-inputs.csv", "independence-pairs.csv", "independence-extremes.csv",
+                "independence-bic.svg"
+            };
 
             void writeFunction(String directory)
             {

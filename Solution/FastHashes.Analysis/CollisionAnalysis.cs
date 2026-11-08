@@ -205,7 +205,6 @@ namespace FastHashes.Analysis
             ];
 
             Dictionary<String, Object> metadata = Utilities.CreateMetadata("collision", config);
-            metadata["SchemaVersion"] = 3;
             metadata["ProjectionBits"] = PROJECTION_BITS;
             metadata["ProjectionBuckets"] = PROJECTION_BUCKETS;
             metadata["Corpora"] = results.ConvertAll(result => new

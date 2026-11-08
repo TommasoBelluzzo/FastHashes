@@ -130,7 +130,6 @@ namespace FastHashes.Analysis
             Double meanChangedOutputBits = sumDistance / bitFlipTrials;
 
             Dictionary<String, Object> metadata = Utilities.CreateMetadata("avalanche", config);
-            metadata["Significance"] = significance;
             metadata["InputBits"] = inputBits;
             metadata["OutputBits"] = outputBits;
             metadata["BitFlipTrials"] = bitFlipTrials;
@@ -143,7 +142,11 @@ namespace FastHashes.Analysis
             metadata["MaximumBiasOutputBit"] = maximumBiasOutputBit;
             metadata["MeanChangedOutputBits"] = meanChangedOutputBits;
             metadata["MeanChangedOutputBitsIdeal"] = outputBits / 2.0d;
-            metadata["OutputFiles"] = new[] { "avalanche.json", "avalanche.csv", "avalanche-hamming.csv", "avalanche-hd.svg", "avalanche-sac.svg" };
+            metadata["OutputFiles"] = new[] {
+                "avalanche.json",
+                "avalanche.csv", "avalanche-hamming.csv",
+                "avalanche-hd.svg", "avalanche-sac.svg"
+            };
 
             void writeFunction(String directory)
             {

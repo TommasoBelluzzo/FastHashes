@@ -606,8 +606,10 @@ namespace FastHashes.Analysis
             {
                 Double value = minimum + (maximum - minimum) * i / intervals;
                 String label = Format(value, format) + suffix;
-                if (saturated && i == intervals)
-                    label = "≥" + label;
+                if (saturated && i == 0)
+                    label = "≤ " + label;
+                else if (saturated && i == intervals)
+                    label = "≥ " + label;
                 Label(left + width + 10.0d, top + height - i * height / intervals + 4.0d, label, TickSize);
             }
         }

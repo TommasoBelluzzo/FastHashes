@@ -34,6 +34,36 @@ namespace FastHashes.Analysis
             return tails;
         }
 
+        public static Double ChiSquare(Int32[] counts, Int64 total)
+        {
+            Double expected = (Double)total / counts.Length;
+            Double statistic = 0.0d;
+
+            foreach (Int32 count in counts)
+            {
+                Double difference = count - expected;
+                statistic += difference * difference / expected;
+            }
+
+            return statistic;
+        }
+
+        public static Double Entropy(Int32[] counts, Int64 total)
+        {
+            Double entropy = 0.0d;
+
+            foreach (Int32 count in counts)
+            {
+                if (count == 0)
+                    continue;
+
+                Double probability = (Double)count / total;
+                entropy -= probability * Math.Log2(probability);
+            }
+
+            return entropy;
+        }
+
         public static Double Erfc(Double x)
         {
             const Double TWO_OVER_SQRT_PI = 1.1283791670955126d;

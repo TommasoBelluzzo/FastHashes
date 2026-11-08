@@ -37,7 +37,8 @@ namespace FastHashes.Analysis
                 ["GeneratorSeed"] = config.GeneratorSeed,
                 ["Samples"] = config.Samples,
                 ["KeysLength"] = config.KeysLength,
-                ["CorpusSize"] = config.CorpusSize
+                ["CorpusSize"] = config.CorpusSize,
+                ["Significance"] = config.Significance
             };
         }
 
