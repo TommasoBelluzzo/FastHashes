@@ -76,16 +76,17 @@ namespace FastHashes.Analysis
                 else
                     fullGroups.Add(hashHex, (inputHex, 1));
 
-                if ((loads[bucket] > 0) && (projectedExamples < MAXIMUM_CORPUS_EXAMPLES))
+                Int32 load = loads[bucket];
+
+                if (load == 0)
+                    firstBucketInputs[bucket] = inputHex;
+                else if (projectedExamples < MAXIMUM_CORPUS_EXAMPLES)
                 {
                     examples.Add(new CollisionExample(name, "projected_16", bucket, hashHex, firstBucketInputs[bucket], inputHex));
                     ++projectedExamples;
                 }
 
-                if (loads[bucket] == 0)
-                    firstBucketInputs[bucket] = inputHex;
-
-                projectedPairs += loads[bucket];
+                projectedPairs += load;
                 ++loads[bucket];
 
                 if (distinctLimit.HasValue && (inputsDistinct >= distinctLimit.Value))
@@ -148,7 +149,6 @@ namespace FastHashes.Analysis
                 
                 yield return buffer;
             }
-                
         }
 
         private static IEnumerable<Byte[]> GenerateRandomBytes(Int32 length, UInt64 seed, Int64 maximumAttempts)

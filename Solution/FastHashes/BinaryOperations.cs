@@ -1,4 +1,3 @@
-
 #region Using Directives
 using System;
 using System.Buffers.Binary;
@@ -100,7 +99,7 @@ namespace FastHashes
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
         /// <param name="offset">The buffer start offset.</param>
         /// <returns>An <see cref="T:System.UInt32"/> value.</returns>
-        public static uint ReadTail32(ReadOnlySpan<Byte> buffer, Int32 offset)
+        public static UInt32 ReadTail32(ReadOnlySpan<Byte> buffer, Int32 offset)
         {
             ReadOnlySpan<Byte> slice = buffer.Slice(offset);
 
@@ -183,6 +182,34 @@ namespace FastHashes
             }
 
             return v;
+        }
+
+        /// <summary>Multiplies two 8-byte unsigned integers and produces their full 16-byte product.</summary>
+        /// <param name="value1">The first <see cref="T:System.UInt64"/> to multiply.</param>
+        /// <param name="value2">The second <see cref="T:System.UInt64"/> to multiply.</param>
+        /// <param name="lo">The lower 64 bits of the product.</param>
+        /// <param name="hi">The upper 64 bits of the product.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Multiply128(UInt64 value1, UInt64 value2, out UInt64 lo, out UInt64 hi)
+        {
+#if NET5_0_OR_GREATER
+            hi = Math.BigMul(value1, value2, out lo);
+#else
+            UInt64 a0 = unchecked((UInt32)value1);
+            UInt64 a1 = value1 >> 32;
+
+            UInt64 b0 = unchecked((UInt32)value2);
+            UInt64 b1 = value2 >> 32;
+
+            UInt64 p0 = a0 * b0;
+            UInt64 p1 = a0 * b1;
+            UInt64 p2 = a1 * b0;
+            UInt64 p3 = a1 * b1;
+
+            UInt64 mid = (p0 >> 32) + unchecked((UInt32)p1) + unchecked((UInt32)p2);
+            lo = (mid << 32) | unchecked((UInt32)p0);
+            hi = p3 + (p1 >> 32) + (p2 >> 32) + (mid >> 32);
+#endif
         }
 
         /// <summary>Rotates a 2-bytes unsigned integer left by the specified number of bits.</summary>

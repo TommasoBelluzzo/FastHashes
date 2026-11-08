@@ -122,27 +122,6 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected static void Mux(out UInt64 lo, out UInt64 hi, UInt64 v, UInt64 p)
-            {
-#if NET5_0_OR_GREATER
-                hi = Math.BigMul(v, p, out lo);
-#else
-                UInt64 a = v >> 32;
-                UInt64 b = v & 0x00000000FFFFFFFFul;
-                UInt64 c = p >> 32;
-                UInt64 d = p & 0x00000000FFFFFFFFul;
-
-                UInt64 ad = a * d;
-                UInt64 bd = b * d;
-                UInt64 adbc = unchecked(ad + (b * c));
-                UInt64 carry = (adbc < ad) ? 1ul : 0ul;
-
-                lo = unchecked(bd + (adbc << 32));
-                hi = unchecked((a * c) + (adbc >> 32) + (carry << 32) + ((lo < bd) ? 1ul : 0ul));
-#endif
-            }
-
             public abstract UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer);
             #endregion
         }
@@ -328,8 +307,10 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static UInt64 MixT(UInt64 v, UInt64 p)
             {
-                Mux(out UInt64 l, out UInt64 h, v, p);
-                return l ^ h;
+                BinaryOperations.Multiply128(v, p, out UInt64 lo, out UInt64 hi);
+                UInt64 m = lo ^ hi;
+
+                return m;
             }
 
             private UInt64 ComputeResult(ReadOnlySpan<Byte> buffer)
@@ -477,9 +458,9 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void MixT(ref UInt64 v1, ref UInt64 v2, UInt64 v3, UInt64 p)
             {
-                Mux(out UInt64 l, out UInt64 h, unchecked(v3 + v2), p);
-                v1 ^= l;
-                v2 = unchecked(v2 + h);
+                BinaryOperations.Multiply128(unchecked(v3 + v2), p, out UInt64 lo, out UInt64 hi);
+                v1 ^= lo;
+                v2 = unchecked(v2 + hi);
             }
 
             private UInt64 ComputeResult(ReadOnlySpan<Byte> buffer)
@@ -585,9 +566,9 @@ namespace FastHashes
 
                 UInt64 h0 = unchecked((a + BinaryOperations.RotateRight(b, 41)) * P640);
                 UInt64 h1 = unchecked((BinaryOperations.RotateRight(a, 23) + b) * P646);
-                Mux(out UInt64 l, out UInt64 h, h0 ^ h1, P645);
+                BinaryOperations.Multiply128(h0 ^ h1, P645, out UInt64 lo, out UInt64 hi);
 
-                UInt64 hash = l ^ h;
+                UInt64 hash = lo ^ hi;
 
                 return hash;
             }

@@ -91,7 +91,7 @@ namespace FastHashes
             UInt64 x = unchecked(BinaryOperations.Read64(buffer, 0) + OH[0]);
             UInt64 y = unchecked(BinaryOperations.Read64(buffer, count - 8) + OH[1]);
 
-            Mul128(x, y, out lo, out hi);
+            BinaryOperations.Multiply128(x, y, out lo, out hi);
             hi = unchecked(hi + (seed ^ (UInt64)count));
             hi ^= lo;
         }
@@ -133,10 +133,10 @@ namespace FastHashes
         {
             UInt64 lo, hi;
 
-            Mul128(m0, AddMod(accumulator, x), out lo, out hi);
+            BinaryOperations.Multiply128(m0, AddMod(accumulator, x), out lo, out hi);
             UInt64 v1 = AddMod(lo, unchecked(8ul * hi));
 
-            Mul128(m1, y, out lo, out hi);
+            BinaryOperations.Multiply128(m1, y, out lo, out hi);
             UInt64 v2 = AddMod(lo, unchecked(8ul * hi));
 
             UInt64 sum = unchecked(v1 + v2);
@@ -173,30 +173,6 @@ namespace FastHashes
                 if (i != 0)
                     hi ^= x >> (64 - i);
             }
-        }
-
-        /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static void Mul128(UInt64 x, UInt64 y, out UInt64 lo, out UInt64 hi)
-        {
-#if NET5_0_OR_GREATER
-            hi = Math.BigMul(x, y, out lo);
-#else
-            UInt64 x0 = unchecked((UInt32)x);
-            UInt64 x1 = x >> 32;
-
-            UInt64 y0 = unchecked((UInt32)y);
-            UInt64 y1 = y >> 32;
-
-            UInt64 p0 = x0 * y0;
-            UInt64 p1 = x0 * y1;
-            UInt64 p2 = x1 * y0;
-            UInt64 p3 = x1 * y1;
-
-            UInt64 mid = unchecked((p0 >> 32) + (UInt32)p1 + (UInt32)p2);
-            lo = (mid << 32) | unchecked((UInt32)p0);
-            hi = unchecked(p3 + (p1 >> 32) + (p2 >> 32) + (mid >> 32));
-#endif
         }
         #endregion
     }
@@ -268,7 +244,7 @@ namespace FastHashes
             UInt64 lastX = BinaryOperations.Read64(buffer, lastOffset);
             UInt64 lastY = BinaryOperations.Read64(buffer, lastOffset + 8);
 
-            Mul128(unchecked(lastX + OH[endPairs]), unchecked(lastY + OH[endPairs + 1]), out lo, out hi);
+            BinaryOperations.Multiply128(unchecked(lastX + OH[endPairs]), unchecked(lastY + OH[endPairs + 1]), out lo, out hi);
             hi = unchecked(hi + tag);
             hi ^= lo;
 
@@ -394,7 +370,7 @@ namespace FastHashes
             tw0 ^= cl0;
             tw1 ^= cl1;
 
-            Mul128(unchecked(lastX + OH[endPairs]), unchecked(lastY + OH[endPairs + 1]), out lo, out hi);
+            BinaryOperations.Multiply128(unchecked(lastX + OH[endPairs]), unchecked(lastY + OH[endPairs + 1]), out lo, out hi);
             hi = unchecked(hi + tag);
             hi ^= lo;
 

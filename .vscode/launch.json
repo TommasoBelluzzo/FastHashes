@@ -41,7 +41,7 @@
         "--hash",
         "FarmHash32",
         "--analysis",
-        "collision"
+        "independence"
       ],
       "console": "integratedTerminal",
       "stopAtEntry": false

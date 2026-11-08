@@ -1,5 +1,6 @@
 ﻿#region Using Directives
 using System;
+using System.Numerics;
 using Xunit;
 #endregion
 
@@ -174,6 +175,59 @@ namespace FastHashes.Tests
         {
             UInt64 actual = BinaryOperations.ReadTail64(s_Buffer, offset);
             Assert.Equal(expected, actual);
+        }
+        #endregion
+
+        #region Tests: Multiplication Operations
+        [Theory]
+        [InlineData(0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul)]
+        [InlineData(0x0000000000000001ul, 0x0000000000000001ul, 0x0000000000000001ul, 0x0000000000000000ul)]
+        [InlineData(0xFFFFFFFFFFFFFFFFul, 0x0000000000000001ul, 0xFFFFFFFFFFFFFFFFul, 0x0000000000000000ul)]
+        [InlineData(0xFFFFFFFFFFFFFFFFul, 0xFFFFFFFFFFFFFFFFul, 0x0000000000000001ul, 0xFFFFFFFFFFFFFFFEul)]
+        [InlineData(0x0000000100000000ul, 0x0000000100000000ul, 0x0000000000000000ul, 0x0000000000000001ul)]
+        [InlineData(0x00000000FFFFFFFFul, 0x00000000FFFFFFFFul, 0xFFFFFFFE00000001ul, 0x0000000000000000ul)]
+        [InlineData(0xFFFFFFFF00000000ul, 0x00000000FFFFFFFFul, 0x0000000100000000ul, 0x00000000FFFFFFFEul)]
+        [InlineData(0x0123456789ABCDEFul, 0xFEDCBA9876543210ul, 0x2236D88FE5618CF0ul, 0x0121FA00AD77D742ul)]
+        [InlineData(0x8000000000000000ul, 0x0000000000000002ul, 0x0000000000000000ul, 0x0000000000000001ul)]
+        [InlineData(0xFFFFFFFFFFFFFFFFul, 0x8000000000000000ul, 0x8000000000000000ul, 0x7FFFFFFFFFFFFFFFul)]
+        public void Multiply128MatchTest(UInt64 a, UInt64 b, UInt64 expectedLo, UInt64 expectedHi)
+        {
+            BinaryOperations.Multiply128(a, b, out UInt64 actualLo, out UInt64 actualHi);
+
+            Assert.Equal(expectedLo, actualLo);
+            Assert.Equal(expectedHi, actualHi);
+        }
+
+        [Fact]
+        public void Multiply128ReferenceTest()
+        {
+            UInt64[] values =
+            [
+                0ul,
+                1ul,
+                2ul,
+                0x00000000FFFFFFFFul,
+                0x0000000100000000ul,
+                0x0123456789ABCDEFul,
+                0x8000000000000000ul,
+                UInt64.MaxValue
+            ];
+
+            foreach (UInt64 a in values)
+            {
+                foreach (UInt64 b in values)
+                {
+                    BigInteger product = (BigInteger)a * b;
+
+                    UInt64 expectedLo = (UInt64)(product & UInt64.MaxValue);
+                    UInt64 expectedHi = (UInt64)(product >> 64);
+
+                    BinaryOperations.Multiply128(a, b, out UInt64 actualLo, out UInt64 actualHi);
+
+                    Assert.Equal(expectedLo, actualLo);
+                    Assert.Equal(expectedHi, actualHi);
+                }
+            }
         }
         #endregion
 

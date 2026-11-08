@@ -1,86 +1,69 @@
 #region Using Directives
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.Json;
 #endregion
 
 namespace FastHashes.Analysis
 {
-    /// <summary>Bit Independence Criterion analysis of output-bit flips under single input-bit perturbations.</summary>
     internal static class IndependenceAnalysis
     {
         #region Setup
-        private const Double SIGNIFICANCE_LEVEL = 0.05d;
-        private const Int32 MINIMUM_SAMPLES = 100;
         private const Int32 MAXIMUM_EXTREMES = 100;
         private const Int64 MAXIMUM_HASH_EVALUATIONS = 20000000;
         private const Int64 MAXIMUM_PAIR_CELLS = 20000000;
         private const Int64 MAXIMUM_PAIR_TRIALS = 2000000000;
+        private const Double SIGNIFICANCE_LEVEL = 0.05d;
         #endregion
 
         #region Methods
-        public static void Validate(Int32 hashLength, Int32 samples, Int32 keyLength)
-        {
-            if (keyLength < 1)
-                throw new ArgumentOutOfRangeException(nameof(keyLength), "Independence analysis requires a nonempty key.");
-
-            if (samples < MINIMUM_SAMPLES)
-                throw new ArgumentOutOfRangeException(nameof(samples), $"Independence analysis requires at least {MINIMUM_SAMPLES} base inputs for asymptotic testing.");
-
-            if ((hashLength <= 1) || ((hashLength % 8) != 0))
-                throw new NotSupportedException("Independence analysis requires a byte-aligned hash longer than one bit.");
-
-            Int64 inputBits = (Int64)keyLength * 8;
-            Int64 pairs = (Int64)hashLength * (hashLength - 1) / 2;
-
-            if (samples * (inputBits + 1) > MAXIMUM_HASH_EVALUATIONS)
-                throw new ArgumentOutOfRangeException(nameof(samples), "Independence workload exceeds the permitted hash evaluations.");
-
-            if (inputBits * pairs > MAXIMUM_PAIR_CELLS)
-                throw new ArgumentOutOfRangeException(nameof(keyLength), "Independence matrix exceeds the permitted pair cells.");
-
-            if (inputBits * pairs * samples > MAXIMUM_PAIR_TRIALS)
-                throw new ArgumentOutOfRangeException(nameof(samples), "Independence workload exceeds the permitted pair trials; reduce --samples or --key-length.");
-        }
-
         public static String Run(Config config, String outputDirectory = null)
         {
             Hash hash = config.Hash;
             String hashName = config.HashName;
-            UInt64? hashSeed = config.HashSeed;
-            Int32 keysLength = config.KeysLength;
             UInt64 generatorSeed = config.GeneratorSeed;
             Int32 samples = config.Samples;
-            String libraryVersion = config.LibraryVersion;
-
-            Validate(hash.Length, samples, keysLength);
+            Int32 keysLength = config.KeysLength;
 
             Int32 inputBits = checked(keysLength * 8);
             Int32 outputBits = hash.Length;
             Int32 outputBytes = outputBits / 8;
-            Int32 pairCount = checked(outputBits * (outputBits - 1) / 2);
-            Int32[] flipCounts = new Int32[checked(inputBits * outputBits)];
-            Int32[] jointCounts = new Int32[checked(inputBits * pairCount)];
-            Int32[] flippedBits = new Int32[outputBits];
-            Byte[] key = new Byte[keysLength];
-            RandomSplitMix generator = new(generatorSeed);
+            Int32 outputPairs = checked(outputBits * (outputBits - 1) / 2);
 
-            // Sampling is completed before any directory or report is created.
+            Int64 evaluations = (Int64)samples * (inputBits + 1L);
+            Int64 pairCells = (Int64)inputBits * outputPairs;
+            Int64 pairTrials = pairCells * samples;
+
+            if (evaluations > MAXIMUM_HASH_EVALUATIONS)
+                throw new ArgumentException($"Independence workload exceeds {MAXIMUM_HASH_EVALUATIONS} hash evaluations; reduce --samples and/or --keys-length parameter value.");
+
+            if (pairCells > MAXIMUM_PAIR_CELLS)
+                throw new ArgumentException($"Independence matrix exceeds {MAXIMUM_PAIR_CELLS} pair cells; reduce the --keys-length parameter value.");
+
+            if (pairTrials > MAXIMUM_PAIR_TRIALS)
+                throw new ArgumentException($"Independence workload exceeds {MAXIMUM_PAIR_TRIALS} pair trials; reduce --samples and/or --keys-length parameter value.");
+
+            Int32[] flipCounts = new Int32[checked(inputBits * outputBits)];
+            Int32[] jointCounts = new Int32[checked((Int32)pairCells)];
+            Int32[] flippedBits = new Int32[outputBits];
+
+            RandomSplitMix generator = new(generatorSeed);
+            Byte[] key = new Byte[keysLength];
+
             for (Int32 sample = 0; sample < samples; ++sample)
             {
                 generator.NextBytes(key);
-                Byte[] baseline = hash.ComputeHashBytes(key);
-                CheckDigest(baseline, outputBytes);
 
-                for (Int32 inputBit = 0; inputBit < inputBits; ++inputBit)
+                Byte[] baseline = hash.ComputeHashBytes(key);
+
+                for (Int32 ib = 0; ib < inputBits; ++ib)
                 {
-                    Int32 keyIndex = inputBit / 8;
-                    Byte mask = (Byte)(1 << (inputBit % 8));
+                    Int32 keyIndex = ib / 8;
+
+                    Byte mask = (Byte)(1 << (ib % 8));
                     key[keyIndex] ^= mask;
+
                     Byte[] mutated;
 
                     try
@@ -92,21 +75,20 @@ namespace FastHashes.Analysis
                         key[keyIndex] ^= mask;
                     }
 
-                    CheckDigest(mutated, outputBytes);
                     Int32 count = 0;
-                    Int32 flipOffset = inputBit * outputBits;
-                    Int32 pairOffset = inputBit * pairCount;
+                    Int32 flipOffset = ib * outputBits;
+                    Int32 pairOffset = ib * outputPairs;
 
-                    for (Int32 outputByte = 0; outputByte < outputBytes; ++outputByte)
+                    for (Int32 ob = 0; ob < outputBytes; ++ob)
                     {
-                        Byte difference = (Byte)(baseline[outputByte] ^ mutated[outputByte]);
+                        Byte difference = (Byte)(baseline[ob] ^ mutated[ob]);
 
                         for (Int32 bit = 0; bit < 8; ++bit)
                         {
                             if ((difference & (1 << bit)) == 0)
                                 continue;
 
-                            Int32 outputBit = outputByte * 8 + bit;
+                            Int32 outputBit = ob * 8 + bit;
                             ++flipCounts[flipOffset + outputBit];
                             flippedBits[count++] = outputBit;
                         }
@@ -124,8 +106,9 @@ namespace FastHashes.Analysis
             }
 
             // Compute complete pair statistics without writing partial reports.
-            Int64 testCount = (Int64)inputBits * pairCount;
-            Double[] meanAbsoluteCorrelation = new Double[pairCount];
+            Int64 testCount = (Int64)inputBits * outputPairs;
+            Double[] meanAbsoluteCorrelation = new Double[outputPairs];
+            Int32[] pairValid = new Int32[outputPairs];
             Int64 validTests = 0;
             Int64 degenerateTests = 0;
             Int64 insufficientExpectedTests = 0;
@@ -149,7 +132,7 @@ namespace FastHashes.Analysis
             {
                 Int32 pairIndex = 0;
                 Int32 flipOffset = inputBit * outputBits;
-                Int32 jointOffset = inputBit * pairCount;
+                Int32 jointOffset = inputBit * outputPairs;
 
                 for (Int32 a = 0; a < outputBits; ++a)
                 {
@@ -171,6 +154,7 @@ namespace FastHashes.Analysis
                             Double absolute = Math.Abs(correlation);
                             sumAbsoluteCorrelation += absolute;
                             meanAbsoluteCorrelation[pairIndex] += absolute;
+                            ++pairValid[pairIndex];
                             inputSumAbsoluteCorrelation[inputBit] += absolute;
                             ++inputDefinedCorrelations[inputBit];
 
@@ -216,57 +200,18 @@ namespace FastHashes.Analysis
             Double meanAbsolute = (degenerateTests == testCount) ? Double.NaN : (sumAbsoluteCorrelation / (testCount - degenerateTests));
             Boolean hasDefinedCorrelations = degenerateTests < testCount;
 
-            String[] outputFiles = ["independence-pairs.csv", "independence-inputs.csv", "independence-extremes.csv", "independence-heatmap.svg", "independence.json", "independence.txt"];
+            for (Int32 i = 0; i < outputPairs; ++i)
+                if (pairValid[i] != 0)
+                    meanAbsoluteCorrelation[i] /= pairValid[i];
 
-            var metadata = new
-            {
-                SchemaVersion = 1,
-                Analysis = "independence",
-                Status = "Completed",
-                QualityAssessment = "StatisticalEvidenceOnly",
-                HashName = hashName,
-                HashSeed = hashSeed,
-                HashLengthBits = outputBits,
-                GeneratorAlgorithm = "SplitMix64",
-                GeneratorSeed = generatorSeed,
-                SamplesPerInputBit = samples,
-                InputLengthBytes = keysLength,
-                InputBits = inputBits,
-                OutputBits = outputBits,
-                OutputPairs = pairCount,
-                PairCells = testCount,
-                HashEvaluations = (Int64)samples * (inputBits + 1L),
-                BitFlipTrials = (Int64)samples * inputBits,
-                BitNumbering = "Least significant bit first within each byte; bytes follow ComputeHashBytes order",
-                Statistic = "Phi coefficient for pairwise output-bit flip indicators conditioned on each input bit",
-                SignificanceTest = "Asymptotic Pearson chi-square (one degree of freedom), upper tail computed as erfc(sqrt(n/2)*abs(phi)); Bonferroni correction across valid tests",
-                SignificanceLevel = SIGNIFICANCE_LEVEL,
-                MinimumExpectedCellCount = 5,
-                ValidTests = validTests,
-                DegenerateTests = degenerateTests,
-                InsufficientExpectedTests = insufficientExpectedTests,
-                MeanAbsoluteCorrelation = Double.IsNaN(meanAbsolute) ? (Double?)null : meanAbsolute,
-                MaximumAbsoluteCorrelation = hasDefinedCorrelations ? (Double?)maximumAbsoluteCorrelation : null,
-                MaximumCorrelationInputBit = hasDefinedCorrelations ? (Int32?)maximumInputBit : null,
-                MaximumCorrelationOutputBitA = hasDefinedCorrelations ? (Int32?)maximumOutputA : null,
-                MaximumCorrelationOutputBitB = hasDefinedCorrelations ? (Int32?)maximumOutputB : null,
-                // Filled consistently after CSV emission below; calculate significant count beforehand.
-                UtcTimestamp = DateTimeOffset.UtcNow,
-                LibraryVersion = libraryVersion,
-                Runtime = RuntimeInformation.FrameworkDescription,
-                OperatingSystem = RuntimeInformation.OSDescription,
-                ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
-                OutputFiles = outputFiles
-            };
-
-            // Count significant cells separately so metadata is finalized before file creation.
+            // Bonferroni significance requires the total valid-test count from the first pass.
             if (validTests > 0)
             {
                 for (Int32 inputBit = 0; inputBit < inputBits; ++inputBit)
                 {
                     Int32 pairIndex = 0;
                     Int32 flipOffset = inputBit * outputBits;
-                    Int32 jointOffset = inputBit * pairCount;
+                    Int32 jointOffset = inputBit * outputPairs;
                     for (Int32 a = 0; a < outputBits; ++a)
                     {
                         for (Int32 b = a + 1; b < outputBits; ++b)
@@ -288,110 +233,150 @@ namespace FastHashes.Analysis
                 }
             }
 
-            return Utilities.WriteArtifacts(hashName, directory =>
+            List<IndependenceExtreme> strongest = [];
+
+            while (extremes.TryDequeue(out IndependenceExtreme extreme, out _))
+                strongest.Add(extreme);
+
+            strongest.Sort((left, right) =>
             {
-                using (StreamWriter writer = CreateWriter(Path.Combine(directory, "independence-inputs.csv")))
+                Int32 comparison = Math.Abs(right.Phi).CompareTo(Math.Abs(left.Phi));
+                if (comparison != 0) return comparison;
+                comparison = left.InputBit.CompareTo(right.InputBit);
+                if (comparison != 0) return comparison;
+                comparison = left.OutputBitA.CompareTo(right.OutputBitA);
+                return comparison != 0 ? comparison : left.OutputBitB.CompareTo(right.OutputBitB);
+            });
+
+            Dictionary<String, Object> metadata = Utilities.CreateMetadata("independence", config);
+            metadata["SignificanceLevel"] = SIGNIFICANCE_LEVEL;
+            metadata["InputBits"] = inputBits;
+            metadata["OutputBits"] = outputBits;
+            metadata["Evaluations"] = evaluations;
+
+
+
+
+            metadata["OutputPairs"] = outputPairs;
+            metadata["PairCells"] = testCount;
+            metadata["HashEvaluations"] = (Int64)samples * (inputBits + 1L);
+            metadata["BitFlipTrials"] = (Int64)samples * inputBits;
+            metadata["BitNumbering"] = "Least significant bit first within each byte; bytes follow ComputeHashBytes order";
+            metadata["Statistic"] = "Phi coefficient for pairwise output-bit flip indicators conditioned on each input bit";
+            metadata["SignificanceTest"] = "Asymptotic Pearson chi-square (one degree of freedom), upper tail computed as erfc(sqrt(n/2)*abs(phi)); Bonferroni correction across valid tests";
+            metadata["SignificanceLevel"] = SIGNIFICANCE_LEVEL;
+            metadata["MinimumExpectedCellCount"] = 5;
+            metadata["ValidTests"] = validTests;
+            metadata["DegenerateTests"] = degenerateTests;
+            metadata["InsufficientExpectedTests"] = insufficientExpectedTests;
+            metadata["SignificantTests"] = significantTests;
+            metadata["MeanAbsoluteCorrelation"] = hasDefinedCorrelations ? (Double?)meanAbsolute : null;
+            metadata["MaximumAbsoluteCorrelation"] = hasDefinedCorrelations ? (Double?)maximumAbsoluteCorrelation : null;
+            metadata["MaximumCorrelationInputBit"] = hasDefinedCorrelations ? (Int32?)maximumInputBit : null;
+            metadata["MaximumCorrelationOutputBitA"] = hasDefinedCorrelations ? (Int32?)maximumOutputA : null;
+            metadata["MaximumCorrelationOutputBitB"] = hasDefinedCorrelations ? (Int32?)maximumOutputB : null;
+            metadata["InterpretationNotes"] = "No significant result does not prove bit independence; the heatmap is descriptive and testing uses each input-bit/output-pair contingency table";
+            metadata["OutputFiles"] = new String[]
+            {
+                "independence.json",
+                "independence-inputs.csv",
+                "independence-pairs.csv",
+                "independence-extremes.csv",
+                "independence-heatmap.svg"
+            };
+
+            void writeFunction(String directory)
+            {
+                String filePath;
+                Encoding encoding = new UTF8Encoding(false);
+
+                filePath = Path.Combine(directory, "independence.json");
+                File.WriteAllText(filePath, Utilities.SerializeJson(metadata) + "\n", encoding);
+
+                filePath = Path.Combine(directory, "independence-inputs.csv");
+
+                using (StreamWriter writer = new(filePath, false, encoding))
                 {
                     writer.WriteLine("InputBit,ValidTests,DegenerateTests,InsufficientExpectedTests,MeanAbsolutePhi,MaximumAbsolutePhi,MaximumOutputBitA,MaximumOutputBitB,SignificantTests");
+
                     for (Int32 inputBit = 0; inputBit < inputBits; ++inputBit)
                     {
                         Int32 count = inputDefinedCorrelations[inputBit];
+
                         writer.WriteLine(String.Join(",",
-                            inputBit, inputValidTests[inputBit], inputDegenerateTests[inputBit], inputInsufficientTests[inputBit],
-                            count == 0 ? "" : Format(inputSumAbsoluteCorrelation[inputBit] / count),
-                            count == 0 ? "" : Format(inputMaximumAbsoluteCorrelation[inputBit]),
-                            count == 0 ? "" : inputMaximumOutputA[inputBit].ToString(CultureInfo.InvariantCulture),
-                            count == 0 ? "" : inputMaximumOutputB[inputBit].ToString(CultureInfo.InvariantCulture),
-                            inputSignificantTests[inputBit]));
+                            Utilities.FormatCsvInteger(inputBit),
+                            Utilities.FormatCsvInteger(inputValidTests[inputBit]),
+                            Utilities.FormatCsvInteger(inputDegenerateTests[inputBit]),
+                            Utilities.FormatCsvInteger(inputInsufficientTests[inputBit]),
+                            count == 0 ? "" : Utilities.FormatCsvDouble(inputSumAbsoluteCorrelation[inputBit] / count),
+                            count == 0 ? "" : Utilities.FormatCsvDouble(inputMaximumAbsoluteCorrelation[inputBit]),
+                            count == 0 ? "" : Utilities.FormatCsvInteger(inputMaximumOutputA[inputBit]),
+                            count == 0 ? "" : Utilities.FormatCsvInteger(inputMaximumOutputB[inputBit]),
+                            Utilities.FormatCsvInteger(inputSignificantTests[inputBit])
+                        ));
                     }
                 }
 
-                List<IndependenceExtreme> strongest = [];
-                while (extremes.TryDequeue(out IndependenceExtreme extreme, out _))
-                    strongest.Add(extreme);
-                strongest.Sort((left, right) =>
-                {
-                    Int32 comparison = Math.Abs(right.Phi).CompareTo(Math.Abs(left.Phi));
-                    if (comparison != 0) return comparison;
-                    comparison = left.InputBit.CompareTo(right.InputBit);
-                    if (comparison != 0) return comparison;
-                    comparison = left.OutputBitA.CompareTo(right.OutputBitA);
-                    return comparison != 0 ? comparison : left.OutputBitB.CompareTo(right.OutputBitB);
-                });
+                filePath = Path.Combine(directory, "independence-pairs.csv");
 
-                using (StreamWriter writer = CreateWriter(Path.Combine(directory, "independence-extremes.csv")))
+                using (StreamWriter writer = new(filePath, false, encoding))
                 {
-                    writer.WriteLine("InputBit,OutputBitA,OutputBitB,N00,N01,N10,N11,Trials,Phi,AbsolutePhi,PValue,BonferroniPValue,TestStatus");
-                    foreach (IndependenceExtreme extreme in strongest)
-                    {
-                        Boolean valid = ExpectedCountsValid(extreme.N00, extreme.N01, extreme.N10, extreme.N11, samples);
-                        Double p = valid ? PValue(extreme.Phi, samples) : Double.NaN;
-                        writer.WriteLine(String.Join(",",
-                            extreme.InputBit, extreme.OutputBitA, extreme.OutputBitB,
-                            extreme.N00, extreme.N01, extreme.N10, extreme.N11, samples,
-                            Format(extreme.Phi), Format(Math.Abs(extreme.Phi)), Format(p),
-                            Format(valid ? Math.Min(1.0d, p * validTests) : Double.NaN),
-                            valid ? "Valid" : "InsufficientExpectedCounts"));
-                    }
-                }
-
-                using (StreamWriter writer = CreateWriter(Path.Combine(directory, "independence-pairs.csv")))
-                {
-                    writer.WriteLine("OutputBitA,OutputBitB,MeanAbsolutePhi,InputBits");
+                    writer.WriteLine("OutputBitA,OutputBitB,MeanAbsolutePhi,DefinedInputBits");
                     Int32 pairIndex = 0;
+
                     for (Int32 a = 0; a < outputBits; ++a)
                     {
                         for (Int32 b = a + 1; b < outputBits; ++b)
                         {
-                            // Valid correlations for this pair may be fewer than inputBits in degenerate cases.
-                            Int32 count = 0;
-                            for (Int32 inputBit = 0; inputBit < inputBits; ++inputBit)
-                            {
-                                Int32 n11 = jointCounts[inputBit * pairCount + pairIndex];
-                                Int32 n10 = flipCounts[inputBit * outputBits + a] - n11;
-                                Int32 n01 = flipCounts[inputBit * outputBits + b] - n11;
-                                Int32 n00 = samples - n11 - n10 - n01;
-                                if (!Double.IsNaN(Phi(n00, n01, n10, n11)))
-                                    ++count;
-                            }
-                            writer.WriteLine(String.Join(",", a, b,
-                                count == 0 ? "" : Format(meanAbsoluteCorrelation[pairIndex] / count), count));
+                            writer.WriteLine(String.Join(",",
+                                Utilities.FormatCsvInteger(a),
+                                Utilities.FormatCsvInteger(b),
+                                pairValid[pairIndex] == 0 ? "" : Utilities.FormatCsvDouble(meanAbsoluteCorrelation[pairIndex]),
+                                Utilities.FormatCsvInteger(pairValid[pairIndex])
+                            ));
                             ++pairIndex;
                         }
                     }
                 }
 
-                IndependenceSvg.WriteHeatmap(Path.Combine(directory, "independence-heatmap.svg"), meanAbsoluteCorrelation, jointCounts, flipCounts, inputBits, outputBits, pairCount, samples, meanAbsolute, maximumAbsoluteCorrelation, significantTests, validTests);
-                var finalMetadata = new
+                filePath = Path.Combine(directory, "independence-extremes.csv");
+
+                using (StreamWriter writer = new(filePath, false, encoding))
                 {
-                    metadata.SchemaVersion, metadata.Analysis, metadata.Status, metadata.QualityAssessment,
-                    metadata.HashName, metadata.HashSeed, metadata.HashLengthBits, metadata.GeneratorAlgorithm,
-                    metadata.GeneratorSeed, metadata.SamplesPerInputBit, metadata.InputLengthBytes,
-                    metadata.InputBits, metadata.OutputBits, metadata.OutputPairs, metadata.PairCells,
-                    metadata.HashEvaluations, metadata.BitFlipTrials, metadata.BitNumbering,
-                    metadata.Statistic, metadata.SignificanceTest, metadata.SignificanceLevel,
-                    metadata.MinimumExpectedCellCount, metadata.ValidTests, metadata.DegenerateTests,
-                    metadata.InsufficientExpectedTests, metadata.MeanAbsoluteCorrelation,
-                    metadata.MaximumAbsoluteCorrelation, metadata.MaximumCorrelationInputBit,
-                    metadata.MaximumCorrelationOutputBitA, metadata.MaximumCorrelationOutputBitB,
-                    SignificantTests = significantTests, metadata.UtcTimestamp, metadata.LibraryVersion,
-                    metadata.Runtime, metadata.OperatingSystem, metadata.ProcessArchitecture, metadata.OutputFiles
-                };
-                File.WriteAllText(Path.Combine(directory, "independence.json"), JsonSerializer.Serialize(finalMetadata, new JsonSerializerOptions { WriteIndented = true }) + "\n", new UTF8Encoding(false));
-                File.WriteAllText(Path.Combine(directory, "independence.txt"),
-                    $"Analysis: independence (AN-002)\nHash: {hashName}\nHash seed: {(hashSeed.HasValue ? hashSeed.Value.ToString(CultureInfo.InvariantCulture) : "default configuration")}\nGenerator seed: {generatorSeed}\nSamples per input bit: {samples}\nInput bits: {inputBits}\nOutput bits: {outputBits}\nOutput-bit pairs: {pairCount}\nPair cells: {testCount}\nValid tests: {validTests}\nDegenerate tests: {degenerateTests}\nInsufficient expected counts: {insufficientExpectedTests}\nMean absolute phi: {Format(meanAbsolute)}\nMaximum absolute phi: {Format(maximumAbsoluteCorrelation)} (input bit {maximumInputBit}, output bits {maximumOutputA}/{maximumOutputB})\nBonferroni-significant tests: {significantTests}\nNote: no significant result does not prove bit independence.\n",
-                    new UTF8Encoding(false));
-            }, outputDirectory);
+                    writer.WriteLine("InputBit,OutputBitA,OutputBitB,N00,N01,N10,N11,Trials,Phi,AbsolutePhi,PValue,BonferroniPValue,TestStatus");
+
+                    foreach (IndependenceExtreme extreme in strongest)
+                    {
+                        Boolean valid = ExpectedCountsValid(extreme.N00, extreme.N01, extreme.N10, extreme.N11, samples);
+                        Double p = valid ? PValue(extreme.Phi, samples) : Double.NaN;
+                        writer.WriteLine(String.Join(",",
+                            Utilities.FormatCsvInteger(extreme.InputBit),
+                            Utilities.FormatCsvInteger(extreme.OutputBitA),
+                            Utilities.FormatCsvInteger(extreme.OutputBitB),
+                            Utilities.FormatCsvInteger(extreme.N00),
+                            Utilities.FormatCsvInteger(extreme.N01),
+                            Utilities.FormatCsvInteger(extreme.N10),
+                            Utilities.FormatCsvInteger(extreme.N11),
+                            Utilities.FormatCsvInteger(samples),
+                            Utilities.FormatCsvDouble(extreme.Phi),
+                            Utilities.FormatCsvDouble(Math.Abs(extreme.Phi)),
+                            valid ? Utilities.FormatCsvDouble(p) : "",
+                            valid ? Utilities.FormatCsvDouble(Math.Min(1.0d, p * validTests)) : "",
+                            valid ? "Valid" : "InsufficientExpectedCounts"
+                        ));
+                    }
+                }
+
+                filePath = Path.Combine(directory, "independence-heatmap.svg");
+                IndependenceSvg.WriteHeatmap(filePath, meanAbsoluteCorrelation, pairValid, outputBits, samples, inputBits,
+                    meanAbsolute, maximumAbsoluteCorrelation, significantTests, validTests);
+            }
+
+            return Utilities.WriteArtifacts(hashName, writeFunction, outputDirectory);
         }
 
         private readonly record struct IndependenceExtreme(Int32 InputBit, Int32 OutputBitA, Int32 OutputBitB,
             Int32 N00, Int32 N01, Int32 N10, Int32 N11, Double Phi);
-
-        private static void CheckDigest(Byte[] digest, Int32 expectedLength)
-        {
-            if ((digest == null) || (digest.Length != expectedLength))
-                throw new InvalidOperationException("The hash returned an invalid digest length.");
-        }
 
         private static Double Phi(Int32 n00, Int32 n01, Int32 n10, Int32 n11)
         {
@@ -451,15 +436,6 @@ namespace FastHashes.Analysis
             return Math.Max(0.0d, Math.Min(1.0d, Math.Exp(-z * z) * INV_SQRT_PI / (z + fraction)));
         }
 
-        private static StreamWriter CreateWriter(String path)
-        {
-            return new StreamWriter(path, false, new UTF8Encoding(false));
-        }
-
-        private static String Format(Double value)
-        {
-            return Double.IsNaN(value) ? "" : value.ToString("G17", CultureInfo.InvariantCulture);
-        }
         #endregion
     }
 }

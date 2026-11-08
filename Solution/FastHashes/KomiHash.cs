@@ -243,28 +243,10 @@ namespace FastHashes
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void Mix(UInt64 a, UInt64 b, ref UInt64 lo, ref UInt64 hi)
+		private static void Mix(UInt64 a, UInt64 b, ref UInt64 lo, ref UInt64 hi0)
 		{
-#if NET5_0_OR_GREATER
-			UInt64 high = Math.BigMul(a, b, out lo);
-			hi = unchecked(hi + high);
-#else
-			UInt64 a0 = unchecked((UInt32)a);
-			UInt64 a1 = a >> 32;
-			UInt64 b0 = unchecked((UInt32)b);
-			UInt64 b1 = b >> 32;
-
-			UInt64 p0 = a0 * b0;
-			UInt64 p1 = a0 * b1;
-			UInt64 p2 = a1 * b0;
-			UInt64 p3 = a1 * b1;
-
-			UInt64 middle = (p0 >> 32) + unchecked((UInt32)p1) + unchecked((UInt32)p2);
-			lo = (middle << 32) | unchecked((UInt32)p0);
-
-			UInt64 high = p3 + (p1 >> 32) + (p2 >> 32) + (middle >> 32);
-			hi = unchecked(hi + high);
-#endif
+			BinaryOperations.Multiply128(a, b, out lo, out UInt64 hi1);
+			hi0 = unchecked(hi0 + hi1);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -127,7 +127,7 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static UInt64 MulReduce(UInt64 a, UInt64 b)
         {
-            Mul128(a, b, out UInt64 lo, out UInt64 hi);
+            BinaryOperations.Multiply128(a, b, out UInt64 lo, out UInt64 hi);
             UInt64 r = Reduce(lo, hi);
 
             return r;
@@ -185,29 +185,6 @@ namespace FastHashes
             hi = unchecked(hi + hiAddon + (lo < prior ? 1ul : 0ul));
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Mul128(UInt64 a, UInt64 b, out UInt64 lo, out UInt64 hi)
-        {
-#if NET5_0_OR_GREATER
-            hi = Math.BigMul(a, b, out lo);
-#else
-            UInt64 a0 = unchecked((UInt32)a);
-            UInt64 a1 = a >> 32;
-
-            UInt64 b0 = unchecked((UInt32)b);
-            UInt64 b1 = b >> 32;
-
-            UInt64 p0 = a0 * b0;
-            UInt64 p1 = a0 * b1;
-            UInt64 p2 = a1 * b0;
-            UInt64 p3 = a1 * b1;
-
-            UInt64 cross = (p0 >> 32) + unchecked((UInt32)p1) + p2;
-            lo = (cross << 32) | unchecked((UInt32)p0);
-            hi = unchecked((p1 >> 32) + (cross >> 32) + p3);
-#endif
-        }
-
         /// <inheritdoc/>
         protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
@@ -243,12 +220,12 @@ namespace FastHashes
                         UInt64 m5 = Read56(buffer, offset + 35);
                         UInt64 m6 = Read56(buffer, offset + 42);
 
-                        Mul128(unchecked(m_K + m0), unchecked(k6 + m1), out UInt64 lo, out UInt64 hi);
-                        Mul128(unchecked(m_K2 + m2), unchecked(k5 + m3), out UInt64 lo1, out UInt64 hi1);
+                        BinaryOperations.Multiply128(unchecked(m_K + m0), unchecked(k6 + m1), out UInt64 lo, out UInt64 hi);
+                        BinaryOperations.Multiply128(unchecked(m_K2 + m2), unchecked(k5 + m3), out UInt64 lo1, out UInt64 hi1);
                         Add128(ref lo, ref hi, lo1, hi1);
-                        Mul128(unchecked(k3 + m4), unchecked(k4 + m5), out lo1, out hi1);
+                        BinaryOperations.Multiply128(unchecked(k3 + m4), unchecked(k4 + m5), out lo1, out hi1);
                         Add128(ref lo, ref hi, lo1, hi1);
-                        Mul128(unchecked(h + m6), m_K7, out lo1, out hi1);
+                        BinaryOperations.Multiply128(unchecked(h + m6), m_K7, out lo1, out hi1);
                         Add128(ref lo, ref hi, lo1, hi1);
 
                         h = Reduce(lo, hi);
@@ -270,8 +247,8 @@ namespace FastHashes
                     UInt64 m1 = Read56(buffer, offset + (count - 7) / 2);
                     UInt64 m2 = BinaryOperations.Read64(buffer, offset + count - 8) >> 8;
 
-                    Mul128(unchecked(m_K2 + m0), unchecked(m_K7 + m1), out UInt64 lo0, out UInt64 hi0);
-                    Mul128(unchecked(m_K + m2), unchecked(k3 + (UInt64)count), out UInt64 lo1, out UInt64 hi1);
+                    BinaryOperations.Multiply128(unchecked(m_K2 + m0), unchecked(m_K7 + m1), out UInt64 lo0, out UInt64 hi0);
+                    BinaryOperations.Multiply128(unchecked(m_K + m2), unchecked(k3 + (UInt64)count), out UInt64 lo1, out UInt64 hi1);
 
                     if (count <= 21)
                     {
@@ -286,8 +263,8 @@ namespace FastHashes
                         UInt64 m6 = Read56(buffer, offset + count - 14);
                         UInt64 t0r = Reduce(lo0, hi0);
 
-                        Mul128(unchecked(m_K2 + m3), unchecked(m_K7 + m4), out UInt64 lo2, out UInt64 hi2);
-                        Mul128(unchecked(t0r + m5), unchecked(k4 + m6), out UInt64 lo3, out UInt64 hi3);
+                        BinaryOperations.Multiply128(unchecked(m_K2 + m3), unchecked(m_K7 + m4), out UInt64 lo2, out UInt64 hi2);
+                        BinaryOperations.Multiply128(unchecked(t0r + m5), unchecked(k4 + m6), out UInt64 lo3, out UInt64 hi3);
                         Add128(ref lo1, ref hi1, lo2, hi2);
                         Add128(ref lo1, ref hi1, lo3, hi3);
 

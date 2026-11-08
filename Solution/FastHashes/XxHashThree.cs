@@ -158,7 +158,7 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static UInt64 MulFold(UInt64 a, UInt64 b)
         {
-            Mul128(a, b, out UInt64 lo, out UInt64 hi);
+            BinaryOperations.Multiply128(a, b, out UInt64 lo, out UInt64 hi);
             UInt64 mf = lo ^ hi;
 
             return mf;
@@ -197,30 +197,6 @@ namespace FastHashes
                 Accumulate(acc, buffer, offset + (stripe * 64), secret, stripe * 8);
 
             Accumulate(acc, buffer, count - 64, secret, 121);
-        }
-
-        /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static void Mul128(UInt64 a, UInt64 b, out UInt64 lo, out UInt64 hi)
-        {
-#if NET5_0_OR_GREATER
-            hi = Math.BigMul(a, b, out lo);
-#else
-            UInt64 a0 = unchecked((UInt32)a);
-            UInt64 a1 = a >> 32;
-
-            UInt64 b0 = unchecked((UInt32)b);
-            UInt64 b1 = b >> 32;
-
-            UInt64 p00 = a0 * b0;
-            UInt64 p01 = a0 * b1;
-            UInt64 p10 = a1 * b0;
-            UInt64 p11 = a1 * b1;
-
-            UInt64 mid = (p00 >> 32) + unchecked((UInt32)p01) + unchecked((UInt32)p10);
-            lo = (mid << 32) | unchecked((UInt32)p00);
-            hi = unchecked(p11 + (p01 >> 32) + (p10 >> 32) + (mid >> 32));
-#endif
         }
 
         /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
@@ -450,14 +426,14 @@ namespace FastHashes
                 UInt64 loIn = BinaryOperations.Read64(buffer, 0);
                 UInt64 hiIn = BinaryOperations.Read64(buffer, count - 8);
 
-                Mul128(loIn ^ hiIn ^ loBf, P64_1, out UInt64 mLow, out UInt64 mHigh);
+                BinaryOperations.Multiply128(loIn ^ hiIn ^ loBf, P64_1, out UInt64 mLow, out UInt64 mHigh);
 
                 mLow = unchecked(mLow + ((UInt64)(count - 1) << 54));
                 hiIn ^= hiBf;
                 mHigh = unchecked(mHigh + hiIn + ((UInt64)unchecked((UInt32)hiIn) * (P32_2 - 1)));
                 mLow ^= BinaryPrimitives.ReverseEndianness(mHigh);
 
-                Mul128(mLow, P64_2, out lo, out hi);
+                BinaryOperations.Multiply128(mLow, P64_2, out lo, out hi);
                 hi = unchecked(hi + mHigh * P64_2);
 
                 lo = AvalancheHhx3(lo);
@@ -473,7 +449,7 @@ namespace FastHashes
                 UInt64 hiIn = BinaryOperations.Read32(buffer, count - 4);
                 UInt64 totIn = loIn | (hiIn << 32);
 
-                Mul128(totIn ^ bf, unchecked(P64_1 + ((UInt64)count << 2)), out lo, out hi);
+                BinaryOperations.Multiply128(totIn ^ bf, unchecked(P64_1 + ((UInt64)count << 2)), out lo, out hi);
 
                 hi = unchecked(hi + (lo << 1));
                 lo ^= hi >> 3;

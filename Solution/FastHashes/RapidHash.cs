@@ -126,31 +126,10 @@ namespace FastHashes
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected static void Mum(ref UInt64 a, ref UInt64 b)
             {
-#if NET5_0_OR_GREATER
-                UInt64 hi = Math.BigMul(a, b, out UInt64 lo);
+                BinaryOperations.Multiply128(a, b, out UInt64 lo, out UInt64 hi);
 
                 a = lo;
                 b = hi;
-#else
-                UInt64 ah = a >> 32;
-                UInt64 al = unchecked((UInt32)a);
-                UInt64 bh = b >> 32;
-                UInt64 bl = unchecked((UInt32)b);
-
-                UInt64 ll = al * bl;
-                UInt64 m0 = ah * bl;
-                UInt64 m1 = bh * al;
-
-                UInt64 t = unchecked(ll + (m0 << 32));
-
-                UInt64 carry = t < ll ? 1ul : 0ul;
-
-                UInt64 lo = unchecked(t + (m1 << 32));
-                carry += lo < t ? 1ul : 0ul;
-
-                a = lo;
-                b = unchecked((ah * bh) + (m0 >> 32) + (m1 >> 32) + carry);
-#endif
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

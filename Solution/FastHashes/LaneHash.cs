@@ -70,32 +70,9 @@ namespace FastHashes
 
         #region Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Mul128(UInt64 a, UInt64 b, out UInt64 lo, out UInt64 hi)
-        {
-#if NET5_0_OR_GREATER
-            hi = Math.BigMul(a, b, out lo);
-#else
-            UInt64 a0 = (UInt32)a;
-            UInt64 a1 = a >> 32;
-
-            UInt64 b0 = (UInt32)b;
-            UInt64 b1 = b >> 32;
-
-            UInt64 p0 = a0 * b0;
-            UInt64 p1 = a0 * b1;
-            UInt64 p2 = a1 * b0;
-            UInt64 p3 = a1 * b1;
-
-            UInt64 mid = unchecked((p0 >> 32) + (UInt32)p1 + (UInt32)p2);
-            lo = (mid << 32) | (UInt32)p0;
-            hi = unchecked(p3 + (p1 >> 32) + (p2 >> 32) + (mid >> 32));
-#endif
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Mum(ref UInt64 a, ref UInt64 b)
         {
-            Mul128(a, b, out UInt64 lo, out UInt64 hi);
+            BinaryOperations.Multiply128(a, b, out UInt64 lo, out UInt64 hi);
             a ^= lo;
             b ^= hi;
         }
@@ -113,7 +90,7 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static UInt64 Fold(UInt64 a, UInt64 b)
         {
-            Mul128(a, b, out UInt64 lo, out UInt64 hi);
+            BinaryOperations.Multiply128(a, b, out UInt64 lo, out UInt64 hi);
             UInt64 v = lo ^ hi;
 
             return v;

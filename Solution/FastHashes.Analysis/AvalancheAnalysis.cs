@@ -54,9 +54,6 @@ namespace FastHashes.Analysis
 
                 Byte[] baseline = hash.ComputeHashBytes(key);
 
-                if ((baseline == null) || (baseline.Length != outputBytes))
-                    throw new InvalidOperationException("The hash returned an invalid digest length.");
-
                 for (Int32 ib = 0; ib < inputBits; ++ib)
                 {
                     Int32 keyIndex = ib / 8;
@@ -74,9 +71,6 @@ namespace FastHashes.Analysis
                     {
                         key[keyIndex] ^= mask;
                     }
-
-                    if ((mutated == null) || (mutated.Length != outputBytes))
-                        throw new InvalidOperationException("The hash returned an invalid digest length.");
 
                     Int32 distance = 0;
                     Int32 rowStart = ib * outputBits;
