@@ -372,7 +372,7 @@ namespace FastHashes.Benchmarks
                 {
                     for (Int32 position = 0; position < 8; ++position)
                     {
-                        Int32 align = pass == 0 ? position : 7 - position;
+                        Int32 align = (pass == 0) ? position : 7 - position;
                         SpeedOutput so = GetSpeed(hashInitializer, bulkKeysLength, bulkRepetitions, align);
 
                         alignBytes[align] += so.Bytes;

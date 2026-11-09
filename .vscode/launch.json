@@ -41,7 +41,7 @@
         "--hash",
         "FarmHash32",
         "--analysis",
-        "distribution"
+        "structural"
       ],
       "console": "integratedTerminal",
       "stopAtEntry": false

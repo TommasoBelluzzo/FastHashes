@@ -4,206 +4,309 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Numerics;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.Json;
-using System.Linq;
 #endregion
 
 namespace FastHashes.Analysis
 {
-    /// <summary>Targeted structural edge-case probes; descriptive only, without global pass/fail thresholds.</summary>
     internal static class StructuralAnalysis
     {
         #region Setup
-        private const Int32 MAXIMUM_KEY_LENGTH = 4096;
         private const Int32 MAXIMUM_PROBES = 20000;
         #endregion
 
-        #region Methods
-        public static void Validate(Int32 hashLength, Int32 keyLength)
+        #region Plots
+        private static void PlotWs(String path, Int32 keysLength, Int32 outputBits, StructuralResult result, List<StructuralObservation> observations)
         {
-            if ((hashLength <= 0) || ((hashLength % 8) != 0))
-                throw new NotSupportedException("Structural analysis requires a positive byte-aligned hash length.");
-            if ((keyLength < 2) || (keyLength > MAXIMUM_KEY_LENGTH))
-                throw new ArgumentOutOfRangeException(nameof(keyLength), "Structural analysis requires --key-length between 2 and 4096.");
-            // Sparse and window experiments scale linearly in key length.
-            Int64 estimate = 2L * 8 * keyLength + 4L * (keyLength - 1) + 100;
-            if (estimate > MAXIMUM_PROBES)
-                throw new ArgumentOutOfRangeException(nameof(keyLength), "Structural workload exceeds the probe cap; reduce --key-length.");
-        }
+            String[] values = ["0001", "0100", "8001", "FFFF"];
+            String[] colors = ["#1f77b4", "#d62728", "#2ca02c", "#9467bd"];
+            Int32 maximumOffset = 0;
 
+            foreach (StructuralObservation observation in observations)
+            {
+                if (observation.Family != "window")
+                    continue;
+
+                if (!TryParseWindowCase(observation.Case, out Int32 offset, out _))
+                    throw new InvalidOperationException($"Unexpected window case format: {observation.Case}");
+
+                maximumOffset = Math.Max(maximumOffset, offset);
+            }
+
+            if (result.Probes == 0)
+                throw new InvalidOperationException("Structural window analysis produced no observations.");
+
+            using SvgPlot plot = new(path, 1200, 790);
+
+            plot.PlotArea(125.0d, 180.0d, 950.0d, 455.0d);
+            plot.DataRange(0.0d, Math.Max(1, maximumOffset), 0.0d, outputBits);
+            plot.ConfigureDiscreteXAxis("Window Byte Offset", 0.0d, Math.Max(1, maximumOffset), intervals: Math.Min(8, Math.Max(1, maximumOffset)), format: "0");
+            plot.ConfigureDiscreteYAxis("Changed Output Bits", 0.0d, outputBits, intervals: 4, format: "0");
+            plot.ConfigureBottomLegend([
+                new SvgPlot.LegendItem("0x0001", colors[0], true),
+                new SvgPlot.LegendItem("0x0100", colors[1], true),
+                new SvgPlot.LegendItem("0x8001", colors[2], true),
+                new SvgPlot.LegendItem("0xFFFF", colors[3], true),
+                new SvgPlot.LegendItem("Ideal Mean", plot.ReferenceColor, true, true)
+            ]);
+
+            plot.Title("WINDOW SENSITIVITY");
+            plot.Subtitle("Output Hamming distance for 16-bit windows shifted across the input key.");
+            plot.Metadata(
+                $"Key Bytes: {keysLength:N0} | Output Bits: {outputBits:N0} | Window Observations: {result.Probes:N0}",
+                $"Mean Hamming: {result.MeanHamming:0.###} | Minimum: {result.MinimumHamming:N0} | Maximum: {result.MaximumHamming:N0}"
+            );
+
+            plot.PrepareLayout();
+            plot.DrawGrid();
+            plot.BeginPlot();
+
+            for (Int32 i = 0; i < values.Length; ++i)
+            {
+                List<(Double X, Double Y)> points = [];
+
+                foreach (StructuralObservation observation in observations)
+                {
+                    if (observation.Family != "window")
+                        continue;
+
+                    if (!TryParseWindowCase(observation.Case, out Int32 offset, out String value))
+                        throw new InvalidOperationException($"Unexpected window case format: {observation.Case}");
+
+                    if (value == values[i])
+                        points.Add((offset, observation.HammingDistance));
+                }
+
+                points.Sort((left, right) => left.X.CompareTo(right.X));
+                plot.Polyline(points, colors[i], 2.3d);
+
+                if (points.Count <= 128)
+                {
+                    foreach ((Double x, Double y) in points)
+                        plot.Rectangle(plot.X(x) - 2.5d, plot.Y(y) - 2.5d, 5.0d, 5.0d, colors[i]);
+                }
+            }
+
+            plot.HorizontalReference(outputBits / 2.0d, plot.ReferenceColor, 2.0d, dashed: true);
+            plot.EndPlot();
+
+            plot.DrawBorder();
+            plot.DrawAxes();
+            plot.DrawBottomLegend();
+        }
+        #endregion
+
+        #region Methods
         public static String Run(Config config, String outputDirectory = null)
         {
             Hash hash = config.Hash;
-            UInt64? hashSeed = config.HashSeed;
             String hashName = config.HashName;
             Int32 keysLength = config.KeysLength;
-            UInt64 generatorSeed = config.GeneratorSeed;
-            Int32 samples = config.Samples;
-            String libraryVersion = config.LibraryVersion;
+            
+            Int32 inputBits = checked(keysLength * 8);
+            Int32 outputBits = hash.Length;
+            
+            Int64 estimatedProbes = (2L * 8 * keysLength) + (4L * (keysLength - 1)) + 100;
 
-            Validate(hash.Length, keysLength);
+            if (estimatedProbes > MAXIMUM_PROBES)
+                throw new ArgumentException($"Structural workload exceeds {MAXIMUM_PROBES} probes; reduce the --keys-length parameter value.");
 
             List<StructuralResult> results = [];
             List<StructuralObservation> observations = [];
-            Evaluate(hash, StructuralInputGenerator.Sparse(keysLength), "sparse", results, observations);
-            Evaluate(hash, StructuralInputGenerator.TwoBytes(keysLength), "twobytes", results, observations);
-            Evaluate(hash, StructuralInputGenerator.Cyclic(keysLength), "cyclic", results, observations);
-            Evaluate(hash, StructuralInputGenerator.Permutation(keysLength), "permutation", results, observations);
-            Evaluate(hash, StructuralInputGenerator.Window(keysLength), "window", results, observations);
-            Evaluate(hash, StructuralInputGenerator.Zeroes(keysLength), "zeroes", results, observations);
-            Evaluate(hash, StructuralInputGenerator.Boundaries(keysLength), "boundaries", results, observations);
-            EvaluateSeeds(hashName, keysLength, hash.Length, results, observations);
 
-            return Utilities.WriteArtifacts(hashName, directory => WriteReports(directory, hashName, hashSeed, libraryVersion, keysLength, hash.Length, results, observations), outputDirectory);
+            Evaluate(hash, "sparse", StructuralInputGenerator.Sparse(keysLength), results, observations);
+            Evaluate(hash, "twobytes", StructuralInputGenerator.TwoBytes(keysLength), results, observations);
+            Evaluate(hash, "cyclic", StructuralInputGenerator.Cyclic(keysLength), results, observations);
+            Evaluate(hash, "permutation", StructuralInputGenerator.Permutation(keysLength), results, observations);
+            StructuralResult windowResult = Evaluate(hash, "window", StructuralInputGenerator.Window(keysLength), results, observations);
+            Evaluate(hash, "zeroes", StructuralInputGenerator.Zeroes(keysLength), results, observations);
+            Evaluate(hash, "boundaries", StructuralInputGenerator.Boundaries(keysLength), results, observations);
+            EvaluateSeeds(hashName, keysLength, outputBits, results, observations);
+
+            Int64 probes = observations.Count;
+            Int64 hashEvaluations = checked(probes * 2L);
+            Int64 equalDigests = 0;
+
+            foreach (StructuralResult result in results)
+                equalDigests += result.EqualDigests;
+
+            Dictionary<String, Object> metadata = Utilities.CreateMetadata("structural", config);
+            metadata["InputBits"] = inputBits;
+            metadata["OutputBits"] = outputBits;
+            metadata["Probes"] = probes;
+            metadata["HashEvaluations"] = hashEvaluations;
+            metadata["EqualDigests"] = equalDigests;
+            metadata["Families"] = results;
+            metadata["OutputFiles"] = new[] {
+                "structural.json", "structural-summary.csv", "structural-families.csv", "structural-ws.svg"
+            };
+
+            void writeFunction(String directory)
+            {
+                String filePath;
+                Encoding encoding = new UTF8Encoding(false);
+
+                filePath = Path.Combine(directory, "structural.json");
+                File.WriteAllText(filePath, Utilities.SerializeJson(metadata) + "\n", encoding);
+
+                filePath = Path.Combine(directory, "structural-summary.csv");
+
+                using (StreamWriter writer = new(filePath, false, encoding))
+                {
+                    writer.WriteLine("Family,Probes,SkippedConfigurations,EqualDigests,MinimumHamming,MeanHamming,MaximumHamming");
+
+                    foreach (StructuralResult result in results)
+                    {
+                        writer.WriteLine(String.Join(",",
+                            result.Family,
+                            Utilities.FormatCsvInteger(result.Probes),
+                            Utilities.FormatCsvInteger(result.Skipped),
+                            Utilities.FormatCsvInteger(result.EqualDigests),
+                            result.MinimumHamming.HasValue ? Utilities.FormatCsvInteger(result.MinimumHamming.Value) : String.Empty,
+                            result.MeanHamming.HasValue ? Utilities.FormatCsvDouble(result.MeanHamming.Value) : String.Empty,
+                            result.MaximumHamming.HasValue ? Utilities.FormatCsvInteger(result.MaximumHamming.Value) : String.Empty
+                        ));
+                    }
+                }
+
+                filePath = Path.Combine(directory, "structural-families.csv");
+
+                using (StreamWriter writer = new(filePath, false, encoding))
+                {
+                    writer.WriteLine("Family,Case,Configuration,InputLengthA,InputLengthB,HammingDistance,EqualDigest,InputAHex,InputBHex,HashAHex,HashBHex");
+
+                    foreach (StructuralObservation observation in observations)
+                    {
+                        writer.WriteLine(String.Join(",",
+                            observation.Family,
+                            observation.Case,
+                            observation.Configuration,
+                            Utilities.FormatCsvInteger(observation.InputLengthA),
+                            Utilities.FormatCsvInteger(observation.InputLengthB),
+                            Utilities.FormatCsvInteger(observation.HammingDistance),
+                            observation.EqualDigest ? "true" : "false",
+                            observation.InputAHex,
+                            observation.InputBHex,
+                            observation.HashAHex,
+                            observation.HashBHex
+                        ));
+                    }
+                }
+
+                filePath = Path.Combine(directory, "structural-window.svg");
+                PlotWs(filePath, keysLength, outputBits, windowResult, observations);
+            }
+
+            return Utilities.WriteArtifacts(hashName, writeFunction, outputDirectory);
         }
 
-        private static void Evaluate(Hash hash, IEnumerable<StructuralPair> pairs, String family, List<StructuralResult> results, List<StructuralObservation> observations)
+        private static StructuralResult Evaluate(Hash hash, String family, IEnumerable<StructuralPair> pairs,
+            List<StructuralResult> results, List<StructuralObservation> observations)
         {
-            StructuralResult result = new(family);
+            Int32 probes = 0;
+            Int32 equalDigests = 0;
+            Int64 totalDistance = 0;
+            Int32 minimumDistance = Int32.MaxValue;
+            Int32 maximumDistance = 0;
+
             foreach (StructuralPair pair in pairs)
-                Measure(hash, pair, "selected-hash-configuration", result, observations);
+            {
+                Int32 distance = Measure(hash, pair, "selected-hash-configuration", observations);
+
+                ++probes;
+                totalDistance += distance;
+                minimumDistance = Math.Min(minimumDistance, distance);
+                maximumDistance = Math.Max(maximumDistance, distance);
+
+                if (distance == 0)
+                    ++equalDigests;
+            }
+
+            StructuralResult result = new(
+                family, probes, 0, equalDigests,
+                probes == 0 ? null : minimumDistance,
+                probes == 0 ? null : (Double)totalDistance / probes,
+                probes == 0 ? null : maximumDistance,
+                []
+            );
+
             results.Add(result);
+            return result;
         }
 
-        private static void EvaluateSeeds(String hashName, Int32 keyLength, Int32 hashLength, List<StructuralResult> results, List<StructuralObservation> observations)
+        private static void EvaluateSeeds(String hashName, Int32 keysLength, Int32 outputBits,
+            List<StructuralResult> results, List<StructuralObservation> observations)
         {
-            StructuralResult result = new("seed");
+            Int32 probes = 0;
+            Int32 skipped = 0;
+            Int32 equalDigests = 0;
+            Int64 totalDistance = 0;
+            Int32 minimumDistance = Int32.MaxValue;
+            Int32 maximumDistance = 0;
+            List<String> notes = [];
             UInt64[] seeds = [0ul, 1ul, 0x5555555555555555ul, 0xAAAAAAAAAAAAAAAAul, UInt64.MaxValue];
+
             foreach (UInt64 seed in seeds)
             {
                 Hash seeded;
+
                 try
                 {
                     seeded = Hash.Create(hashName, seed);
                 }
                 catch (Exception exception) when (exception is ArgumentException || exception is NotSupportedException || exception is OverflowException)
                 {
-                    result.Skipped++;
-                    result.Notes.Add($"seed {seed}: {exception.GetType().Name}: {exception.Message}");
+                    ++skipped;
+                    notes.Add($"seed {seed}: {exception.GetType().Name}: {exception.Message}");
                     continue;
                 }
-                if (seeded.Length != hashLength)
+
+                if (seeded.Length != outputBits)
                     throw new InvalidOperationException("A seed configuration unexpectedly changed the hash output length.");
-                foreach (StructuralPair pair in StructuralInputGenerator.SeedProbes(keyLength))
-                    Measure(seeded, pair, seed.ToString(CultureInfo.InvariantCulture), result, observations);
+
+                foreach (StructuralPair pair in StructuralInputGenerator.SeedProbes(keysLength))
+                {
+                    Int32 distance = Measure(seeded, pair, seed.ToString(CultureInfo.InvariantCulture), observations);
+
+                    ++probes;
+                    totalDistance += distance;
+                    minimumDistance = Math.Min(minimumDistance, distance);
+                    maximumDistance = Math.Max(maximumDistance, distance);
+
+                    if (distance == 0)
+                        ++equalDigests;
+                }
             }
-            results.Add(result);
+
+            results.Add(new StructuralResult(
+                "seed", probes, skipped, equalDigests,
+                probes == 0 ? null : minimumDistance,
+                probes == 0 ? null : (Double)totalDistance / probes,
+                probes == 0 ? null : maximumDistance,
+                [.. notes]
+            ));
         }
 
-        private static void Measure(Hash hash, StructuralPair pair, String configuration, StructuralResult result, List<StructuralObservation> observations)
+        private static Int32 Measure(Hash hash, StructuralPair pair, String configuration,
+            List<StructuralObservation> observations)
         {
             if (pair.InputA.AsSpan().SequenceEqual(pair.InputB))
                 throw new InvalidOperationException($"Structural probe '{pair.Family}/{pair.Case}' contains identical input keys.");
 
-            Byte[] a = hash.ComputeHashBytes(pair.InputA);
-            Byte[] b = hash.ComputeHashBytes(pair.InputB);
-            if ((a == null) || (b == null) || (a.Length != hash.Length / 8) || (b.Length != hash.Length / 8))
-                throw new InvalidOperationException("The hash returned an invalid digest length.");
-
+            Byte[] digestA = hash.ComputeHashBytes(pair.InputA);
+            Byte[] digestB = hash.ComputeHashBytes(pair.InputB);
             Int32 distance = 0;
-            for (Int32 i = 0; i < a.Length; ++i)
-                distance += BitOperations.PopCount((UInt32)(a[i] ^ b[i]));
 
-            ++result.Probes;
-            result.TotalDistance += distance;
-            result.MinimumDistance = Math.Min(result.MinimumDistance, distance);
-            result.MaximumDistance = Math.Max(result.MaximumDistance, distance);
-            if (distance == 0)
-                ++result.EqualDigests;
-            observations.Add(new StructuralObservation(pair.Family, pair.Case, configuration, pair.InputA.Length, pair.InputB.Length, distance, distance == 0,
-                Convert.ToHexString(pair.InputA), Convert.ToHexString(pair.InputB), Convert.ToHexString(a), Convert.ToHexString(b)));
-        }
+            for (Int32 i = 0; i < digestA.Length; ++i)
+                distance += BitOperations.PopCount((UInt32)(digestA[i] ^ digestB[i]));
 
-        private static void WriteReports(String directory, String hashName, UInt64? hashSeed, String hashVersion, Int32 keyLength, Int32 hashBits, List<StructuralResult> results, List<StructuralObservation> observations)
-        {
-            UTF8Encoding utf8 = new(false);
-            using (StreamWriter writer = new(Path.Combine(directory, "structural-summary.csv"), false, utf8))
-            {
-                writer.WriteLine("Family,Probes,SkippedConfigurations,EqualDigests,MinimumHamming,MeanHamming,MaximumHamming,IdealHamming");
-                foreach (StructuralResult result in results)
-                    writer.WriteLine(String.Join(",", result.Family, result.Probes, result.Skipped, result.EqualDigests,
-                        result.Probes == 0 ? "" : result.MinimumDistance.ToString(CultureInfo.InvariantCulture),
-                        result.Probes == 0 ? "" : F((Double)result.TotalDistance / result.Probes),
-                        result.Probes == 0 ? "" : result.MaximumDistance.ToString(CultureInfo.InvariantCulture), F(hashBits / 2.0d)));
-            }
+            observations.Add(new StructuralObservation(
+                pair.Family, pair.Case, configuration, pair.InputA.Length, pair.InputB.Length,
+                distance, distance == 0, Convert.ToHexString(pair.InputA), Convert.ToHexString(pair.InputB),
+                Convert.ToHexString(digestA), Convert.ToHexString(digestB)
+            ));
 
-            foreach (String family in new[] { "sparse", "twobytes", "cyclic", "permutation", "window", "zeroes", "seed", "boundaries" })
-            {
-                using StreamWriter writer = new(Path.Combine(directory, $"structural-{family}.csv"), false, utf8);
-                writer.WriteLine("Case,Configuration,InputLengthA,InputLengthB,HammingDistance,EqualDigest,InputAHex,InputBHex,HashAHex,HashBHex");
-                foreach (StructuralObservation item in observations)
-                {
-                    if (item.Family != family)
-                        continue;
-                    writer.WriteLine(String.Join(",", item.Case, item.Configuration, item.InputLengthA, item.InputLengthB, item.HammingDistance,
-                        item.EqualDigest, item.InputAHex, item.InputBHex, item.HashAHex, item.HashBHex));
-                }
-            }
-
-            List<StructuralSvg.WindowObservation> windowObservations = observations
-                .Where(item => item.Family == "window")
-                .Select(item =>
-                {
-                    if (!TryParseWindowCase(item.Case, out Int32 offset, out String value))
-                        throw new InvalidOperationException($"Unexpected window case format: {item.Case}");
-                    return new StructuralSvg.WindowObservation(offset, value, item.HammingDistance);
-                })
-                .OrderBy(item => item.Offset)
-                .ThenBy(item => item.Value, StringComparer.Ordinal)
-                .ToList();
-
-            if (windowObservations.Count > 0)
-                StructuralSvg.WriteWindowProfile(Path.Combine(directory, "structural-window.svg"), hashName, hashBits, keyLength, windowObservations);
-
-            String[] files = ["structural-summary.csv", "structural-sparse.csv", "structural-twobytes.csv", "structural-cyclic.csv",
-                "structural-permutation.csv", "structural-window.csv", "structural-zeroes.csv", "structural-seed.csv",
-                "structural-boundaries.csv", "structural-window.svg", "structural.json", "structural.txt"];
-            var metadata = new
-            {
-                SchemaVersion = 1,
-                Analysis = "structural",
-                Status = "Completed",
-                QualityAssessment = "DescriptiveOnly",
-                HashName = hashName,
-                HashSeed = hashSeed,
-                HashLengthBits = hashBits,
-                KeyLengthBytes = keyLength,
-                HashEvaluations = observations.Count * 2L,
-                Method = "Deterministic input-pair stress probes; no global significance test or pass/fail threshold",
-                Caveat = "Mean Hamming distances in small or dependent constructed families cannot independently establish statistical significance.",
-                Families = results.ConvertAll(result => new
-                {
-                    result.Family, result.Probes, result.Skipped, result.EqualDigests,
-                    MinimumHamming = result.Probes == 0 ? (Int32?)null : result.MinimumDistance,
-                    MeanHamming = result.Probes == 0 ? (Double?)null : (Double)result.TotalDistance / result.Probes,
-                    MaximumHamming = result.Probes == 0 ? (Int32?)null : result.MaximumDistance,
-                    Notes = result.Notes
-                }),
-                UtcTimestamp = DateTimeOffset.UtcNow,
-                LibraryVersion = hashVersion,
-                Runtime = RuntimeInformation.FrameworkDescription,
-                OperatingSystem = RuntimeInformation.OSDescription,
-                ProcessArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
-                OutputFiles = files
-            };
-            File.WriteAllText(Path.Combine(directory, "structural.json"), JsonSerializer.Serialize(metadata, new JsonSerializerOptions { WriteIndented = true }) + "\n", utf8);
-            StringBuilder report = new();
-            report.AppendLine("Analysis: structural (AN-005)").AppendLine($"Hash: {hashName} ({hashBits} bits)")
-                .AppendLine($"Hash seed: {(hashSeed.HasValue ? hashSeed.Value.ToString(CultureInfo.InvariantCulture) : "default configuration")}")
-                .AppendLine($"Key length: {keyLength} bytes")
-                .AppendLine($"Hash evaluations: {observations.Count * 2L}")
-                .AppendLine("Interpretation: targeted structural diagnostics, not a statistical quality certification.");
-            foreach (StructuralResult result in results)
-            {
-                report.AppendLine().AppendLine($"[{result.Family.ToUpperInvariant()}]")
-                    .AppendLine($"Probes: {result.Probes}; skipped seed configurations: {result.Skipped}; identical digests: {result.EqualDigests}")
-                    .AppendLine($"Hamming distance: min {((result.Probes == 0) ? "n/a" : result.MinimumDistance.ToString(CultureInfo.InvariantCulture))}, mean {((result.Probes == 0) ? "n/a" : F((Double)result.TotalDistance / result.Probes))}, max {((result.Probes == 0) ? "n/a" : result.MaximumDistance.ToString(CultureInfo.InvariantCulture))}; ideal marginal mean {F(hashBits / 2.0d)}");
-                foreach (String note in result.Notes)
-                    report.AppendLine($"Note: {note}");
-            }
-            File.WriteAllText(Path.Combine(directory, "structural.txt"), report.ToString(), utf8);
+            return distance;
         }
 
         private static Boolean TryParseWindowCase(String value, out Int32 offset, out String windowValue)
@@ -211,38 +314,43 @@ namespace FastHashes.Analysis
             offset = 0;
             windowValue = String.Empty;
             String[] parts = value.Split(':');
+
             if ((parts.Length != 4) || (parts[0] != "offset") || (parts[2] != "value"))
                 return false;
+
             if (!Int32.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out offset))
                 return false;
+
             windowValue = parts[3];
             return true;
         }
-
-        private static String F(Double value)
-        {
-            return value.ToString("G17", CultureInfo.InvariantCulture);
-        }
         #endregion
 
-        private sealed class StructuralResult
-        {
-            public String Family { get; }
-            public Int32 Probes { get; set; }
-            public Int32 Skipped { get; set; }
-            public Int32 EqualDigests { get; set; }
-            public Int64 TotalDistance { get; set; }
-            public Int32 MinimumDistance { get; set; } = Int32.MaxValue;
-            public Int32 MaximumDistance { get; set; }
-            public List<String> Notes { get; } = [];
+        #region Records
+        private readonly record struct StructuralObservation(
+            String Family,
+            String Case,
+            String Configuration,
+            Int32 InputLengthA,
+            Int32 InputLengthB,
+            Int32 HammingDistance,
+            Boolean EqualDigest,
+            String InputAHex,
+            String InputBHex,
+            String HashAHex,
+            String HashBHex
+        );
 
-            public StructuralResult(String family)
-            {
-                Family = family;
-            }
-        }
-
-        private sealed record StructuralObservation(String Family, String Case, String Configuration, Int32 InputLengthA,
-            Int32 InputLengthB, Int32 HammingDistance, Boolean EqualDigest, String InputAHex, String InputBHex, String HashAHex, String HashBHex);
+        private readonly record struct StructuralResult(
+            String Family,
+            Int32 Probes,
+            Int32 Skipped,
+            Int32 EqualDigests,
+            Int32? MinimumHamming,
+            Double? MeanHamming,
+            Int32? MaximumHamming,
+            String[] Notes
+        );
+        #endregion
     }
 }
