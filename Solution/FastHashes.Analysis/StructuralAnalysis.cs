@@ -34,14 +34,18 @@ namespace FastHashes.Analysis
             }
 
             if (result.Probes == 0)
-                throw new InvalidOperationException("Structural window analysis produced no observations.");
+                throw new InvalidOperationException("Structural window analysis produced no probes.");
 
             using SvgPlot plot = new(path, 1200, 790);
 
             plot.PlotArea(125.0d, 180.0d, 950.0d, 455.0d);
             plot.DataRange(0.0d, Math.Max(1, maximumOffset), 0.0d, outputBits);
-            plot.ConfigureDiscreteXAxis("Window Byte Offset", 0.0d, Math.Max(1, maximumOffset), intervals: Math.Min(8, Math.Max(1, maximumOffset)), format: "0");
+            
+            Int32 xStep = Math.Max(1, maximumOffset);
+            Int32 xIntervals = Math.Min(8, xStep);
+            plot.ConfigureDiscreteXAxis("Window Byte Offset", 0.0d, xStep, intervals: xIntervals, format: "0");
             plot.ConfigureDiscreteYAxis("Changed Output Bits", 0.0d, outputBits, intervals: 4, format: "0");
+            
             plot.ConfigureBottomLegend([
                 new SvgPlot.LegendItem("0x0001", colors[0], true),
                 new SvgPlot.LegendItem("0x0100", colors[1], true),
@@ -53,12 +57,13 @@ namespace FastHashes.Analysis
             plot.Title("WINDOW SENSITIVITY");
             plot.Subtitle("Output Hamming distance for 16-bit windows shifted across the input key.");
             plot.Metadata(
-                $"Key Bytes: {keysLength:N0} | Output Bits: {outputBits:N0} | Window Observations: {result.Probes:N0}",
-                $"Mean Hamming: {result.MeanHamming:0.###} | Minimum: {result.MinimumHamming:N0} | Maximum: {result.MaximumHamming:N0}"
+                $"Output Bits: {outputBits:N0} | Probes: {result.Probes:N0}",
+                $"Mean: {result.MeanHamming:0.###} | Minimum: {result.MinimumHamming:N0} | Maximum: {result.MaximumHamming:N0}"
             );
 
             plot.PrepareLayout();
             plot.DrawGrid();
+
             plot.BeginPlot();
 
             for (Int32 i = 0; i < values.Length; ++i)
@@ -173,7 +178,7 @@ namespace FastHashes.Analysis
 
                 using (StreamWriter writer = new(filePath, false, encoding))
                 {
-                    writer.WriteLine("Family,Case,Configuration,InputLengthA,InputLengthB,HammingDistance,EqualDigest,InputAHex,InputBHex,HashAHex,HashBHex");
+                    writer.WriteLine("Family,Case,Configuration,InputLengthA,InputLengthB,HammingDistance,EqualDigest,InputA,InputB,HashA,HashB");
 
                     foreach (StructuralObservation observation in observations)
                     {
@@ -185,10 +190,10 @@ namespace FastHashes.Analysis
                             Utilities.FormatCsvInteger(observation.InputLengthB),
                             Utilities.FormatCsvInteger(observation.HammingDistance),
                             observation.EqualDigest ? "true" : "false",
-                            observation.InputAHex,
-                            observation.InputBHex,
-                            observation.HashAHex,
-                            observation.HashBHex
+                            observation.InputA,
+                            observation.InputB,
+                            observation.HashA,
+                            observation.HashB
                         ));
                     }
                 }
@@ -335,10 +340,10 @@ namespace FastHashes.Analysis
             Int32 InputLengthB,
             Int32 HammingDistance,
             Boolean EqualDigest,
-            String InputAHex,
-            String InputBHex,
-            String HashAHex,
-            String HashBHex
+            String InputA,
+            String InputB,
+            String HashA,
+            String HashB
         );
 
         private readonly record struct StructuralResult(
