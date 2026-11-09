@@ -11,6 +11,21 @@ namespace FastHashes
         #region Constants
         private static readonly Dictionary<String, (Func<Hash> Default, (Func<UInt64, Hash> Ctor, Int32 Bits) Seeded)> s_Algorithms = new(StringComparer.Ordinal)
         {
+            ["A5Hash32"] =
+            (
+                () => new A5Hash32(),
+                (seed => new A5Hash32(checked((UInt32)seed)), 32)
+            ),
+            ["A5Hash64"] =
+            (
+                () => new A5Hash64(),
+                (seed => new A5Hash64(seed), 64)
+            ),
+            ["A5Hash128"] =
+            (
+                () => new A5Hash128(),
+                (seed => new A5Hash128(seed), 64)
+            ),
             ["FarmHash32"] =
             (
                 () => new FarmHash32(),

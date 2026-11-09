@@ -27,7 +27,7 @@ namespace FastHashes.Tests
         #region Constructors
         public ConformanceFixture()
         {
-            String directory = Path.Combine(AppContext.BaseDirectory, "Data", "Vectors");
+            String directory = Path.Combine(AppContext.BaseDirectory, "Data");
 
             if (!Directory.Exists(directory))
                 return;

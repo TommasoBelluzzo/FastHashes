@@ -10,6 +10,9 @@ namespace FastHashes.Tests
         #region Constants
         private static readonly Dictionary<String, String> VALIDATION_CASES = new(StringComparer.Ordinal)
         {
+            ["A5Hash32"] = "0x1BD148A9",
+            ["A5Hash64"] = "0xB379DEADE864EBB4",
+            ["A5Hash128"] = "0x116B408952FBEDF107A0D75A03AB167B",
             ["FarmHash32"] = "0x39AFC90D",
             ["FarmHash64"] = "0x79A6C4EB62E22A5C",
             ["FarmHash128"] = "0x71BF3EA9A4D9F2351533AF0F4A96CEFB",
