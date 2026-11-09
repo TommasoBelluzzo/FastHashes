@@ -10,83 +10,89 @@ namespace FastHashes.Analysis
 {
     internal sealed class SvgPlot : IDisposable
     {
-        #region Setup
+        #region Constants
         private const String CLIP_ID = "fasthashes-plot-clip";
-        private readonly StreamWriter writer;
-        private readonly Dictionary<String, String[]> palettes = new(StringComparer.Ordinal);
-        private String lastPaletteLow;
-        private String lastPaletteHigh;
-        private Int32 lastPaletteResolution;
-        private String[] lastPalette;
-        private Boolean completed;
-        private Boolean prepared;
-        private Boolean plotOpen;
-        private Double xMinimum;
-        private Double xMaximum;
-        private Double yMinimum;
-        private Double yMaximum;
-        private Double requestedLeft;
-        private Double requestedTop;
-        private Double requestedWidth;
-        private Double requestedHeight;
-        private String[] metadataLines = Array.Empty<String>();
-        private List<AxisTick> xTicks;
-        private List<AxisTick> yTicks;
-        private List<String> customYAxisLabels;
-        private Double customYAxisSpacing = 12.0d;
-        private Boolean clipDefined;
-        private String xAxisTitle;
-        private String yAxisTitle;
-        private Boolean xGrid;
-        private Boolean yGrid;
-        private ColorbarSettings rightColorbar;
-        private IReadOnlyList<LegendItem> bottomLegend;
-        private Double bottomLegendSlotWidth = 180.0d;
+        #endregion
 
-        private readonly record struct AxisTick(Double Position, String Label);
-        private sealed record ColorbarSettings(String Title, Double Minimum, Double Maximum, String LowColor, String HighColor,
-            Int32 Intervals, Boolean Saturated, String Format, String Suffix, String MiddleColor, Double? Center);
-        public readonly record struct LegendItem(String Label, String Color, Boolean IsLine, Boolean Dashed = false);
+        #region Members
+        private Boolean m_ClipDefined;
+        private Boolean m_Completed;
+        private Boolean m_GridX;
+        private Boolean m_GridY;
+        private Boolean m_PlotOpen;
+        private Boolean m_Prepared;
+        private ColorbarSettings m_ColorbarSettings;
+        private readonly Dictionary<String, String[]> m_Palettes = new(StringComparer.Ordinal);
+        private Double m_CustomAxisSpacingY = 12.0d;
+        private Double m_MaximumX;
+        private Double m_MaximumY;
+        private Double m_MinimumX;
+        private Double m_MinimumY;
+        private Double m_RequestedHeight;
+        private Double m_RequestedLeft;
+        private Double m_RequestedTop;
+        private Double m_RequestedWidth;
+        private Int32 m_LastPaletteResolution;
+        private IReadOnlyList<AxisTick> m_TicksX;
+        private IReadOnlyList<AxisTick> m_TicksY;
+        private IReadOnlyList<LegendItem> m_Legend;
+        private IReadOnlyList<String> m_CustomAxisLabelsY;
+        private readonly StreamWriter m_Writer;
+        private String[] m_LastPalette;
+        private String[] m_MetadataLines = [];
+        private String m_AxisTitleX;
+        private String m_AxisTitleY;
+        private String m_LastPaletteHigh;
+        private String m_LastPaletteLow;
+        #endregion
 
-        public Int32 Width { get; }
+        #region Properties: Appearance
+        public String BackgroundColor { get; set; } = "#ffffff";
+        public String BorderColor { get; set; } = "#8b99ab";
+        public String GridColor { get; set; } = "#e3e9f1";
+        public String HighlightColor { get; set; } = "#b43f53";
+        public String MutedColor { get; set; } = "#64748b";
+        public String ObservedColor { get; set; } = "#4683ad";
+        public Int32 PaletteResolution { get; set; } = 256;
+        public String ReferenceColor { get; set; } = "#ed8a37";
+        public String SecondaryColor { get; set; } = "#556174";
+        public String TextColor { get; set; } = "#303c50";
+        public String TitleColor { get; set; } = "#172235";
+        #endregion
+
+        #region Properties: Geometry
         public Int32 Height { get; }
+        public Int32 Width { get; }
         public Double PlotLeft { get; private set; }
         public Double PlotTop { get; private set; }
-        public Double PlotWidth { get; private set; }
         public Double PlotHeight { get; private set; }
+        public Double PlotWidth { get; private set; }
+        #endregion
 
-        public String FontFamily { get; set; } = "Arial, Helvetica, sans-serif";
-        public String BackgroundColor { get; set; } = "#ffffff";
-        public String TitleColor { get; set; } = "#172235";
-        public String TextColor { get; set; } = "#303c50";
-        public String SecondaryColor { get; set; } = "#556174";
-        public String MutedColor { get; set; } = "#64748b";
-        public String GridColor { get; set; } = "#e3e9f1";
-        public String BorderColor { get; set; } = "#8b99ab";
-        public String ObservedColor { get; set; } = "#4683ad";
-        public String ReferenceColor { get; set; } = "#ed8a37";
-        public String HighlightColor { get; set; } = "#b43f53";
-        public String SequentialColor { get; set; } = "#1F77B4";
-
-        public Int32 TitleSize { get; set; } = 26;
-        public Int32 SubtitleSize { get; set; } = 14;
-        public Int32 MetadataSize { get; set; } = 14;
-        public Int32 AxisTitleSize { get; set; } = 14;
-        public Int32 TickSize { get; set; } = 12;
-        public Int32 LegendSize { get; set; } = 13;
-        public Double TitleLeft { get; set; } = 66.0d;
-        public Double TitleTop { get; set; } = 43.0d;
-        public Double SubtitleTop { get; set; } = 70.0d;
-        public Double MetadataTop { get; set; } = 103.0d;
-        public Double MetadataSpacing { get; set; } = 23.0d;
+        #region Properties: Layout
         public Double AxisLabelSpacing { get; set; } = 24.0d;
         public Double AxisTitleSpacing { get; set; } = 48.0d;
         public Double BottomLegendMargin { get; set; } = 32.0d;
-        public Double RightColorbarGap { get; set; } = 60.0d;
-        public Double RightColorbarWidth { get; set; } = 24.0d;
-        public Double RightColorbarHeight { get; set; } = 390.0d;
+        public Double BottomLegendSlotWidth { get; set; } = 180.0d;
+        public Double MetadataSpacing { get; set; } = 23.0d;
+        public Double MetadataTop { get; set; } = 103.0d;
         public Double MinimumHeaderGap { get; set; } = 50.0d;
-        public Int32 PaletteResolution { get; set; } = 256;
+        public Double RightColorbarGap { get; set; } = 60.0d;
+        public Double RightColorbarHeight { get; set; } = 390.0d;
+        public Double RightColorbarWidth { get; set; } = 24.0d;
+        public Double SubtitleTop { get; set; } = 70.0d;
+        public Double TitleLeft { get; set; } = 66.0d;
+        public Double TitleTop { get; set; } = 43.0d;
+        #endregion
+
+        #region Properties: Typography
+        public String FontFamily { get; set; } = "Arial, Helvetica, sans-serif";
+        public Int32 AxisTitleSize { get; set; } = 14;
+        public Int32 LegendSize { get; set; } = 13;
+        public Int32 MetadataSize { get; set; } = 14;
+        public Int32 SubtitleSize { get; set; } = 14;
+        public Int32 TickSize { get; set; } = 12;
+        public Int32 TitleSize { get; set; } = 26;
         #endregion
 
         #region Constructors
@@ -102,24 +108,158 @@ namespace FastHashes.Analysis
             PlotArea(125.0d, 180.0d, Math.Max(1.0d, width - 250.0d), Math.Max(1.0d, height - 290.0d));
             DataRange(0.0d, 1.0d, 0.0d, 1.0d);
 
-            writer = new StreamWriter(path, false, new UTF8Encoding(false));
-            writer.WriteLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\" role=\"img\"{(description == null ? String.Empty : $" aria-label=\"{Escape(description)}\"")}>");
-            writer.WriteLine($"<rect width=\"100%\" height=\"100%\" fill=\"{BackgroundColor}\"/>");
+            String ariaLabel = (description == null) ? String.Empty : $" aria-label=\"{Escape(description)}\"";
+
+            m_Writer = new StreamWriter(path, false, new UTF8Encoding(false));
+            m_Writer.WriteLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\" role=\"img\"{ariaLabel}>");
+            m_Writer.WriteLine($"<rect width=\"100%\" height=\"100%\" fill=\"{BackgroundColor}\"/>");
         }
         #endregion
 
-        #region Layout
-        public void PlotArea(Double left, Double top, Double width, Double height)
+        #region Methods: Header
+        public void Metadata(params String[] lines)
+        {
+            ArgumentNullException.ThrowIfNull(lines);
+
+            if (!m_Prepared)
+                m_MetadataLines = (String[])lines.Clone();
+
+            for (Int32 i = 0; i < lines.Length; ++i)
+                Text(TitleLeft, MetadataTop + (i * MetadataSpacing), lines[i], MetadataSize, TextColor);
+        }
+
+        public void Subtitle(String value)
+        {
+            Text(TitleLeft, SubtitleTop, value, SubtitleSize, SecondaryColor);
+        }
+
+        public void Title(String value)
+        {
+            Text(TitleLeft, TitleTop, value, TitleSize, TitleColor, true);
+        }
+        #endregion
+
+        #region Methods: Layout
+        public Double CellX(Int32 index, Int32 count)
+        {
+            return PlotLeft + (((index + 0.5d) * PlotWidth) / count);
+        }
+
+        public Double CellY(Int32 index, Int32 count)
+        {
+            return PlotTop + (((index + 0.5d) * PlotHeight) / count);
+        }
+
+        public Double X(Double value)
+        {
+            return PlotLeft + (((value - m_MinimumX) / (m_MaximumX - m_MinimumX)) * PlotWidth);
+        }
+
+        public Double Y(Double value)
+        {
+            return PlotTop + PlotHeight - (((value - m_MinimumY) / (m_MaximumY - m_MinimumY)) * PlotHeight);
+        }
+
+        public void ConfigureDiscreteAxisX(String title, Double minimum, Double maximum, Boolean grid = true, Int32 intervals = 5, String format = "0.##")
         {
             RequireUnprepared();
-            RequireFinite(left, nameof(left));
-            RequireFinite(top, nameof(top));
-            RequirePositive(width, nameof(width));
-            RequirePositive(height, nameof(height));
-            requestedLeft = PlotLeft = left;
-            requestedTop = PlotTop = top;
-            requestedWidth = PlotWidth = width;
-            requestedHeight = PlotHeight = height;
+            RequireAxis(minimum, maximum, intervals);
+
+            List<AxisTick> ticks = new(intervals + 1);
+            
+            for (Int32 i = 0; i <= intervals; ++i)
+            {
+                Double value = minimum + (((maximum - minimum) * i) / intervals);
+                ticks.Add(new AxisTick(value, Format(value, format)));
+            }
+
+            m_GridX = grid;
+            m_AxisTitleX = title;
+            m_TicksX = ticks;
+        }
+
+        public void ConfigureDiscreteAxisY(String title, Double minimum, Double maximum, Boolean grid = true, Int32 intervals = 5, String format = "0.##")
+        {
+            RequireUnprepared();
+            RequireAxis(minimum, maximum, intervals);
+
+            List<AxisTick> ticks = new(intervals + 1);
+
+            for (Int32 i = 0; i <= intervals; ++i)
+            {
+                Double value = minimum + (((maximum - minimum) * i) / intervals);
+                ticks.Add(new AxisTick(value, Format(value, format)));
+            }
+
+            m_GridY = grid;
+            m_AxisTitleY = title;
+            m_TicksY = ticks;
+        }
+
+        public void ConfigureIndexedAxisX(String title, Int32 count, Int32 step, Boolean includeLast = true)
+        {
+            RequireIndexed(count, step);
+
+            List<(Double, String)> ticks = [];
+            
+            for (Int32 i = 0; i < count; i += step)
+                ticks.Add((i + 0.5d, i.ToString(CultureInfo.InvariantCulture)));
+            
+            if (includeLast && (((count - 1) % step) != 0))
+                ticks.Add((count - 0.5d, (count - 1).ToString(CultureInfo.InvariantCulture)));
+            
+            ConfigureTicksX(title, ticks);
+        }
+
+        public void ConfigureIndexedAxisY(String title, Int32 count, Int32 step, Boolean topDown = true, Boolean includeLast = true)
+        {
+            RequireIndexed(count, step);
+
+            List<(Double Value, String Label)> ticks = [];
+            
+            for (Int32 i = 0; i < count; i += step)
+                ticks.Add((topDown ? (count - i - 0.5d) : (i + 0.5d), i.ToString(CultureInfo.InvariantCulture)));
+            
+            if (includeLast && (((count - 1) % step) != 0))
+                ticks.Add((topDown ? 0.5d : (count - 0.5d), (count - 1).ToString(CultureInfo.InvariantCulture)));
+            
+            ConfigureTicksY(title, ticks);
+        }
+
+        public void ConfigureTicksX(String title, IReadOnlyList<(Double, String)> sourceTicks, Boolean grid = false)
+        {
+            RequireUnprepared();
+            ArgumentNullException.ThrowIfNull(sourceTicks);
+
+            List<AxisTick> ticks = new(sourceTicks.Count);
+
+            foreach ((Double value, String label) in sourceTicks)
+            {
+                RequireFinite(value, nameof(sourceTicks));
+                ticks.Add(new AxisTick(value, label));
+            }
+
+            m_GridX = grid;
+            m_AxisTitleX = title;
+            m_TicksX = ticks;
+        }
+
+        public void ConfigureTicksY(String title, IReadOnlyList<(Double, String)> sourceTicks, Boolean grid = false)
+        {
+            RequireUnprepared();
+            ArgumentNullException.ThrowIfNull(sourceTicks);
+
+            List<AxisTick> ticks = new(sourceTicks.Count);
+
+            foreach ((Double value, String label) in sourceTicks)
+            {
+                RequireFinite(value, nameof(sourceTicks));
+                ticks.Add(new AxisTick(value, label));
+            }
+
+            m_GridY = grid;
+            m_AxisTitleY = title;
+            m_TicksY = ticks;
         }
 
         public void DataRange(Double minimumX, Double maximumX, Double minimumY, Double maximumY)
@@ -128,101 +268,39 @@ namespace FastHashes.Analysis
             RequireFinite(maximumX, nameof(maximumX));
             RequireFinite(minimumY, nameof(minimumY));
             RequireFinite(maximumY, nameof(maximumY));
-            if (maximumX <= minimumX || maximumY <= minimumY)
+            
+            if ((maximumX <= minimumX) || (maximumY <= minimumY))
                 throw new ArgumentException("Data ranges must be strictly increasing.");
-            xMinimum = minimumX;
-            xMaximum = maximumX;
-            yMinimum = minimumY;
-            yMaximum = maximumY;
+            
+            m_MinimumX = minimumX;
+            m_MaximumX = maximumX;
+            m_MinimumY = minimumY;
+            m_MaximumY = maximumY;
         }
 
-        public Double X(Double value) => PlotLeft + (value - xMinimum) / (xMaximum - xMinimum) * PlotWidth;
-        public Double Y(Double value) => PlotTop + PlotHeight - (value - yMinimum) / (yMaximum - yMinimum) * PlotHeight;
-        public Double CellX(Int32 index, Int32 count) => PlotLeft + (index + 0.5d) * PlotWidth / count;
-        public Double CellY(Int32 index, Int32 count) => PlotTop + (index + 0.5d) * PlotHeight / count;
-
-        public void ConfigureDiscreteXAxis(String title, Double minimum, Double maximum, Int32 intervals = 5, String format = "0.##", Boolean grid = true)
+        public void PlotArea(Double left, Double top, Double width, Double height)
         {
             RequireUnprepared();
-            RequireAxis(minimum, maximum, intervals);
-            xAxisTitle = title;
-            xGrid = grid;
-            xTicks = new List<AxisTick>(intervals + 1);
-            for (Int32 i = 0; i <= intervals; ++i)
-            {
-                Double value = minimum + (maximum - minimum) * i / intervals;
-                xTicks.Add(new AxisTick(value, Format(value, format)));
-            }
+            RequireFinite(left, nameof(left));
+            RequireFinite(top, nameof(top));
+            RequirePositive(width, nameof(width));
+            RequirePositive(height, nameof(height));
+            
+            m_RequestedLeft = PlotLeft = left;
+            m_RequestedTop = PlotTop = top;
+            m_RequestedWidth = PlotWidth = width;
+            m_RequestedHeight = PlotHeight = height;
         }
 
-        public void ConfigureDiscreteYAxis(String title, Double minimum, Double maximum, Int32 intervals = 5, String format = "0.##", Boolean grid = true)
-        {
-            RequireUnprepared();
-            RequireAxis(minimum, maximum, intervals);
-            yAxisTitle = title;
-            yGrid = grid;
-            yTicks = new List<AxisTick>(intervals + 1);
-            for (Int32 i = 0; i <= intervals; ++i)
-            {
-                Double value = minimum + (maximum - minimum) * i / intervals;
-                yTicks.Add(new AxisTick(value, Format(value, format)));
-            }
-        }
 
-        public void ConfigureXTicks(String title, IReadOnlyList<(Double Value, String Label)> ticks, Boolean grid = false)
-        {
-            RequireUnprepared();
-            if (ticks == null)
-                throw new ArgumentNullException(nameof(ticks));
-            xAxisTitle = title;
-            xGrid = grid;
-            xTicks = new List<AxisTick>(ticks.Count);
-            foreach ((Double value, String label) in ticks)
-            {
-                RequireFinite(value, nameof(ticks));
-                xTicks.Add(new AxisTick(value, label));
-            }
-        }
 
-        public void ConfigureYTicks(String title, IReadOnlyList<(Double Value, String Label)> ticks, Boolean grid = false)
-        {
-            RequireUnprepared();
-            if (ticks == null)
-                throw new ArgumentNullException(nameof(ticks));
-            yAxisTitle = title;
-            yGrid = grid;
-            yTicks = new List<AxisTick>(ticks.Count);
-            foreach ((Double value, String label) in ticks)
-            {
-                RequireFinite(value, nameof(ticks));
-                yTicks.Add(new AxisTick(value, label));
-            }
-        }
 
-        public void ConfigureIndexedXAxis(String title, Int32 count, Int32 step, Boolean includeLast = true)
-        {
-            RequireIndexed(count, step);
-            List<(Double Value, String Label)> ticks = new();
-            for (Int32 i = 0; i < count; i += step)
-                ticks.Add((i + 0.5d, i.ToString(CultureInfo.InvariantCulture)));
-            if (includeLast && (count - 1) % step != 0)
-                ticks.Add((count - 0.5d, (count - 1).ToString(CultureInfo.InvariantCulture)));
-            ConfigureXTicks(title, ticks);
-        }
 
-        public void ConfigureIndexedYAxis(String title, Int32 count, Int32 step, Boolean topDown = true, Boolean includeLast = true)
-        {
-            RequireIndexed(count, step);
-            List<(Double Value, String Label)> ticks = new();
-            for (Int32 i = 0; i < count; i += step)
-                ticks.Add((topDown ? count - i - 0.5d : i + 0.5d, i.ToString(CultureInfo.InvariantCulture)));
-            if (includeLast && (count - 1) % step != 0)
-                ticks.Add((topDown ? 0.5d : count - 0.5d, (count - 1).ToString(CultureInfo.InvariantCulture)));
-            ConfigureYTicks(title, ticks);
-        }
+
+
 
         public void ConfigureRightColorbar(String title, Double minimum, Double maximum, String lowColor, String highColor,
-            Int32 intervals = 5, Boolean saturated = false, String format = "0.##", String suffix = "", String middleColor = null, Double? center = null)
+            Int32 intervals = 5, Boolean saturatedLower = false, Boolean saturatedUpper = false, String format = "0.##", String suffix = "", String middleColor = null, Double? center = null)
         {
             RequireUnprepared();
             RequireAxis(minimum, maximum, intervals);
@@ -230,7 +308,7 @@ namespace FastHashes.Analysis
                 throw new ArgumentException("Diverging colorbars require both a middle color and a center value.");
             if (center.HasValue && (center.Value <= minimum || center.Value >= maximum))
                 throw new ArgumentOutOfRangeException(nameof(center));
-            rightColorbar = new ColorbarSettings(title, minimum, maximum, lowColor, highColor, intervals, saturated, format, suffix, middleColor, center);
+            m_ColorbarSettings = new ColorbarSettings(title, minimum, maximum, lowColor, middleColor, highColor, intervals, center, saturatedLower, saturatedUpper, format, suffix);
         }
 
         public void ConfigureBottomLegend(IReadOnlyList<LegendItem> items, Double slotWidth = 180.0d)
@@ -239,8 +317,8 @@ namespace FastHashes.Analysis
             if (items == null)
                 throw new ArgumentNullException(nameof(items));
             RequirePositive(slotWidth, nameof(slotWidth));
-            bottomLegend = new List<LegendItem>(items);
-            bottomLegendSlotWidth = slotWidth;
+            m_Legend = [.. items];
+            BottomLegendSlotWidth = slotWidth;
         }
 
         public void FitYAxisLabels(IEnumerable<String> labels, Double spacing = 12.0d)
@@ -249,9 +327,9 @@ namespace FastHashes.Analysis
             if (labels == null)
                 throw new ArgumentNullException(nameof(labels));
             RequireNonnegative(spacing, nameof(spacing));
-            customYAxisLabels = new List<String>(labels);
-            customYAxisSpacing = spacing;
-            ApplyYAxisFit(customYAxisLabels, spacing);
+            m_CustomAxisLabelsY = [.. labels];
+            m_CustomAxisSpacingY = spacing;
+            ApplyYAxisFit(m_CustomAxisLabelsY, spacing);
         }
 
         private void ApplyYAxisFit(IEnumerable<String> labels, Double spacing)
@@ -270,55 +348,41 @@ namespace FastHashes.Analysis
             }
         }
 
-        /// <summary>Finalize chart margins before rendering any plot geometry.</summary>
         public void PrepareLayout()
         {
-            if (prepared)
+            if (m_Prepared)
                 return;
-            PlotLeft = requestedLeft;
-            PlotTop = requestedTop;
-            PlotWidth = requestedWidth;
-            PlotHeight = requestedHeight;
+            PlotLeft = m_RequestedLeft;
+            PlotTop = m_RequestedTop;
+            PlotWidth = m_RequestedWidth;
+            PlotHeight = m_RequestedHeight;
 
-            if (metadataLines.Length != 0)
+            if (m_MetadataLines.Length != 0)
             {
-                Double headerEnd = MetadataTop + (metadataLines.Length - 1) * MetadataSpacing + MinimumHeaderGap;
+                Double headerEnd = MetadataTop + (m_MetadataLines.Length - 1) * MetadataSpacing + MinimumHeaderGap;
                 Double shift = Math.Max(0.0d, headerEnd - PlotTop);
                 PlotTop += shift;
                 PlotHeight -= shift;
             }
-            if (yTicks != null)
-                ApplyYAxisFit(GetLabels(yTicks), 12.0d);
-            if (customYAxisLabels != null)
-                ApplyYAxisFit(customYAxisLabels, customYAxisSpacing);
-            if (rightColorbar != null)
+            if (m_TicksY != null)
+                ApplyYAxisFit(GetLabels(m_TicksY), 12.0d);
+            if (m_CustomAxisLabelsY != null)
+                ApplyYAxisFit(m_CustomAxisLabelsY, m_CustomAxisSpacingY);
+            if (m_ColorbarSettings != null)
             {
                 Double reserved = RightColorbarGap + RightColorbarWidth + 55.0d;
                 Double freeRight = Width - (PlotLeft + PlotWidth);
                 Double reduction = Math.Max(0.0d, reserved - freeRight);
                 PlotWidth -= reduction;
             }
-            if (bottomLegend != null && bottomLegend.Count != 0)
+            if (m_Legend != null && m_Legend.Count != 0)
             {
                 Double bottomLimit = Height - BottomLegendMargin - LegendSize - AxisTitleSpacing - AxisTitleSize - 16.0d;
                 PlotHeight = Math.Min(PlotHeight, bottomLimit - PlotTop);
             }
             if (PlotWidth <= 0.0d || PlotHeight <= 0.0d)
                 throw new InvalidOperationException("Plot area is too small for the configured layout.");
-            prepared = true;
-        }
-
-        public void Title(String value) => Text(TitleLeft, TitleTop, value, TitleSize, TitleColor, true);
-        public void Subtitle(String value) => Text(TitleLeft, SubtitleTop, value, SubtitleSize, SecondaryColor);
-
-        public void Metadata(params String[] lines)
-        {
-            if (lines == null)
-                throw new ArgumentNullException(nameof(lines));
-            if (!prepared)
-                metadataLines = (String[])lines.Clone();
-            for (Int32 i = 0; i < lines.Length; ++i)
-                Text(TitleLeft, MetadataTop + i * MetadataSpacing, lines[i], MetadataSize, TextColor);
+            m_Prepared = true;
         }
         #endregion
 
@@ -326,30 +390,30 @@ namespace FastHashes.Analysis
         public void DrawGrid()
         {
             EnsurePrepared();
-            if (xGrid && xTicks != null)
-                foreach (AxisTick tick in xTicks)
-                    DataLine(tick.Position, yMinimum, tick.Position, yMaximum, GridColor, 1.0d);
-            if (yGrid && yTicks != null)
-                foreach (AxisTick tick in yTicks)
-                    DataLine(xMinimum, tick.Position, xMaximum, tick.Position, GridColor, 1.0d);
+            if (m_GridX && m_TicksX != null)
+                foreach (AxisTick tick in m_TicksX)
+                    DataLine(tick.Position, m_MinimumY, tick.Position, m_MaximumY, GridColor, 1.0d);
+            if (m_GridY && m_TicksY != null)
+                foreach (AxisTick tick in m_TicksY)
+                    DataLine(m_MinimumX, tick.Position, m_MaximumX, tick.Position, GridColor, 1.0d);
         }
 
         public void DrawAxes()
         {
             EnsurePrepared();
 
-            if (xTicks != null)
+            if (m_TicksX != null)
             {
-                foreach (AxisTick tick in xTicks)
+                foreach (AxisTick tick in m_TicksX)
                     Label(X(tick.Position), PlotTop + PlotHeight + AxisLabelSpacing, tick.Label, TickSize, "middle");
-                XAxisTitle(xAxisTitle);
+                XAxisTitle(m_AxisTitleX);
             }
 
-            if (yTicks != null)
+            if (m_TicksY != null)
             {
-                foreach (AxisTick tick in yTicks)
+                foreach (AxisTick tick in m_TicksY)
                     Label(PlotLeft - 15.0d, Y(tick.Position) + TickSize * 0.35d, tick.Label, TickSize, "end");
-                YAxisTitle(yAxisTitle);
+                YAxisTitle(m_AxisTitleY);
             }
         }
 
@@ -412,9 +476,9 @@ namespace FastHashes.Analysis
         {
             if (String.IsNullOrEmpty(title))
                 return;
-            Double cx = TitleLeft;
-            Double cy = PlotTop + PlotHeight / 2.0d;
-            writer.WriteLine($"<text x=\"{F(cx)}\" y=\"{F(cy)}\" transform=\"rotate(-90 {F(cx)} {F(cy)})\" text-anchor=\"middle\" font-family=\"{Escape(FontFamily)}\" font-size=\"{AxisTitleSize}\" font-weight=\"bold\" fill=\"{Escape(TextColor)}\">{Escape(title)}</text>");
+            Double centerX = TitleLeft;
+            Double centerY = PlotTop + PlotHeight / 2.0d;
+            m_Writer.WriteLine($"<text x=\"{F(centerX)}\" y=\"{F(centerY)}\" transform=\"rotate(-90 {F(centerX)} {F(centerY)})\" text-anchor=\"middle\" font-family=\"{Escape(FontFamily)}\" font-size=\"{AxisTitleSize}\" font-weight=\"bold\" fill=\"{Escape(TextColor)}\">{Escape(title)}</text>");
         }
 
         public void DrawBorder() => Border(PlotLeft, PlotTop, PlotWidth, PlotHeight);
@@ -424,23 +488,23 @@ namespace FastHashes.Analysis
         public void BeginPlot()
         {
             EnsurePrepared();
-            if (plotOpen)
+            if (m_PlotOpen)
                 throw new InvalidOperationException("A clipped plot group is already open.");
-            if (!clipDefined)
+            if (!m_ClipDefined)
             {
-                writer.WriteLine($"<defs><clipPath id=\"{CLIP_ID}\"><rect x=\"{F(PlotLeft)}\" y=\"{F(PlotTop)}\" width=\"{F(PlotWidth)}\" height=\"{F(PlotHeight)}\"/></clipPath></defs>");
-                clipDefined = true;
+                m_Writer.WriteLine($"<defs><clipPath id=\"{CLIP_ID}\"><rect x=\"{F(PlotLeft)}\" y=\"{F(PlotTop)}\" width=\"{F(PlotWidth)}\" height=\"{F(PlotHeight)}\"/></clipPath></defs>");
+                m_ClipDefined = true;
             }
-            writer.WriteLine($"<g clip-path=\"url(#{CLIP_ID})\">");
-            plotOpen = true;
+            m_Writer.WriteLine($"<g clip-path=\"url(#{CLIP_ID})\">");
+            m_PlotOpen = true;
         }
 
         public void EndPlot()
         {
-            if (!plotOpen)
+            if (!m_PlotOpen)
                 throw new InvalidOperationException("No clipped plot group is open.");
-            writer.WriteLine("</g>");
-            plotOpen = false;
+            m_Writer.WriteLine("</g>");
+            m_PlotOpen = false;
         }
 
         public void Rectangle(Double x, Double y, Double width, Double height, String fill, String stroke = null, Double strokeWidth = 1.0d)
@@ -449,7 +513,7 @@ namespace FastHashes.Analysis
             RequireFinite(y, nameof(y));
             RequireNonnegative(width, nameof(width));
             RequireNonnegative(height, nameof(height));
-            writer.WriteLine($"<rect x=\"{F(x)}\" y=\"{F(y)}\" width=\"{F(width)}\" height=\"{F(height)}\" fill=\"{Escape(fill)}\"{(stroke == null ? String.Empty : $" stroke=\"{Escape(stroke)}\" stroke-width=\"{F(strokeWidth)}\"")}/>");
+            m_Writer.WriteLine($"<rect x=\"{F(x)}\" y=\"{F(y)}\" width=\"{F(width)}\" height=\"{F(height)}\" fill=\"{Escape(fill)}\"{(stroke == null ? String.Empty : $" stroke=\"{Escape(stroke)}\" stroke-width=\"{F(strokeWidth)}\"")}/>");
         }
 
         public void Border(Double x, Double y, Double width, Double height) => Rectangle(x, y, width, height, "none", BorderColor);
@@ -463,7 +527,7 @@ namespace FastHashes.Analysis
             RequireNonnegative(thickness, nameof(thickness));
             if (!Double.IsFinite(opacity) || opacity < 0.0d || opacity > 1.0d)
                 throw new ArgumentOutOfRangeException(nameof(opacity));
-            writer.WriteLine($"<line x1=\"{F(x1)}\" y1=\"{F(y1)}\" x2=\"{F(x2)}\" y2=\"{F(y2)}\" stroke=\"{Escape(color)}\" stroke-width=\"{F(thickness)}\"{(dash == null ? String.Empty : $" stroke-dasharray=\"{Escape(dash)}\"")}{(opacity == 1.0d ? String.Empty : $" stroke-opacity=\"{F(opacity)}\"")}/>");
+            m_Writer.WriteLine($"<line x1=\"{F(x1)}\" y1=\"{F(y1)}\" x2=\"{F(x2)}\" y2=\"{F(y2)}\" stroke=\"{Escape(color)}\" stroke-width=\"{F(thickness)}\"{(dash == null ? String.Empty : $" stroke-dasharray=\"{Escape(dash)}\"")}{(opacity == 1.0d ? String.Empty : $" stroke-opacity=\"{F(opacity)}\"")}/>");
         }
 
         public void DataLine(Double x1, Double y1, Double x2, Double y2, String color, Double thickness = 2.0d, String dash = null, Double opacity = 1.0d)
@@ -497,10 +561,6 @@ namespace FastHashes.Analysis
             Rectangle(PlotLeft + column * width, PlotTop + row * height, width + overlap, height + overlap, color);
         }
 
-        /// <summary>
-        /// Render one top-down heatmap row. Identically colored adjacent cells are merged
-        /// to reduce SVG size. A cached palette avoids per-cell hexadecimal parsing.
-        /// </summary>
         public void HeatmapRow(ReadOnlySpan<Double> values, Int32 row, Int32 rows, Double minimum, Double maximum,
             String lowColor, String highColor, Boolean mergeCells = true)
         {
@@ -525,27 +585,30 @@ namespace FastHashes.Analysis
 
         public void Polyline(IReadOnlyList<(Double X, Double Y)> points, String color, Double thickness = 2.0d)
         {
-            if (points == null)
-                throw new ArgumentNullException(nameof(points));
+            ArgumentNullException.ThrowIfNull(points);
+            
             if (points.Count == 0)
                 return;
+            
             StringBuilder data = new();
+            
             for (Int32 i = 0; i < points.Count; ++i)
                 data.Append(i == 0 ? "M " : " L ").Append(F(X(points[i].X))).Append(' ').Append(F(Y(points[i].Y)));
+            
             Path(data.ToString(), color, thickness);
         }
 
         public void Path(String data, String stroke, Double thickness = 2.0d, String fill = "none")
         {
             RequireNonnegative(thickness, nameof(thickness));
-            writer.WriteLine($"<path d=\"{Escape(data)}\" fill=\"{Escape(fill)}\" stroke=\"{Escape(stroke)}\" stroke-width=\"{F(thickness)}\" stroke-linejoin=\"round\"/>");
+            m_Writer.WriteLine($"<path d=\"{Escape(data)}\" fill=\"{Escape(fill)}\" stroke=\"{Escape(stroke)}\" stroke-width=\"{F(thickness)}\" stroke-linejoin=\"round\"/>");
         }
 
         public void Text(Double x, Double y, String value, Int32 size, String color, Boolean bold = false, String anchor = "start")
         {
             RequireFinite(x, nameof(x));
             RequireFinite(y, nameof(y));
-            writer.WriteLine($"<text x=\"{F(x)}\" y=\"{F(y)}\" text-anchor=\"{Escape(anchor)}\" font-family=\"{Escape(FontFamily)}\" font-size=\"{size}\" fill=\"{Escape(color)}\"{(bold ? " font-weight=\"bold\"" : String.Empty)}>{Escape(value)}</text>");
+            m_Writer.WriteLine($"<text x=\"{F(x)}\" y=\"{F(y)}\" text-anchor=\"{Escape(anchor)}\" font-family=\"{Escape(FontFamily)}\" font-size=\"{size}\" fill=\"{Escape(color)}\"{(bold ? " font-weight=\"bold\"" : String.Empty)}>{Escape(value)}</text>");
         }
 
         public void Label(Double x, Double y, String value, Int32 size = 12, String anchor = "start", String color = null)
@@ -571,18 +634,21 @@ namespace FastHashes.Analysis
         public void DrawRightColorbar()
         {
             EnsurePrepared();
-            if (rightColorbar == null)
+            
+            if (m_ColorbarSettings == null)
                 return;
-            ColorbarSettings c = rightColorbar;
+
+            ColorbarSettings settings = m_ColorbarSettings;
+
             Double left = PlotLeft + PlotWidth + RightColorbarGap;
             Double top = PlotTop + 30.0d;
             Double height = Math.Min(RightColorbarHeight, Math.Max(1.0d, PlotHeight - 30.0d));
-            Colorbar(c.Title, left, top, RightColorbarWidth, height, c.Minimum, c.Maximum, c.LowColor, c.HighColor,
-                c.Intervals, c.Saturated, c.Format, c.Suffix, c.MiddleColor, c.Center);
+            Colorbar(settings.Title, left, top, RightColorbarWidth, height, settings.Minimum, settings.Maximum, settings.LowColor, settings.HighColor,
+                settings.Intervals, settings.SaturatedLower, settings.SaturatedUpper, settings.Format, settings.Suffix, settings.MiddleColor, settings.Center);
         }
 
         public void Colorbar(String title, Double left, Double top, Double width, Double height, Double minimum, Double maximum,
-            String lowColor, String highColor, Int32 intervals = 5, Boolean saturated = false, String format = "0.##", String suffix = "",
+            String lowColor, String highColor, Int32 intervals = 5, Boolean saturateLower = false, Boolean saturatedUpper = false, String format = "0.##", String suffix = "",
             String middleColor = null, Double? center = null)
         {
             RequireAxis(minimum, maximum, intervals);
@@ -608,10 +674,13 @@ namespace FastHashes.Analysis
             {
                 Double value = minimum + (maximum - minimum) * i / intervals;
                 String label = Format(value, format) + suffix;
-                if (saturated && i == 0)
+                
+                if (saturateLower && (i == 0))
                     label = "≤ " + label;
-                else if (saturated && i == intervals)
+
+                if (saturatedUpper && (i == intervals))
                     label = "≥ " + label;
+                
                 Label(left + width + 10.0d, top + height - i * height / intervals + 4.0d, label, TickSize);
             }
         }
@@ -630,8 +699,8 @@ namespace FastHashes.Analysis
 
         public void DrawBottomLegend()
         {
-            if (bottomLegend != null)
-                BottomLegend(bottomLegend, bottomLegendSlotWidth);
+            if (m_Legend != null)
+                BottomLegend(m_Legend, BottomLegendSlotWidth);
         }
 
         public void BottomLegend(IReadOnlyList<LegendItem> items, Double slotWidth = 180.0d)
@@ -676,13 +745,13 @@ namespace FastHashes.Analysis
         #region Document
         public void End()
         {
-            if (completed)
+            if (m_Completed)
                 return;
-            if (plotOpen)
+            if (m_PlotOpen)
                 EndPlot();
-            writer.WriteLine("</svg>");
-            completed = true;
-            writer.Flush();
+            m_Writer.WriteLine("</svg>");
+            m_Completed = true;
+            m_Writer.Flush();
         }
 
         public void Dispose()
@@ -693,7 +762,7 @@ namespace FastHashes.Analysis
             }
             finally
             {
-                writer.Dispose();
+                m_Writer.Dispose();
             }
         }
         #endregion
@@ -725,17 +794,17 @@ namespace FastHashes.Analysis
         {
             if (PaletteResolution < 2 || PaletteResolution > 4096)
                 throw new ArgumentOutOfRangeException(nameof(PaletteResolution));
-            if (lastPalette != null && lastPaletteResolution == PaletteResolution &&
-                String.Equals(lastPaletteLow, lowColor, StringComparison.Ordinal) &&
-                String.Equals(lastPaletteHigh, highColor, StringComparison.Ordinal))
-                return lastPalette;
+            if (m_LastPalette != null && m_LastPaletteResolution == PaletteResolution &&
+                String.Equals(m_LastPaletteLow, lowColor, StringComparison.Ordinal) &&
+                String.Equals(m_LastPaletteHigh, highColor, StringComparison.Ordinal))
+                return m_LastPalette;
             String key = lowColor + "|" + highColor + "|" + PaletteResolution.ToString(CultureInfo.InvariantCulture);
-            if (palettes.TryGetValue(key, out String[] cached))
+            if (m_Palettes.TryGetValue(key, out String[] cached))
             {
-                lastPaletteLow = lowColor;
-                lastPaletteHigh = highColor;
-                lastPaletteResolution = PaletteResolution;
-                lastPalette = cached;
+                m_LastPaletteLow = lowColor;
+                m_LastPaletteHigh = highColor;
+                m_LastPaletteResolution = PaletteResolution;
+                m_LastPalette = cached;
                 return cached;
             }
             (Int32 r0, Int32 g0, Int32 b0) = ParseColor(lowColor);
@@ -749,11 +818,11 @@ namespace FastHashes.Analysis
                 Int32 b = (Int32)Math.Round(b0 + (b1 - b0) * t);
                 palette[i] = $"#{r:X2}{g:X2}{b:X2}";
             }
-            palettes.Add(key, palette);
-            lastPaletteLow = lowColor;
-            lastPaletteHigh = highColor;
-            lastPaletteResolution = PaletteResolution;
-            lastPalette = palette;
+            m_Palettes.Add(key, palette);
+            m_LastPaletteLow = lowColor;
+            m_LastPaletteHigh = highColor;
+            m_LastPaletteResolution = PaletteResolution;
+            m_LastPalette = palette;
             return palette;
         }
 
@@ -833,15 +902,45 @@ namespace FastHashes.Analysis
 
         private void RequireUnprepared()
         {
-            if (prepared)
+            if (m_Prepared)
                 throw new InvalidOperationException("Layout cannot be reconfigured after PrepareLayout().");
         }
 
         private void EnsurePrepared()
         {
-            if (!prepared)
+            if (!m_Prepared)
                 PrepareLayout();
         }
+        #endregion
+
+        #region Records
+        private sealed record ColorbarSettings(
+            String Title,
+            Double Minimum,
+            Double Maximum,
+            String LowColor,
+            String MiddleColor,
+            String HighColor,
+            Int32 Intervals,
+            Double? Center,
+            Boolean SaturatedLower,
+            Boolean SaturatedUpper,
+            String Format,
+            String Suffix
+        );
+
+        private readonly record struct AxisTick(
+            Double Position,
+            String Label
+        );
+
+
+        public readonly record struct LegendItem(
+            String Label,
+            String Color,
+            Boolean IsLine,
+            Boolean Dashed = false
+        );
         #endregion
     }
 }

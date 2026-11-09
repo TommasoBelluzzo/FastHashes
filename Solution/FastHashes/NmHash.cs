@@ -277,7 +277,7 @@ namespace FastHashes
                     x[j] = unchecked(x[j] + v);
                     y[j] = v ^ (v << 17) ^ (v >> 6);
                     x[j] = MixLane(x[j], y[j]);
-                    x[j] ^= j == 0 ? P1 : j == 1 ? P2 : j == 2 ? P3 : P4;
+                    x[j] ^= (j == 0) ? P1 : (j == 1) ? P2 : (j == 2) ? P3 : P4;
 
                     sum = unchecked(sum + x[j]);
                 }

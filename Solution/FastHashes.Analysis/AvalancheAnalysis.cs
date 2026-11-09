@@ -265,8 +265,8 @@ namespace FastHashes.Analysis
             plot.PlotArea(120, 178, 980, 500);
             plot.DataRange(0.0d, k, 0.0d, ceiling);
 
-            plot.ConfigureIndexedXAxis("Changed Output Bits", k, xStep);
-            plot.ConfigureDiscreteYAxis("Number of Trials", 0.0d, ceiling, intervals: 5, format: "N0");
+            plot.ConfigureIndexedAxisX("Changed Output Bits", k, xStep);
+            plot.ConfigureDiscreteAxisY("Number of Trials", 0.0d, ceiling, intervals: 5, format: "N0");
 
             plot.ConfigureBottomLegend([
                 new SvgPlot.LegendItem("Observed", plot.ObservedColor, false),
@@ -308,16 +308,16 @@ namespace FastHashes.Analysis
             plot.DataRange(0.0d, outputBits, 0.0d, inputBits);
 
             Int32 xStep = (outputBits <= 64) ? 8 : (outputBits <= 128) ? 16 : 32;
-            plot.ConfigureIndexedXAxis("Output Bit Index (LSB-first)", outputBits, xStep);
+            plot.ConfigureIndexedAxisX("Output Bit Index (LSB-first)", outputBits, xStep);
 
             Int32 yStep = (inputBits <= 64) ? 8 : (inputBits <= 256) ? 32 : 64;
-            plot.ConfigureIndexedYAxis("Input Bit Index", inputBits, yStep);
+            plot.ConfigureIndexedAxisY("Input Bit Index", inputBits, yStep);
 
             plot.ConfigureRightColorbar(
                 "Absolute Bias",
                 0.0d, PLOT_HEATMAP_SCALE * 100.0d,
                 "#ffffff", plot.ObservedColor,
-                intervals: 5, saturated: true, format: "0.##", suffix: "%"
+                intervals: 5, saturatedUpper: true, format: "0.##", suffix: "%"
             );
 
             plot.Title("STRICT AVALANCHE CRITERION");

@@ -381,9 +381,9 @@ namespace FastHashes.Analysis
             plot.PlotArea(120.0d, 178.0d, 980.0d, 430.0d);
             plot.DataRange(0.0d, groups, 0.0d, ceiling);
             
-            plot.ConfigureDiscreteYAxis("Number of Buckets", 0.0d, ceiling, intervals: 4, format: "N0");
+            plot.ConfigureDiscreteAxisY("Number of Buckets", 0.0d, ceiling, intervals: 4, format: "N0");
 
-            plot.ConfigureXTicks("Inputs per Projected Bucket", ticks);
+            plot.ConfigureTicksX("Inputs per Projected Bucket", ticks);
 
             plot.ConfigureBottomLegend([
                 new SvgPlot.LegendItem("Observed", plot.ObservedColor, false),

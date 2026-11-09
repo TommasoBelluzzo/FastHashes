@@ -27,8 +27,8 @@ namespace FastHashes.Analysis
             plot.DataRange(0.0d, outputBytes, 0.0d, ceiling);
 
             Int32 xStep = Math.Max(1, (outputBytes + 15) / 16);
-            plot.ConfigureIndexedXAxis("Output Byte Position", outputBytes, xStep);
-            plot.ConfigureDiscreteYAxis("Entropy Deficit", 0.0d, ceiling, intervals: 4, format: "0.###");
+            plot.ConfigureIndexedAxisX("Output Byte Position", outputBytes, xStep);
+            plot.ConfigureDiscreteAxisY("Entropy Deficit", 0.0d, ceiling, intervals: 4, format: "0.###");
 
             plot.Title("OUTPUT-BYTE ENTROPY DEFICIT");
             plot.Subtitle("Ideal 8-bit entropy minus empirical plug-in entropy; finite-sample estimates are downward biased.");
@@ -70,8 +70,8 @@ namespace FastHashes.Analysis
             plot.DataRange(0.0d, outputBits, -limit, limit);
 
             Int32 step = outputBits <= 64 ? 8 : outputBits <= 128 ? 16 : 32;
-            plot.ConfigureIndexedXAxis("Output Bit (LSB-first)", outputBits, step);
-            plot.ConfigureDiscreteYAxis("Signed One-bit Bias", -limit, limit, intervals: 4, format: "P1");
+            plot.ConfigureIndexedAxisX("Output Bit (LSB-first)", outputBits, step);
+            plot.ConfigureDiscreteAxisY("Signed One-bit Bias", -limit, limit, intervals: 4, format: "P1");
 
             plot.ConfigureBottomLegend([
                 new SvgPlot.LegendItem("Observed Bias", plot.ObservedColor, false),
@@ -121,14 +121,14 @@ namespace FastHashes.Analysis
             plot.DataRange(0.0d, 256.0d, 0.0d, outputBytes);
 
             Int32 yStep = Math.Max(1, (outputBytes + 11) / 12);
-            plot.ConfigureIndexedXAxis("Output Byte Value", 256, 32);
-            plot.ConfigureIndexedYAxis("Output Byte Position", outputBytes, yStep);
+            plot.ConfigureIndexedAxisX("Output Byte Value", 256, 32);
+            plot.ConfigureIndexedAxisY("Output Byte Position", outputBytes, yStep);
 
             plot.ConfigureRightColorbar(
                 "Standardized Residual",
                 -PLOT_RESIDUAL_SCALE, PLOT_RESIDUAL_SCALE,
                 plot.ObservedColor, plot.HighlightColor,
-                intervals: 4, saturated: true, format: "0", middleColor: "#ffffff", center: 0.0d
+                intervals: 4, saturatedLower: true, saturatedUpper: true, format: "0", middleColor: "#ffffff", center: 0.0d
             );
 
             plot.Title("OUTPUT-BYTE FREQUENCY");

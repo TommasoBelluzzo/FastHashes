@@ -51,11 +51,14 @@ namespace FastHashes.Analysis
             plot.DataRange(0.0d, outputBits, 0.0d, outputBits);
 
             Int32 step = outputBits <= 64 ? 8 : outputBits <= 128 ? 16 : 32;
-            plot.ConfigureIndexedXAxis("Output Bit A (LSB-first)", outputBits, step);
-            plot.ConfigureIndexedYAxis("Output Bit B (LSB-first)", outputBits, step);
+            plot.ConfigureIndexedAxisX("Output Bit A (LSB-first)", outputBits, step);
+            plot.ConfigureIndexedAxisY("Output Bit B (LSB-first)", outputBits, step);
             
-            plot.ConfigureRightColorbar("Mean |phi|", 0.0d, PLOT_HEATMAP_SCALE, "#ffffff", plot.ObservedColor,
-                intervals: 3, saturated: true, format: "0.##");
+            plot.ConfigureRightColorbar(
+                "Mean |phi|",
+                0.0d, PLOT_HEATMAP_SCALE,
+                "#ffffff", plot.ObservedColor,
+                intervals: 3, saturatedUpper: true, format: "0.##");
 
             plot.Title("BIT INDEPENDENCE CRITERION");
             plot.Subtitle("Mean absolute phi across input-bit perturbations; black denotes undefined pairs and the excluded diagonal.");

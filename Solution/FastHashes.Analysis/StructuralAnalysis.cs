@@ -513,8 +513,8 @@ namespace FastHashes.Analysis
             plot.PlotArea(150.0d, 185.0d, 920.0d, 445.0d);
             plot.DataRange(-0.5d, 4.5d, 0.0d, outputBits);
 
-            plot.ConfigureXTicks("Seed Configuration", ticks);
-            plot.ConfigureDiscreteYAxis("Changed Output Bits", 0.0d, outputBits, intervals: 4, format: "0");
+            plot.ConfigureTicksX("Seed Configuration", ticks);
+            plot.ConfigureDiscreteAxisY("Changed Output Bits", 0.0d, outputBits, intervals: 4, format: "0");
 
             plot.ConfigureBottomLegend([
                 new SvgPlot.LegendItem("Zero vs Last Bit", colors[0], false),
