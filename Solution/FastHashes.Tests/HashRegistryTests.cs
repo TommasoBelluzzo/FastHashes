@@ -48,7 +48,22 @@ namespace FastHashes.Tests
 
             Assert.Throws<OverflowException>(() => Hash.Create("XxHash32", UInt64.MaxValue));
             Assert.Throws<OverflowException>(() => Hash.TryCreate("XxHash32", UInt64.MaxValue, out _));
-            Assert.Throws<OverflowException>(() => Hash.GetInitializerSeeded("XxHash32")(UInt64.MaxValue));
+            Assert.Throws<OverflowException>(() => Hash.GetInitializerSeeded("XxHash32").Ctor(UInt64.MaxValue));
+        }
+
+        [Fact]
+        public void RegistryCoverageTest()
+        {
+            Type[] implementations = [.. typeof(Hash).Assembly.GetTypes()
+                .Where(x => x.IsClass && !x.IsAbstract && typeof(Hash).IsAssignableFrom(x))
+                .OrderBy(x => x.Name, StringComparer.Ordinal)];
+
+            Type[] registered = [.. Hash.GetAlgorithms()
+                .Select(x => Hash.Create(x).GetType()).Distinct()
+                .OrderBy(x => x.Name, StringComparer.Ordinal)];
+
+            Assert.NotEmpty(implementations);
+            Assert.Equal(implementations, registered);
         }
 
         [Fact]
@@ -67,7 +82,7 @@ namespace FastHashes.Tests
                 Hash hashSeeded = Hash.Create(name, TEST_SEED);
 
                 Hash hashInitializedDefault = Hash.GetInitializerDefault(name)();
-                Hash hashInitializedSeeded = Hash.GetInitializerSeeded(name)(TEST_SEED);
+                Hash hashInitializedSeeded = Hash.GetInitializerSeeded(name).Ctor(TEST_SEED);
 
                 Assert.Equal(hashDefault.GetType(), hashInitializedDefault.GetType());
                 Assert.Equal(hashSeeded.GetType(), hashInitializedSeeded.GetType());
@@ -84,18 +99,17 @@ namespace FastHashes.Tests
         }
 
         [Fact]
-        public void RegistryCoverageTest()
+        public void RegistrySeedWidthTest()
         {
-            Type[] implementations = [.. typeof(Hash).Assembly.GetTypes()
-                .Where(x => x.IsClass && !x.IsAbstract && typeof(Hash).IsAssignableFrom(x))
-                .OrderBy(x => x.Name, StringComparer.Ordinal)];
+            foreach (String name in Hash.GetAlgorithms())
+            {
+                (Func<UInt64, Hash> ctor, Int32 bits) = Hash.GetInitializerSeeded(name);
 
-            Type[] registered = [.. Hash.GetAlgorithms()
-                .Select(x => Hash.Create(x).GetType()).Distinct()
-                .OrderBy(x => x.Name, StringComparer.Ordinal)];
+                Assert.True((bits == 32) || (bits == 64));
 
-            Assert.NotEmpty(implementations);
-            Assert.Equal(implementations, registered);
+                if (bits == 32)
+                    Assert.Throws<OverflowException>(() => ctor(UInt64.MaxValue));
+            }
         }
         #endregion
 

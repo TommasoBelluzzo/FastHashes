@@ -74,7 +74,7 @@ namespace FastHashes
                 return false;
             }
 
-            hash = initializers.Seeded(seed);
+            hash = initializers.Seeded.Ctor(seed);
             return true;
         }
 
@@ -93,10 +93,10 @@ namespace FastHashes
 
         /// <summary>Gets the standardized single-seed initializer of the specified hashing algorithm.</summary>
         /// <param name="name">The <see cref="T:System.String"/> identifying the hashing algorithm.</param>
-        /// <returns>A <see cref="T:System.Func`2"/> delegate of type <c>Func&lt;UInt64, Hash&gt;</c> that creates a new hash instance using a standardized single-seed initialization.</returns>
+        /// <returns>A tuple containing a <see cref="T:System.Func`2"/> delegate of type <c>Func&lt;UInt64, Hash&gt;</c> that creates a new hash instance using standardized single-seed initialization, and an <see cref="T:System.Int32"/> value specifying the supported seed width in bits.</returns>
         /// <exception cref="T:System.ArgumentException">Thrown when the specified hashing algorithm is unknown.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="name">name</paramref> is <c>null</c>.</exception>
-        public static Func<UInt64, Hash> GetInitializerSeeded(String name)
+        public static (Func<UInt64, Hash> Ctor, Int32 Bits) GetInitializerSeeded(String name)
         {
             if (!HashRegistry.TryGetInitializers(name, out var initializers))
                 throw new ArgumentException("Unknown hashing algorithm specified.", nameof(name));
@@ -129,7 +129,7 @@ namespace FastHashes
             if (!HashRegistry.TryGetInitializers(name, out var initializers))
                 throw new ArgumentException("Unknown hashing algorithm specified.", nameof(name));
 
-            return initializers.Seeded(seed);
+            return initializers.Seeded.Ctor(seed);
         }
 
         /// <summary>Gets the identifiers of all registered hashing algorithms and their supported variants.</summary>
@@ -420,7 +420,7 @@ namespace FastHashes
             if (!HashRegistry.TryGetInitializers(name, out var initializers))
                 return false;
 
-            hash = initializers.Seeded(seed) as Hash<T>;
+            hash = initializers.Seeded.Ctor(seed) as Hash<T>;
 
             return hash != null;
         }
@@ -453,7 +453,7 @@ namespace FastHashes
             if (!HashRegistry.TryGetInitializers(name, out var initializers))
                 throw new ArgumentException("Unknown hashing algorithm specified.", nameof(name));
 
-            if (initializers.Seeded(seed) is Hash<T> hash)
+            if (initializers.Seeded.Ctor(seed) is Hash<T> hash)
                 return hash;
 
             throw new ArgumentException("Incompatible hashing algorithm specified.", nameof(name));

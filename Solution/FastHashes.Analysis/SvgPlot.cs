@@ -98,7 +98,7 @@ namespace FastHashes.Analysis
 
             Width = width;
             Height = height;
-            
+
             PlotArea(125.0d, 180.0d, Math.Max(1.0d, width - 250.0d), Math.Max(1.0d, height - 290.0d));
             DataRange(0.0d, 1.0d, 0.0d, 1.0d);
 
@@ -337,12 +337,14 @@ namespace FastHashes.Analysis
         public void DrawAxes()
         {
             EnsurePrepared();
+
             if (xTicks != null)
             {
                 foreach (AxisTick tick in xTicks)
                     Label(X(tick.Position), PlotTop + PlotHeight + AxisLabelSpacing, tick.Label, TickSize, "middle");
                 XAxisTitle(xAxisTitle);
             }
+
             if (yTicks != null)
             {
                 foreach (AxisTick tick in yTicks)

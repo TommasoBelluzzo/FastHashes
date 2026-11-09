@@ -72,7 +72,7 @@ namespace FastHashes.Tests
                 if (!VALIDATION_CASES.TryGetValue(hashName, out String expected))
                     throw new InvalidOperationException($"Missing validation value for {hashName}.");
 
-                yield return new Object[] { hashName, Hash.GetInitializerSeeded(hashName), expected };
+                yield return new Object[] { hashName, Hash.GetInitializerSeeded(hashName).Ctor, expected };
             }
         }
         #endregion

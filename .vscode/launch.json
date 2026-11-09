@@ -39,9 +39,9 @@
       "cwd": "${workspaceFolder}/Solution",
       "args": [
         "--hash",
-        "FarmHash32",
+        "FarmHash64",
         "--analysis",
-        "structural"
+        "all"
       ],
       "console": "integratedTerminal",
       "stopAtEntry": false

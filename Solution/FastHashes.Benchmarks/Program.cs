@@ -205,7 +205,7 @@ namespace FastHashes.Benchmarks
                 String hashName = selectedAlgorithms[i];
                 Func<UInt64, Hash> hashInitializer = String.Equals(hashName, "DummyHash", StringComparison.Ordinal)
                     ? seed => new DummyHash()
-                    : Hash.GetInitializerSeeded(hashName);
+                    : Hash.GetInitializerSeeded(hashName).Ctor;
 
                 String title = $"# HASH: {hashName} #";
                 String frame = new('#', title.Length);
