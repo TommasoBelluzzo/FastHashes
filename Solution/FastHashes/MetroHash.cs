@@ -601,6 +601,7 @@ namespace FastHashes
                     goto Finalize;
 
                 UInt64 length = (UInt64)count;
+
                 hash1 = unchecked(hash1 + length);
                 hash2 = unchecked(hash2 + length);
 
@@ -622,6 +623,7 @@ namespace FastHashes
 
                         hash1 = Mix256(hash1, v1, z1, K0);
                         hash2 = Mix256(hash2, v2, z2, K1);
+                        
                         v1 = Mix256(v1, hash1, z3, K2);
                         v2 = Mix256(v2, hash2, z4, K3);
                     }
@@ -629,6 +631,7 @@ namespace FastHashes
 
                     v1 = Xor256(v1, hash1, v2, hash2, 26, K0, K1);
                     v2 = Xor256(v2, hash2, v1, hash1, 26, K1, K0);
+                    
                     hash1 = Xor256(hash1, hash1, v1, v2, 26, K0, K1);
                     hash2 = Xor256(hash2, hash2, v2, v1, 30, K1, K0);
                 }

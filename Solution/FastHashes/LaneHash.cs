@@ -100,6 +100,7 @@ namespace FastHashes
         protected static void HashLong(ReadOnlySpan<Byte> buffer, UInt64 seed, Span<UInt64> merged, out UInt64 ks)
         {
             Int32 count = buffer.Length;
+            UInt64 length = (UInt64)count;
             Int32 stripes = (count - 1) / 64;
 
             ks = Fold(seed ^ SEED0, SEED1);
@@ -119,7 +120,7 @@ namespace FastHashes
 
                 for (Int32 i = 0; i < 8; ++i)
                 {
-                    UInt64 value = Step(unchecked(CT[(stripes * 8) + i] + ks), BinaryOperations.Read64(buffer, count - 64 + (i * 8)) ^ (UInt64)count);
+                    UInt64 value = Step(unchecked(CT[(stripes * 8) + i] + ks), BinaryOperations.Read64(buffer, count - 64 + (i * 8)) ^ length);
                     merged[i] ^= Step(value, Q[i]);
                 }
             }
@@ -144,7 +145,7 @@ namespace FastHashes
                 Int32 lastChain = (stripes & 7) * 8;
 
                 for (Int32 i = 0; i < 8; ++i)
-                    state[lastChain + i] = Step(state[lastChain + i], BinaryOperations.Read64(buffer, count - 64 + (i * 8)) ^ (UInt64)count);
+                    state[lastChain + i] = Step(state[lastChain + i], BinaryOperations.Read64(buffer, count - 64 + (i * 8)) ^ length);
 
                 for (Int32 chain = 0; chain < 8; ++chain)
                 {
@@ -158,7 +159,7 @@ namespace FastHashes
         protected static void HashShort(ReadOnlySpan<Byte> buffer, UInt64 seed, out UInt64 x, out UInt64 y)
         {
             Int32 count = buffer.Length;
-            UInt64 z = (UInt64)count;
+            UInt64 length = (UInt64)count;
 
             UInt64 ks = Fold(seed ^ SEED0, SEED1);
 
@@ -188,7 +189,7 @@ namespace FastHashes
                 }
 
                 w0 ^= KS[0];
-                w1 ^= KS[1] ^ z ^ ks;
+                w1 ^= KS[1] ^ length ^ ks;
 
                 Mum(ref w0, ref w1);
 
@@ -200,7 +201,7 @@ namespace FastHashes
                 UInt64 a0 = BinaryOperations.Read64(buffer, 0) ^ KS[0];
                 UInt64 b0 = BinaryOperations.Read64(buffer, 8) ^ KS[1];
                 UInt64 a1 = BinaryOperations.Read64(buffer, count - 16) ^ KS[2];
-                UInt64 b1 = BinaryOperations.Read64(buffer, count - 8) ^ (KS[3] ^ z ^ ks);
+                UInt64 b1 = BinaryOperations.Read64(buffer, count - 8) ^ (KS[3] ^ length ^ ks);
 
                 Mum(ref a0, ref b0);
                 Mum(ref a1, ref b1);
@@ -217,7 +218,7 @@ namespace FastHashes
                 UInt64 a2 = BinaryOperations.Read64(buffer, count - 32) ^ KS[4];
                 UInt64 b2 = BinaryOperations.Read64(buffer, count - 24) ^ KS[5];
                 UInt64 a3 = BinaryOperations.Read64(buffer, count - 16) ^ KS[6];
-                UInt64 b3 = BinaryOperations.Read64(buffer, count - 8) ^ (KS[7] ^ z ^ ks);
+                UInt64 b3 = BinaryOperations.Read64(buffer, count - 8) ^ (KS[7] ^ length ^ ks);
 
                 Mum(ref a0, ref b0);
                 Mum(ref a1, ref b1);

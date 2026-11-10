@@ -117,6 +117,9 @@ The library includes the following non-cryptographic hashes:
  * `Umash`
    * 64/128 Bits Output
    * Reference Implementation: [https://github.com/backtrace-labs/umash](https://github.com/backtrace-labs/umash)
+ * `W1Hash`
+   * 64 Bits Output
+   * Reference Implementation: [https://github.com/PeterRK/w1hash](https://github.com/PeterRK/w1hash)
  * `WyHash`
    * 32/64 Bits Output
    * Reference Implementation: [https://github.com/wangyi-fudan/wyhash](https://github.com/wangyi-fudan/wyhash)

@@ -214,13 +214,14 @@ namespace FastHashes
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
+            UInt64 length = (UInt64)count;
 
             UInt64 x, y;
 
             UInt64 v01 = V01;
             UInt64 v10 = V10;
-            UInt64 seed1 = 0x243F6A8885A308D3ul ^ (UInt64)count;
-            UInt64 seed2 = 0x452821E638D01377ul ^ (UInt64)count;
+            UInt64 seed1 = 0x243F6A8885A308D3ul ^ length;
+            UInt64 seed2 = 0x452821E638D01377ul ^ length;
 
             x = seed2 ^ (m_Seed & v10);
             y = seed1 ^ (m_Seed & v01);
@@ -313,13 +314,14 @@ namespace FastHashes
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
+            UInt64 length = (UInt64)count;
 
             UInt64 x, y;
 
             UInt64 v01 = V01;
             UInt64 v10 = V10;
-            UInt64 seed1 = 0x243F6A8885A308D3ul ^ (UInt64)count;
-            UInt64 seed2 = 0x452821E638D01377ul ^ (UInt64)count;
+            UInt64 seed1 = 0x243F6A8885A308D3ul ^ length;
+            UInt64 seed2 = 0x452821E638D01377ul ^ length;
             UInt64 seed3 = 0xA4093822299F31D0ul;
             UInt64 seed4 = 0xC0AC29B7C97C50DDul;
 
@@ -336,7 +338,7 @@ namespace FastHashes
                 {
                     Int32 mo = count >> 3;
                     a = ReadPair(buffer, 0, count - 4);
-                    b = ReadPair(buffer, mo * 4, count - 4 - mo * 4);
+                    b = ReadPair(buffer, mo * 4, count - (mo * 4) - 4);
                 }
                 else
                 {

@@ -316,8 +316,8 @@ namespace FastHashes
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
-
                 UInt64 length = (UInt64)count;
+
                 UInt64 a = m_Seed;
                 UInt64 b = length;
 
@@ -466,8 +466,8 @@ namespace FastHashes
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
-
                 UInt64 length = (UInt64)count;
+
                 UInt64 a = m_Seed;
                 UInt64 b = length;
 

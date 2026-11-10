@@ -162,8 +162,9 @@ namespace FastHashes
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
+                UInt64 length = (UInt64)count;
 
-                UInt64 seed = m_Seed ^ Mix(m_Seed ^ S0, S1) ^ (UInt64)count;
+                UInt64 seed = m_Seed ^ Mix(m_Seed ^ S0, S1) ^ length;
                 UInt64 a, b;
 
                 if (count <= 16)
@@ -240,7 +241,7 @@ namespace FastHashes
                 b ^= seed;
                 Mum(ref a, ref b);
 
-                a ^= S0 ^ (UInt64)count;
+                a ^= S0 ^ length;
                 b ^= S1;
 
                 UInt64 hash = Mix(a, b);
@@ -275,8 +276,9 @@ namespace FastHashes
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
+                UInt64 length = (UInt64)count;
 
-                UInt64 seed = m_Seed ^ Mix(m_Seed ^ S2, S1) ^ (UInt64)count;
+                UInt64 seed = m_Seed ^ Mix(m_Seed ^ S2, S1) ^ length;
                 UInt64 a, b;
 
                 if (count <= 16)
@@ -415,7 +417,7 @@ namespace FastHashes
                 b ^= seed;
                 Mum(ref a, ref b);
 
-                a ^= S7 ^ (UInt64)count;
+                a ^= S7 ^ length;
                 b ^= S1;
 
                 UInt64 hash = Mix(a, b);

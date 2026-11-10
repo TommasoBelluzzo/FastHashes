@@ -58,6 +58,7 @@ namespace FastHashes.Tests
             ["SpookyHash128"] = "0xBEFC3C892A16F01B23B81DE576CA399A",
             ["Umash64"] = "0xCD64A23666A52B91",
             ["Umash128"] = "0x057D85637C4D1D0BA7A070DCC9A6516F",
+            ["W1Hash"] = "0xF148896451D5889C",
             ["WyHash32"] = "0x6680DE09",
             ["WyHash64"] = "0xD37DAE9D1F46D8DB",
             ["XxHash32"] = "0x43B788BA",

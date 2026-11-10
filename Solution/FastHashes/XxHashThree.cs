@@ -378,9 +378,11 @@ namespace FastHashes
         private static void ComputeMedium(ReadOnlySpan<Byte> buffer, UInt64 seed, out UInt64 lo, out UInt64 hi)
         {
             Int32 count = buffer.Length;
+            UInt64 length = (UInt64)count;
+
             ReadOnlySpan<Byte> secret = Secret;
 
-            UInt64 loAccumulator = unchecked((UInt64)count * P64_1);
+            UInt64 loAccumulator = unchecked(length * P64_1);
             UInt64 hiAccumulator = 0;
 
             if (count <= 128)
@@ -411,7 +413,7 @@ namespace FastHashes
             }
 
             lo = AvalancheHhx3(unchecked(loAccumulator + hiAccumulator));
-            hi = unchecked(0ul - AvalancheHhx3(loAccumulator * P64_1 + hiAccumulator * P64_4 + ((UInt64)count - seed) * P64_2));
+            hi = unchecked(0ul - AvalancheHhx3(loAccumulator * P64_1 + hiAccumulator * P64_4 + (length - seed) * P64_2));
         }
 
         private static void ComputeShort(ReadOnlySpan<Byte> buffer, UInt64 seed, out UInt64 lo, out UInt64 hi)
@@ -488,6 +490,7 @@ namespace FastHashes
         protected override (UInt64, UInt64) ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             Int32 count = buffer.Length;
+
             UInt64 lo, hi;
 
             if (count <= 16)
@@ -496,11 +499,13 @@ namespace FastHashes
                 ComputeMedium(buffer, Seed, out lo, out hi);
             else
             {
+                UInt64 length = (UInt64)count;
+
                 Span<UInt64> accumulator = stackalloc UInt64[8];
                 ComputeLong(buffer, accumulator, LongSecret);
 
-                UInt64 loStart = unchecked((UInt64)count * P64_1);
-                UInt64 hiStart = ~unchecked((UInt64)count * P64_2);
+                UInt64 loStart = unchecked(length * P64_1);
+                UInt64 hiStart = ~unchecked(length * P64_2);
 
                 lo = Merge(accumulator, LongSecret, 11, loStart);
                 hi = Merge(accumulator, LongSecret, 117, hiStart);

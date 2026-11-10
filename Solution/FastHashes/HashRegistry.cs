@@ -256,6 +256,11 @@ namespace FastHashes
                 () => new WyHash32(),
                 (seed => new WyHash32(checked((UInt32)seed)), 32)
             ),
+            ["W1Hash"] =
+            (
+                () => new W1Hash(),
+                (seed => new W1Hash(seed), 64)
+            ),
             ["WyHash64"] =
             (
                 () => new WyHash64(),

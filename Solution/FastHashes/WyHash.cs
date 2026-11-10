@@ -54,31 +54,29 @@ namespace FastHashes
             Int32 offset = 0;
             Int32 count = buffer.Length;
 
-            Int32 i = count;
-
             UInt32 seed = m_Seed ^ (UInt32)((UInt64)count >> 32);
             UInt32 s0 = (UInt32)count;
 
             WyMix(ref seed, ref s0);
 
-            while (i > 8)
+            while (count > 8)
             {
                 seed ^= BinaryOperations.Read32(buffer, offset);
                 s0 ^= BinaryOperations.Read32(buffer, offset + 4);
 
                 WyMix(ref seed, ref s0);
 
-                i -= 8;
+                count -= 8;
                 offset += 8;
             }
 
-            if (i >= 4)
+            if (count >= 4)
             {
                 seed ^= BinaryOperations.Read32(buffer, offset);
-                s0 ^= BinaryOperations.Read32(buffer, offset + i - 4);
+                s0 ^= BinaryOperations.Read32(buffer, offset + count - 4);
             }
-            else if (i > 0)
-                seed ^= ((UInt32)buffer[offset] << 16) | ((UInt32)buffer[offset + (i >> 1)] << 8) | (UInt32)buffer[offset + i - 1];
+            else if (count > 0)
+                seed ^= ((UInt32)buffer[offset] << 16) | ((UInt32)buffer[offset + (count >> 1)] << 8) | (UInt32)buffer[offset + count - 1];
 
             WyMix(ref seed, ref s0);
             WyMix(ref seed, ref s0);
@@ -87,7 +85,6 @@ namespace FastHashes
 
             return hash;
         }
-
         #endregion
     }
 
