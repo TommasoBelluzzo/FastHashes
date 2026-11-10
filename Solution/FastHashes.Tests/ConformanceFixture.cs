@@ -32,7 +32,7 @@ namespace FastHashes.Tests
             String directory = Path.Combine(AppContext.BaseDirectory, "Data");
 
             if (!Directory.Exists(directory))
-                return;
+                throw new DirectoryNotFoundException($"Data directory could not be found: {directory}.");
 
             HashSet<String> registered = new(Hash.GetAlgorithms(), StringComparer.Ordinal);
 
@@ -59,11 +59,14 @@ namespace FastHashes.Tests
                 if (!String.Equals(Path.GetFileNameWithoutExtension(file), algorithm, StringComparison.Ordinal))
                     throw new InvalidDataException($"Algorithm name does not match filename: {file}.");
 
-                if (!registered.Contains(algorithm))
+                if (!registered.Remove(algorithm))
                     throw new InvalidDataException($"Unregistered algorithm: {file}.");
 
                 if (!root.TryGetProperty("cases", out JsonElement testCases) || (testCases.ValueKind != JsonValueKind.Array))
-                    throw new InvalidDataException($"Invalid reference cases: {file}.");
+                    throw new InvalidDataException($"Missing or invalid property 'cases': {file}.");
+
+                if (testCases.GetArrayLength() == 0)
+                    throw new InvalidDataException($"Empty property 'cases': {file}.");
 
                 Int32 hashLength = Hash.Create(algorithm).Length / 8;
 
@@ -83,7 +86,7 @@ namespace FastHashes.Tests
                     String seedValue = seed.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? seed[2..] : seed;
 
                     if (!UInt64.TryParse(seedValue, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out _))
-                        throw new InvalidDataException($"Invalid hexadecimal seed in case '{name}': {file}.");
+                        throw new InvalidDataException($"Invalid seed in case '{name}': {file}.");
 
                     Byte[] expectedBytes;
 
@@ -105,6 +108,9 @@ namespace FastHashes.Tests
 
                 m_CasesByAlgorithm.Add(algorithm, algorithmCases);
             }
+
+            if (registered.Count > 0)
+                throw new InvalidDataException($"Missing conformance files for registered algorithms: {String.Join(", ", registered.OrderBy(x => x, StringComparer.Ordinal))}.");
         }
         #endregion
 

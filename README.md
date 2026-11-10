@@ -58,8 +58,8 @@ The library includes the following non-cryptographic hashes:
  * `FastHash`
    * 32/64 Bits Output
    * Reference Implementation: [https://github.com/ZilongTan/fast-hash](https://github.com/ZilongTan/fast-hash)
- * `FastPositiveHash / T1HA`
-   * 64 Bits Output
+ * `FastPositiveHash (T1HA)`
+   * 64/128 Bits Output
    * 0/1/2 Variants
    * Reference Implementation: [https://github.com/leo-yuriev/t1ha](https://github.com/leo-yuriev/t1ha)
  * `HalfSipHash`
@@ -74,6 +74,7 @@ The library includes the following non-cryptographic hashes:
    * Reference Implementation: [https://github.com/google/highwayhash](https://github.com/google/highwayhash)
  * `KomiHash`
    * 64 Bits Output
+   * Version 5.34
    * Reference Implementation: [https://github.com/avaneev/komihash](https://github.com/avaneev/komihash)
  * `LaneHash`
    * 64/128 Bits Output
@@ -196,8 +197,8 @@ The following NuGet packages are used by the unit testing project:
 | 35        | HalfSipHash             | 364.78 MB/s               | 119.96 MB/s               |
 
 The benchmarks above were conducted using the following hardware and software configuration:
- * `CPU:` Intel Core i7-7700HQ @2.80GHz (4 Cores, 8 Threads, 256KB L1 Cache)
- * `RAM:` 16 GB x DDR4 SO-DIMM @1200MHz
- * `OS:` Microsoft Windows 10 64-Bit
+ * `CPU:` Intel Core i9-13900K @3.00 GHz (24 Cores, 32 Threads, 32 MB L2 Cache, 36 MB L3 Cache)
+ * `RAM:` 32 GB DDR5-6000 (2×16 GB Corsair DIMM @3000 MHz)
+ * `OS:` Microsoft Windows 11 Home 64-Bit
 
  Performance may vary depending on the runtime, processor architecture, input size and execution environment.

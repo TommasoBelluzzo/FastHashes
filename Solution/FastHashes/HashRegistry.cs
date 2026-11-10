@@ -56,20 +56,25 @@ namespace FastHashes
                 () => new FastHash64(),
                 (seed => new FastHash64(seed), 64)
             ),
-            ["FastPositiveHash-V0"] =
+            ["FastPositiveHash64-V0"] =
             (
-                () => new FastPositiveHash(FastPositiveHashVariant.V0),
-                (seed => new FastPositiveHash(FastPositiveHashVariant.V0, seed), 64)
+                () => new FastPositiveHash64(FastPositiveHashVariant.V0),
+                (seed => new FastPositiveHash64(FastPositiveHashVariant.V0, seed), 64)
             ),
-            ["FastPositiveHash-V1"] =
+            ["FastPositiveHash64-V1"] =
             (
-                () => new FastPositiveHash(FastPositiveHashVariant.V1),
-                (seed => new FastPositiveHash(FastPositiveHashVariant.V1, seed), 64)
+                () => new FastPositiveHash64(FastPositiveHashVariant.V1),
+                (seed => new FastPositiveHash64(FastPositiveHashVariant.V1, seed), 64)
             ),
-            ["FastPositiveHash-V2"] =
+            ["FastPositiveHash64-V2"] =
             (
-                () => new FastPositiveHash(FastPositiveHashVariant.V2),
-                (seed => new FastPositiveHash(FastPositiveHashVariant.V2, seed), 64)
+                () => new FastPositiveHash64(FastPositiveHashVariant.V2),
+                (seed => new FastPositiveHash64(FastPositiveHashVariant.V2, seed), 64)
+            ),
+            ["FastPositiveHash128"] =
+            (
+                () => new FastPositiveHash128(),
+                (seed => new FastPositiveHash128(seed), 64)
             ),
             ["HalfSipHash"] =
             (

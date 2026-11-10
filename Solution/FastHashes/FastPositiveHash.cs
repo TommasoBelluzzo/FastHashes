@@ -6,8 +6,8 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
-    /// <summary>Represents the FastPositiveHash implementation. This class cannot be derived.</summary>
-    public sealed class FastPositiveHash : Hash<UInt64>
+    /// <summary>Represents the FastPositiveHash64 implementation. This class cannot be derived.</summary>
+    public sealed class FastPositiveHash64 : Hash<UInt64>
     {
         #region Members
         private readonly Engine m_Engine;
@@ -31,7 +31,7 @@ namespace FastHashes
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
-        public FastPositiveHash(FastPositiveHashVariant variant, UInt64 seed)
+        public FastPositiveHash64(FastPositiveHashVariant variant, UInt64 seed)
         {
             if (!Enum.IsDefined(typeof(FastPositiveHashVariant), variant))
                 throw new ArgumentOutOfRangeException(nameof(variant), "Invalid variant specified.");
@@ -57,18 +57,18 @@ namespace FastHashes
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.FastPositiveHashVariant.V2"/> and a seed value of <c>0</c>.</summary>
         [ExcludeFromCodeCoverage]
-        public FastPositiveHash() : this(FastPositiveHashVariant.V2, 0ul) { }
+        public FastPositiveHash64() : this(FastPositiveHashVariant.V2, 0ul) { }
 
         /// <summary>Initializes a new instance using the specified variant and a seed value of <c>0</c>.</summary>
         /// <param name="variant">The <see cref="T:FastHashes.FastPositiveHashVariant"/> value specifying the variant of the hashing algorithm.</param>
         /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
-        public FastPositiveHash(FastPositiveHashVariant variant) : this(variant, 0ul) { }
+        public FastPositiveHash64(FastPositiveHashVariant variant) : this(variant, 0ul) { }
 
         /// <summary>Initializes a new instance using <see cref="F:FastHashes.FastPositiveHashVariant.V2"/> and the specified seed.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         [ExcludeFromCodeCoverage]
-        public FastPositiveHash(UInt64 seed) : this(FastPositiveHashVariant.V2, seed) { }
+        public FastPositiveHash64(UInt64 seed) : this(FastPositiveHashVariant.V2, seed) { }
         #endregion
 
         #region Methods
@@ -577,6 +577,163 @@ namespace FastHashes
                 return ComputeResult(buffer);
             }
             #endregion
+        }
+        #endregion
+    }
+
+    /// <summary>Represents the FastPositiveHash128 implementation. This class cannot be derived.</summary>
+    public sealed class FastPositiveHash128 : Hash<(UInt64, UInt64)>
+    {
+        #region Constants
+        private const UInt64 P640 = 0xEC99BF0D8372CAABul;
+        private const UInt64 P641 = 0x82434FE90EDCEF39ul;
+        private const UInt64 P642 = 0xD4F06DB99D67BE4Bul;
+        private const UInt64 P643 = 0xBD9CACC22C6E9571ul;
+        private const UInt64 P644 = 0x9C06FAF4D023E3ABul;
+        private const UInt64 P645 = 0xC060724A8424F345ul;
+        private const UInt64 P646 = 0xCB5AF53AE3AAAC31ul;
+        #endregion
+
+        #region Members
+        private readonly UInt64 m_Seed;
+        #endregion
+
+        #region Properties
+        /// <summary>Gets the seed used by the hashing algorithm.</summary>
+        /// <value>An <see cref="T:System.UInt64"/> value.</value>
+        [ExcludeFromCodeCoverage]
+        public UInt64 Seed => m_Seed;
+        #endregion
+
+        #region Constructors
+        /// <summary>Initializes a new instance using the specified seed.</summary>
+        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
+        public FastPositiveHash128(UInt64 seed)
+        {
+            m_Seed = seed;
+        }
+
+        /// <summary>Initializes a new instance using a seed value of <c>0</c>.</summary>
+        [ExcludeFromCodeCoverage]
+        public FastPositiveHash128() : this(0ul) { }
+        #endregion
+
+        #region Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void MixB(ref UInt64 a, ref UInt64 b, ref UInt64 c, ref UInt64 d, ReadOnlySpan<UInt64> w)
+        {
+            UInt64 d02 = unchecked(w[0] + BinaryOperations.RotateRight(w[2] + d, 56));
+            UInt64 c13 = unchecked(w[1] + BinaryOperations.RotateRight(w[3] + c, 19));
+
+            d ^= unchecked(b + BinaryOperations.RotateRight(w[1], 38));
+            c ^= unchecked(a + BinaryOperations.RotateRight(w[0], 57));
+            b ^= unchecked(P646 * (c13 + w[2]));
+            a ^= unchecked(P645 * (d02 + w[3]));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void MixT(ref UInt64 v1, ref UInt64 v2, UInt64 v3, UInt64 p)
+        {
+            BinaryOperations.Multiply128(unchecked(v3 + v2), p, out UInt64 lo, out UInt64 hi);
+            v1 ^= lo;
+            v2 = unchecked(v2 + hi);
+        }
+
+        /// <inheritdoc/>
+        protected override (UInt64, UInt64) ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
+        {
+            Int32 offset = 0;
+            Int32 count = buffer.Length;
+            UInt64 length = (UInt64)count;
+
+            UInt64 a = m_Seed;
+            UInt64 b = length;
+            UInt64 c = unchecked(BinaryOperations.RotateRight(length, 23) + ~m_Seed);
+            UInt64 d = unchecked(~length + BinaryOperations.RotateRight(m_Seed, 19));
+
+            Int32 remainder = count;
+
+            if (count > 32)
+            {
+                Int32 blocks = count / 32;
+                remainder = count & 31;
+
+                Span<UInt64> w = stackalloc UInt64[4];
+
+                for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
+                {
+                    w[0] = BinaryOperations.Read64(buffer, offset);
+                    w[1] = BinaryOperations.Read64(buffer, offset + 8);
+                    w[2] = BinaryOperations.Read64(buffer, offset + 16);
+                    w[3] = BinaryOperations.Read64(buffer, offset + 24);
+
+                    offset += 32;
+
+                    MixB(ref a, ref b, ref c, ref d, w);
+                }
+            }
+
+            switch (remainder)
+            {
+                case 32:
+                case 31:
+                case 30:
+                case 29:
+                case 28:
+                case 27:
+                case 26:
+                case 25:
+                    MixT(ref a, ref d, BinaryOperations.Read64(buffer, offset), P644);
+                    offset += 8;
+                    goto case 17;
+
+                case 24:
+                case 23:
+                case 22:
+                case 21:
+                case 20:
+                case 19:
+                case 18:
+                case 17:
+                    MixT(ref b, ref a, BinaryOperations.Read64(buffer, offset), P643);
+                    offset += 8;
+                    goto case 9;
+
+                case 16:
+                case 15:
+                case 14:
+                case 13:
+                case 12:
+                case 11:
+                case 10:
+                case 9:
+                    MixT(ref c, ref b, BinaryOperations.Read64(buffer, offset), P642);
+                    offset += 8;
+                    goto case 1;
+
+                case 8:
+                case 7:
+                case 6:
+                case 5:
+                case 4:
+                case 3:
+                case 2:
+                case 1:
+                    UInt64 t = BinaryOperations.ReadTail64(buffer, offset);
+                    MixT(ref d, ref c, t, P641);
+                    break;
+            }
+
+            MixT(ref a, ref b, BinaryOperations.RotateRight(c, 41) ^ d, P640);
+            MixT(ref b, ref c, BinaryOperations.RotateRight(d, 23) ^ a, P646);
+            MixT(ref c, ref d, BinaryOperations.RotateRight(a, 19) ^ b, P645);
+            MixT(ref d, ref a, BinaryOperations.RotateRight(b, 31) ^ c, P644);
+
+            UInt64 hash1 = a ^ b;
+            UInt64 hash2 = unchecked(c + d);
+
+            return (hash1, hash2);
         }
         #endregion
     }

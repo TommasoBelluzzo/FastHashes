@@ -130,7 +130,7 @@ DEALINGS IN THE SOFTWARE.
 */
 ```
 
-## FastPositiveHash / t1ha
+## FastPositiveHash (T1HA)
 
 - FastHashes Implementation: `FastPositiveHash`
 - Original Authors: Positive Technologies; Leonid Yuriev
