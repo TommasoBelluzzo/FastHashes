@@ -46,9 +46,8 @@ namespace FastHashes
         private static UInt64 Mix(UInt64 value1, UInt64 value2)
         {
             BinaryOperations.Multiply128(value1, value2, out UInt64 lo, out UInt64 hi);
-            UInt64 v = lo ^ hi;
-            
-            return v;
+
+            return lo ^ hi;
         }
 
         /// <inheritdoc/>

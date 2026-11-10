@@ -101,7 +101,7 @@ namespace FastHashes
         /// <returns>An <see cref="T:System.UInt32"/> value.</returns>
         public static UInt32 ReadTail32(ReadOnlySpan<Byte> buffer, Int32 offset)
         {
-            ReadOnlySpan<Byte> slice = buffer[offset..];
+            ReadOnlySpan<Byte> slice = buffer.Slice(offset);
 
             UInt32 v;
 
@@ -138,7 +138,7 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UInt64 ReadTail64(ReadOnlySpan<Byte> buffer, Int32 offset)
         {
-            ReadOnlySpan<Byte> slice = buffer[offset..];
+            ReadOnlySpan<Byte> slice = buffer.Slice(offset);
 
             UInt64 v;
 
@@ -351,7 +351,7 @@ namespace FastHashes
             return array;
         }
 
-        /// <summary>Converts a 32-bit unsigned integer to a 8-byte array.</summary>
+        /// <summary>Converts a 32-bit unsigned integer to an 8-byte array.</summary>
         /// <param name="value">The <see cref="T:System.UInt32"/> to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

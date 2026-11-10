@@ -150,9 +150,7 @@ namespace FastHashes.Benchmarks
 
             return command.Parse(args).Invoke();
         }
-        #endregion
 
-        #region Methods
         private static Int32 RunBenchmarks(String selectedHash, Int32 bulkKeysLength, Int32 bulkRepetitions, Int32 warmupRepetitions)
         {
             Assembly assembly = typeof(Hash).Assembly;
@@ -305,6 +303,8 @@ namespace FastHashes.Benchmarks
             Int64 totalTicks = 0, totalBytes = 0;
             List<Double> batchSpeeds = new(batchCount);
 
+            Byte[] digest = new Byte[hashInitializer(0ul).Length / 8];
+
             unsafe
             {
                 fixed (Byte* pin = key)
@@ -327,10 +327,8 @@ namespace FastHashes.Benchmarks
 
                         Int64 start = Stopwatch.GetTimestamp();
 
-                        Byte[] digest = null;
-
                         for (Int32 i = 0; i < count; ++i)
-                            digest = hashes[i].ComputeHashBytes(key, offset + (i * stride), length);
+                            hashes[i].ComputeHashBytes(key.AsSpan(offset + (i * stride), length), digest);
 
                         Int64 elapsed = Stopwatch.GetTimestamp() - start;
 
