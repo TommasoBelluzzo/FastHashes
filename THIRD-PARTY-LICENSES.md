@@ -43,6 +43,22 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
+## ChibiHash
+
+- FastHashes Implementation: `ChibiHash`
+- Original Authors: NRK
+- Original Repository: [https://github.com/N-R-K/ChibiHash](https://github.com/N-R-K/ChibiHash)
+- Reference Revision: `7159bfafc656611bdb9c021c8d64190cb7a1f6c2`
+- License: The Unlicense
+- License Source: [chibihash64.h](https://github.com/N-R-K/ChibiHash/blob/7159bfafc656611bdb9c021c8d64190cb7a1f6c2/chibihash64.h)
+
+**Original License**
+
+```text
+// This is free and unencumbered software released into the public domain.
+// For more information, please refer to <https://unlicense.org/>
+```
+
 ## FarmHash
 
 - FastHashes Implementation: `FarmHash`
@@ -1314,7 +1330,7 @@ You can contact the author at:
 - Original Authors: Bob Jenkins
 - Original Repository: https://github.com/bobjen/spookyhash
 - Reference Revision: `c3bbfb644c4e7d07f4f2eaceb0dc329784defdeb`
-- License: Unlicense
+- License: The Unlicense
 - License Source: [LICENSE](https://github.com/bobjen/spookyhash/blob/c3bbfb644c4e7d07f4f2eaceb0dc329784defdeb/LICENSE)
 
 **Original License**
@@ -1429,7 +1445,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 - Original Authors: Wang Yi
 - Original Repository: https://github.com/wangyi-fudan/wyhash
 - Reference Revision: `e4764a0b637d34d3421a7760affada9288b625a8`
-- License: Unlicense
+- License: The Unlicense
 - License Source: [LICENSE](https://github.com/wangyi-fudan/wyhash/blob/e4764a0b637d34d3421a7760affada9288b625a8/LICENSE)
 
 **Original License**

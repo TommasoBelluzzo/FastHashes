@@ -47,6 +47,10 @@ The library includes the following non-cryptographic hashes:
  * `A5Hash`
    * 32/64/128 Bits Output
    * Reference Implementation: [https://github.com/avaneev/a5hash](https://github.com/avaneev/a5hash)
+ * `ChibiHash`
+   * 64 Bits Output
+   * V2 Version
+   * Reference Implementation: [https://github.com/N-R-K/ChibiHash](https://github.com/N-R-K/ChibiHash)
  * `FarmHash`
    * 32/64/128 Bits Output
    * Fingerprint Versions

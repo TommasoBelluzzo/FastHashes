@@ -13,6 +13,7 @@ namespace FastHashes.Tests
             ["A5Hash32"] = "0x1BD148A9",
             ["A5Hash64"] = "0xB379DEADE864EBB4",
             ["A5Hash128"] = "0x116B408952FBEDF107A0D75A03AB167B",
+            ["ChibiHash"] = "0x9A88ED65577479F1",
             ["FarmHash32"] = "0x39AFC90D",
             ["FarmHash64"] = "0x79A6C4EB62E22A5C",
             ["FarmHash128"] = "0x71BF3EA9A4D9F2351533AF0F4A96CEFB",

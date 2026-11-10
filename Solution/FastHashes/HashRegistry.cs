@@ -26,6 +26,11 @@ namespace FastHashes
                 () => new A5Hash128(),
                 (seed => new A5Hash128(seed), 64)
             ),
+            ["ChibiHash"] =
+            (
+                () => new ChibiHash(),
+                (seed => new ChibiHash(seed), 64)
+            ),
             ["FarmHash32"] =
             (
                 () => new FarmHash32(),
