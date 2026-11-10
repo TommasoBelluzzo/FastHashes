@@ -20,7 +20,7 @@ namespace FastHashes
 
         #region Properties
         /// <summary>Gets the internal processing style of the hashing algorithm.</summary>
-        /// <value>An enumerator value of type <see cref="T:FastHashes.HalftimeHashStyle"/>.</value>
+        /// <value>An enumeration value of type <see cref="T:FastHashes.HalftimeHashStyle"/>.</value>
         [ExcludeFromCodeCoverage]
         public HalftimeHashStyle Style => m_Style;
 

@@ -17,11 +17,13 @@ These notices do not supersede the terms of the respective licenses.
 - Original Repository: [https://github.com/avaneev/a5hash](https://github.com/avaneev/a5hash)
 - Reference Revision: `10492dbe8c34ae043ccbab3fe4b16a2a26eebbc6`
 - License: MIT
-- License Source: [LICENSE](https://github.com/avaneev/a5hash/blob/main/LICENSE)
+- License Source: [LICENSE](https://github.com/avaneev/a5hash/blob/10492dbe8c34ae043ccbab3fe4b16a2a26eebbc6/LICENSE)
 
 **Original License**
 
 ```text
+MIT License
+
 Copyright (c) 2025 Aleksey Vaneev
 
 Permission is hereby granted, free of charge, to any person obtaining a
@@ -229,15 +231,15 @@ subsequent owner(s) (each and all, an "owner") of an original work of
 authorship and/or a database (each, a "Work").
 
 Certain owners wish to permanently relinquish those rights to a Work for the
-purpose of contributing to a commons of creative, cultural, scientific
+purpose of contributing to a commons of creative, cultural and scientific
 works ("Commons") that the public can reliably and without fear of later
 claims of infringement build upon, modify, incorporate in other works, reuse
 and redistribute as freely as possible in any form whatsoever and for any
-purposes, including without limitation commercial purposes. These owners
-may contribute to the Commons to promote the ideal of a free culture and
-the further production of creative, cultural and scientific works, or to
-gain reputation or greater distribution for their Work in part through the
-use and efforts of others.
+purposes, including without limitation commercial purposes. These owners may
+contribute to the Commons to promote the ideal of a free culture and the
+further production of creative, cultural and scientific works, or to gain
+reputation or greater distribution for their Work in part through the use and
+efforts of others.
 
 For these and/or other purposes and motivations, and without any expectation
 of additional consideration or compensation, the person associating CC0 with a
@@ -283,22 +285,21 @@ action), in the Work (i) in all territories worldwide, (ii) for the maximum
 duration provided by applicable law or treaty (including future time
 extensions), (iii) in any current or future medium and for any number of
 copies, and (iv) for any purpose whatsoever, including without limitation
-commercial, advertising or promotional purposes (the "Waiver"). Affirmer
-makes the Waiver for the benefit of each member of the public at large and to
-the detriment of Affirmer's heirs and successors, fully intending that such
-Waiver shall not be subject to revocation, rescission, cancellation,
-termination, or any other legal or equitable action to disrupt the quiet
-enjoyment of the Work by the public as contemplated by Affirmer's express
-Statement of Purpose.
+commercial, advertising or promotional purposes (the "Waiver"). Affirmer makes
+the Waiver for the benefit of each member of the public at large and to the
+detriment of Affirmer's heirs and successors, fully intending that such Waiver
+shall not be subject to revocation, rescission, cancellation, termination, or
+any other legal or equitable action to disrupt the quiet enjoyment of the Work
+by the public as contemplated by Affirmer's express Statement of Purpose.
 
 3. Public License Fallback. Should any part of the Waiver for any reason be
 judged legally invalid or ineffective under applicable law, then the Waiver
 shall be preserved to the maximum extent permitted taking into account
-Affirmer's express Statement of Purpose. In addition, to the extent the
-Waiver is so judged Affirmer hereby grants to each affected person a
-royalty-free, non transferable, non sublicensable, non exclusive, irrevocable
-and unconditional license to exercise Affirmer's Copyright and Related Rights
-in the Work (i) in all territories worldwide, (ii) for the maximum duration
+Affirmer's express Statement of Purpose. In addition, to the extent the Waiver
+is so judged Affirmer hereby grants to each affected person a royalty-free,
+non transferable, non sublicensable, non exclusive, irrevocable and
+unconditional license to exercise Affirmer's Copyright and Related Rights in
+the Work (i) in all territories worldwide, (ii) for the maximum duration
 provided by applicable law or treaty (including future time extensions), (iii)
 in any current or future medium and for any number of copies, and (iv) for any
 purpose whatsoever, including without limitation commercial, advertising or
@@ -1131,17 +1132,17 @@ SOFTWARE.
 - Original Author: Austin Appleby
 - Original Repository: https://github.com/aappleby/smhasher
 - Reference Revision: `07bb4de10a63e8cc2e1724865454eba635742383`
-- License: None
+- License: Public Domain
 - License Sources: [MurmurHash2.cpp](https://github.com/aappleby/smhasher/blob/07bb4de10a63e8cc2e1724865454eba635742383/src/MurmurHash2.cpp); [MurmurHash3.cpp](https://github.com/aappleby/smhasher/blob/07bb4de10a63e8cc2e1724865454eba635742383/src/MurmurHash3.cpp)
 
-**Original License** (`MurmurHash2`)
+**License Notices** (`MurmurHash2.cpp`)
 
 ```text
 MurmurHash2 was written by Austin Appleby, and is placed in the public domain.
 The author hereby disclaims copyright to this source code.
 ```
 
-**Original License** (`MurmurHash3`)
+**License Notices** (`MurmurHash3.cpp`)
 
 ```text
 MurmurHash3 was written by Austin Appleby, and is placed in the public domain.
@@ -1369,6 +1370,7 @@ For more information, please refer to <https://unlicense.org>
 - **Original Repository:** https://github.com/backtrace-labs/umash
 - **Reference Revision:** `9709e1123c753e7ef34bc560cbdefac6fd33fe47`
 - **License:** MIT
+- **License Source:** [LICENSE](https://github.com/backtrace-labs/umash/blob/9709e1123c753e7ef34bc560cbdefac6fd33fe47/LICENSE)
 
 ### License Notice
 

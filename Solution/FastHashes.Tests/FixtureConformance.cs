@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 #endregion
 
 namespace FastHashes.Tests
@@ -20,19 +21,23 @@ namespace FastHashes.Tests
         String Provenance
     );
 
-    public sealed class ConformanceFixture
+    public sealed class FixtureConformance
     {
+        #region Constants
+        private static readonly Regex CASE_NAME_PATTERN = new(@"^(formula|increment|ones|zero)-len-(0|[1-9][0-9]*)-seed-([0-9A-F]{16})$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        #endregion
+
         #region Members
         private readonly Dictionary<String, List<ConformanceCase>> m_CasesByAlgorithm = new(StringComparer.Ordinal);
         #endregion
 
         #region Constructors
-        public ConformanceFixture()
+        public FixtureConformance()
         {
-            String directory = Path.Combine(AppContext.BaseDirectory, "Data");
+            String directory = Path.Combine(AppContext.BaseDirectory, "Data", "Conformance");
 
             if (!Directory.Exists(directory))
-                throw new DirectoryNotFoundException($"Data directory could not be found: {directory}.");
+                throw new DirectoryNotFoundException($"Conformance data directory could not be found: {directory}.");
 
             HashSet<String> registered = new(Hash.GetAlgorithms(), StringComparer.Ordinal);
 
@@ -42,7 +47,6 @@ namespace FastHashes.Tests
             foreach (String file in files)
             {
                 using JsonDocument document = JsonDocument.Parse(File.ReadAllText(file));
-
                 JsonElement root = document.RootElement;
 
                 String algorithm = RequiredString(file, root, "algorithm");
@@ -81,27 +85,9 @@ namespace FastHashes.Tests
                     String expected = RequiredString(file, testCase, "expected");
 
                     if (!names.Add(name))
-                        throw new InvalidDataException($"Duplicate reference case '{name}': {file}.");
+                        throw new InvalidDataException($"Duplicate case '{name}': {file}.");
 
-                    String seedValue = seed.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? seed[2..] : seed;
-
-                    if (!UInt64.TryParse(seedValue, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out _))
-                        throw new InvalidDataException($"Invalid seed in case '{name}': {file}.");
-
-                    Byte[] expectedBytes;
-
-                    try
-                    {
-                        Convert.FromHexString(input);
-                        expectedBytes = Convert.FromHexString(expected);
-                    }
-                    catch (FormatException exception)
-                    {
-                        throw new InvalidDataException($"Invalid hexadecimal data in case '{name}': {file}.", exception);
-                    }
-
-                    if (expectedBytes.Length != hashLength)
-                        throw new InvalidDataException($"Invalid expected hash length in case '{name}': {file}.");
+                    ValidateCase(file, name, seed, input, expected, hashLength);
 
                     algorithmCases.Add(new(algorithm, name, seed, input, expected, provenance));
                 }
@@ -126,6 +112,41 @@ namespace FastHashes.Tests
                 throw new InvalidDataException($"Missing or empty property '{propertyName}': {file}.");
 
             return value;
+        }
+
+        private static void ValidateCase(String file, String name, String seed, String input, String expected, Int32 hashLength)
+        {
+            Match match = CASE_NAME_PATTERN.Match(name);
+
+            if (!match.Success)
+                throw new InvalidDataException($"Invalid name in case '{name}': {file}.");
+
+            String seedValue = seed.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? seed[2..] : seed;
+
+            if (!UInt64.TryParse(seedValue, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out UInt64 parsedSeed))
+                throw new InvalidDataException($"Invalid seed in case '{name}': {file}.");
+
+            if (!String.Equals(match.Groups[3].Value, parsedSeed.ToString("X16", CultureInfo.InvariantCulture), StringComparison.Ordinal))
+                throw new InvalidDataException($"Mismatch between name and seed in case '{name}': {file}.");
+
+            Byte[] inputBytes;
+            Byte[] expectedBytes;
+
+            try
+            {
+                inputBytes = Convert.FromHexString(input);
+                expectedBytes = Convert.FromHexString(expected);
+            }
+            catch (FormatException exception)
+            {
+                throw new InvalidDataException($"Invalid hexadecimal data in case '{name}': {file}.", exception);
+            }
+
+            if (!Int32.TryParse(match.Groups[2].Value, NumberStyles.None, CultureInfo.InvariantCulture, out Int32 length) || (length != inputBytes.Length))
+                throw new InvalidDataException($"Mismatch between name and length in case '{name}': {file}.");
+
+            if (expectedBytes.Length != hashLength)
+                throw new InvalidDataException($"Invalid expected hash length in case '{name}': {file}.");
         }
 
         public IEnumerable<ConformanceCase> GetCases()

@@ -1,4 +1,3 @@
-
 <?xml version="1.0" encoding="utf-8" ?>
 <RunSettings>
   <DataCollectionRunSettings>
@@ -10,6 +9,7 @@
           <SingleHit>false</SingleHit>
           <SkipAutoProps>true</SkipAutoProps>
           <ExcludeByAttribute>CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute,GeneratedCodeAttribute</ExcludeByAttribute>
+          <Include>[FastHashes]*</Include>
           <IncludeTestAssembly>false</IncludeTestAssembly>
           <DeterministicReport>false</DeterministicReport>
         </Configuration>

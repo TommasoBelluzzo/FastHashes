@@ -15,7 +15,7 @@ namespace FastHashes
 
         #region Properties
         /// <summary>Gets the variant of the hashing algorithm.</summary>
-        /// <value>An enumerator value of type <see cref="T:FastHashes.FastPositiveHashVariant"/>.</value>
+        /// <value>An enumeration value of type <see cref="T:FastHashes.FastPositiveHashVariant"/>.</value>
         [ExcludeFromCodeCoverage]
         public FastPositiveHashVariant Variant => m_Engine.Variant;
 

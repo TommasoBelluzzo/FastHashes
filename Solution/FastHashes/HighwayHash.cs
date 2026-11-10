@@ -288,7 +288,7 @@ namespace FastHashes
 
         /// <summary>Initializes a new instance using the specified <see cref="T:System.UInt64"/> seeds.</summary>
         /// <param name="seeds">The <see cref="T:System.UInt64"/>[] of seeds used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to 4.</exception>
+        /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to <c>4</c>.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is <c>null</c>.</exception>
         [ExcludeFromCodeCoverage]
         public HighwayHash64(UInt64[] seeds) : base(seeds) { }
@@ -333,7 +333,7 @@ namespace FastHashes
 
         /// <summary>Initializes a new instance using the specified seeds.</summary>
         /// <param name="seeds">The <see cref="T:System.UInt64"/>[] of seeds used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to 4.</exception>
+        /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to <c>4</c>.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is <c>null</c>.</exception>
         [ExcludeFromCodeCoverage]
         public HighwayHash128(UInt64[] seeds) : base(seeds) { }
@@ -378,7 +378,7 @@ namespace FastHashes
 
         /// <summary>Initializes a new instance using the specified seeds.</summary>
         /// <param name="seeds">The <see cref="T:System.UInt64"/>[] of seeds used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to 4.</exception>
+        /// <exception cref="T:System.ArgumentException">Thrown when the number of seeds in <paramref name="seeds">seeds</paramref> is not equal to <c>4</c>.</exception>
         /// <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="seeds">seeds</paramref> is <c>null</c>.</exception>
         [ExcludeFromCodeCoverage]
         public HighwayHash256(UInt64[] seeds) : base(seeds) { }

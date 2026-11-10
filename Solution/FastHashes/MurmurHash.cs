@@ -15,7 +15,7 @@ namespace FastHashes
 
         #region Properties
         /// <summary>Gets the engine category of the hashing algorithm.</summary>
-        /// <value>An enumerator value of type <see cref="T:FastHashes.MurmurHashEngine"/>.</value>
+        /// <value>An enumeration value of type <see cref="T:FastHashes.MurmurHashEngine"/>.</value>
         [ExcludeFromCodeCoverage]
         public MurmurHashEngine Category => m_Engine.Category;
 

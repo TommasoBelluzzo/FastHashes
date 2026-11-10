@@ -86,7 +86,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Data\*.json">
+    <None Update="Data\**\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

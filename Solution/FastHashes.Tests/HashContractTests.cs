@@ -106,10 +106,10 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(TestsCases.Hashes), MemberType = typeof(TestsCases))]
-        public void InputEmptyTest(String hashName, Func<UInt64, Hash> hashInitializer, String _)
+        [MemberData(nameof(HashesProvider.GetHashes), MemberType = typeof(HashesProvider))]
+        public void InputEmptyTest(String hashName)
         {
-            Hash hash = hashInitializer(0u);
+            Hash hash = Hash.Create(hashName, 0ul);
 
             Byte[] buffer = [];
             Byte[] expected = hash.ComputeHashBytes(buffer);
@@ -151,10 +151,10 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(TestsCases.Hashes), MemberType = typeof(TestsCases))]
-        public void InputStringTest(String hashName, Func<UInt64, Hash> hashInitializer, String _)
+        [MemberData(nameof(HashesProvider.GetHashes), MemberType = typeof(HashesProvider))]
+        public void InputStringTest(String hashName)
         {
-            Hash hash = hashInitializer(TEST_SEED);
+            Hash hash = Hash.Create(hashName, TEST_SEED);
 
             String[] texts = [String.Empty, "Hello World", "你好世界", "🚀"];
             Encoding[] encodings = [Encoding.UTF8, Encoding.Unicode, Encoding.BigEndianUnicode];
@@ -179,10 +179,10 @@ namespace FastHashes.Tests
         }
 
         [Theory]
-        [MemberData(nameof(TestsCases.Hashes), MemberType = typeof(TestsCases))]
-        public void InputStringFormattedTest(String hashName, Func<UInt64, Hash> hashInitializer, String _)
+        [MemberData(nameof(HashesProvider.GetHashes), MemberType = typeof(HashesProvider))]
+        public void InputStringFormattedTest(String hashName)
         {
-            Hash hash = hashInitializer(TEST_SEED);
+            Hash hash = Hash.Create(hashName, TEST_SEED);
 
             String text = "Hello 世界 🚀";
             Encoding encoding = Encoding.Unicode;
@@ -204,11 +204,11 @@ namespace FastHashes.Tests
 
         #region Tests: Output Operations
         [Theory]
-        [MemberData(nameof(TestsCases.Hashes), MemberType = typeof(TestsCases))]
-        public void OutputTest(String hashName, Func<UInt64, Hash> hashInitializer, String _)
+        [MemberData(nameof(HashesProvider.GetHashes), MemberType = typeof(HashesProvider))]
+        public void OutputTest(String hashName)
         {
             Byte[] buffer = [23, 134, 0, 237, 0, 81, 64, 64, 39, 5];
-            Hash hash = hashInitializer(0u);
+            Hash hash = Hash.Create(hashName, 0ul);
             Byte[] expected = hash.ComputeHashBytes(buffer);
 
             Assert.Equal(expected, hash.ComputeHashBytes(buffer, buffer.Length));

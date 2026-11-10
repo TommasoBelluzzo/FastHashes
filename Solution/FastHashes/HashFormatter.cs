@@ -52,13 +52,13 @@ namespace FastHashes
             String text = lowerCase ? Convert.ToHexStringLower(hash) : Convert.ToHexString(hash);
 #else
             String digits = lowerCase ? LOWER_DIGITS : UPPER_DIGITS;
-            
+
             Int32 charsCount = checked(hashLength * 2);
-    #if NETSTANDARD2_0
+#if NETSTANDARD2_0
             Char[] chars = new Char[charsCount];
-    #else
+#else
             Span<Char> chars = (charsCount <= 512) ? stackalloc Char[charsCount] : new Char[charsCount];
-    #endif
+#endif
 
             for (Int32 i = 0; i < hashLength; ++i)
             {

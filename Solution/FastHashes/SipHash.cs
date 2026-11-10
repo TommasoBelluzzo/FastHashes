@@ -71,7 +71,7 @@ namespace FastHashes
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
-            
+
             UInt32 b = (UInt32)count << 24;
 
             UInt32 v0 = m_Seed1;
@@ -88,7 +88,7 @@ namespace FastHashes
             {
                 UInt32 m = BinaryOperations.Read32(buffer, offset);
                 offset += 4;
-                
+
                 v3 ^= m;
 
                 for (Int32 i = 0; i < 2; ++i)
@@ -122,7 +122,7 @@ namespace FastHashes
                 Mix(ref v0, ref v1, ref v2, ref v3);
 
             UInt32 hash2 = v1 ^ v3;
-            
+
             return (hash1, hash2);
         }
         #endregion
@@ -211,10 +211,10 @@ namespace FastHashes
 
         #region Properties
         /// <summary>Gets the variant of the hashing algorithm.</summary>
-        /// <value>An enumerator value of type <see cref="T:FastHashes.SipHashVariant"/>.</value>
+        /// <value>An enumeration value of type <see cref="T:FastHashes.SipHashVariant"/>.</value>
         [ExcludeFromCodeCoverage]
         public SipHashVariant Variant => m_Variant;
-        
+
         /// <summary>Gets the first seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
         [ExcludeFromCodeCoverage]
@@ -335,7 +335,7 @@ namespace FastHashes
                 Mix(ref v0, ref v1, ref v2, ref v3);
 
             UInt64 hash2 = v0 ^ v1 ^ v2 ^ v3;
-            
+
             return (hash1, hash2);
         }
 
@@ -370,6 +370,7 @@ namespace FastHashes
         public SipHash64(UInt64 seed1, UInt64 seed2) : base(SipHashVariant.V24, seed1, seed2) { }
 
         /// <summary>Initializes a new instance using the specified variant and the specified value for both seeds.</summary>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
         public SipHash64(SipHashVariant variant, UInt64 seed) : base(variant, seed, seed) { }
 
@@ -415,6 +416,7 @@ namespace FastHashes
         public SipHash128(UInt64 seed1, UInt64 seed2) : base(SipHashVariant.V24, seed1, seed2) { }
 
         /// <summary>Initializes a new instance using the specified variant and the specified value for both seeds.</summary>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
         [ExcludeFromCodeCoverage]
         public SipHash128(SipHashVariant variant, UInt64 seed) : base(variant, seed, seed) { }
 

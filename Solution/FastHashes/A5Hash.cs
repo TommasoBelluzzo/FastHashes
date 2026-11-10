@@ -133,7 +133,7 @@ namespace FastHashes
                     x = unchecked(BinaryOperations.Read32(buffer, offset) + seed1);
                     y = unchecked(BinaryOperations.Read32(buffer, offset + 4) + seed2);
                     Multiply64(x, y, out seed1, out seed2);
-                    
+
                     x = unchecked(BinaryOperations.Read32(buffer, offset + 8) + seed3);
                     y = unchecked(BinaryOperations.Read32(buffer, offset + 12) + seed4);
                     Multiply64(x, y, out seed3, out seed4);
@@ -168,7 +168,7 @@ namespace FastHashes
             x = unchecked(a + seed1);
             y = unchecked(b + seed2);
             Multiply64(x, y, out seed1, out seed2);
-            
+
             x = v01 ^ seed1;
             y = seed2;
             Multiply64(x, y, out a, out b);
@@ -257,10 +257,10 @@ namespace FastHashes
             {
                 if (count > 0)
                     seed1 ^= buffer[offset];
-                
+
                 if (count > 1)
                     seed1 ^= (UInt64)buffer[offset + 1] << 8;
-                
+
                 if (count > 2)
                     seed1 ^= (UInt64)buffer[offset + 2] << 16;
             }
@@ -268,7 +268,7 @@ namespace FastHashes
             x = seed1;
             y = seed2;
             BinaryOperations.Multiply128(x, y, out seed1, out seed2);
-            
+
             x = v01 ^ seed1;
             y = seed2;
             BinaryOperations.Multiply128(x, y, out seed1, out seed2);
@@ -344,13 +344,13 @@ namespace FastHashes
                 {
                     a = 0;
                     b = 0;
-                    
+ 
                     if (count > 0)
                         a = buffer[0];
-                    
+
                     if (count > 1)
                         a |= (UInt64)buffer[1] << 8;
-                    
+
                     if (count > 2)
                         a |= (UInt64)buffer[2] << 16;
                 }
@@ -361,11 +361,11 @@ namespace FastHashes
                 b = ReadPair(buffer, 8, 12);
                 UInt64 c = ReadPair(buffer, count - 16, count - 12);
                 UInt64 d = ReadPair(buffer, count - 8, count - 4);
-                
+
                 x = unchecked(c + seed3);
                 y = unchecked(d + seed4);
                 BinaryOperations.Multiply128(x, y, out seed3, out seed4);
-                
+
                 seed1 ^= seed3;
                 seed2 ^= seed4;
             }
@@ -397,7 +397,7 @@ namespace FastHashes
                         x = unchecked(BinaryOperations.Read64(buffer, offset + 8) + seed3);
                         y = unchecked(BinaryOperations.Read64(buffer, offset + 40) + seed4);
                         BinaryOperations.Multiply128(x, y, out seed3, out seed4);
-                        
+
                         seed3 = unchecked(seed3 + s1);
                         seed4 = unchecked(seed4 + v10);
 
@@ -432,7 +432,7 @@ namespace FastHashes
                     x = unchecked(BinaryOperations.Read64(buffer, offset) + seed1);
                     y = unchecked(BinaryOperations.Read64(buffer, offset + 8) + seed2);
                     BinaryOperations.Multiply128(x, y, out seed1, out seed2);
-                    
+
                     seed1 = unchecked(seed1 + v01);
                     seed2 = unchecked(seed2 + seed4);
 
@@ -471,7 +471,7 @@ namespace FastHashes
             x = v01 ^ seed1;
             y = seed2;
             BinaryOperations.Multiply128(x, y, out a, out b);
-            
+
             UInt64 hash1 = a ^ b;
 
             x = seed1 ^ seed3;

@@ -57,13 +57,13 @@ The library includes the following non-cryptographic hashes:
    * Reference Implementation: [https://github.com/google/farmhash](https://github.com/google/farmhash)
  * `FastHash`
    * 32/64 Bits Output
-   * Reference Implementation: [https://github.com/ZilongTan/fast-hash](https://github.com/ZilongTan/fast-hash)
+   * Reference Implementation: [https://github.com/ztanml/fast-hash](https://github.com/ztanml/fast-hash)
  * `FastPositiveHash (T1HA)`
    * 64/128 Bits Output
    * 0/1/2 Variants
-   * Reference Implementation: [https://github.com/leo-yuriev/t1ha](https://github.com/leo-yuriev/t1ha)
+   * Reference Implementation: [https://github.com/erthink/t1ha](https://github.com/erthink/t1ha)
  * `HalfSipHash`
-   * 32 Bits Output
+   * 32/64 Bits Output
    * Reference Implementation: [https://github.com/veorq/SipHash](https://github.com/veorq/SipHash)
  * `HalftimeHash`
    * 64 Bits Output
@@ -81,7 +81,7 @@ The library includes the following non-cryptographic hashes:
    * Reference Implementation: [https://github.com/ccipherx/lanehash](https://github.com/ccipherx/lanehash)
  * `MetroHash`
    * 64/128 Bits Output
-   * 0/1 Variants
+   * 1/2 Variants
    * Reference Implementation: [https://github.com/jandrewrogers/MetroHash](https://github.com/jandrewrogers/MetroHash)
  * `MirHash`
    * 64 Bits Output
@@ -113,7 +113,7 @@ The library includes the following non-cryptographic hashes:
    * 1/2/3 Variants
    * Reference Implementation: [https://github.com/Nicoshev/rapidhash](https://github.com/Nicoshev/rapidhash)
  * `SipHash`
-   * 64 Bits Output
+   * 64/128 Bits Output
    * 1-3/2-4 Variants
    * Reference Implementation: [https://github.com/veorq/SipHash](https://github.com/veorq/SipHash)
  * `SpookyHash`

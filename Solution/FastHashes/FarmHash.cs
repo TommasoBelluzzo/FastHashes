@@ -123,7 +123,7 @@ namespace FastHashes
 
         #region Properties
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
-        /// <value>An <see cref="T:System.UInt32"/>? value.</value>
+        /// <value>A nullable <see cref="T:System.UInt32"/> value.</value>
         [ExcludeFromCodeCoverage]
         public UInt32? Seed => m_Seed;
         #endregion

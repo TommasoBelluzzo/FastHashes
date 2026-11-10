@@ -1,14 +1,14 @@
 namespace FastHashes
 {
-    /// <summary>Specifies the variant of <see cref="T:FastHashes.FastPositiveHash"/>.</summary>
+    /// <summary>Specifies the variant of FastPositiveHash.</summary>
     public enum FastPositiveHashVariant
     {
         #region Values
-        /// <summary>The variant 0 of <see cref="T:FastHashes.FastPositiveHash"/>.</summary>
+        /// <summary>The variant 0 of FastPositiveHash.</summary>
         V0,
-        /// <summary>The variant 1 of <see cref="T:FastHashes.FastPositiveHash"/>.</summary>
+        /// <summary>The variant 1 of FastPositiveHash.</summary>
         V1,
-        /// <summary>The variant 2 of <see cref="T:FastHashes.FastPositiveHash"/>.</summary>
+        /// <summary>The variant 2 of FastPositiveHash.</summary>
         V2
         #endregion
     }
@@ -101,13 +101,13 @@ namespace FastHashes
         #endregion
     }
 
-    /// <summary>Specifies the variant of <see cref="T:FastHashes.SipHash"/>.</summary>
+    /// <summary>Specifies the variant of SipHash.</summary>
     public enum SipHashVariant
     {
         #region Values
-        /// <summary>The variant 1-3 of <see cref="T:FastHashes.SipHash"/>.</summary>
+        /// <summary>The variant 1-3 of SipHash.</summary>
         V13,
-        /// <summary>The variant 2-4 of <see cref="T:FastHashes.SipHash"/>.</summary>
+        /// <summary>The variant 2-4 of SipHash.</summary>
         V24
         #endregion
     }
