@@ -499,10 +499,10 @@ namespace FastHashes.Benchmarks
         private static void WarmupLength(Func<UInt64, Hash> hashInitializer, Byte[] key, Int32 offset, Int32 length, Int32 repetitions, Int32 seed)
         {
             Hash hash = hashInitializer((UInt64)seed);
-            Byte[] digest = null;
+            Byte[] digest = new Byte[hash.Length / 8];
 
             for (Int32 i = 0; i < repetitions; ++i)
-                digest = hash.ComputeHashBytes(key, offset, length);
+                hash.ComputeHashBytes(key.AsSpan(offset, length), digest);
 
             GC.KeepAlive(digest);
         }
