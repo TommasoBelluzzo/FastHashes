@@ -21,7 +21,7 @@ namespace FastHashes.Benchmarks
         public SpeedOptimizer()
         {
             m_Process = Process.GetCurrentProcess();
-            m_PriorityClass = m_Process.PriorityClass;
+
             m_LatencyMode = GCSettings.LatencyMode;
 
             try
@@ -34,8 +34,11 @@ namespace FastHashes.Benchmarks
                 m_RestoreLatency = false;
             }
 
+            m_PriorityClass = default;
+
             try
             {
+                m_PriorityClass = m_Process.PriorityClass;
                 m_Process.PriorityClass = ProcessPriorityClass.AboveNormal;
                 m_RestorePriority = true;
             }

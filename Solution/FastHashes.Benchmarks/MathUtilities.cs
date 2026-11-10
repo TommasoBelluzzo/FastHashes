@@ -49,7 +49,6 @@ namespace FastHashes.Benchmarks
                 if (sd > 0.0d)
                 {
                     Double threshold = 2.0d * sd;
-                    
                     List<Double> filtered = new(length);
 
                     for (Int32 i = 0; i < length; ++i)

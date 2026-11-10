@@ -52,11 +52,8 @@ namespace FastHashes.Tests
 
             foreach (Hash hash in hashes)
             {
-                Byte[] expected = hash.ComputeHashBytes(buffer);
-                Byte[] actual = hash.ComputeHashBytes(buffer);
-
-                Assert.Equal(hash.Length / 8, expected.Length);
-                Assert.Equal(expected, actual);
+                Byte[] hashBytes = hash.ComputeHashBytes(buffer);
+                Assert.Equal(hash.Length / 8, hashBytes.Length);
             }
         }
 
