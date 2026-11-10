@@ -39,7 +39,7 @@ namespace FastHashes.Benchmarks
         #region Entry Point
         public static Int32 Main(String[] args)
         {
-            RootCommand command = new("Measures hash algorithms performance using bulk throughput and chunk latency benchmarks.");
+            RootCommand command = new("Measures hash algorithm performance using bulk and chunk throughput benchmarks.");
 
             Option<Boolean> listOption = new("--list")
             {
