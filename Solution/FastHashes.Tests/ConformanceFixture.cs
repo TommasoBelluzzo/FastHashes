@@ -1,6 +1,8 @@
-﻿#region Using Directives
+﻿
+#region Using Directives
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -32,38 +34,71 @@ namespace FastHashes.Tests
             if (!Directory.Exists(directory))
                 return;
 
+            HashSet<String> registered = new(Hash.GetAlgorithms(), StringComparer.Ordinal);
+
             String[] files = Directory.GetFiles(directory, "*.json", SearchOption.TopDirectoryOnly);
             Array.Sort(files, StringComparer.Ordinal);
 
             foreach (String file in files)
             {
                 using JsonDocument document = JsonDocument.Parse(File.ReadAllText(file));
-                
+
                 JsonElement root = document.RootElement;
 
-                String algorithm = RequiredString(root, "algorithm");
-                JsonElement reference = root.GetProperty("reference");
+                String algorithm = RequiredString(file, root, "algorithm");
 
-                String repository = RequiredString(reference, "repository");
-                String revision = RequiredString(reference, "revision");
-                String entryPoint = RequiredString(reference, "entryPoint");
+                if (!root.TryGetProperty("reference", out JsonElement reference) || (reference.ValueKind != JsonValueKind.Object))
+                    throw new InvalidDataException($"Missing or invalid property 'reference': {file}.");
+
+                String repository = RequiredString(file, reference, "repository");
+                String revision = RequiredString(file, reference, "revision");
+                String entryPoint = RequiredString(file, reference, "entryPoint");
 
                 String provenance = $"{repository} @ {revision} ({entryPoint})";
 
                 if (!String.Equals(Path.GetFileNameWithoutExtension(file), algorithm, StringComparison.Ordinal))
-                    throw new InvalidDataException($"Algorithm name does not match filename: {file}");
+                    throw new InvalidDataException($"Algorithm name does not match filename: {file}.");
+
+                if (!registered.Contains(algorithm))
+                    throw new InvalidDataException($"Unregistered algorithm: {file}.");
 
                 if (!root.TryGetProperty("cases", out JsonElement testCases) || (testCases.ValueKind != JsonValueKind.Array))
-                    throw new InvalidDataException($"Invalid reference cases in {file}");
+                    throw new InvalidDataException($"Invalid reference cases: {file}.");
+
+                Int32 hashLength = Hash.Create(algorithm).Length / 8;
 
                 List<ConformanceCase> algorithmCases = [];
+                HashSet<String> names = new(StringComparer.Ordinal);
 
                 foreach (JsonElement testCase in testCases.EnumerateArray())
                 {
-                    String name = RequiredString(testCase, "name");
-                    String seed = RequiredString(testCase, "seed");
-                    String input = RequiredString(testCase, "input", true);
-                    String expected = RequiredString(testCase, "expected");
+                    String name = RequiredString(file, testCase, "name");
+                    String seed = RequiredString(file, testCase, "seed");
+                    String input = RequiredString(file, testCase, "input", true);
+                    String expected = RequiredString(file, testCase, "expected");
+
+                    if (!names.Add(name))
+                        throw new InvalidDataException($"Duplicate reference case '{name}': {file}.");
+
+                    String seedValue = seed.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? seed[2..] : seed;
+
+                    if (!UInt64.TryParse(seedValue, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out _))
+                        throw new InvalidDataException($"Invalid hexadecimal seed in case '{name}': {file}.");
+
+                    Byte[] expectedBytes;
+
+                    try
+                    {
+                        Convert.FromHexString(input);
+                        expectedBytes = Convert.FromHexString(expected);
+                    }
+                    catch (FormatException exception)
+                    {
+                        throw new InvalidDataException($"Invalid hexadecimal data in case '{name}': {file}.", exception);
+                    }
+
+                    if (expectedBytes.Length != hashLength)
+                        throw new InvalidDataException($"Invalid expected hash length in case '{name}': {file}.");
 
                     algorithmCases.Add(new(algorithm, name, seed, input, expected, provenance));
                 }
@@ -74,15 +109,15 @@ namespace FastHashes.Tests
         #endregion
 
         #region Methods
-        private static String RequiredString(JsonElement element, String propertyName, Boolean allowEmpty = false)
+        private static String RequiredString(String file, JsonElement element, String propertyName, Boolean allowEmpty = false)
         {
             if (!element.TryGetProperty(propertyName, out JsonElement property) || (property.ValueKind != JsonValueKind.String))
-                throw new InvalidDataException($"Missing or invalid JSON property: {propertyName}");
+                throw new InvalidDataException($"Missing or invalid property '{propertyName}': {file}.");
 
             String value = property.GetString();
 
             if ((value == null) || (!allowEmpty && String.IsNullOrWhiteSpace(value)))
-                throw new InvalidDataException($"Missing or empty JSON property: {propertyName}");
+                throw new InvalidDataException($"Missing or empty property '{propertyName}': {file}.");
 
             return value;
         }

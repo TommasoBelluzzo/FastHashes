@@ -112,7 +112,7 @@ namespace FastHashes.Tests
         {
             IEnumerable<ConformanceCase> cases = m_ConformanceFixture.GetCases(hashName);
 
-            Assert.SkipWhen(!cases.Any(), $"No reference vectors available for {hashName}.");
+            Assert.True(cases.Any(), $"No reference vectors available for {hashName}.");
 
             Int32 total = 0;
             Int32 failed = 0;

@@ -72,7 +72,16 @@ namespace FastHashes.Tests
         #region Test Cases
         public static IEnumerable<Object[]> Hashes()
         {
-            foreach (String hashName in Hash.GetAlgorithms())
+            IReadOnlyList<String> algorithms = Hash.GetAlgorithms();
+            HashSet<String> registered = new(algorithms, StringComparer.Ordinal);
+
+            foreach (String hashName in VALIDATION_CASES.Keys)
+            {
+                if (!registered.Contains(hashName))
+                    throw new InvalidOperationException($"Orphan validation value for {hashName}.");
+            }
+
+            foreach (String hashName in algorithms)
             {
                 if (!VALIDATION_CASES.TryGetValue(hashName, out String expected))
                     throw new InvalidOperationException($"Missing validation value for {hashName}.");

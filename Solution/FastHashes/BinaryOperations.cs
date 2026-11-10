@@ -10,7 +10,7 @@ namespace FastHashes
     public static class BinaryOperations
     {
         #region Methods
-        /// <summary>Reads a 2-bytes unsigned integer from the specified byte span.</summary>
+        /// <summary>Reads a 16-bit unsigned integer from the specified byte span.</summary>
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
         /// <param name="offset">The buffer start offset.</param>
         /// <returns>An <see cref="T:System.UInt16"/> value.</returns>
@@ -23,7 +23,7 @@ namespace FastHashes
             return v;
         }
 
-        /// <summary>Reads a 4-bytes unsigned integer from the specified byte span.</summary>
+        /// <summary>Reads a 32-bit unsigned integer from the specified byte span.</summary>
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
         /// <param name="offset">The buffer start offset.</param>
         /// <returns>An <see cref="T:System.UInt32"/> value.</returns>
@@ -36,9 +36,9 @@ namespace FastHashes
             return v;
         }
 
-        /// <summary>Reads a 8-bytes unsigned integer from the specified byte span.</summary>
+        /// <summary>Reads a 64-bit unsigned integer from the specified byte span.</summary>
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
-        /// <param name="offset">The span start offset.</param>
+        /// <param name="offset">The buffer start offset.</param>
         /// <returns>An <see cref="T:System.UInt64"/> value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UInt64 Read64(ReadOnlySpan<Byte> buffer, Int32 offset)
@@ -49,9 +49,9 @@ namespace FastHashes
             return v;
         }
 
-        /// <summary>Reads an array of 2-bytes unsigned integers from the specified byte pointer.</summary>
+        /// <summary>Reads an array of 16-bit unsigned integers from the specified byte span.</summary>
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
-        /// <param name="offset">The span start offset.</param>
+        /// <param name="offset">The buffer start offset.</param>
         /// <param name="count">The number of values to read.</param>
         /// <returns>An array of <see cref="T:System.UInt16"/> values.</returns>
         public static UInt16[] ReadArray16(ReadOnlySpan<Byte> buffer, Int32 offset, Int32 count)
@@ -64,9 +64,9 @@ namespace FastHashes
             return array;
         }
 
-        /// <summary>Reads an array of 4-bytes unsigned integers from the specified byte span.</summary>
+        /// <summary>Reads an array of 32-bit unsigned integers from the specified byte span.</summary>
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
-        /// <param name="offset">The span start offset.</param>
+        /// <param name="offset">The buffer start offset.</param>
         /// <param name="count">The number of values to read.</param>
         /// <returns>An array of <see cref="T:System.UInt32"/> values.</returns>
         public static UInt32[] ReadArray32(ReadOnlySpan<Byte> buffer, Int32 offset, Int32 count)
@@ -79,9 +79,9 @@ namespace FastHashes
             return array;
         }
 
-        /// <summary>Reads an array of 8-bytes unsigned integers from the specified byte span.</summary>
+        /// <summary>Reads an array of 64-bit unsigned integers from the specified byte span.</summary>
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
-        /// <param name="offset">The span start offset.</param>
+        /// <param name="offset">The buffer start offset.</param>
         /// <param name="count">The number of values to read.</param>
         /// <returns>An array of <see cref="T:System.UInt64"/> values.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -95,13 +95,13 @@ namespace FastHashes
             return array;
         }
 
-        /// <summary>Reads a 4-bytes unsigned integer from the tail of the byte span.</summary>
+        /// <summary>Reads a 32-bit unsigned integer from the tail of the byte span.</summary>
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
         /// <param name="offset">The buffer start offset.</param>
         /// <returns>An <see cref="T:System.UInt32"/> value.</returns>
         public static UInt32 ReadTail32(ReadOnlySpan<Byte> buffer, Int32 offset)
         {
-            ReadOnlySpan<Byte> slice = buffer.Slice(offset);
+            ReadOnlySpan<Byte> slice = buffer[offset..];
 
             UInt32 v;
 
@@ -131,14 +131,14 @@ namespace FastHashes
             return v;
         }
 
-        /// <summary>Reads a 8-bytes unsigned integer from the tail of the byte span.</summary>
+        /// <summary>Reads a 64-bit unsigned integer from the tail of the byte span.</summary>
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> to read.</param>
         /// <param name="offset">The buffer start offset.</param>
         /// <returns>An <see cref="T:System.UInt64"/> value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UInt64 ReadTail64(ReadOnlySpan<Byte> buffer, Int32 offset)
         {
-            ReadOnlySpan<Byte> slice = buffer.Slice(offset);
+            ReadOnlySpan<Byte> slice = buffer[offset..];
 
             UInt64 v;
 
@@ -184,7 +184,7 @@ namespace FastHashes
             return v;
         }
 
-        /// <summary>Multiplies two 8-byte unsigned integers and produces their full 16-byte product.</summary>
+        /// <summary>Multiplies two 64-bit unsigned integers and produces their full 16-byte product.</summary>
         /// <param name="value1">The first <see cref="T:System.UInt64"/> to multiply.</param>
         /// <param name="value2">The second <see cref="T:System.UInt64"/> to multiply.</param>
         /// <param name="lo">The lower 64 bits of the product.</param>
@@ -212,7 +212,7 @@ namespace FastHashes
 #endif
         }
 
-        /// <summary>Rotates a 2-bytes unsigned integer left by the specified number of bits.</summary>
+        /// <summary>Rotates a 16-bit unsigned integer left by the specified number of bits.</summary>
         /// <param name="value">The <see cref="T:System.UInt16"/> to rotate.</param>
         /// <param name="rotation">The number of bits to rotate.</param>
         /// <returns>An <see cref="T:System.UInt16"/> value.</returns>
@@ -223,7 +223,7 @@ namespace FastHashes
             return unchecked((UInt16)((value << rotation) | (value >> (16 - rotation))));
         }
 
-        /// <summary>Rotates a 4-bytes unsigned integer left by the specified number of bits.</summary>
+        /// <summary>Rotates a 32-bit unsigned integer left by the specified number of bits.</summary>
         /// <param name="value">The <see cref="T:System.UInt32"/> to rotate.</param>
         /// <param name="rotation">The number of bits to rotate.</param>
         /// <returns>An <see cref="T:System.UInt32"/> value.</returns>
@@ -234,7 +234,7 @@ namespace FastHashes
             return (value << rotation) | (value >> (32 - rotation));
         }
 
-        /// <summary>Rotates a 8-bytes unsigned integer left by the specified number of bits.</summary>
+        /// <summary>Rotates a 64-bit unsigned integer left by the specified number of bits.</summary>
         /// <param name="value">The <see cref="T:System.UInt64"/> to rotate.</param>
         /// <param name="rotation">The number of bits to rotate.</param>
         /// <returns>An <see cref="T:System.UInt64"/> value.</returns>
@@ -245,7 +245,7 @@ namespace FastHashes
             return (value << rotation) | (value >> (64 - rotation));
         }
 
-        /// <summary>Rotates a 2-bytes unsigned integer right by the specified number of bits.</summary>
+        /// <summary>Rotates a 16-bit unsigned integer right by the specified number of bits.</summary>
         /// <param name="value">The <see cref="T:System.UInt16"/> to rotate.</param>
         /// <param name="rotation">The number of bits to rotate.</param>
         /// <returns>An <see cref="T:System.UInt16"/> value.</returns>
@@ -256,7 +256,7 @@ namespace FastHashes
             return unchecked((UInt16)((value >> rotation) | (value << (16 - rotation))));
         }
 
-        /// <summary>Rotates a 4-bytes unsigned integer right by the specified number of bits.</summary>
+        /// <summary>Rotates a 32-bit unsigned integer right by the specified number of bits.</summary>
         /// <param name="value">The <see cref="T:System.UInt32"/> to rotate.</param>
         /// <param name="rotation">The number of bits to rotate.</param>
         /// <returns>An <see cref="T:System.UInt32"/> value.</returns>
@@ -267,7 +267,7 @@ namespace FastHashes
             return (value >> rotation) | (value << (32 - rotation));
         }
 
-        /// <summary>Rotates a 8-bytes unsigned integer right by the specified number of bits.</summary>
+        /// <summary>Rotates a 64-bit unsigned integer right by the specified number of bits.</summary>
         /// <param name="value">The <see cref="T:System.UInt64"/> to rotate.</param>
         /// <param name="rotation">The number of bits to rotate.</param>
         /// <returns>An <see cref="T:System.UInt64"/> value.</returns>
@@ -278,7 +278,7 @@ namespace FastHashes
             return (value >> rotation) | (value << (64 - rotation));
         }
 
-        /// <summary>Converts a 4-bytes unsigned integer to a byte array.</summary>
+        /// <summary>Converts a 32-bit unsigned integer to a byte array.</summary>
         /// <param name="value">The <see cref="T:System.UInt32"/> to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -290,7 +290,7 @@ namespace FastHashes
             return array;
         }
 
-        /// <summary>Converts a 8-bytes unsigned integer to a 4-bytes array.</summary>
+        /// <summary>Converts a 64-bit unsigned integer to a 4-byte array.</summary>
         /// <param name="value">The <see cref="T:System.UInt64"/> to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -302,7 +302,7 @@ namespace FastHashes
             return array;
         }
 
-        /// <summary>Converts two 4-bytes unsigned integers to a byte array.</summary>
+        /// <summary>Converts two 32-bit unsigned integers to a byte array.</summary>
         /// <param name="value1">The first <see cref="T:System.UInt32"/> to convert.</param>
         /// <param name="value2">The second <see cref="T:System.UInt32"/> to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
@@ -317,7 +317,7 @@ namespace FastHashes
             return array;
         }
 
-        /// <summary>Converts four 4-bytes unsigned integers to a byte array.</summary>
+        /// <summary>Converts four 32-bit unsigned integers to a byte array.</summary>
         /// <param name="value1">The first <see cref="T:System.UInt32"/> to convert.</param>
         /// <param name="value2">The second <see cref="T:System.UInt32"/> to convert.</param>
         /// <param name="value3">The third <see cref="T:System.UInt32"/> to convert.</param>
@@ -336,7 +336,7 @@ namespace FastHashes
             return array;
         }
 
-        /// <summary>Converts an array of 4-bytes unsigned integers to a byte array.</summary>
+        /// <summary>Converts an array of 32-bit unsigned integers to a byte array.</summary>
         /// <param name="values">The <see cref="T:System.UInt32"/>[] value to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -351,7 +351,7 @@ namespace FastHashes
             return array;
         }
 
-        /// <summary>Converts a 4-bytes unsigned integer to a 8-bytes array.</summary>
+        /// <summary>Converts a 32-bit unsigned integer to a 8-byte array.</summary>
         /// <param name="value">The <see cref="T:System.UInt32"/> to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -363,7 +363,7 @@ namespace FastHashes
             return array;
         }
 
-        /// <summary>Converts a 8-bytes unsigned integer to a byte array.</summary>
+        /// <summary>Converts a 64-bit unsigned integer to a byte array.</summary>
         /// <param name="value">The <see cref="T:System.UInt64"/> to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -375,7 +375,7 @@ namespace FastHashes
             return array;
         }
 
-        /// <summary>Converts two 8-bytes unsigned integers to a byte array.</summary>
+        /// <summary>Converts two 64-bit unsigned integers to a byte array.</summary>
         /// <param name="value1">The first <see cref="T:System.UInt64"/> to convert.</param>
         /// <param name="value2">The second <see cref="T:System.UInt64"/> to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
@@ -390,7 +390,7 @@ namespace FastHashes
             return array;
         }
 
-        /// <summary>Converts four 8-bytes unsigned integers to a byte array.</summary>
+        /// <summary>Converts four 64-bit unsigned integers to a byte array.</summary>
         /// <param name="value1">The first <see cref="T:System.UInt64"/> to convert.</param>
         /// <param name="value2">The second <see cref="T:System.UInt64"/> to convert.</param>
         /// <param name="value3">The third <see cref="T:System.UInt64"/> to convert.</param>
@@ -409,7 +409,7 @@ namespace FastHashes
             return array;
         }
 
-        /// <summary>Converts an array of 8-bytes unsigned integers to a byte array.</summary>
+        /// <summary>Converts an array of 64-bit unsigned integers to a byte array.</summary>
         /// <param name="values">The <see cref="T:System.UInt64"/>[] value to convert.</param>
         /// <returns>A <see cref="T:System.Byte"/>[] value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -424,7 +424,7 @@ namespace FastHashes
             return array;
         }
 
-        /// <summary>Swaps the value of two 2-bytes unsigned integers.</summary>
+        /// <summary>Swaps the value of two 16-bit unsigned integers.</summary>
         /// <param name="value1">The first <see cref="T:System.UInt16"/>, whose value is assigned to the second one.</param>
         /// <param name="value2">The second <see cref="T:System.UInt16"/>, whose value is assigned to the first one.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -435,7 +435,7 @@ namespace FastHashes
             value2 = tmp;
         }
 
-        /// <summary>Swaps the value of two 4-bytes unsigned integers.</summary>
+        /// <summary>Swaps the value of two 32-bit unsigned integers.</summary>
         /// <param name="value1">The first <see cref="T:System.UInt32"/>, whose value is assigned to the second one.</param>
         /// <param name="value2">The second <see cref="T:System.UInt32"/>, whose value is assigned to the first one.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -446,7 +446,7 @@ namespace FastHashes
             value2 = tmp;
         }
 
-        /// <summary>Swaps the value of two 8-bytes unsigned integers.</summary>
+        /// <summary>Swaps the value of two 64-bit unsigned integers.</summary>
         /// <param name="value1">The first <see cref="T:System.UInt64"/>, whose value is assigned to the second one.</param>
         /// <param name="value2">The second <see cref="T:System.UInt64"/>, whose value is assigned to the first one.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

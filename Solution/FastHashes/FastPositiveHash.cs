@@ -69,7 +69,7 @@ namespace FastHashes
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         [ExcludeFromCodeCoverage]
         public FastPositiveHash(UInt64 seed) : this(FastPositiveHashVariant.V2, seed) { }
-        #endregion  
+        #endregion
 
         #region Methods
         /// <inheritdoc/>
