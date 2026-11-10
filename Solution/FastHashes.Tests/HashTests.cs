@@ -133,7 +133,7 @@ namespace FastHashes.Tests
                     ++failed;
             }
 
-            Assert.True(failed == 0, $"Conformance test failed for {hashName}: {failed} of {total} cases failed.");
+            Assert.True((total > 0) && (failed == 0), $"Conformance test failed for {hashName}: {failed} of {total} cases failed.");
         }
         #endregion
     }
