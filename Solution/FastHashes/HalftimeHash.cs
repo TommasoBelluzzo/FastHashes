@@ -24,7 +24,6 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         public HalftimeHashStyle Style => m_Style;
 
-
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
         [ExcludeFromCodeCoverage]

@@ -19,7 +19,6 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         public FastPositiveHashVariant Variant => m_Engine.Variant;
 
-
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
         [ExcludeFromCodeCoverage]

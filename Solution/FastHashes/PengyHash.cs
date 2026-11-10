@@ -15,8 +15,6 @@ namespace FastHashes
         #endregion
 
         #region Properties
-
-
         /// <summary>Gets the seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt32"/> value.</value>
         [ExcludeFromCodeCoverage]

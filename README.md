@@ -44,6 +44,9 @@ FastHashes is a suite of .NET non-cryptographic hash functions.
 
 The library includes the following non-cryptographic hashes:
 
+ * `A5Hash`
+   * 32/64/128 Bits Output
+   * Reference Implementation: [https://github.com/avaneev/a5hash](https://github.com/avaneev/a5hash)
  * `FarmHash`
    * 32/64/128 Bits Output
    * Fingerprint Versions

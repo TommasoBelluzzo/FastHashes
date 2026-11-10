@@ -14,8 +14,6 @@ namespace FastHashes
         #endregion
 
         #region Properties
-
-
         /// <summary>Gets the variant of the hashing algorithm.</summary>
         /// <value>An enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/>.</value>
         [ExcludeFromCodeCoverage]
@@ -428,8 +426,6 @@ namespace FastHashes
         #endregion
 
         #region Properties
-
-
         /// <summary>Gets the variant of the hashing algorithm.</summary>
         /// <value>An enumerator value of type <see cref="T:FastHashes.MetroHashVariant"/>.</value>
         [ExcludeFromCodeCoverage]
