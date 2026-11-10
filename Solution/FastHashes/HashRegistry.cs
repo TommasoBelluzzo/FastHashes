@@ -76,10 +76,15 @@ namespace FastHashes
                 () => new FastPositiveHash128(),
                 (seed => new FastPositiveHash128(seed), 64)
             ),
-            ["HalfSipHash"] =
+            ["HalfSipHash32"] =
             (
-                () => new HalfSipHash(),
-                (seed => new HalfSipHash(checked((UInt32)seed)), 32)
+                () => new HalfSipHash32(),
+                (seed => new HalfSipHash32(checked((UInt32)seed)), 32)
+            ),
+            ["HalfSipHash64"] =
+            (
+                () => new HalfSipHash64(),
+                (seed => new HalfSipHash64(checked((UInt32)seed)), 32)
             ),
             ["HalftimeHash-S64"] =
             (
@@ -226,15 +231,25 @@ namespace FastHashes
                 () => new RapidHash(RapidHashVariant.V3),
                 (seed => new RapidHash(RapidHashVariant.V3, seed), 64)
             ),
-            ["SipHash-13"] =
+            ["SipHash64-13"] =
             (
-                () => new SipHash(SipHashVariant.V13),
-                (seed => new SipHash(SipHashVariant.V13, seed), 64)
+                () => new SipHash64(SipHashVariant.V13),
+                (seed => new SipHash64(SipHashVariant.V13, seed), 64)
             ),
-            ["SipHash-24"] =
+            ["SipHash64-24"] =
             (
-                () => new SipHash(SipHashVariant.V24),
-                (seed => new SipHash(SipHashVariant.V24, seed), 64)
+                () => new SipHash64(SipHashVariant.V24),
+                (seed => new SipHash64(SipHashVariant.V24, seed), 64)
+            ),
+            ["SipHash128-13"] =
+            (
+                () => new SipHash128(SipHashVariant.V13),
+                (seed => new SipHash128(SipHashVariant.V13, seed), 64)
+            ),
+            ["SipHash128-24"] =
+            (
+                () => new SipHash128(SipHashVariant.V24),
+                (seed => new SipHash128(SipHashVariant.V24, seed), 64)
             ),
             ["SpookyHash32"] =
             (

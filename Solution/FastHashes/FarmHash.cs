@@ -538,12 +538,12 @@ namespace FastHashes
         [ExcludeFromCodeCoverage]
         public FarmHash128() { }
 
-        /// <summary>Initializes a new instance using the specified <see cref="T:System.UInt64"/> value for both seeds.</summary>
+        /// <summary>Initializes a new instance using the specified value for both seeds.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         [ExcludeFromCodeCoverage]
         public FarmHash128(UInt64 seed) : base(seed, seed) { }
 
-        /// <summary>Initializes a new instance using the specified <see cref="T:System.UInt64"/> seeds.</summary>
+        /// <summary>Initializes a new instance using the specified seeds.</summary>
         /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         [ExcludeFromCodeCoverage]

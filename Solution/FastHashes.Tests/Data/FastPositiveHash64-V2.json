@@ -1,8 +1,8 @@
 {
   "algorithm": "FastPositiveHash64-V2",
   "reference": {
-    "repository": "https://github.com/PositiveTechnologies/t1ha",
-    "revision": "1c9b3dd3530583d95dd2efa8ec9a73c5eef9646b",
+    "repository": "https://github.com/erthink/t1ha",
+    "revision": "00eb779b6c042ccd831ec2f1ae757409c73f39f6",
     "entryPoint": "t1ha2_atonce"
   },
   "cases": [

@@ -6,8 +6,8 @@ using System.Runtime.CompilerServices;
 
 namespace FastHashes
 {
-    /// <summary>Represents the HalfSipHash implementation. This class cannot be derived.</summary>
-    public sealed class HalfSipHash : Hash<UInt32>
+    /// <summary>Represents the base class from which all the HalfSipHash implementations must derive. This class is abstract.</summary>
+    public abstract class HalfSipHash<T> : Hash<T> where T : unmanaged
     {
         #region Constants
         private const UInt32 I0 = 0x6C796765u;
@@ -20,8 +20,6 @@ namespace FastHashes
         #endregion
 
         #region Properties
-
-
         /// <summary>Gets the first seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt32"/> value.</value>
         [ExcludeFromCodeCoverage]
@@ -34,24 +32,15 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance using the specified seeds.</summary>
+        /// <summary>Represents the base constructor used by derived classes.</summary>
         /// <param name="seed1">The first <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         /// <param name="seed2">The second <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         [ExcludeFromCodeCoverage]
-        public HalfSipHash(UInt32 seed1, UInt32 seed2)
+        protected HalfSipHash(UInt32 seed1, UInt32 seed2)
         {
             m_Seed1 = seed1;
             m_Seed2 = seed2;
         }
-
-        /// <summary>Initializes a new instance using a value of <c>0</c> for both seeds.</summary>
-        [ExcludeFromCodeCoverage]
-        public HalfSipHash() : this(0u, 0u) { }
-
-        /// <summary>Initializes a new instance using the specified value for both seeds.</summary>
-        /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
-        [ExcludeFromCodeCoverage]
-        public HalfSipHash(UInt32 seed) : this(seed, seed) { }
         #endregion
 
         #region Methods
@@ -77,12 +66,12 @@ namespace FastHashes
             v2 = BinaryOperations.RotateLeft(v2, 16);
         }
 
-        /// <inheritdoc/>
-        protected override UInt32 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
+        /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
+        protected (UInt32, UInt32) ComputeHashParts(ReadOnlySpan<Byte> buffer, Boolean extended)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
-
+            
             UInt32 b = (UInt32)count << 24;
 
             UInt32 v0 = m_Seed1;
@@ -90,8 +79,8 @@ namespace FastHashes
             UInt32 v2 = I0 ^ m_Seed1;
             UInt32 v3 = I1 ^ m_Seed2;
 
-            if (count == 0)
-                goto Finalize;
+            if (extended)
+                v1 ^= 0x000000EEu;
 
             Int32 blocks = count / 4;
 
@@ -99,7 +88,7 @@ namespace FastHashes
             {
                 UInt32 m = BinaryOperations.Read32(buffer, offset);
                 offset += 4;
-
+                
                 v3 ^= m;
 
                 for (Int32 i = 0; i < 2; ++i)
@@ -108,9 +97,8 @@ namespace FastHashes
                 v0 ^= m;
             }
 
-            b |= BinaryOperations.ReadTail32(buffer, offset);
-
-        Finalize:
+            if (offset < count)
+                b |= BinaryOperations.ReadTail32(buffer, offset);
 
             v3 ^= b;
 
@@ -118,21 +106,93 @@ namespace FastHashes
                 Mix(ref v0, ref v1, ref v2, ref v3);
 
             v0 ^= b;
-            v2 ^= 0x000000FFu;
+            v2 ^= extended ? 0x000000EEu : 0x000000FFu;
 
             for (Int32 i = 0; i < 4; ++i)
                 Mix(ref v0, ref v1, ref v2, ref v3);
 
-            UInt32 hash = v1 ^ v3;
+            UInt32 hash1 = v1 ^ v3;
 
-            return hash;
+            if (!extended)
+                return (hash1, 0u);
+
+            v1 ^= 0x000000DDu;
+
+            for (Int32 i = 0; i < 4; ++i)
+                Mix(ref v0, ref v1, ref v2, ref v3);
+
+            UInt32 hash2 = v1 ^ v3;
+            
+            return (hash1, hash2);
         }
-
         #endregion
     }
 
-    /// <summary>Represents the SipHash implementation. This class cannot be derived.</summary>
-    public sealed class SipHash : Hash<UInt64>
+    /// <summary>Represents the HalfSipHash32 implementation. This class cannot be derived.</summary>
+    public sealed class HalfSipHash32 : HalfSipHash<UInt32>
+    {
+        #region Constructors
+        /// <summary>Initializes a new instance using a value of <c>0</c> for both seeds.</summary>
+        [ExcludeFromCodeCoverage]
+        public HalfSipHash32() : base(0u, 0u) { }
+
+        /// <summary>Initializes a new instance using the specified value for both seeds.</summary>
+        /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
+        public HalfSipHash32(UInt32 seed) : base(seed, seed) { }
+
+        /// <summary>Initializes a new instance using the specified seeds.</summary>
+        /// <param name="seed1">The first <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
+        public HalfSipHash32(UInt32 seed1, UInt32 seed2) : base(seed1, seed2) { }
+        #endregion
+
+        #region Methods
+        /// <inheritdoc/>
+        protected override UInt32 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
+        {
+            (UInt32 hash, _) = ComputeHashParts(buffer, false);
+
+            return hash;
+        }
+        #endregion
+    }
+
+    /// <summary>Represents the HalfSipHash64 implementation. This class cannot be derived.</summary>
+    public sealed class HalfSipHash64 : HalfSipHash<UInt64>
+    {
+        #region Constructors
+        /// <summary>Initializes a new instance using a value of <c>0</c> for both seeds.</summary>
+        [ExcludeFromCodeCoverage]
+        public HalfSipHash64() : base(0u, 0u) { }
+
+        /// <summary>Initializes a new instance using the specified value for both seeds.</summary>
+        /// <param name="seed">The <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
+        public HalfSipHash64(UInt32 seed) : base(seed, seed) { }
+
+        /// <summary>Initializes a new instance using the specified seeds.</summary>
+        /// <param name="seed1">The first <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
+        [ExcludeFromCodeCoverage]
+        public HalfSipHash64(UInt32 seed1, UInt32 seed2) : base(seed1, seed2) { }
+        #endregion
+
+        #region Methods
+        /// <inheritdoc/>
+        protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
+        {
+            (UInt32 hash1, UInt32 hash2) = ComputeHashParts(buffer, true);
+            UInt64 hash = hash1 | ((UInt64)hash2 << 32);
+
+            return hash;
+        }
+        #endregion
+    }
+
+    /// <summary>Represents the base class from which all the SipHash implementations must derive. This class is abstract.</summary>
+    public abstract class SipHash<T> : Hash<T> where T : unmanaged
     {
         #region Constants
         private const UInt64 K0 = 0x736F6D6570736575ul;
@@ -150,13 +210,11 @@ namespace FastHashes
         #endregion
 
         #region Properties
-
-
         /// <summary>Gets the variant of the hashing algorithm.</summary>
         /// <value>An enumerator value of type <see cref="T:FastHashes.SipHashVariant"/>.</value>
         [ExcludeFromCodeCoverage]
         public SipHashVariant Variant => m_Variant;
-
+        
         /// <summary>Gets the first seed used by the hashing algorithm.</summary>
         /// <value>An <see cref="T:System.UInt64"/> value.</value>
         [ExcludeFromCodeCoverage]
@@ -169,13 +227,12 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Initializes a new instance using the specified variant and seeds.</summary>
+        /// <summary>Represents the base constructor used by derived classes.</summary>
         /// <param name="variant">The <see cref="T:FastHashes.SipHashVariant"/> value specifying the variant of the hashing algorithm.</param>
-        /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
+        /// <param name="seed1">The first <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second <see cref="T:System.UInt32"/> seed used by the hashing algorithm.</param>
         [ExcludeFromCodeCoverage]
-        public SipHash(SipHashVariant variant, UInt64 seed1, UInt64 seed2)
+        protected SipHash(SipHashVariant variant, UInt64 seed1, UInt64 seed2)
         {
             if (!Enum.IsDefined(typeof(SipHashVariant), variant))
                 throw new ArgumentOutOfRangeException(nameof(variant), "Invalid variant specified.");
@@ -195,34 +252,6 @@ namespace FastHashes
             m_Seed1 = seed1;
             m_Seed2 = seed2;
         }
-
-        /// <summary>Initializes a new instance using <see cref="F:FastHashes.SipHashVariant.V24"/> and a value of <c>0</c> for both seeds.</summary>
-        [ExcludeFromCodeCoverage]
-        public SipHash() : this(SipHashVariant.V24, 0ul, 0ul) { }
-
-        /// <summary>Initializes a new instance using the specified variant and a value of <c>0</c> for both seeds.</summary>
-        /// <param name="variant">The <see cref="T:FastHashes.SipHashVariant"/> value specifying the variant of the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
-        [ExcludeFromCodeCoverage]
-        public SipHash(SipHashVariant variant) : this(variant, 0ul, 0ul) { }
-
-        /// <summary>Initializes a new instance using the specified variant and the specified value for both seeds.</summary>
-        /// <param name="variant">The <see cref="T:FastHashes.SipHashVariant"/> value specifying the variant of the hashing algorithm.</param>
-        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
-        [ExcludeFromCodeCoverage]
-        public SipHash(SipHashVariant variant, UInt64 seed) : this(variant, seed, seed) { }
-
-        /// <summary>Initializes a new instance using <see cref="F:FastHashes.SipHashVariant.V24"/> and the specified value for both seeds.</summary>
-        /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        [ExcludeFromCodeCoverage]
-        public SipHash(UInt64 seed) : this(SipHashVariant.V24, seed, seed) { }
-
-        /// <summary>Initializes a new instance using <see cref="F:FastHashes.SipHashVariant.V24"/> and the specified seeds.</summary>
-        /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
-        [ExcludeFromCodeCoverage]
-        public SipHash(UInt64 seed1, UInt64 seed2) : this(SipHashVariant.V24, seed1, seed2) { }
         #endregion
 
         #region Methods
@@ -252,12 +281,11 @@ namespace FastHashes
             v2 = BinaryOperations.RotateLeft(v2, 32);
         }
 
-        /// <inheritdoc/>
-        protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
+        /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
+        protected (UInt64, UInt64) ComputeHashParts(ReadOnlySpan<Byte> buffer, Boolean extended)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
-
             UInt64 b = (UInt64)(count & 0x000000FF) << 56;
 
             UInt64 v0 = m_Seed1 ^ K0;
@@ -265,8 +293,8 @@ namespace FastHashes
             UInt64 v2 = m_Seed1 ^ K2;
             UInt64 v3 = m_Seed2 ^ K3;
 
-            if (count == 0)
-                goto Finalize;
+            if (extended)
+                v1 ^= 0x00000000000000EEul;
 
             Int32 blocks = count / 8;
 
@@ -274,7 +302,6 @@ namespace FastHashes
             {
                 UInt64 m = BinaryOperations.Read64(buffer, offset);
                 offset += 8;
-
                 v3 ^= m;
 
                 for (Int32 i = 0; i < m_R1; ++i)
@@ -283,9 +310,8 @@ namespace FastHashes
                 v0 ^= m;
             }
 
-            b |= BinaryOperations.ReadTail64(buffer, offset);
-
-        Finalize:
+            if (offset < count)
+                b |= BinaryOperations.ReadTail64(buffer, offset);
 
             v3 ^= b;
 
@@ -293,14 +319,24 @@ namespace FastHashes
                 Mix(ref v0, ref v1, ref v2, ref v3);
 
             v0 ^= b;
-            v2 ^= 0x000000000000000000FFul;
+            v2 ^= extended ? 0x00000000000000EEul : 0x00000000000000FFul;
 
             for (Int32 i = 0; i < m_R2; ++i)
                 Mix(ref v0, ref v1, ref v2, ref v3);
 
-            UInt64 hash = v0 ^ v1 ^ v2 ^ v3;
+            UInt64 hash1 = v0 ^ v1 ^ v2 ^ v3;
 
-            return hash;
+            if (!extended)
+                return (hash1, 0ul);
+
+            v1 ^= 0x00000000000000DDul;
+
+            for (Int32 i = 0; i < m_R2; ++i)
+                Mix(ref v0, ref v1, ref v2, ref v3);
+
+            UInt64 hash2 = v0 ^ v1 ^ v2 ^ v3;
+            
+            return (hash1, hash2);
         }
 
         /// <inheritdoc/>
@@ -308,6 +344,96 @@ namespace FastHashes
         public override String ToString()
         {
             return $"{GetType().Name}-{m_Variant.ToString().Substring(1)}";
+        }
+        #endregion
+    }
+
+    /// <summary>Represents the SipHash64 implementation. This class cannot be derived.</summary>
+    public sealed class SipHash64 : SipHash<UInt64>
+    {
+        #region Constructors
+        /// <summary>Initializes a new instance using <see cref="F:FastHashes.SipHashVariant.V24"/> and a value of <c>0</c> for both seeds.</summary>
+        [ExcludeFromCodeCoverage]
+        public SipHash64() : base(SipHashVariant.V24, 0ul, 0ul) { }
+
+        /// <summary>Initializes a new instance using the specified variant and a value of <c>0</c> for both seeds.</summary>
+        /// <param name="variant">The <see cref="T:FastHashes.SipHashVariant"/> value specifying the variant of the hashing algorithm.</param>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
+        public SipHash64(SipHashVariant variant) : base(variant, 0ul, 0ul) { }
+
+        /// <summary>Initializes a new instance using <see cref="F:FastHashes.SipHashVariant.V24"/> and the specified value for both seeds.</summary>
+        [ExcludeFromCodeCoverage]
+        public SipHash64(UInt64 seed) : base(SipHashVariant.V24, seed, seed) { }
+
+        /// <summary>Initializes a new instance using <see cref="F:FastHashes.SipHashVariant.V24"/> and the specified seeds.</summary>
+        [ExcludeFromCodeCoverage]
+        public SipHash64(UInt64 seed1, UInt64 seed2) : base(SipHashVariant.V24, seed1, seed2) { }
+
+        /// <summary>Initializes a new instance using the specified variant and the specified value for both seeds.</summary>
+        [ExcludeFromCodeCoverage]
+        public SipHash64(SipHashVariant variant, UInt64 seed) : base(variant, seed, seed) { }
+
+        /// <summary>Initializes a new instance using the specified variant and seeds.</summary>
+        /// <param name="variant">The <see cref="T:FastHashes.SipHashVariant"/> value specifying the variant of the hashing algorithm.</param>
+        /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
+        [ExcludeFromCodeCoverage]
+        public SipHash64(SipHashVariant variant, UInt64 seed1, UInt64 seed2) : base(variant, seed1, seed2) { }
+        #endregion
+
+        #region Methods
+        /// <inheritdoc/>
+        protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
+        {
+            (UInt64 hash, _) = ComputeHashParts(buffer, false);
+
+            return hash;
+        }
+        #endregion
+    }
+
+    /// <summary>Represents the SipHash128 implementation. This class cannot be derived.</summary>
+    public sealed class SipHash128 : SipHash<(UInt64, UInt64)>
+    {
+        #region Constructors
+        /// <summary>Initializes a new instance using <see cref="F:FastHashes.SipHashVariant.V24"/> and a value of <c>0</c> for both seeds.</summary>
+        [ExcludeFromCodeCoverage]
+        public SipHash128() : base(SipHashVariant.V24, 0ul, 0ul) { }
+
+        /// <summary>Initializes a new instance using the specified variant and a value of <c>0</c> for both seeds.</summary>
+        /// <param name="variant">The <see cref="T:FastHashes.SipHashVariant"/> value specifying the variant of the hashing algorithm.</param>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
+        public SipHash128(SipHashVariant variant) : base(variant, 0ul, 0ul) { }
+
+        /// <summary>Initializes a new instance using <see cref="F:FastHashes.SipHashVariant.V24"/> and the specified value for both seeds.</summary>
+        [ExcludeFromCodeCoverage]
+        public SipHash128(UInt64 seed) : base(SipHashVariant.V24, seed, seed) { }
+
+        /// <summary>Initializes a new instance using <see cref="F:FastHashes.SipHashVariant.V24"/> and the specified seeds.</summary>
+        [ExcludeFromCodeCoverage]
+        public SipHash128(UInt64 seed1, UInt64 seed2) : base(SipHashVariant.V24, seed1, seed2) { }
+
+        /// <summary>Initializes a new instance using the specified variant and the specified value for both seeds.</summary>
+        [ExcludeFromCodeCoverage]
+        public SipHash128(SipHashVariant variant, UInt64 seed) : base(variant, seed, seed) { }
+
+        /// <summary>Initializes a new instance using the specified variant and seeds.</summary>
+        /// <param name="variant">The <see cref="T:FastHashes.SipHashVariant"/> value specifying the variant of the hashing algorithm.</param>
+        /// <param name="seed1">The first <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        /// <param name="seed2">The second <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="variant">variant</paramref> is not a defined enumeration value.</exception>
+        [ExcludeFromCodeCoverage]
+        public SipHash128(SipHashVariant variant, UInt64 seed1, UInt64 seed2) : base(variant, seed1, seed2) { }
+        #endregion
+
+        #region Methods
+        /// <inheritdoc/>
+        protected override (UInt64, UInt64) ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
+        {
+            (UInt64 hash1, UInt64 hash2) = ComputeHashParts(buffer, false);
+
+            return (hash1, hash2);
         }
         #endregion
     }
