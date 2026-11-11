@@ -2,6 +2,11 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+#if NET10_0_OR_GREATER
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+#endif
 #endregion
 
 namespace FastHashes
@@ -18,6 +23,16 @@ namespace FastHashes
         private const UInt64 M11 = 0xC0ACF169B5F18A8Cul;
         private const UInt64 M12 = 0xBE5466CF34E90C6Cul;
         private const UInt64 M13 = 0x452821E638D01377ul;
+
+#if NET10_0_OR_GREATER
+        private static readonly Vector256<Byte> ZMASK = Vector256.Create
+        (
+            0x000F010E05020C03ul,
+            0x070806090D0A040Bul,
+            0x000F010E05020C03ul,
+            0x070806090D0A040Bul
+        ).AsByte();
+#endif
         #endregion
 
         #region Members
@@ -122,11 +137,26 @@ namespace FastHashes
             ZMA(ref v1[2], ref v1[3], v0[3], v0[2]);
         }
 
+#if NET10_0_OR_GREATER
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void UpdateAvx2(ref Vector256<UInt64> m0, ref Vector256<UInt64> m1, ref Vector256<UInt64> v0, ref Vector256<UInt64> v1, Vector256<UInt64> k)
+        {
+            v1 = Avx2.Add(v1, Avx2.Add(m0, k));
+            m0 = Avx2.Xor(m0, Avx2.Multiply(v1.AsUInt32(), Avx2.ShiftRightLogical(v0, 32).AsUInt32()));
+
+            v0 = Avx2.Add(v0, m1);
+            m1 = Avx2.Xor(m1, Avx2.Multiply(v0.AsUInt32(), Avx2.ShiftRightLogical(v1, 32).AsUInt32()));
+
+            v0 = Avx2.Add(v0, Avx2.Shuffle(v1.AsByte(), ZMASK).AsUInt64());
+            v1 = Avx2.Add(v1, Avx2.Shuffle(v0.AsByte(), ZMASK).AsUInt64());
+        }
+#endif
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ZMA(ref UInt64 v1, ref UInt64 v2, UInt64 v3, UInt64 v4)
         {
             v1 = unchecked(v1 + (
-                  (((v4 & 0x00000000FF000000ul) | (v3 & 0x000000FF00000000ul)) >> 24)
+                (((v4 & 0x00000000FF000000ul) | (v3 & 0x000000FF00000000ul)) >> 24)
                 | (((v4 & 0x0000FF0000000000ul) | (v3 & 0x00FF000000000000ul)) >> 16)
                 | (v4 & 0x0000000000FF0000ul)
                 | ((v4 & 0x000000000000FF00ul) << 32)
@@ -135,7 +165,7 @@ namespace FastHashes
             ));
 
             v2 = unchecked(v2 + (
-                  (((v3 & 0x00000000FF000000ul) | (v4 & 0x000000FF00000000ul)) >> 24)
+                (((v3 & 0x00000000FF000000ul) | (v4 & 0x000000FF00000000ul)) >> 24)
                 | (v3 & 0x0000000000FF0000ul)
                 | ((v3 & 0x0000FF0000000000ul) >> 16)
                 | ((v3 & 0x000000000000FF00ul) << 24)
@@ -156,11 +186,141 @@ namespace FastHashes
             hash2 = a1 ^ ((a3 << 1) | (a2 >> 63)) ^ ((a3 << 2) | (a2 >> 62));
         }
 
+#if NET10_0_OR_GREATER
+        private (UInt64, UInt64, UInt64, UInt64) ComputeHighwayHashAvx2(ReadOnlySpan<Byte> buffer)
+        {
+            Int32 offset = 0;
+            Int32 count = buffer.Length;
+
+            Vector256<UInt64> m0 = Vector256.Create(M00, M01, M02, M03);
+            Vector256<UInt64> m1 = Vector256.Create(M10, M11, M12, M13);
+
+            Vector256<UInt64> v0 = Vector256.Create
+            (
+                M00 ^ m_Seed1,
+                M01 ^ m_Seed2,
+                M02 ^ m_Seed3,
+                M03 ^ m_Seed4
+            );
+
+            Vector256<UInt64> v1 = Vector256.Create
+            (
+                M10 ^ ((m_Seed1 >> 32) | (m_Seed1 << 32)),
+                M11 ^ ((m_Seed2 >> 32) | (m_Seed2 << 32)),
+                M12 ^ ((m_Seed3 >> 32) | (m_Seed3 << 32)),
+                M13 ^ ((m_Seed4 >> 32) | (m_Seed4 << 32))
+            );
+
+            if (count > 0)
+            {
+                Int32 blocks = count / 32;
+
+                for (Int32 blockIndex = 0; blockIndex < blocks; ++blockIndex)
+                {
+                    Vector256<UInt64> k = MemoryMarshal.Read<Vector256<UInt64>>(buffer.Slice(offset, 32));
+                    offset += 32;
+                    UpdateAvx2(ref m0, ref m1, ref v0, ref v1, k);
+                }
+
+                Int32 remainder = count & 31;
+
+                if (remainder > 0)
+                {
+                    UInt64 increment = ((UInt64)remainder << 32) + (UInt64)remainder;
+
+                    v0 = Avx2.Add(v0, Vector256.Create(increment));
+
+                    v1 = Vector256.Create
+                    (
+                        Mix(v1.GetElement(0), remainder),
+                        Mix(v1.GetElement(1), remainder),
+                        Mix(v1.GetElement(2), remainder),
+                        Mix(v1.GetElement(3), remainder)
+                    );
+
+                    Int32 diff4 = remainder & ~3;
+                    Int32 mod4 = remainder & 3;
+
+                    Span<Byte> packet = stackalloc Byte[32];
+                    packet.Clear();
+
+                    if (diff4 > 0)
+                    {
+                        buffer.Slice(offset, diff4).CopyTo(packet);
+                        offset += diff4;
+                    }
+
+                    if ((remainder & 16) > 0)
+                    {
+                        for (Int32 i = 0; i < 4; ++i)
+                            packet[28 + i] = buffer[offset + (i + mod4 - 4)];
+                    }
+                    else if (mod4 > 0)
+                    {
+                        packet[16] = buffer[offset];
+                        packet[17] = buffer[offset + (mod4 >> 1)];
+                        packet[18] = buffer[offset + (mod4 - 1)];
+                    }
+
+                    Vector256<UInt64> k = MemoryMarshal.Read<Vector256<UInt64>>(packet);
+                    UpdateAvx2(ref m0, ref m1, ref v0, ref v1, k);
+                }
+            }
+
+            for (UInt32 i = 0; i < P; ++i)
+            {
+                UInt64 a = v0.GetElement(2);
+                UInt64 b = v0.GetElement(3);
+                UInt64 c = v0.GetElement(0);
+                UInt64 d = v0.GetElement(1);
+
+                Vector256<UInt64> k = Vector256.Create
+                (
+                    (a >> 32) | (a << 32),
+                    (b >> 32) | (b << 32),
+                    (c >> 32) | (c << 32),
+                    (d >> 32) | (d << 32)
+                );
+
+                UpdateAvx2(ref m0, ref m1, ref v0, ref v1, k);
+            }
+
+            switch (Length)
+            {
+                case 64:
+                    UInt64 hash1 = unchecked(v0.GetElement(0) + v1.GetElement(0) + m0.GetElement(0) + m1.GetElement(0));
+                    return(hash1, 0ul, 0ul, 0ul);
+
+                case 128:
+                    UInt64 hash2 = unchecked(v0.GetElement(0) + m0.GetElement(0) + v1.GetElement(2) + m1.GetElement(2));
+                    UInt64 hash3 = unchecked(v0.GetElement(1) + m0.GetElement(1) + v1.GetElement(3) + m1.GetElement(3));
+                    return (hash2, hash3, 0ul, 0ul);
+
+                case 256:
+                    UInt64 v00 = v0.GetElement(0), v01 = v0.GetElement(1), v02 = v0.GetElement(2), v03 = v0.GetElement(3);
+                    UInt64 v10 = v1.GetElement(0), v11 = v1.GetElement(1), v12 = v1.GetElement(2), v13 = v1.GetElement(3);
+                    UInt64 m00 = m0.GetElement(0), m01 = m0.GetElement(1), m02 = m0.GetElement(2), m03 = m0.GetElement(3);
+                    UInt64 m10 = m1.GetElement(0), m11 = m1.GetElement(1), m12 = m1.GetElement(2), m13 = m1.GetElement(3);
+                    MR(out UInt64 hash4, out UInt64 hash5, v00, m00, v01, m01, v10, m10, v11, m11);
+                    MR(out UInt64 hash6, out UInt64 hash7, v02, m02, v03, m03, v12, m12, v13, m13);
+                    return (hash4, hash5, hash6, hash7);
+
+                default:
+                    throw new InvalidOperationException("Unsupported hash length.");
+            }
+        }
+#endif
+
         /// <summary>Computes the numeric hash value of the specified byte span.</summary>
         /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> containing the data to hash.</param>
         /// <returns>The computed hash represented by four <see cref="T:System.UInt64"/> values.</returns>
         protected (UInt64, UInt64, UInt64, UInt64) ComputeHighwayHash(ReadOnlySpan<Byte> buffer)
         {
+#if NET10_0_OR_GREATER
+            if (Avx2.IsSupported)
+                return ComputeHighwayHashAvx2(buffer);
+#endif
+
             Int32 offset = 0;
             Int32 count = buffer.Length;
 
@@ -248,17 +408,18 @@ namespace FastHashes
             switch (Length)
             {
                 case 64:
-                    return (unchecked(v0[0] + v1[0] + m0[0] + m1[0]), 0ul, 0ul, 0ul);
+                    UInt64 hash1 = unchecked(v0[0] + v1[0] + m0[0] + m1[0]);
+                    return (hash1, 0ul, 0ul, 0ul);
 
                 case 128:
-                    UInt64 hash1 = unchecked(v0[0] + m0[0] + v1[2] + m1[2]);
-                    UInt64 hash2 = unchecked(v0[1] + m0[1] + v1[3] + m1[3]);
-                    return (hash1, hash2, 0ul, 0ul);
+                    UInt64 hash2 = unchecked(v0[0] + m0[0] + v1[2] + m1[2]);
+                    UInt64 hash3 = unchecked(v0[1] + m0[1] + v1[3] + m1[3]);
+                    return (hash2, hash3, 0ul, 0ul);
 
                 case 256:
-                    MR(out UInt64 hash3, out UInt64 hash4, v0[0], m0[0], v0[1], m0[1], v1[0], m1[0], v1[1], m1[1]);
-                    MR(out UInt64 hash5, out UInt64 hash6, v0[2], m0[2], v0[3], m0[3], v1[2], m1[2], v1[3], m1[3]);
-                    return (hash3, hash4, hash5, hash6);
+                    MR(out UInt64 hash4, out UInt64 hash5, v0[0], m0[0], v0[1], m0[1], v1[0], m1[0], v1[1], m1[1]);
+                    MR(out UInt64 hash6, out UInt64 hash7, v0[2], m0[2], v0[3], m0[3], v1[2], m1[2], v1[3], m1[3]);
+                    return (hash4, hash5, hash6, hash7);
 
                 default:
                     throw new InvalidOperationException("Unsupported hash length.");

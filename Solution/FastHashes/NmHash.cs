@@ -2,6 +2,11 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+#if NET10_0_OR_GREATER
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+#endif
 #endregion
 
 namespace FastHashes
@@ -131,6 +136,43 @@ namespace FastHashes
             #region Methods
             private static void LongRound(Span<UInt32> x, Span<UInt32> y, ReadOnlySpan<Byte> buffer, Int32 offset)
             {
+#if NET10_0_OR_GREATER
+                if (Avx2.IsSupported)
+                {
+                    Span<Vector256<UInt32>> xv = MemoryMarshal.Cast<UInt32, Vector256<UInt32>>(x);
+                    Span<Vector256<UInt32>> yv = MemoryMarshal.Cast<UInt32, Vector256<UInt32>>(y);
+                    ReadOnlySpan<Vector256<UInt32>> data = MemoryMarshal.Cast<Byte, Vector256<UInt32>>(buffer.Slice(offset, 256));
+
+                    Vector256<Int16> m1 = Vector256.Create(M1).AsInt16();
+                    Vector256<Int16> m2 = Vector256.Create(M2).AsInt16();
+                    Vector256<Int16> m3 = Vector256.Create(M3).AsInt16();
+
+                    for (Int32 i = 0; i < 4; ++i)
+                    {
+                        Vector256<UInt32> xi = Avx2.Xor(xv[i], data[i]);
+                        Vector256<UInt32> yi = Avx2.Xor(yv[i], data[i + 4]);
+
+                        xi = Avx2.Add(xi, yi);
+                        yi = Avx2.Xor(yi, Avx2.ShiftRightLogical(xi, 1));
+
+                        xi = Avx2.MultiplyLow(xi.AsInt16(), m1).AsUInt32();
+                        xi = Avx2.Xor(xi, Avx2.Xor(Avx2.ShiftLeftLogical(xi, 5), Avx2.ShiftRightLogical(xi, 13)));
+
+                        xi = Avx2.MultiplyLow(xi.AsInt16(), m2).AsUInt32();
+                        xi = Avx2.Xor(xi, yi);
+                        xi = Avx2.Xor(xi, Avx2.Xor(Avx2.ShiftLeftLogical(xi, 11), Avx2.ShiftRightLogical(xi, 9)));
+
+                        xi = Avx2.MultiplyLow(xi.AsInt16(), m3).AsUInt32();
+                        xi = Avx2.Xor(xi, Avx2.Xor(Avx2.ShiftRightLogical(xi, 10), Avx2.ShiftRightLogical(xi, 20)));
+
+                        xv[i] = xi;
+                        yv[i] = yi;
+                    }
+
+                    return;
+                }
+#endif
+
                 for (Int32 i = 0; i < 32; ++i)
                 {
                     UInt32 xi = x[i] ^ BinaryOperations.Read32(buffer, offset + (i * 4));

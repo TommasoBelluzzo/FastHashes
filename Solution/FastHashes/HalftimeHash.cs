@@ -2,6 +2,11 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+#if NET10_0_OR_GREATER
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+#endif
 #endregion
 
 namespace FastHashes
@@ -100,6 +105,28 @@ namespace FastHashes
             return v;
         }
 
+#if NET10_0_OR_GREATER
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector128<UInt64> MixSse2(Vector128<UInt64> accumulator, Vector128<UInt64> value, UInt64 entropy)
+        {
+            Vector128<UInt64> e = Vector128.Create(entropy);
+            Vector128<UInt64> sum = Sse2.Add(value.AsUInt32(), e.AsUInt32()).AsUInt64();
+            Vector128<UInt64> product = Sse2.Multiply(sum.AsUInt32(), Sse2.ShiftRightLogical(sum, 32).AsUInt32());
+
+            return Sse2.Add(accumulator, product);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector256<UInt64> MixAvx2(Vector256<UInt64> accumulator, Vector256<UInt64> value, UInt64 entropy)
+        {
+            Vector256<UInt64> e = Vector256.Create(entropy);
+            Vector256<UInt64> sum = Avx2.Add(value.AsUInt32(), e.AsUInt32()).AsUInt64();
+            Vector256<UInt64> product = Avx2.Multiply(sum.AsUInt32(), Avx2.ShiftRightLogical(sum, 32).AsUInt32());
+
+            return Avx2.Add(accumulator, product);
+        }
+#endif
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private UInt64 Tabulate(UInt64 value, Int32 offset)
         {
@@ -184,6 +211,42 @@ namespace FastHashes
 
                 for (Int32 row = 0; row < 7; ++row)
                 {
+#if NET10_0_OR_GREATER
+                    if ((m_Lanes == 4) && Avx2.IsSupported)
+                    {
+                        Span<Vector256<UInt64>> sv = MemoryMarshal.Cast<UInt64, Vector256<UInt64>>(scratch);
+                        Span<Vector256<UInt64>> hv = MemoryMarshal.Cast<UInt64, Vector256<UInt64>>(hashes);
+
+                        Vector256<UInt64> value = Vector256<UInt64>.Zero;
+
+                        for (Int32 column = 0; column < 3; ++column)
+                        {
+                            Vector256<UInt64> input = sv[(row * 3) + column];
+                            value = MixAvx2(value, input, m_Entropy[512 + (row * 3) + column]);
+                        }
+
+                        hv[row] = value;
+                        continue;
+                    }
+
+                    if ((m_Lanes == 2) && Sse2.IsSupported)
+                    {
+                        Span<Vector128<UInt64>> sv = MemoryMarshal.Cast<UInt64, Vector128<UInt64>>(scratch);
+                        Span<Vector128<UInt64>> hv = MemoryMarshal.Cast<UInt64, Vector128<UInt64>>(hashes);
+
+                        Vector128<UInt64> value = Vector128<UInt64>.Zero;
+
+                        for (Int32 column = 0; column < 3; ++column)
+                        {
+                            Vector128<UInt64> input = sv[(row * 3) + column];
+                            value = MixSse2(value, input, m_Entropy[(row * 3) + column + 512]);
+                        }
+
+                        hv[row] = value;
+                        continue;
+                    }
+#endif
+
                     for (Int32 lane = 0; lane < m_Lanes; ++lane)
                     {
                         UInt64 value = 0ul;
@@ -191,10 +254,10 @@ namespace FastHashes
                         for (Int32 column = 0; column < 3; ++column)
                         {
                             UInt64 input = scratch[(((row * 3) + column) * m_Lanes) + lane];
-                            value = Mix(value, input, m_Entropy[512 + (row * 3) + column]);
+                            value = Mix(value, input, m_Entropy[(row * 3) + column + 512]);
                         }
 
-                        hashes[row * m_Lanes + lane] = value;
+                        hashes[(row * m_Lanes) + lane] = value;
                     }
                 }
 

@@ -3,6 +3,11 @@ using System;
 using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+#if NET10_0_OR_GREATER
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+#endif
 #endregion
 
 namespace FastHashes
@@ -92,6 +97,28 @@ namespace FastHashes
         /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
         protected static void Accumulate(Span<UInt64> accumulator, ReadOnlySpan<Byte> data, Int32 dataOffset, ReadOnlySpan<Byte> secret, Int32 secretOffset)
         {
+#if NET10_0_OR_GREATER
+            if (Avx2.IsSupported)
+            {
+                Span<Vector256<UInt64>> acc = MemoryMarshal.Cast<UInt64, Vector256<UInt64>>(accumulator);
+
+                for (Int32 i = 0; i < 2; ++i)
+                {
+                    Vector256<UInt64> vv = MemoryMarshal.Read<Vector256<UInt64>>(data.Slice(dataOffset + (i * 32), 32));
+                    Vector256<UInt64> vk = MemoryMarshal.Read<Vector256<UInt64>>(secret.Slice(secretOffset + (i * 32), 32));
+
+                    vk = Avx2.Xor(vv, vk);
+
+                    Vector256<UInt64> swapped = Avx2.Permute4x64(vv.AsInt64(), 0xB1).AsUInt64();
+                    Vector256<UInt64> product = Avx2.Multiply(vk.AsUInt32(), Avx2.ShiftRightLogical(vk, 32).AsUInt32());
+
+                    acc[i] = Avx2.Add(acc[i], Avx2.Add(swapped, product));
+                }
+
+                return;
+            }
+#endif
+
             for (Int32 i = 0; i < 8; ++i)
             {
                 UInt64 v = BinaryOperations.Read64(data, dataOffset + i * 8);

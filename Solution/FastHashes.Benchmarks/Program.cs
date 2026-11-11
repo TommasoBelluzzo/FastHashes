@@ -25,7 +25,7 @@ namespace FastHashes.Benchmarks
         private const Int32 BULK_REPETITIONS = 5000;
         private const Int32 BULK_REPETITIONS_MINIMUM = 1000;
         private const Int32 BULK_REPETITIONS_MAXIMUM = 50000;
-        private const Int32 WARMUP_REPETITIONS = 100;
+        private const Int32 WARMUP_REPETITIONS = 250;
         private const Int32 WARMUP_REPETITIONS_MINIMUM = 100;
         private const Int32 WARMUP_REPETITIONS_MAXIMUM = 1000;
 
