@@ -153,7 +153,6 @@ namespace FastHashes
         protected override UInt32 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             (UInt32 hash, _) = ComputeHashParts(buffer, false);
-
             return hash;
         }
         #endregion
@@ -388,7 +387,6 @@ namespace FastHashes
         protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             (UInt64 hash, _) = ComputeHashParts(buffer, false);
-
             return hash;
         }
         #endregion
@@ -433,9 +431,7 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override (UInt64, UInt64) ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
-            (UInt64 hash1, UInt64 hash2) = ComputeHashParts(buffer, true);
-
-            return (hash1, hash2);
+            return ComputeHashParts(buffer, true);
         }
         #endregion
     }

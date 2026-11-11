@@ -64,8 +64,8 @@ namespace FastHashes
         #endregion
 
         #region Methods
-        /// <summary>Computes the shared 128-bit MurmurHash result.</summary>
-        protected (UInt64 Hash1, UInt64 Hash2) ComputeMurmurHash(ReadOnlySpan<Byte> buffer)
+        /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
+        protected (UInt64, UInt64) ComputeHashParts(ReadOnlySpan<Byte> buffer)
         {
             return m_Engine.ComputeHashValue(buffer);
         }
@@ -174,7 +174,7 @@ namespace FastHashes
                 return v1;
             }
 
-            private (UInt64 Hash1, UInt64 Hash2) ComputeRawValue(ReadOnlySpan<Byte> buffer)
+            public override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -247,11 +247,6 @@ namespace FastHashes
                 hash2 = unchecked(hash2 + hash1);
 
                 return (hash1, hash2);
-            }
-
-            public override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
-            {
-                return ComputeRawValue(buffer);
             }
             #endregion
         }
@@ -331,15 +326,15 @@ namespace FastHashes
                 return v1;
             }
 
-            private (UInt32 Hash1, UInt32 Hash2, UInt32 Hash3, UInt32 Hash4) ComputeRawValue(ReadOnlySpan<Byte> buffer)
+            public override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
 
-                UInt32 hash1 = m_Seed1;
-                UInt32 hash2 = m_Seed2;
-                UInt32 hash3 = m_Seed3;
-                UInt32 hash4 = m_Seed4;
+                UInt32 hashPart1 = m_Seed1;
+                UInt32 hashPart2 = m_Seed2;
+                UInt32 hashPart3 = m_Seed3;
+                UInt32 hashPart4 = m_Seed4;
 
                 if (count == 0)
                     goto Finalize;
@@ -358,16 +353,16 @@ namespace FastHashes
                     offset += 4;
 
                     UInt32 v = Mix(k1, C1, C2, 15);
-                    hash1 = Mur(hash1, hash2, v, 19, N1);
+                    hashPart1 = Mur(hashPart1, hashPart2, v, 19, N1);
 
                     v = Mix(k2, C2, C3, 16);
-                    hash2 = Mur(hash2, hash3, v, 17, N2);
+                    hashPart2 = Mur(hashPart2, hashPart3, v, 17, N2);
 
                     v = Mix(k3, C3, C4, 17);
-                    hash3 = Mur(hash3, hash4, v, 15, N3);
+                    hashPart3 = Mur(hashPart3, hashPart4, v, 15, N3);
 
                     v = Mix(k4, C4, C1, 18);
-                    hash4 = Mur(hash4, hash1, v, 13, N4);
+                    hashPart4 = Mur(hashPart4, hashPart1, v, 13, N4);
                 }
 
                 Int32 remainder = count & 15;
@@ -382,63 +377,58 @@ namespace FastHashes
                     case 14: v4 ^= (UInt32)buffer[offset + 13] << 8; goto case 13;
                     case 13:
                         v4 ^= buffer[offset + 12];
-                        hash4 ^= Mix(v4, C4, C1, 18);
+                        hashPart4 ^= Mix(v4, C4, C1, 18);
                         goto case 12;
                     case 12: v3 ^= (UInt32)buffer[offset + 11] << 24; goto case 11;
                     case 11: v3 ^= (UInt32)buffer[offset + 10] << 16; goto case 10;
                     case 10: v3 ^= (UInt32)buffer[offset + 9] << 8; goto case 9;
                     case 9:
                         v3 ^= buffer[offset + 8];
-                        hash3 ^= Mix(v3, C3, C4, 17);
+                        hashPart3 ^= Mix(v3, C3, C4, 17);
                         goto case 8;
                     case 8: v2 ^= (UInt32)buffer[offset + 7] << 24; goto case 7;
                     case 7: v2 ^= (UInt32)buffer[offset + 6] << 16; goto case 6;
                     case 6: v2 ^= (UInt32)buffer[offset + 5] << 8; goto case 5;
                     case 5:
                         v2 ^= buffer[offset + 4];
-                        hash2 ^= Mix(v2, C2, C3, 16);
+                        hashPart2 ^= Mix(v2, C2, C3, 16);
                         goto case 4;
                     case 4: v1 ^= (UInt32)buffer[offset + 3] << 24; goto case 3;
                     case 3: v1 ^= (UInt32)buffer[offset + 2] << 16; goto case 2;
                     case 2: v1 ^= (UInt32)buffer[offset + 1] << 8; goto case 1;
                     case 1:
                         v1 ^= buffer[offset];
-                        hash1 ^= Mix(v1, C1, C2, 15);
+                        hashPart1 ^= Mix(v1, C1, C2, 15);
                         break;
                 }
 
             Finalize:
 
                 UInt32 length = (UInt32)count;
-                hash1 ^= length;
-                hash2 ^= length;
-                hash3 ^= length;
-                hash4 ^= length;
+                hashPart1 ^= length;
+                hashPart2 ^= length;
+                hashPart3 ^= length;
+                hashPart4 ^= length;
 
-                hash1 = unchecked(hash1 + hash2 + hash3 + hash4);
-                hash2 = unchecked(hash2 + hash1);
-                hash3 = unchecked(hash3 + hash1);
-                hash4 = unchecked(hash4 + hash1);
+                hashPart1 = unchecked(hashPart1 + hashPart2 + hashPart3 + hashPart4);
+                hashPart2 = unchecked(hashPart2 + hashPart1);
+                hashPart3 = unchecked(hashPart3 + hashPart1);
+                hashPart4 = unchecked(hashPart4 + hashPart1);
 
-                hash1 = Fin(hash1);
-                hash2 = Fin(hash2);
-                hash3 = Fin(hash3);
-                hash4 = Fin(hash4);
+                hashPart1 = Fin(hashPart1);
+                hashPart2 = Fin(hashPart2);
+                hashPart3 = Fin(hashPart3);
+                hashPart4 = Fin(hashPart4);
 
-                hash1 = unchecked(hash1 + hash2 + hash3 + hash4);
-                hash2 = unchecked(hash2 + hash1);
-                hash3 = unchecked(hash3 + hash1);
-                hash4 = unchecked(hash4 + hash1);
+                hashPart1 = unchecked(hashPart1 + hashPart2 + hashPart3 + hashPart4);
+                hashPart2 = unchecked(hashPart2 + hashPart1);
+                hashPart3 = unchecked(hashPart3 + hashPart1);
+                hashPart4 = unchecked(hashPart4 + hashPart1);
 
-                return (hash1, hash2, hash3, hash4);
-            }
+                UInt64 hash1 = ((UInt64)hashPart2 << 32) | hashPart1;
+                UInt64 hash2 = ((UInt64)hashPart4 << 32) | hashPart3;
 
-            public override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
-            {
-                (UInt32 hash1, UInt32 hash2, UInt32 hash3, UInt32 hash4) = ComputeRawValue(buffer);
-                UInt64 low = ((UInt64)hash2 << 32) | hash1;
-                UInt64 high = ((UInt64)hash4 << 32) | hash3;
-                return (low, high);
+                return (hash1, hash2);
             }
             #endregion
         }
@@ -574,7 +564,8 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
-            return ComputeMurmurHash(buffer).Hash1;
+            (UInt64 hash, _) = ComputeHashParts(buffer);
+            return hash;
         }
         #endregion
     }
@@ -609,7 +600,7 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override (UInt64, UInt64) ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
-            return ComputeMurmurHash(buffer);
+            return ComputeHashParts(buffer);
         }
         #endregion
     }

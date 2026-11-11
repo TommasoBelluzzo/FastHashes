@@ -212,20 +212,26 @@ namespace FastHashes
                 for (Int32 row = 0; row < 7; ++row)
                 {
 #if NET10_0_OR_GREATER
-                    if ((m_Lanes == 4) && Avx2.IsSupported)
+                    if ((m_Lanes >= 4) && Avx2.IsSupported)
                     {
                         Span<Vector256<UInt64>> sv = MemoryMarshal.Cast<UInt64, Vector256<UInt64>>(scratch);
                         Span<Vector256<UInt64>> hv = MemoryMarshal.Cast<UInt64, Vector256<UInt64>>(hashes);
 
-                        Vector256<UInt64> value = Vector256<UInt64>.Zero;
+                        Int32 vectors = m_Lanes / 4;
 
-                        for (Int32 column = 0; column < 3; ++column)
+                        for (Int32 vectorIndex = 0; vectorIndex < vectors; ++vectorIndex)
                         {
-                            Vector256<UInt64> input = sv[(row * 3) + column];
-                            value = MixAvx2(value, input, m_Entropy[512 + (row * 3) + column]);
+                            Vector256<UInt64> value = Vector256<UInt64>.Zero;
+
+                            for (Int32 column = 0; column < 3; ++column)
+                            {
+                                Vector256<UInt64> input = sv[(((row * 3) + column) * vectors) + vectorIndex];
+                                value = MixAvx2(value, input, m_Entropy[512 + (row * 3) + column]);
+                            }
+
+                            hv[(row * vectors) + vectorIndex] = value;
                         }
 
-                        hv[row] = value;
                         continue;
                     }
 
@@ -243,6 +249,7 @@ namespace FastHashes
                         }
 
                         hv[row] = value;
+
                         continue;
                     }
 #endif

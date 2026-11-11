@@ -11,10 +11,6 @@ namespace FastHashes
     {
         #region Constants
         private const UInt64 C = 0xDEADBEEFDEADBEEFul;
-        private static readonly Int32[] LRE = { 44, 15, 34, 21, 38, 33, 10, 13, 38, 53, 42, 54 };
-        private static readonly Int32[] LRM = { 11, 32, 43, 31, 17, 28, 39, 57, 55, 54, 22, 46 };
-        private static readonly Int32[] SRE = { 15, 52, 26, 51, 28, 9, 47, 54, 32, 25, 63 };
-        private static readonly Int32[] SRM = { 50, 52, 30, 41, 54, 48, 38, 37, 62, 34, 5, 36 };
         #endregion
 
         #region Members
@@ -50,60 +46,232 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void LongEnd(Span<UInt64> hash)
         {
-            for (Int32 j = 0; j < 12; ++j)
-            {
-                Int32 index1 = (j + 11) % 12;
-                Int32 index2 = (j + 1) % 12;
+            hash[11] = unchecked(hash[11] + hash[1]);
+            hash[2] ^= hash[11];
+            hash[1] = BinaryOperations.RotateLeft(hash[1], 44);
 
-                hash[index1] = unchecked(hash[index1] + hash[index2]);
-                hash[(j + 2) % 12] ^= hash[index1];
-                hash[index2] = BinaryOperations.RotateLeft(hash[index2], LRE[j]);
-            }
+            hash[0] = unchecked(hash[0] + hash[2]);
+            hash[3] ^= hash[0];
+            hash[2] = BinaryOperations.RotateLeft(hash[2], 15);
+
+            hash[1] = unchecked(hash[1] + hash[3]);
+            hash[4] ^= hash[1];
+            hash[3] = BinaryOperations.RotateLeft(hash[3], 34);
+
+            hash[2] = unchecked(hash[2] + hash[4]);
+            hash[5] ^= hash[2];
+            hash[4] = BinaryOperations.RotateLeft(hash[4], 21);
+
+            hash[3] = unchecked(hash[3] + hash[5]);
+            hash[6] ^= hash[3];
+            hash[5] = BinaryOperations.RotateLeft(hash[5], 38);
+
+            hash[4] = unchecked(hash[4] + hash[6]);
+            hash[7] ^= hash[4];
+            hash[6] = BinaryOperations.RotateLeft(hash[6], 33);
+
+            hash[5] = unchecked(hash[5] + hash[7]);
+            hash[8] ^= hash[5];
+            hash[7] = BinaryOperations.RotateLeft(hash[7], 10);
+
+            hash[6] = unchecked(hash[6] + hash[8]);
+            hash[9] ^= hash[6];
+            hash[8] = BinaryOperations.RotateLeft(hash[8], 13);
+
+            hash[7] = unchecked(hash[7] + hash[9]);
+            hash[10] ^= hash[7];
+            hash[9] = BinaryOperations.RotateLeft(hash[9], 38);
+
+            hash[8] = unchecked(hash[8] + hash[10]);
+            hash[11] ^= hash[8];
+            hash[10] = BinaryOperations.RotateLeft(hash[10], 53);
+
+            hash[9] = unchecked(hash[9] + hash[11]);
+            hash[0] ^= hash[9];
+            hash[11] = BinaryOperations.RotateLeft(hash[11], 42);
+
+            hash[10] = unchecked(hash[10] + hash[0]);
+            hash[1] ^= hash[10];
+            hash[0] = BinaryOperations.RotateLeft(hash[0], 54);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void LongMix(Span<UInt64> hash, ReadOnlySpan<UInt64> v)
         {
-            for (Int32 i = 0; i < 12; ++i)
-            {
-                Int32 index = (i + 11) % 12;
+            hash[0] = unchecked(hash[0] + v[0]);
+            hash[2] ^= hash[10];
+            hash[11] ^= hash[0];
+            hash[0] = BinaryOperations.RotateLeft(hash[0], 11);
+            hash[11] = unchecked(hash[11] + hash[1]);
 
-                hash[i] = unchecked(hash[i] + v[i]);
-                hash[(i + 2) % 12] ^= hash[(i + 10) % 12];
-                hash[index] ^= hash[i];
-                hash[i] = BinaryOperations.RotateLeft(hash[i], LRM[i]);
-                hash[index] = unchecked(hash[index] + hash[(i + 1) % 12]);
-            }
+            hash[1] = unchecked(hash[1] + v[1]);
+            hash[3] ^= hash[11];
+            hash[0] ^= hash[1];
+            hash[1] = BinaryOperations.RotateLeft(hash[1], 32);
+            hash[0] = unchecked(hash[0] + hash[2]);
+
+            hash[2] = unchecked(hash[2] + v[2]);
+            hash[4] ^= hash[0];
+            hash[1] ^= hash[2];
+            hash[2] = BinaryOperations.RotateLeft(hash[2], 43);
+            hash[1] = unchecked(hash[1] + hash[3]);
+
+            hash[3] = unchecked(hash[3] + v[3]);
+            hash[5] ^= hash[1];
+            hash[2] ^= hash[3];
+            hash[3] = BinaryOperations.RotateLeft(hash[3], 31);
+            hash[2] = unchecked(hash[2] + hash[4]);
+
+            hash[4] = unchecked(hash[4] + v[4]);
+            hash[6] ^= hash[2];
+            hash[3] ^= hash[4];
+            hash[4] = BinaryOperations.RotateLeft(hash[4], 17);
+            hash[3] = unchecked(hash[3] + hash[5]);
+
+            hash[5] = unchecked(hash[5] + v[5]);
+            hash[7] ^= hash[3];
+            hash[4] ^= hash[5];
+            hash[5] = BinaryOperations.RotateLeft(hash[5], 28);
+            hash[4] = unchecked(hash[4] + hash[6]);
+
+            hash[6] = unchecked(hash[6] + v[6]);
+            hash[8] ^= hash[4];
+            hash[5] ^= hash[6];
+            hash[6] = BinaryOperations.RotateLeft(hash[6], 39);
+            hash[5] = unchecked(hash[5] + hash[7]);
+
+            hash[7] = unchecked(hash[7] + v[7]);
+            hash[9] ^= hash[5];
+            hash[6] ^= hash[7];
+            hash[7] = BinaryOperations.RotateLeft(hash[7], 57);
+            hash[6] = unchecked(hash[6] + hash[8]);
+
+            hash[8] = unchecked(hash[8] + v[8]);
+            hash[10] ^= hash[6];
+            hash[7] ^= hash[8];
+            hash[8] = BinaryOperations.RotateLeft(hash[8], 55);
+            hash[7] = unchecked(hash[7] + hash[9]);
+
+            hash[9] = unchecked(hash[9] + v[9]);
+            hash[11] ^= hash[7];
+            hash[8] ^= hash[9];
+            hash[9] = BinaryOperations.RotateLeft(hash[9], 54);
+            hash[8] = unchecked(hash[8] + hash[10]);
+
+            hash[10] = unchecked(hash[10] + v[10]);
+            hash[0] ^= hash[8];
+            hash[9] ^= hash[10];
+            hash[10] = BinaryOperations.RotateLeft(hash[10], 22);
+            hash[9] = unchecked(hash[9] + hash[11]);
+
+            hash[11] = unchecked(hash[11] + v[11]);
+            hash[1] ^= hash[9];
+            hash[10] ^= hash[11];
+            hash[11] = BinaryOperations.RotateLeft(hash[11], 46);
+            hash[10] = unchecked(hash[10] + hash[0]);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ShortEnd(Span<UInt64> hash)
         {
-            for (Int32 i = 0; i < 11; ++i)
-            {
-                Int32 index1 = (i + 2) % 4;
-                Int32 index2 = (i + 3) % 4;
+            hash[3] ^= hash[2];
+            hash[2] = BinaryOperations.RotateLeft(hash[2], 15);
+            hash[3] = unchecked(hash[3] + hash[2]);
 
-                hash[index2] ^= hash[index1];
-                hash[index1] = BinaryOperations.RotateLeft(hash[index1], SRE[i]);
-                hash[index2] = unchecked(hash[index2] + hash[index1]);
-            }
+            hash[0] ^= hash[3];
+            hash[3] = BinaryOperations.RotateLeft(hash[3], 52);
+            hash[0] = unchecked(hash[0] + hash[3]);
+
+            hash[1] ^= hash[0];
+            hash[0] = BinaryOperations.RotateLeft(hash[0], 26);
+            hash[1] = unchecked(hash[1] + hash[0]);
+
+            hash[2] ^= hash[1];
+            hash[1] = BinaryOperations.RotateLeft(hash[1], 51);
+            hash[2] = unchecked(hash[2] + hash[1]);
+
+            hash[3] ^= hash[2];
+            hash[2] = BinaryOperations.RotateLeft(hash[2], 28);
+            hash[3] = unchecked(hash[3] + hash[2]);
+
+            hash[0] ^= hash[3];
+            hash[3] = BinaryOperations.RotateLeft(hash[3], 9);
+            hash[0] = unchecked(hash[0] + hash[3]);
+
+            hash[1] ^= hash[0];
+            hash[0] = BinaryOperations.RotateLeft(hash[0], 47);
+            hash[1] = unchecked(hash[1] + hash[0]);
+
+            hash[2] ^= hash[1];
+            hash[1] = BinaryOperations.RotateLeft(hash[1], 54);
+            hash[2] = unchecked(hash[2] + hash[1]);
+
+            hash[3] ^= hash[2];
+            hash[2] = BinaryOperations.RotateLeft(hash[2], 32);
+            hash[3] = unchecked(hash[3] + hash[2]);
+
+            hash[0] ^= hash[3];
+            hash[3] = BinaryOperations.RotateLeft(hash[3], 25);
+            hash[0] = unchecked(hash[0] + hash[3]);
+
+            hash[1] ^= hash[0];
+            hash[0] = BinaryOperations.RotateLeft(hash[0], 63);
+            hash[1] = unchecked(hash[1] + hash[0]);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ShortMix(Span<UInt64> hash)
         {
-            for (Int32 i = 0; i < 12; ++i)
-            {
-                Int32 index = (i + 2) % 4;
+            hash[2] = BinaryOperations.RotateLeft(hash[2], 50);
+            hash[2] = unchecked(hash[2] + hash[3]);
+            hash[0] ^= hash[2];
 
-                hash[index] = BinaryOperations.RotateLeft(hash[index], SRM[i]);
-                hash[index] = unchecked(hash[index] + hash[(i + 3) % 4]);
-                hash[i % 4] ^= hash[index];
-            }
+            hash[3] = BinaryOperations.RotateLeft(hash[3], 52);
+            hash[3] = unchecked(hash[3] + hash[0]);
+            hash[1] ^= hash[3];
+
+            hash[0] = BinaryOperations.RotateLeft(hash[0], 30);
+            hash[0] = unchecked(hash[0] + hash[1]);
+            hash[2] ^= hash[0];
+
+            hash[1] = BinaryOperations.RotateLeft(hash[1], 41);
+            hash[1] = unchecked(hash[1] + hash[2]);
+            hash[3] ^= hash[1];
+
+            hash[2] = BinaryOperations.RotateLeft(hash[2], 54);
+            hash[2] = unchecked(hash[2] + hash[3]);
+            hash[0] ^= hash[2];
+
+            hash[3] = BinaryOperations.RotateLeft(hash[3], 48);
+            hash[3] = unchecked(hash[3] + hash[0]);
+            hash[1] ^= hash[3];
+
+            hash[0] = BinaryOperations.RotateLeft(hash[0], 38);
+            hash[0] = unchecked(hash[0] + hash[1]);
+            hash[2] ^= hash[0];
+
+            hash[1] = BinaryOperations.RotateLeft(hash[1], 37);
+            hash[1] = unchecked(hash[1] + hash[2]);
+            hash[3] ^= hash[1];
+
+            hash[2] = BinaryOperations.RotateLeft(hash[2], 62);
+            hash[2] = unchecked(hash[2] + hash[3]);
+            hash[0] ^= hash[2];
+
+            hash[3] = BinaryOperations.RotateLeft(hash[3], 34);
+            hash[3] = unchecked(hash[3] + hash[0]);
+            hash[1] ^= hash[3];
+
+            hash[0] = BinaryOperations.RotateLeft(hash[0], 5);
+            hash[0] = unchecked(hash[0] + hash[1]);
+            hash[2] ^= hash[0];
+
+            hash[1] = BinaryOperations.RotateLeft(hash[1], 36);
+            hash[1] = unchecked(hash[1] + hash[2]);
+            hash[3] ^= hash[1];
         }
 
-        private (UInt64 Hash1, UInt64 Hash2) ComputeHashLong(ReadOnlySpan<Byte> buffer)
+        private (UInt64, UInt64) ComputeHashLong(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -146,7 +314,7 @@ namespace FastHashes
             return (hash[0], hash[1]);
         }
 
-        private (UInt64 Hash1, UInt64 Hash2) ComputeHashShort(ReadOnlySpan<Byte> buffer)
+        private (UInt64, UInt64) ComputeHashShort(ReadOnlySpan<Byte> buffer)
         {
             Int32 offset = 0;
             Int32 count = buffer.Length;
@@ -228,7 +396,7 @@ namespace FastHashes
         }
 
         /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
-        protected (UInt64 Hash1, UInt64 Hash2) ComputeSpookyHash(ReadOnlySpan<Byte> buffer)
+        protected (UInt64, UInt64) ComputeHashParts(ReadOnlySpan<Byte> buffer)
         {
             return buffer.Length < 192
                 ? ComputeHashShort(buffer)
@@ -261,8 +429,10 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override UInt32 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
-            UInt64 hash = ComputeSpookyHash(buffer).Hash1;
-            return unchecked((UInt32)hash);
+            (UInt64 hash64, _) = ComputeHashParts(buffer);
+            UInt32 hash = unchecked((UInt32)hash64);
+
+            return hash;
         }
         #endregion
     }
@@ -291,7 +461,8 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
-            return ComputeSpookyHash(buffer).Hash1;
+            (UInt64 hash, _) = ComputeHashParts(buffer);
+            return hash;
         }
         #endregion
     }
@@ -320,7 +491,7 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override (UInt64, UInt64) ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
-            return ComputeSpookyHash(buffer);
+            return ComputeHashParts(buffer);
         }
         #endregion
     }

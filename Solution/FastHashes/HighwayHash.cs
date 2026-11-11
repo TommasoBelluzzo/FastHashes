@@ -311,10 +311,8 @@ namespace FastHashes
         }
 #endif
 
-        /// <summary>Computes the numeric hash value of the specified byte span.</summary>
-        /// <param name="buffer">The <see cref="T:System.ReadOnlySpan`1{T}">ReadOnlySpan&lt;byte&gt;</see> containing the data to hash.</param>
-        /// <returns>The computed hash represented by four <see cref="T:System.UInt64"/> values.</returns>
-        protected (UInt64, UInt64, UInt64, UInt64) ComputeHighwayHash(ReadOnlySpan<Byte> buffer)
+        /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
+        protected (UInt64, UInt64, UInt64, UInt64) ComputeHashParts(ReadOnlySpan<Byte> buffer)
         {
 #if NET10_0_OR_GREATER
             if (Avx2.IsSupported)
@@ -467,7 +465,7 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
-            (UInt64 hash1, _, _, _) = ComputeHighwayHash(buffer);
+            (UInt64 hash1, _, _, _) = ComputeHashParts(buffer);
             return hash1;
         }
         #endregion
@@ -512,7 +510,7 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override (UInt64, UInt64) ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
-            (UInt64 hash1, UInt64 hash2, _, _) = ComputeHighwayHash(buffer);
+            (UInt64 hash1, UInt64 hash2, _, _) = ComputeHashParts(buffer);
             return (hash1, hash2);
         }
         #endregion
@@ -557,7 +555,7 @@ namespace FastHashes
         /// <inheritdoc/>
         protected override (UInt64, UInt64, UInt64, UInt64) ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
-            return ComputeHighwayHash(buffer);
+            return ComputeHashParts(buffer);
         }
         #endregion
     }

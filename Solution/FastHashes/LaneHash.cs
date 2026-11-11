@@ -59,7 +59,7 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Represents the compact base constructor used by derived classes.</summary>
+        /// <summary>Represents the base constructor used by derived classes.</summary>
         /// <param name="seed">The <see cref="T:System.UInt64"/> seed used by the hashing algorithm.</param>
         [ExcludeFromCodeCoverage]
         protected LaneHash(UInt64 seed)

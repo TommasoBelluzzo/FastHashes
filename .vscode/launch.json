@@ -53,7 +53,7 @@
       "preLaunchTask": "Build Benchmarks: Release",
       "program": "${workspaceFolder}/Solution/Output/Release/net10.0/FastHashes.Benchmarks.dll",
       "cwd": "${workspaceFolder}/Solution",
-      "args": [],
+      "args": ["--hash", "SpookyHash32"],
       "console": "integratedTerminal",
       "stopAtEntry": false
     },

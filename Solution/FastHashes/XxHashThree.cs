@@ -69,7 +69,7 @@ namespace FastHashes
         #endregion
 
         #region Constructors
-        /// <summary>Represents the compact base constructor used by derived classes.</summary>
+        /// <summary>Represents the base constructor used by derived classes.</summary>
         [ExcludeFromCodeCoverage]
         protected XxHashThree(UInt64 seed)
         {

@@ -179,7 +179,7 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            private UInt64 ComputeResult(ReadOnlySpan<Byte> buffer)
+            public override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -278,11 +278,6 @@ namespace FastHashes
 
                 return hash;
             }
-
-            public override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
-            {
-                return ComputeResult(buffer);
-            }
             #endregion
         }
 
@@ -309,7 +304,7 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            private UInt64 ComputeResult(ReadOnlySpan<Byte> buffer)
+            public override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -407,11 +402,6 @@ namespace FastHashes
                 hash ^= BinaryOperations.RotateRight(hash, 29);
 
                 return hash;
-            }
-
-            public override UInt64 ComputeHashValue(ReadOnlySpan<Byte> buffer)
-            {
-                return ComputeResult(buffer);
             }
             #endregion
         }
@@ -589,7 +579,7 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            private (UInt64 Hash1, UInt64 Hash2) ComputeResult(ReadOnlySpan<Byte> buffer)
+            public override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -685,11 +675,6 @@ namespace FastHashes
 
                 return (hash1, hash2);
             }
-
-            public override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
-            {
-                return ComputeResult(buffer);
-            }
             #endregion
         }
 
@@ -716,7 +701,7 @@ namespace FastHashes
             #endregion
 
             #region Methods
-            private (UInt64 Hash1, UInt64 Hash2) ComputeResult(ReadOnlySpan<Byte> buffer)
+            public override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
             {
                 Int32 offset = 0;
                 Int32 count = buffer.Length;
@@ -808,11 +793,6 @@ namespace FastHashes
                 hash2 = Fin(hash2, hash1, 33, K3);
 
                 return (hash1, hash2);
-            }
-
-            public override (UInt64, UInt64) ComputeHashValue(ReadOnlySpan<Byte> buffer)
-            {
-                return ComputeResult(buffer);
             }
             #endregion
         }
