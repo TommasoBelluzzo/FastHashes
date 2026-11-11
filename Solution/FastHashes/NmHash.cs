@@ -132,37 +132,26 @@ namespace FastHashes
             private static void LongRound(Span<UInt32> x, Span<UInt32> y, ReadOnlySpan<Byte> buffer, Int32 offset)
             {
                 for (Int32 i = 0; i < 32; ++i)
-                    x[i] ^= BinaryOperations.Read32(buffer, offset + (i * 4));
+                {
+                    UInt32 xi = x[i] ^ BinaryOperations.Read32(buffer, offset + (i * 4));
+                    UInt32 yi = y[i] ^ BinaryOperations.Read32(buffer, offset + 128 + (i * 4));
 
-                for (Int32 i = 0; i < 32; ++i)
-                    y[i] ^= BinaryOperations.Read32(buffer, offset + 128 + (i * 4));
+                    xi = unchecked(xi + yi);
+                    yi ^= xi >> 1;
 
-                for (Int32 i = 0; i < 32; ++i)
-                    x[i] = unchecked(x[i] + y[i]);
+                    xi = MultiplyHalves(xi, M1);
+                    xi ^= (xi << 5) ^ (xi >> 13);
 
-                for (Int32 i = 0; i < 32; ++i)
-                    y[i] ^= x[i] >> 1;
+                    xi = MultiplyHalves(xi, M2);
+                    xi ^= yi;
+                    xi ^= (xi << 11) ^ (xi >> 9);
 
-                for (Int32 i = 0; i < 32; ++i)
-                    x[i] = MultiplyHalves(x[i], M1);
+                    xi = MultiplyHalves(xi, M3);
+                    xi ^= (xi >> 10) ^ (xi >> 20);
 
-                for (Int32 i = 0; i < 32; ++i)
-                    x[i] ^= (x[i] << 5) ^ (x[i] >> 13);
-
-                for (Int32 i = 0; i < 32; ++i)
-                    x[i] = MultiplyHalves(x[i], M2);
-
-                for (Int32 i = 0; i < 32; ++i)
-                    x[i] ^= y[i];
-
-                for (Int32 i = 0; i < 32; ++i)
-                    x[i] ^= (x[i] << 11) ^ (x[i] >> 9);
-
-                for (Int32 i = 0; i < 32; ++i)
-                    x[i] = MultiplyHalves(x[i], M3);
-
-                for (Int32 i = 0; i < 32; ++i)
-                    x[i] ^= (x[i] >> 10) ^ (x[i] >> 20);
+                    x[i] = xi;
+                    y[i] = yi;
+                }
             }
 
             protected static UInt32 ComputeLong(ReadOnlySpan<Byte> buffer, UInt32 seed)

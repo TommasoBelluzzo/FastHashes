@@ -3,10 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime;
 using System.Runtime.InteropServices;
+using System.Text;
 #endregion
 
 namespace FastHashes.Benchmarks
@@ -158,8 +161,10 @@ namespace FastHashes.Benchmarks
                 ?? assembly.GetName().Version?.ToString()
                 ?? "Unknown";
 
+            DateTimeOffset startDate = DateTimeOffset.Now;
+
             Console.WriteLine("[SYSTEM CONFIGURATION]");
-            Console.WriteLine($"Timestamp: {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}");
+            Console.WriteLine($"Timestamp: {startDate:yyyy-MM-dd HH:mm:ss zzz}");
             Console.WriteLine($"OS: {RuntimeInformation.OSDescription}");
             Console.WriteLine($"OS Architecture: {RuntimeInformation.OSArchitecture}");
             Console.WriteLine($"Process Architecture: {RuntimeInformation.ProcessArchitecture}");
@@ -249,108 +254,62 @@ namespace FastHashes.Benchmarks
                 Console.WriteLine();
                 Console.WriteLine();
 
-                results.Add(new (hashName, bso.BulkMedianSpeedFormatted, cso.ChunkNormalizedSpeedFormatted));
+                results.Add(new (hashName, bso.BulkMedianSpeed, bso.BulkMedianSpeedFormatted, cso.ChunkNormalizedSpeed, cso.ChunkNormalizedSpeedFormatted));
             }
 
             if (selectedHash != null)
                 return 0;
 
-            Int32 orderPadding = Math.Max(5, results.Count.ToString().Length);
-            Int32 hashNamePadding = 4;
-            Int32 bulkMedianSpeedPadding = 4;
-            Int32 chunkNormalizedSpeedPadding = 5;
-
-            foreach ((String HashName, String BulkMedianSpeedFormatted, String ChunkNormalizedSpeedFormatted) in results)
-            {
-                hashNamePadding = Math.Max(hashNamePadding, HashName.Length);
-                bulkMedianSpeedPadding = Math.Max(bulkMedianSpeedPadding, BulkMedianSpeedFormatted.Length);
-                chunkNormalizedSpeedPadding = Math.Max(chunkNormalizedSpeedPadding, ChunkNormalizedSpeedFormatted.Length);
-            }
+            (String summary, _, _) = ExportSummaries(startDate, results);
 
             Console.WriteLine("###########");
             Console.WriteLine("# SUMMARY #");
             Console.WriteLine("###########");
             Console.WriteLine();
-            Console.WriteLine($"{"ORDER".PadRight(orderPadding)} | {"HASH".PadRight(hashNamePadding)} | {"BULK".PadRight(bulkMedianSpeedPadding)} | {"CHUNK".PadRight(chunkNormalizedSpeedPadding)}");
-
-            for (Int32 i = 0; i < results.Count; ++i)
-            {
-                var (hashName, bulkMedianSpeedFormatted, chunkNormalizedSpeedFormatted) = results[i];
-
-                String order = (i + 1).ToString().PadRight(orderPadding);
-                String hash = hashName.PadRight(hashNamePadding);
-                String bulkSpeed = bulkMedianSpeedFormatted.PadRight(bulkMedianSpeedPadding);
-                String chunkSpeed = chunkNormalizedSpeedFormatted.PadRight(chunkNormalizedSpeedPadding);
-
-                Console.WriteLine($"{order} | {hash} | {bulkSpeed} | {chunkSpeed}");
-            }
+            Console.WriteLine(summary);
 
             return 0;
         }
         #endregion
 
         #region Methods
-        private static SpeedOutput GetSpeed(Func<UInt64, Hash> hashInitializer, Int32 length, Int32 repetitions, Int32 align)
+        private static (String, String, String) ExportSummaries(DateTimeOffset startDate, IReadOnlyList<Result> results)
         {
-            RandomXorShift r = new();
+            String root = Path.Combine(Environment.CurrentDirectory, "Benchmarks");
+            String runId = startDate.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+            String directory = Path.Combine(root, runId);
+            String reservation = directory + ".lock";
 
-            Int32 stride = Math.Max(256, ((length + 255) / 256) * 256);
-            Int32 batchCapacity = Math.Min(BATCH_MAXIMUM_OPERATIONS, Math.Max(1, BATCH_MAXIMUM_BYTES / stride));
-            Int32 batchCount = Math.Min(repetitions, Math.Max(5, (repetitions + batchCapacity - 1) / batchCapacity));
+            Directory.CreateDirectory(root);
 
-            Byte[] key = new Byte[(batchCapacity * stride) + 512];
-            Hash[] hashes = new Hash[batchCapacity];
-            Int64 totalTicks = 0, totalBytes = 0;
-            List<Double> batchSpeeds = new(batchCount);
-
-            Byte[] digest = new Byte[hashInitializer(0ul).Length / 8];
-
-            unsafe
+            using FileStream reservationStream = new(reservation, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+            
+            try
             {
-                fixed (Byte* pin = key)
-                {
-                    UInt64 pinValue = (UInt64)pin;
-                    UInt64 alignValue = ((pinValue + 255ul) & 0xFFFFFFFFFFFFFF00ul) + (UInt64)align;
-                    Int32 offset = (Int32)(alignValue - pinValue);
+                if (Directory.Exists(directory))
+                    throw new IOException($"Benchmarks directory already exists: {directory}.");
 
-                    Int32 completed = 0;
-
-                    for (Int32 batch = 0; batch < batchCount; ++batch)
-                    {
-                        Int32 count = (repetitions / batchCount) + ((batch < (repetitions % batchCount)) ? 1 : 0);
-
-                        for (Int32 i = 0; i < count; ++i)
-                        {
-                            r.NextBytes(key, offset + (i * stride), length);
-                            hashes[i] = hashInitializer((UInt64)(completed + i));
-                        }
-
-                        Int64 start = Stopwatch.GetTimestamp();
-
-                        for (Int32 i = 0; i < count; ++i)
-                            hashes[i].ComputeHashBytes(key.AsSpan(offset + (i * stride), length), digest);
-
-                        Int64 elapsed = Stopwatch.GetTimestamp() - start;
-
-                        GC.KeepAlive(digest);
-                        Array.Clear(hashes, 0, count);
-
-                        if (elapsed <= 0)
-                            throw new InvalidOperationException("The benchmark timer returned an invalid elapsed duration.");
-
-                        Int64 bytes = (Int64)length * count;
-
-                        totalTicks += elapsed;
-                        totalBytes += bytes;
-
-                        batchSpeeds.Add(MathUtilities.Throughput(bytes, elapsed, Stopwatch.Frequency));
-
-                        completed += count;
-                    }
-                }
+                Directory.CreateDirectory(directory);
+            }
+            finally
+            {
+                reservationStream.Dispose();
+                File.Delete(reservation);
             }
 
-            return new (totalBytes, totalTicks, batchSpeeds);
+            Result[] resultsSortedBulk = [.. results.OrderBy(x => x.HashName != "DummyHash").ThenByDescending(x => x.BulkMedianSpeed)];
+            Result[] resultsSortedChunk = [.. results.OrderBy(x => x.HashName != "DummyHash").ThenByDescending(x => x.ChunkNormalizedSpeed)];
+
+            String summary = BuildSummary(results);
+            File.WriteAllText(Path.Combine(directory, "summary.txt"), summary);
+
+            String summaryBulk = BuildSummary(resultsSortedBulk);
+            File.WriteAllText(Path.Combine(directory, "summary-bulk.txt"), summaryBulk);
+
+            String summaryChunk = BuildSummary(resultsSortedChunk);
+            File.WriteAllText(Path.Combine(directory, "summary-chunk.txt"), summaryChunk);
+
+            return (summary, summaryBulk, summaryChunk);
         }
 
         private static BulkSpeedOutput BulkSpeedTest(Func<UInt64, Hash> hashInitializer, Int32 bulkKeysLength, Int32 bulkRepetitions)
@@ -453,6 +412,101 @@ namespace FastHashes.Benchmarks
 
                 return new (chunkSpeeds, aggregateSpeed, aggregateSpeedFormatted, normalizedSpeed, normalizedSpeedFormatted);
             }
+        }
+
+        private static SpeedOutput GetSpeed(Func<UInt64, Hash> hashInitializer, Int32 length, Int32 repetitions, Int32 align)
+        {
+            RandomXorShift r = new();
+
+            Int32 stride = Math.Max(256, ((length + 255) / 256) * 256);
+            Int32 batchCapacity = Math.Min(BATCH_MAXIMUM_OPERATIONS, Math.Max(1, BATCH_MAXIMUM_BYTES / stride));
+            Int32 batchCount = Math.Min(repetitions, Math.Max(5, (repetitions + batchCapacity - 1) / batchCapacity));
+
+            Byte[] key = new Byte[(batchCapacity * stride) + 512];
+            Hash[] hashes = new Hash[batchCapacity];
+            Int64 totalTicks = 0, totalBytes = 0;
+            List<Double> batchSpeeds = new(batchCount);
+
+            Byte[] hashBytes = new Byte[hashInitializer(0ul).Length / 8];
+
+            unsafe
+            {
+                fixed (Byte* pin = key)
+                {
+                    UInt64 pinValue = (UInt64)pin;
+                    UInt64 alignValue = ((pinValue + 255ul) & 0xFFFFFFFFFFFFFF00ul) + (UInt64)align;
+                    Int32 offset = (Int32)(alignValue - pinValue);
+
+                    Int32 completed = 0;
+
+                    for (Int32 batch = 0; batch < batchCount; ++batch)
+                    {
+                        Int32 count = (repetitions / batchCount) + ((batch < (repetitions % batchCount)) ? 1 : 0);
+
+                        for (Int32 i = 0; i < count; ++i)
+                        {
+                            r.NextBytes(key, offset + (i * stride), length);
+                            hashes[i] = hashInitializer((UInt64)(completed + i));
+                        }
+
+                        Int64 start = Stopwatch.GetTimestamp();
+
+                        for (Int32 i = 0; i < count; ++i)
+                            hashes[i].ComputeHashBytes(key.AsSpan(offset + (i * stride), length), hashBytes);
+
+                        Int64 elapsed = Stopwatch.GetTimestamp() - start;
+
+                        GC.KeepAlive(hashBytes);
+                        Array.Clear(hashes, 0, count);
+
+                        if (elapsed <= 0)
+                            throw new InvalidOperationException("The benchmark timer returned an invalid elapsed duration.");
+
+                        Int64 bytes = (Int64)length * count;
+
+                        totalTicks += elapsed;
+                        totalBytes += bytes;
+
+                        batchSpeeds.Add(MathUtilities.Throughput(bytes, elapsed, Stopwatch.Frequency));
+
+                        completed += count;
+                    }
+                }
+            }
+
+            return new (totalBytes, totalTicks, batchSpeeds);
+        }
+
+        private static String BuildSummary(IEnumerable<Result> results)
+        {
+            Result[] rows = [.. results];
+            Int32 orderWidth = Math.Max(5, rows.Length.ToString(CultureInfo.InvariantCulture).Length);
+            Int32 hashWidth = Math.Max(4, rows.Max(x => x.HashName.Length));
+            Int32 bulkWidth = Math.Max(4, rows.Max(x => x.BulkMedianSpeedFormatted.Length));
+            Int32 chunkWidth = Math.Max(5, rows.Max(x => x.ChunkNormalizedSpeedFormatted.Length));
+
+            StringBuilder builder = new();
+
+            builder.AppendLine(
+                $"{"ORDER".PadRight(orderWidth)} | "
+                + $"{"HASH".PadRight(hashWidth)} | "
+                + $"{"BULK".PadRight(bulkWidth)} | "
+                + $"{"CHUNK".PadRight(chunkWidth)}"
+            );
+
+            for (Int32 i = 0; i < rows.Length; ++i)
+            {
+                Result result = rows[i];
+
+                builder.AppendLine(
+                    $"{(i + 1).ToString(CultureInfo.InvariantCulture).PadRight(orderWidth)} | "
+                    + $"{result.HashName.PadRight(hashWidth)} | "
+                    + $"{result.BulkMedianSpeedFormatted.PadRight(bulkWidth)} | "
+                    + $"{result.ChunkNormalizedSpeedFormatted.PadRight(chunkWidth)}"
+                );
+            }
+
+            return builder.ToString();
         }
 
         private static void Warmup(Func<UInt64, Hash> hashInitializer, Int32 bulkKeysLength, Int32 warmupRepetitions)

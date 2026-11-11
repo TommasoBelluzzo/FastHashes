@@ -2,6 +2,10 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+#if NET10_0_OR_GREATER
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+#endif
 #endregion
 
 namespace FastHashes
@@ -160,6 +164,20 @@ namespace FastHashes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static void ClMul(UInt64 x, UInt64 y, out UInt64 lo, out UInt64 hi)
         {
+#if NET10_0_OR_GREATER
+            if (Pclmulqdq.IsSupported)
+            {
+                Vector128<UInt64> vx = Vector128.CreateScalar(x);
+                Vector128<UInt64> vy = Vector128.CreateScalar(y);
+                Vector128<UInt64> result = Pclmulqdq.CarrylessMultiply(vx, vy, 0x00);
+
+                lo = result.GetElement(0);
+                hi = result.GetElement(1);
+
+                return;
+            }
+#endif
+
             lo = 0ul;
             hi = 0ul;
 

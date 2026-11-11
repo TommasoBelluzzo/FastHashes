@@ -33,7 +33,9 @@ namespace FastHashes.Benchmarks
     internal readonly record struct Result
     (
         String HashName,
+        Double BulkMedianSpeed,
         String BulkMedianSpeedFormatted,
+        Double ChunkNormalizedSpeed,
         String ChunkNormalizedSpeedFormatted
     );
 

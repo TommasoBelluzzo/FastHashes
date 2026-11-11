@@ -157,44 +157,69 @@ The following NuGet packages are used by the unit testing project:
 
 ## Performance Benchmarks
 
-| Hash Rank | Hash Name               | Bulk Speed Test Average ↓ | Chunks Speed Test Average |
-| :---:     | :---:                   | :---:                     | :---:                     |
-| *-*       | *DummyHash (Reference)* | *609.34 GB/s*             | *2.06 GB/s*               |
-| 1         | FarmHash64              | 11.47 GB/s                | 626.60 MB/s               |
-| 2         | FarmHash128             | 11.27 GB/s                | 641.03 MB/s               |
-| 3         | MetroHash128-V1         | 11.11 GB/s                | 636.52 MB/s               |
-| 4         | MetroHash64-V1          | 11.10 GB/s                | 628.81 MB/s               |
-| 5         | MetroHash128-V2         | 11.06 GB/s                | 635.34 MB/s               |
-| 6         | MetroHash64-V2          | 11.05 GB/s                | 620.92 MB/s               |
-| 7         | XxHash64                | 10.03 GB/s                | 596.90 MB/s               |
-| 8         | Mx3Hash                 | 9.31 GB/s                 | 545.03 MB/s               |
-| 9         | PengyHash               | 8.73 GB/s                 | 517.22 MB/s               |
-| 10        | MurmurHash128-x64       | 6.70 GB/s                 | 485.59 MB/s               |
-| 11        | MurmurHash64-x64        | 6.56 GB/s                 | 467.14 MB/s               |
-| 12        | XxHash32                | 6.43 GB/s                 | 482.92 MB/s               |
-| 13        | FastHash64              | 5.34 GB/s                 | 444.45 MB/s               |
-| 14        | FastHash32              | 5.26 GB/s                 | 440.91 MB/s               |
-| 15        | WyHash32                | 4.38 GB/s                 | 389.76 MB/s               |
-| 16        | FarmHash32              | 4.27 GB/s                 | 394.83 MB/s               |
-| 17        | FastPositiveHash-V1     | 4.10 GB/s                 | 386.51 MB/s               |
-| 18        | MurmurHash128-x86       | 4.05 GB/s                 | 383.60 MB/s               |
-| 19        | MurmurHash64-x86        | 4.01 GB/s                 | 374.73 MB/s               |
-| 20        | FastPositiveHash-V2     | 3.99 GB/s                 | 386.33 MB/s               |
-| 21        | MurmurHash32            | 2.82 GB/s                 | 332.35 MB/s               |
-| 22        | MumHash                 | 2.44 GB/s                 | 312.24 MB/s               |
-| 23        | WyHash64                | 2.39 GB/s                 | 340.13 MB/s               |
-| 24        | KomiHash                | 2.31 GB/s                 | 331.88 MB/s               |
-| 25        | FastPositiveHash-V0     | 2.29 GB/s                 | 320.69 MB/s               |
-| 26        | MirHash                 | 2.03 GB/s                 | 298.14 MB/s               |
-| 27        | SipHash-13              | 1.28 GB/s                 | 230.67 MB/s               |
-| 28        | HighwayHash256          | 914.16 MB/s               | 125.78 MB/s               |
-| 29        | HighwayHash64           | 899.65 MB/s               | 151.54 MB/s               |
-| 30        | HighwayHash128          | 883.51 MB/s               | 143.84 MB/s               |
-| 31        | SpookyHash32            | 752.43 MB/s               | 156.79 MB/s               |
-| 32        | SpookyHash64            | 734.84 MB/s               | 149.36 MB/s               |
-| 33        | SipHash-24              | 734.74 MB/s               | 168.43 MB/s               |
-| 34        | SpookyHash128           | 723.91 MB/s               | 155.67 MB/s               |
-| 35        | HalfSipHash             | 364.78 MB/s               | 119.96 MB/s               |
+| Rank | Hash                  | Bulk Throughput ↓ | Chunk Throughput |
+| ---: | :-------------------- | ----------------: | ---------------: |
+|    1 | DummyHash             |        10.20 TB/s |       43.30 GB/s |
+|    2 | RapidHash-V2          |        20.92 GB/s |        8.16 GB/s |
+|    3 | RapidHash-V3          |        20.77 GB/s |        8.04 GB/s |
+|    4 | W1Hash                |        20.50 GB/s |        8.42 GB/s |
+|    5 | RapidHash-V1          |        20.07 GB/s |        8.47 GB/s |
+|    6 | KomiHash              |        19.57 GB/s |        7.69 GB/s |
+|    7 | A5Hash128             |        19.55 GB/s |        6.71 GB/s |
+|    8 | XxHash64              |        19.24 GB/s |        6.76 GB/s |
+|    9 | WyHash64              |        18.61 GB/s |        7.81 GB/s |
+|   10 | ChibiHash             |        17.43 GB/s |        7.37 GB/s |
+|   11 | MetroHash128-V2       |        16.81 GB/s |        5.20 GB/s |
+|   12 | MetroHash64-V2        |        16.27 GB/s |        6.63 GB/s |
+|   13 | MetroHash128-V1       |        16.16 GB/s |        5.22 GB/s |
+|   14 | MetroHash64-V1        |        15.79 GB/s |        6.56 GB/s |
+|   15 | FastPositiveHash128   |        14.90 GB/s |        5.61 GB/s |
+|   16 | FarmHash64            |        14.86 GB/s |        6.49 GB/s |
+|   17 | FastPositiveHash64-V2 |        14.53 GB/s |        6.20 GB/s |
+|   18 | FastPositiveHash64-V1 |        14.27 GB/s |        5.61 GB/s |
+|   19 | FarmHash128           |        14.20 GB/s |        5.00 GB/s |
+|   20 | MumHash               |        12.20 GB/s |        5.97 GB/s |
+|   21 | PengyHash             |        11.96 GB/s |        3.09 GB/s |
+|   22 | PolymurHash           |        11.95 GB/s |        5.34 GB/s |
+|   23 | Mx3Hash               |        11.32 GB/s |        6.27 GB/s |
+|   24 | XxHash32              |        11.09 GB/s |        5.96 GB/s |
+|   25 | A5Hash64              |        10.33 GB/s |        5.78 GB/s |
+|   26 | MurmurHash128-X64     |         9.81 GB/s |        4.67 GB/s |
+|   27 | MurmurHash64-X64      |         9.71 GB/s |        5.18 GB/s |
+|   28 | FastHash64            |         8.92 GB/s |        5.62 GB/s |
+|   29 | LaneHash64            |         8.88 GB/s |        4.34 GB/s |
+|   30 | FastHash32            |         8.84 GB/s |        5.69 GB/s |
+|   31 | LaneHash128           |         8.84 GB/s |        3.65 GB/s |
+|   32 | A5Hash32              |         8.14 GB/s |        4.95 GB/s |
+|   33 | FastPositiveHash64-V0 |         7.26 GB/s |        4.23 GB/s |
+|   34 | XxHashThree128        |         6.89 GB/s |        3.64 GB/s |
+|   35 | FarmHash32            |         6.82 GB/s |        4.38 GB/s |
+|   36 | WyHash32              |         6.77 GB/s |        5.11 GB/s |
+|   37 | MirHash               |         6.51 GB/s |        4.04 GB/s |
+|   38 | XxHashThree64         |         6.43 GB/s |        5.28 GB/s |
+|   39 | MurmurHash128-X86     |         5.98 GB/s |        3.26 GB/s |
+|   40 | MurmurHash64-X86      |         5.85 GB/s |        3.56 GB/s |
+|   41 | MurmurHash32          |         4.23 GB/s |        3.69 GB/s |
+|   42 | SipHash64-13          |         3.84 GB/s |        1.85 GB/s |
+|   43 | SipHash128-13         |         3.81 GB/s |        1.48 GB/s |
+|   44 | HalftimeHash-S512     |         2.52 GB/s |      277.65 MB/s |
+|   45 | HalftimeHash-S256     |         2.51 GB/s |      294.33 MB/s |
+|   46 | HalftimeHash-S128     |         2.50 GB/s |      313.03 MB/s |
+|   47 | HalftimeHash-S64      |         2.40 GB/s |      300.26 MB/s |
+|   48 | HighwayHash64         |         2.34 GB/s |      742.65 MB/s |
+|   49 | HighwayHash128        |         2.34 GB/s |      614.03 MB/s |
+|   50 | HighwayHash256        |         2.32 GB/s |      463.13 MB/s |
+|   51 | SpookyHash32          |         2.16 GB/s |      828.73 MB/s |
+|   52 | SipHash128-24         |         2.15 GB/s |      882.81 MB/s |
+|   53 | SpookyHash128         |         2.14 GB/s |      806.15 MB/s |
+|   54 | SpookyHash64          |         2.13 GB/s |      825.05 MB/s |
+|   55 | SipHash64-24          |         2.12 GB/s |      998.79 MB/s |
+|   56 | HalfSipHash32         |         1.97 GB/s |        1.56 GB/s |
+|   57 | HalfSipHash64         |         1.94 GB/s |        1.36 GB/s |
+|   58 | NmHash-S              |         1.36 GB/s |        1.11 GB/s |
+|   59 | NmHash-X              |         1.36 GB/s |        3.00 GB/s |
+|   60 | Umash64               |       102.46 MB/s |      119.12 MB/s |
+|   61 | Umash128              |        95.92 MB/s |       86.90 MB/s |
 
 The benchmarks above were conducted using the following hardware and software configuration:
  * `CPU:` Intel Core i9-13900K @3.00 GHz (24 Cores, 32 Threads, 32 MB L2 Cache, 36 MB L3 Cache)
