@@ -95,11 +95,11 @@ jobs:
         for configuration in ubuntu-latest-native ubuntu-latest-sse2 ubuntu-latest-scalar windows-latest-native macos-latest-native; do
           directory="Coverage/coverage-$configuration"
           if [ ! -d "$directory" ]; then
-            echo "Missing coverage artifact: $os"
+            echo "Missing coverage artifact: $configuration"
             exit 1
           fi
           if ! find "$directory" -type f -name '*.info' -size +0c | grep -q .; then
-            echo "Missing or empty LCOV report: $os"
+            echo "Missing or empty LCOV report: $configuration"
             exit 1
           fi
         done
