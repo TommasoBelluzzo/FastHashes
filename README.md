@@ -142,7 +142,13 @@ FastHashes produces deterministic outputs for explicitly selected algorithms, va
 Algorithm upgrades or corrections may change computed hash values.\
 Applications that persist hash values or depend on reproducible results across library versions should verify output compatibility before upgrading.
 
-## Requirements
+## Installation & Requirements
+
+FastHashes is available on [NuGet](https://www.nuget.org/packages/FastHashes/) and can be installed as follows:
+
+```console
+dotnet add package FastHashes
+```
 
 The following frameworks are supported:
 
@@ -154,6 +160,35 @@ The following NuGet packages are used by the unit testing project:
 * [xunit.v3.mtp-v2](https://www.nuget.org/packages/xunit.v3.mtp-v2)
 * [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform)
 * [coverlet.MTP](https://www.nuget.org/packages/coverlet.MTP)
+
+## Usage
+
+FastHashes supports strongly typed, byte-array, and formatted string hash outputs.
+
+The generic `Hash<T>` API provides strongly typed results through `ComputeHashValue` method:
+
+```csharp
+using System;
+using FastHashes;
+
+Hash<UInt64> hash = new XxHash64();
+
+UInt64 result = hash.ComputeHashValue("Hello World");
+```
+
+The non-generic `Hash` API supports dynamic algorithm selection and provides byte-array and formatted string outputs:
+
+```csharp
+using System;
+using FastHashes;
+
+Hash hash = Hash.Create("XxHash64");
+
+Byte[] resultBytes = hash.ComputeHashBytes("Hello World");
+String resultString = hash.ComputeHashString("Hello World", HashFormat.Hexadecimal);
+```
+
+The generic API also inherits `ComputeHashBytes` and `ComputeHashString` methods from the non-generic base class.
 
 ## Performance Benchmarks
 
@@ -225,5 +260,6 @@ The benchmarks above were conducted using the following hardware and software co
  * `CPU:` Intel Core i9-13900K @3.00 GHz (24 Cores, 32 Threads, 32 MB L2 Cache, 36 MB L3 Cache)
  * `RAM:` 32 GB DDR5-6000 (2×16 GB Corsair DIMM @3000 MHz)
  * `OS:` Microsoft Windows 11 Home 64-Bit
+ * `Runtime:` .NET 10.0
 
  Performance may vary depending on the runtime, processor architecture, input size and execution environment.

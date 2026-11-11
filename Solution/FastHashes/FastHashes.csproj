@@ -13,7 +13,7 @@
     <PackageProjectUrl>https://github.com/TommasoBelluzzo/FastHashes</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>algorithm hash</PackageTags>
+    <PackageTags>hash hashing algorithms non-cryptographic checksum</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
