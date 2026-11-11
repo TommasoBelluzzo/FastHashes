@@ -117,10 +117,28 @@ namespace FastHashes
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector128<UInt64> MixSse2(Vector128<UInt64> accumulator, Vector128<UInt64> value, Vector128<UInt64> entropy)
+        {
+            Vector128<UInt64> sum = Sse2.Add(value.AsUInt32(), entropy.AsUInt32()).AsUInt64();
+            Vector128<UInt64> product = Sse2.Multiply(sum.AsUInt32(), Sse2.ShiftRightLogical(sum, 32).AsUInt32());
+
+            return Sse2.Add(accumulator, product);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Vector256<UInt64> MixAvx2(Vector256<UInt64> accumulator, Vector256<UInt64> value, UInt64 entropy)
         {
             Vector256<UInt64> e = Vector256.Create(entropy);
             Vector256<UInt64> sum = Avx2.Add(value.AsUInt32(), e.AsUInt32()).AsUInt64();
+            Vector256<UInt64> product = Avx2.Multiply(sum.AsUInt32(), Avx2.ShiftRightLogical(sum, 32).AsUInt32());
+
+            return Avx2.Add(accumulator, product);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector256<UInt64> MixAvx2(Vector256<UInt64> accumulator, Vector256<UInt64> value, Vector256<UInt64> entropy)
+        {
+            Vector256<UInt64> sum = Avx2.Add(value.AsUInt32(), entropy.AsUInt32()).AsUInt64();
             Vector256<UInt64> product = Avx2.Multiply(sum.AsUInt32(), Avx2.ShiftRightLogical(sum, 32).AsUInt32());
 
             return Avx2.Add(accumulator, product);
@@ -175,6 +193,45 @@ namespace FastHashes
 
                     for (Int32 channel = 0; channel < 2; ++channel)
                     {
+#if NET10_0_OR_GREATER
+                        if ((m_Lanes >= 4) && Avx2.IsSupported)
+                        {
+                            Span<Vector256<UInt64>> sv = MemoryMarshal.Cast<UInt64, Vector256<UInt64>>(stack);
+                            Int32 vectors = m_Lanes / 4;
+
+                            for (Int32 vectorIndex = 0; vectorIndex < vectors; ++vectorIndex)
+                            {
+                                Vector256<UInt64> value = sv[(source / 4) + (channel * vectors) + vectorIndex];
+
+                                for (Int32 child = 1; child < 8; ++child)
+                                {
+                                    Vector256<UInt64> input = sv[(source / 4) + (2 * child * vectors) + (channel * vectors) + vectorIndex];
+                                    UInt64 entropy = m_Entropy[entropyOffset + (channel * 7) + child - 1];
+
+                                    value = MixAvx2(value, input, entropy);
+                                }
+
+                                sv[(destination / 4) + (channel * vectors) + vectorIndex] = value;
+                            }
+                        }
+                        else if ((m_Lanes == 2) && Sse2.IsSupported)
+                        {
+                            Span<Vector128<UInt64>> sv = MemoryMarshal.Cast<UInt64, Vector128<UInt64>>(stack);
+
+                            Vector128<UInt64> value = sv[(source / 2) + channel];
+
+                            for (Int32 child = 1; child < 8; ++child)
+                            {
+                                Vector128<UInt64> input = sv[(source / 2) + (2 * child) + channel];
+                                UInt64 entropy = m_Entropy[entropyOffset + (channel * 7) + child - 1];
+
+                                value = MixSse2(value, input, entropy);
+                            }
+
+                            sv[(destination / 2) + channel] = value;
+                        }
+                        else
+#endif
                         for (Int32 lane = 0; lane < m_Lanes; ++lane)
                         {
                             UInt64 value = stack[source + (channel * m_Lanes) + lane];
@@ -183,6 +240,7 @@ namespace FastHashes
                             {
                                 UInt64 input = stack[source + (2 * child * m_Lanes) + (channel * m_Lanes) + lane];
                                 UInt64 entropy = m_Entropy[entropyOffset + (channel * 7) + child - 1];
+
                                 value = Mix(value, input, entropy);
                             }
 
@@ -231,11 +289,8 @@ namespace FastHashes
 
                             hv[(row * vectors) + vectorIndex] = value;
                         }
-
-                        continue;
                     }
-
-                    if ((m_Lanes == 2) && Sse2.IsSupported)
+                    else if ((m_Lanes == 2) && Sse2.IsSupported)
                     {
                         Span<Vector128<UInt64>> sv = MemoryMarshal.Cast<UInt64, Vector128<UInt64>>(scratch);
                         Span<Vector128<UInt64>> hv = MemoryMarshal.Cast<UInt64, Vector128<UInt64>>(hashes);
@@ -249,11 +304,9 @@ namespace FastHashes
                         }
 
                         hv[row] = value;
-
-                        continue;
                     }
+                    else
 #endif
-
                     for (Int32 lane = 0; lane < m_Lanes; ++lane)
                     {
                         UInt64 value = 0ul;
@@ -270,6 +323,70 @@ namespace FastHashes
 
                 Int32 slotOffset = 2 * stackLengths[0] * m_Lanes;
 
+#if NET10_0_OR_GREATER
+                if ((m_Lanes >= 4) && Avx2.IsSupported)
+                {
+                    Span<Vector256<UInt64>> hv = MemoryMarshal.Cast<UInt64, Vector256<UInt64>>(hashes);
+                    Span<Vector256<UInt64>> sv = MemoryMarshal.Cast<UInt64, Vector256<UInt64>>(stack);
+
+                    Int32 vectors = m_Lanes / 4;
+
+                    for (Int32 vectorIndex = 0; vectorIndex < vectors; ++vectorIndex)
+                    {
+                        Vector256<UInt64> h0 = hv[vectorIndex];
+                        Vector256<UInt64> h1 = hv[vectors + vectorIndex];
+                        Vector256<UInt64> h2 = hv[(2 * vectors) + vectorIndex];
+                        Vector256<UInt64> h3 = hv[(3 * vectors) + vectorIndex];
+                        Vector256<UInt64> h4 = hv[(4 * vectors) + vectorIndex];
+                        Vector256<UInt64> h5 = hv[(5 * vectors) + vectorIndex];
+                        Vector256<UInt64> h6 = hv[(6 * vectors) + vectorIndex];
+
+                        Vector256<UInt64> a = Avx2.Add(h0, h2);
+                        a = Avx2.Add(a, h3);
+                        a = Avx2.Add(a, Avx2.ShiftLeftLogical(h4, 1));
+                        a = Avx2.Add(a, h5);
+                        a = Avx2.Add(a, Avx2.ShiftLeftLogical(h6, 2));
+
+                        Vector256<UInt64> b = Avx2.Add(h1, h2);
+                        b = Avx2.Add(b, Avx2.ShiftLeftLogical(h3, 1));
+                        b = Avx2.Add(b, h4);
+                        b = Avx2.Add(b, Avx2.ShiftLeftLogical(h5, 2));
+                        b = Avx2.Add(b, h6);
+
+                        sv[(slotOffset / 4) + vectorIndex] = a;
+                        sv[(slotOffset / 4) + vectors + vectorIndex] = b;
+                    }
+                }
+                else if ((m_Lanes == 2) && Sse2.IsSupported)
+                {
+                    Span<Vector128<UInt64>> hv = MemoryMarshal.Cast<UInt64, Vector128<UInt64>>(hashes);
+                    Span<Vector128<UInt64>> sv = MemoryMarshal.Cast<UInt64, Vector128<UInt64>>(stack);
+
+                    Vector128<UInt64> h0 = hv[0];
+                    Vector128<UInt64> h1 = hv[1];
+                    Vector128<UInt64> h2 = hv[2];
+                    Vector128<UInt64> h3 = hv[3];
+                    Vector128<UInt64> h4 = hv[4];
+                    Vector128<UInt64> h5 = hv[5];
+                    Vector128<UInt64> h6 = hv[6];
+
+                    Vector128<UInt64> a = Sse2.Add(h0, h2);
+                    a = Sse2.Add(a, h3);
+                    a = Sse2.Add(a, Sse2.ShiftLeftLogical(h4, 1));
+                    a = Sse2.Add(a, h5);
+                    a = Sse2.Add(a, Sse2.ShiftLeftLogical(h6, 2));
+
+                    Vector128<UInt64> b = Sse2.Add(h1, h2);
+                    b = Sse2.Add(b, Sse2.ShiftLeftLogical(h3, 1));
+                    b = Sse2.Add(b, h4);
+                    b = Sse2.Add(b, Sse2.ShiftLeftLogical(h5, 2));
+                    b = Sse2.Add(b, h6);
+
+                    sv[slotOffset / 2] = a;
+                    sv[(slotOffset / 2) + 1] = b;
+                }
+                else
+#endif
                 for (Int32 lane = 0; lane < m_Lanes; ++lane)
                 {
                     UInt64 a = unchecked(
@@ -314,8 +431,37 @@ namespace FastHashes
 
             Int32 inputOffset = groups * groupBytes;
 
-            while (inputOffset + blockBytes <= count)
+            while ((inputOffset + blockBytes) <= count)
             {
+#if NET10_0_OR_GREATER
+                if ((m_Lanes >= 4) && Avx2.IsSupported)
+                {
+                    Span<Vector256<UInt64>> av = MemoryMarshal.Cast<UInt64, Vector256<UInt64>>(accumulator);
+                    ReadOnlySpan<Vector256<UInt64>> words = MemoryMarshal.Cast<Byte, Vector256<UInt64>>(buffer.Slice(inputOffset, blockBytes));
+                    ReadOnlySpan<Vector256<UInt64>> entropy = MemoryMarshal.Cast<UInt64, Vector256<UInt64>>(m_Entropy.AsSpan(seedOffset, 2 * m_Lanes));
+
+                    Int32 vectors = m_Lanes / 4;
+
+                    for (Int32 channel = 0; channel < 2; ++channel)
+                    {
+                        for (Int32 vectorIndex = 0; vectorIndex < vectors; ++vectorIndex)
+                        {
+                            Int32 index = (channel * vectors) + vectorIndex;
+                            av[index] = MixAvx2(av[index], words[vectorIndex], entropy[index]);
+                        }
+                    }
+                }
+                else if ((m_Lanes == 2) && Sse2.IsSupported)
+                {
+                    Span<Vector128<UInt64>> av = MemoryMarshal.Cast<UInt64, Vector128<UInt64>>(accumulator);
+                    ReadOnlySpan<Vector128<UInt64>> words = MemoryMarshal.Cast<Byte, Vector128<UInt64>>(buffer.Slice(inputOffset, blockBytes));
+                    ReadOnlySpan<Vector128<UInt64>> entropy = MemoryMarshal.Cast<UInt64, Vector128<UInt64>>(m_Entropy.AsSpan(seedOffset, 2 * m_Lanes));
+
+                    for (Int32 channel = 0; channel < 2; ++channel)
+                        av[channel] = MixSse2(av[channel], words[0], entropy[channel]);
+                }
+                else
+#endif
                 for (Int32 channel = 0; channel < 2; ++channel)
                 {
                     for (Int32 lane = 0; lane < m_Lanes; ++lane)

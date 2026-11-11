@@ -229,16 +229,39 @@ namespace FastHashes
         /// <summary>Represents an auxiliary hashing function used by derived classes.</summary>
         protected static void Scramble(Span<UInt64> acc, ReadOnlySpan<Byte> secret, Int32 offset)
         {
+#if NET10_0_OR_GREATER
+            if (Avx2.IsSupported)
+            {
+                Span<Vector256<UInt64>> av = MemoryMarshal.Cast<UInt64, Vector256<UInt64>>(acc);
+                Vector256<UInt32> multiplier = Vector256.Create(P32_1);
+
+                for (Int32 i = 0; i < 2; ++i)
+                {
+                    Vector256<UInt64> vv = av[i];
+                    Vector256<UInt64> vk = MemoryMarshal.Read<Vector256<UInt64>>(secret.Slice(offset + (i * 32), 32));
+
+                    vv = Avx2.Xor(vv, Avx2.ShiftRightLogical(vv, 47));
+                    vv = Avx2.Xor(vv, vk);
+
+                    Vector256<UInt64> lo = Avx2.Multiply(vv.AsUInt32(), multiplier);
+                    Vector256<UInt64> hi = Avx2.Multiply(Avx2.ShiftRightLogical(vv, 32).AsUInt32(), multiplier);
+
+                    av[i] = Avx2.Add(lo, Avx2.ShiftLeftLogical(hi, 32));
+                }
+
+                return;
+            }
+#endif
+
             for (Int32 i = 0; i < 8; ++i)
             {
-                UInt64 value = acc[i];
-                value ^= value >> 47;
-                value ^= BinaryOperations.Read64(secret, offset + i * 8);
+                UInt64 v = acc[i];
+                v ^= v >> 47;
+                v ^= BinaryOperations.Read64(secret, offset + i * 8);
 
-                acc[i] = unchecked(value * P32_1);
+                acc[i] = unchecked(v * P32_1);
             }
         }
-
         #endregion
     }
 

@@ -35,6 +35,7 @@ FastHashes is a suite of .NET non-cryptographic hash functions.
 ## Main Features
 
 * `High Performing`: optimized implementations make extensive use of method inlining and efficient memory access to maximize hashing throughput.
+* `Hardware Accelerated`: selected algorithms leverage SIMD and hardware intrinsics (SSE2, AVX2, PCLMULQDQ) when available, with portable scalar fallbacks.
 * `Allocation Free`: hashing computations avoid unnecessary intermediate allocations, minimizing garbage collection overhead.
 * `Endian-Agnostic`: all hashes produce consistent results regardless of the machine's byte order.
 * `Platform-Agnostic`: the library targets .NET Standard and modern .NET, with support for both x86 and x64 architectures.
@@ -139,7 +140,6 @@ The library includes the following non-cryptographic hashes:
 
 FastHashes produces deterministic outputs for explicitly selected algorithms, variants, seeds, and inputs.\
 Algorithm upgrades or corrections may change computed hash values.\
-Such changes will be documented in the corresponding release notes.\
 Applications that persist hash values or depend on reproducible results across library versions should verify output compatibility before upgrading.
 
 ## Requirements
