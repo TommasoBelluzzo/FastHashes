@@ -21,6 +21,7 @@
 [Pp]ackage/
 [Cc]overage/
 [Aa]nalysis/
+[Bb]enchmarks/
 x64/
 x86/
 bld/
