@@ -224,37 +224,37 @@ namespace FastHashes.Benchmarks
                 Console.WriteLine($"Keys Length: {bulkKeysLength} Bytes");
                 Console.WriteLine($"Repetitions: {bulkRepetitions} (2 Passes)");
 
-                BulkSpeedOutput bso = BulkSpeedTest(hashInitializer, bulkKeysLength, bulkRepetitions);
+                BulkThroughputOutput bto = BulkThroughputTest(hashInitializer, bulkKeysLength, bulkRepetitions);
 
-                for (Int32 j = 0; j < bso.BulkAlignSpeeds.Length; ++j)
+                for (Int32 j = 0; j < bto.AlignmentThroughputs.Length; ++j)
                 {
-                    Console.WriteLine($" - Aggregate Speed Alignment {j}: {Utilities.FormatSpeed(bso.BulkAlignSpeeds[j])}");
-                    Console.WriteLine($"   Batch MAD: {Utilities.FormatVariability(bso.BulkVariability[j])}");
+                    Console.WriteLine($" - Alignment {j} Throughput: {Utilities.FormatSpeed(bto.AlignmentThroughputs[j])}");
+                    Console.WriteLine($"   Batch MAD: {Utilities.FormatVariability(bto.BatchMads[j])}");
                 }
 
-                Console.WriteLine($" - Median Speed Overall: {bso.BulkMedianSpeedFormatted}");
-                Console.WriteLine($" - Alignment MAD: {Utilities.FormatVariability(MathUtilities.RelativeMedianAbsoluteDeviation(bso.BulkAlignSpeeds))}");
+                Console.WriteLine($" - Median Throughput: {bto.MedianThroughputFormatted}");
+                Console.WriteLine($" - Alignment MAD: {Utilities.FormatVariability(MathUtilities.RelativeMedianAbsoluteDeviation(bto.AlignmentThroughputs))}");
 
                 Console.WriteLine();
                 Console.WriteLine("[CHUNKS SPEED TEST]");
                 Console.WriteLine($"Keys Length Span: 1-{s_ChunkParameters.Max(x => x.KeySize)} Bytes");
                 Console.WriteLine($"Repetitions Span: {s_ChunkParameters.Min(x => x.Repetitions)}-{s_ChunkParameters.Max(x => x.Repetitions)}");
 
-                ChunkSpeedOutput cso = ChunksSpeedTest(hashInitializer);
+                ChunkThroughputOutput cto = ChunksThroughputTest(hashInitializer);
 
-                foreach (ChunkSpeedEntry entry in cso.ChunkSpeeds)
+                foreach (ChunkRangeThroughput crt in cto.RangeThroughputs)
                 {
-                    Console.WriteLine($" - Aggregate Speed {entry.Start}-{entry.End} Bytes: {Utilities.FormatSpeed(entry.Speed)}");
-                    Console.WriteLine($"   Median Batch MAD: {Utilities.FormatVariability(entry.Variability)}");
+                    Console.WriteLine($" - Range {crt.Start}-{crt.End} Throughput: {Utilities.FormatSpeed(crt.Throughput)}");
+                    Console.WriteLine($"   Median Batch MAD: {Utilities.FormatVariability(crt.MedianBatchMad)}");
                 }
 
-                Console.WriteLine($" - Aggregate Speed Overall: {cso.ChunkAggregateSpeedFormatted}");
-                Console.WriteLine($" - Geometric Mean Speed: {cso.ChunkNormalizedSpeedFormatted}");
+                Console.WriteLine($" - Aggregate Throughput: {cto.AggregateThroughputFormatted}");
+                Console.WriteLine($" - Average Throughput: {cto.AverageThroughputFormatted}");
 
                 Console.WriteLine();
                 Console.WriteLine();
 
-                results.Add(new (hashName, bso.BulkMedianSpeed, bso.BulkMedianSpeedFormatted, cso.ChunkNormalizedSpeed, cso.ChunkNormalizedSpeedFormatted));
+                results.Add(new (hashName, bto.MedianThroughput, bto.MedianThroughputFormatted, cto.AverageThroughput, cto.AverageThroughputFormatted));
             }
 
             if (selectedHash != null)
@@ -297,8 +297,8 @@ namespace FastHashes.Benchmarks
                 File.Delete(reservation);
             }
 
-            Result[] resultsSortedBulk = [.. results.OrderBy(x => x.HashName != "DummyHash").ThenByDescending(x => x.BulkMedianSpeed)];
-            Result[] resultsSortedChunk = [.. results.OrderBy(x => x.HashName != "DummyHash").ThenByDescending(x => x.ChunkNormalizedSpeed)];
+            Result[] resultsSortedBulk = [.. results.OrderBy(x => x.HashName != "DummyHash").ThenByDescending(x => x.BulkMedianThroughput)];
+            Result[] resultsSortedChunk = [.. results.OrderBy(x => x.HashName != "DummyHash").ThenByDescending(x => x.ChunkAverageThroughput)];
 
             String summary = BuildSummary(results);
             File.WriteAllText(Path.Combine(directory, "summary.txt"), summary);
@@ -312,109 +312,111 @@ namespace FastHashes.Benchmarks
             return (summary, summaryBulk, summaryChunk);
         }
 
-        private static BulkSpeedOutput BulkSpeedTest(Func<UInt64, Hash> hashInitializer, Int32 bulkKeysLength, Int32 bulkRepetitions)
+        private static BulkThroughputOutput BulkThroughputTest(Func<UInt64, Hash> hashInitializer, Int32 bulkKeysLength, Int32 bulkRepetitions)
         {
             using (new SpeedOptimizer())
             {
-                Double[] alignSpeeds = new Double[8];
-                Double[] alignVariability = new Double[8];
-                Int64[] alignBytes = new Int64[8];
-                Int64[] alignTicks = new Int64[8];
-                List<Double>[] alignBatchSpeeds = new List<Double>[8];
+                Int64[] bytes = new Int64[8];
+                Int64[] ticks = new Int64[8];
+                List<Double>[] batchThroughputs = new List<Double>[8];
 
-                for (Int32 align = 0; align < 8; ++align)
-                    alignBatchSpeeds[align] = [];
+                for (Int32 alignment = 0; alignment < 8; ++alignment)
+                    batchThroughputs[alignment] = [];
 
                 for (Int32 pass = 0; pass < 2; ++pass)
                 {
                     for (Int32 position = 0; position < 8; ++position)
                     {
-                        Int32 align = (pass == 0) ? position : 7 - position;
-                        SpeedOutput so = GetSpeed(hashInitializer, bulkKeysLength, bulkRepetitions, align);
+                        Int32 alignment = (pass == 0) ? position : 7 - position;
+                        ThroughputMeasurement tm = MeasureThroughput(hashInitializer, bulkKeysLength, bulkRepetitions, alignment);
 
-                        alignBytes[align] += so.Bytes;
-                        alignTicks[align] += so.Ticks;
-                        alignBatchSpeeds[align].AddRange(so.BatchSpeeds);
+                        bytes[alignment] += tm.Bytes;
+                        ticks[alignment] += tm.Ticks;
+                        batchThroughputs[alignment].AddRange(tm.BatchThroughputs);
                     }
                 }
 
-                for (Int32 align = 0; align < 8; ++align)
+                Double[] throughputs = new Double[8];
+                Double[] batchMads = new Double[8];
+
+                for (Int32 alignment = 0; alignment < 8; ++alignment)
                 {
-                    alignSpeeds[align] = MathUtilities.Throughput(alignBytes[align], alignTicks[align], Stopwatch.Frequency);
-                    alignVariability[align] = MathUtilities.RelativeMedianAbsoluteDeviation(alignBatchSpeeds[align]);
+                    throughputs[alignment] = MathUtilities.Throughput(bytes[alignment], ticks[alignment], Stopwatch.Frequency);
+                    batchMads[alignment] = MathUtilities.RelativeMedianAbsoluteDeviation(batchThroughputs[alignment]);
                 }
 
-                Double medianSpeed = MathUtilities.Median(alignSpeeds, false);
-                String medianSpeedFormatted = Utilities.FormatSpeed(medianSpeed);
+                Double medianThroughput = MathUtilities.Median(throughputs, false);
+                String medianThroughputFormatted = Utilities.FormatSpeed(medianThroughput);
 
-                return new (alignSpeeds, alignVariability, medianSpeed, medianSpeedFormatted);
+                return new (throughputs, batchMads, medianThroughput, medianThroughputFormatted);
             }
         }
 
-        private static ChunkSpeedOutput ChunksSpeedTest(Func<UInt64, Hash> hashInitializer)
+        private static ChunkThroughputOutput ChunksThroughputTest(Func<UInt64, Hash> hashInitializer)
         {
             using (new SpeedOptimizer())
             {
                 Int32 length = 1;
                 Int64 totalBytes = 0;
                 Int64 totalTicks = 0;
-                List<ChunkSpeedEntry> chunkSpeeds = new(s_ChunkParameters.Count);
+                List<ChunkRangeThroughput> rangeThroughputs = new(s_ChunkParameters.Count);
 
                 foreach ((Func<Int32, Int32> increment, Int32 keySize, Int32 repetitions) in s_ChunkParameters)
                 {
-                    Int32 lengthStart = length;
-                    Int64 rangeBytes = 0;
-                    Int64 rangeTicks = 0;
-                    List<Double> lengthVariability = [];
+                    Int32 start = length;
+                    Int32 end = keySize - 1;
+
+                    Int64 bytes = 0;
+                    Int64 ticks = 0;
+                    List<Double> batchMads = [];
 
                     while (length < keySize)
                     {
-                        SpeedOutput so = GetSpeed(hashInitializer, length, repetitions, 0);
-                        Double variability = MathUtilities.RelativeMedianAbsoluteDeviation(so.BatchSpeeds);
+                        ThroughputMeasurement tm = MeasureThroughput(hashInitializer, length, repetitions, 0);
+                        Double batchMad = MathUtilities.RelativeMedianAbsoluteDeviation(tm.BatchThroughputs);
 
-                        if (Double.IsFinite(variability))
-                            lengthVariability.Add(variability);
+                        if (Double.IsFinite(batchMad))
+                            batchMads.Add(batchMad);
 
-                        rangeBytes += so.Bytes;
-                        rangeTicks += so.Ticks;
+                        bytes += tm.Bytes;
+                        ticks += tm.Ticks;
+                        
                         length = increment(length);
                     }
 
-                    Int32 lengthEnd = keySize - 1;
-
                     if (keySize == s_ChunkParameters[^1].KeySize)
                     {
-                        SpeedOutput so = GetSpeed(hashInitializer, length, repetitions, 0);
-                        Double variability = MathUtilities.RelativeMedianAbsoluteDeviation(so.BatchSpeeds);
+                        ThroughputMeasurement tm = MeasureThroughput(hashInitializer, length, repetitions, 0);
+                        Double batchMad = MathUtilities.RelativeMedianAbsoluteDeviation(tm.BatchThroughputs);
 
-                        if (Double.IsFinite(variability))
-                            lengthVariability.Add(variability);
+                        if (Double.IsFinite(batchMad))
+                            batchMads.Add(batchMad);
 
-                        rangeBytes += so.Bytes;
-                        rangeTicks += so.Ticks;
-                        lengthEnd = keySize;
+                        bytes += tm.Bytes;
+                        ticks += tm.Ticks;
+                        end = keySize;
                     }
 
                     length = keySize;
-                    totalBytes += rangeBytes;
-                    totalTicks += rangeTicks;
+                    totalBytes += bytes;
+                    totalTicks += ticks;
 
-                    Double rangeSpeed = MathUtilities.Throughput(rangeBytes, rangeTicks, Stopwatch.Frequency);
-                    Double rangeVariability = lengthVariability.Count == 0 ? Double.NaN : MathUtilities.Median(lengthVariability, false);
-                    chunkSpeeds.Add(new (lengthStart, lengthEnd, rangeSpeed, rangeVariability));
+                    Double throughput = MathUtilities.Throughput(bytes, ticks, Stopwatch.Frequency);
+                    Double medianBatchMad = (batchMads.Count == 0) ? Double.NaN : MathUtilities.Median(batchMads, false);
+                    rangeThroughputs.Add(new (start, end, throughput, medianBatchMad));
                 }
 
-                Double aggregateSpeed = MathUtilities.Throughput(totalBytes, totalTicks, Stopwatch.Frequency);
-                String aggregateSpeedFormatted = Utilities.FormatSpeed(aggregateSpeed);
+                Double aggregateThroughput = MathUtilities.Throughput(totalBytes, totalTicks, Stopwatch.Frequency);
+                String aggregateThroughputFormatted = Utilities.FormatSpeed(aggregateThroughput);
 
-                Double normalizedSpeed = MathUtilities.GeometricMean([.. chunkSpeeds.Select(x => x.Speed)]);
-                String normalizedSpeedFormatted = Utilities.FormatSpeed(normalizedSpeed);
+                Double averageThroughput = MathUtilities.GeometricMean([.. rangeThroughputs.Select(x => x.Throughput)]);
+                String averageThroughputFormatted = Utilities.FormatSpeed(averageThroughput);
 
-                return new (chunkSpeeds, aggregateSpeed, aggregateSpeedFormatted, normalizedSpeed, normalizedSpeedFormatted);
+                return new (rangeThroughputs, aggregateThroughput, aggregateThroughputFormatted, averageThroughput, averageThroughputFormatted);
             }
         }
 
-        private static SpeedOutput GetSpeed(Func<UInt64, Hash> hashInitializer, Int32 length, Int32 repetitions, Int32 align)
+        private static ThroughputMeasurement MeasureThroughput(Func<UInt64, Hash> hashInitializer, Int32 length, Int32 repetitions, Int32 alignment)
         {
             RandomXorShift r = new();
 
@@ -424,18 +426,18 @@ namespace FastHashes.Benchmarks
 
             Byte[] key = new Byte[(batchCapacity * stride) + 512];
             Hash[] hashes = new Hash[batchCapacity];
-            Int64 totalTicks = 0, totalBytes = 0;
-            List<Double> batchSpeeds = new(batchCount);
-
             Byte[] hashBytes = new Byte[hashInitializer(0ul).Length / 8];
+
+            Int64 totalTicks = 0, totalBytes = 0;
+            List<Double> batchThroughputs = new(batchCount);
 
             unsafe
             {
                 fixed (Byte* pin = key)
                 {
                     UInt64 pinValue = (UInt64)pin;
-                    UInt64 alignValue = ((pinValue + 255ul) & 0xFFFFFFFFFFFFFF00ul) + (UInt64)align;
-                    Int32 offset = (Int32)(alignValue - pinValue);
+                    UInt64 aligned = ((pinValue + 255ul) & 0xFFFFFFFFFFFFFF00ul) + (UInt64)alignment;
+                    Int32 offset = (Int32)(aligned - pinValue);
 
                     Int32 completed = 0;
 
@@ -467,14 +469,14 @@ namespace FastHashes.Benchmarks
                         totalTicks += elapsed;
                         totalBytes += bytes;
 
-                        batchSpeeds.Add(MathUtilities.Throughput(bytes, elapsed, Stopwatch.Frequency));
+                        batchThroughputs.Add(MathUtilities.Throughput(bytes, elapsed, Stopwatch.Frequency));
 
                         completed += count;
                     }
                 }
             }
 
-            return new (totalBytes, totalTicks, batchSpeeds);
+            return new (totalBytes, totalTicks, batchThroughputs);
         }
 
         private static String BuildSummary(IEnumerable<Result> results)
@@ -482,8 +484,8 @@ namespace FastHashes.Benchmarks
             Result[] rows = [.. results];
             Int32 orderWidth = Math.Max(5, rows.Length.ToString(CultureInfo.InvariantCulture).Length);
             Int32 hashWidth = Math.Max(4, rows.Max(x => x.HashName.Length));
-            Int32 bulkWidth = Math.Max(4, rows.Max(x => x.BulkMedianSpeedFormatted.Length));
-            Int32 chunkWidth = Math.Max(5, rows.Max(x => x.ChunkNormalizedSpeedFormatted.Length));
+            Int32 bulkWidth = Math.Max(4, rows.Max(x => x.BulkMedianThroughputFormatted.Length));
+            Int32 chunkWidth = Math.Max(5, rows.Max(x => x.ChunkAverageThroughputFormatted.Length));
 
             StringBuilder builder = new();
 
@@ -501,8 +503,8 @@ namespace FastHashes.Benchmarks
                 builder.AppendLine(
                     $"{(i + 1).ToString(CultureInfo.InvariantCulture).PadRight(orderWidth)} | "
                     + $"{result.HashName.PadRight(hashWidth)} | "
-                    + $"{result.BulkMedianSpeedFormatted.PadRight(bulkWidth)} | "
-                    + $"{result.ChunkNormalizedSpeedFormatted.PadRight(chunkWidth)}"
+                    + $"{result.BulkMedianThroughputFormatted.PadRight(bulkWidth)} | "
+                    + $"{result.ChunkAverageThroughputFormatted.PadRight(chunkWidth)}"
                 );
             }
 
@@ -541,9 +543,9 @@ namespace FastHashes.Benchmarks
                     UInt64 pinValue = (UInt64)pin;
                     UInt64 aligned = (pinValue + 255ul) & 0xFFFFFFFFFFFFFF00ul;
 
-                    for (Int32 align = 0; align < 8; ++align)
+                    for (Int32 alignment = 0; alignment < 8; ++alignment)
                     {
-                        Int32 offset = (Int32)(aligned + (UInt64)align - pinValue);
+                        Int32 offset = (Int32)(aligned + (UInt64)alignment - pinValue);
                         WarmupLength(hashInitializer, key, offset, bulkKeysLength, warmupRepetitions, seed++);
                     }
                 }

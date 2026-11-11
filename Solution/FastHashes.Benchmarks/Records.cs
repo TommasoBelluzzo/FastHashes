@@ -5,44 +5,44 @@ using System.Collections.Generic;
 
 namespace FastHashes.Benchmarks
 {
-    internal readonly record struct BulkSpeedOutput
+    internal readonly record struct BulkThroughputOutput
     (
-        Double[] BulkAlignSpeeds,
-        Double[] BulkVariability,
-        Double BulkMedianSpeed,
-        String BulkMedianSpeedFormatted
+        Double[] AlignmentThroughputs,
+        Double[] BatchMads,
+        Double MedianThroughput,
+        String MedianThroughputFormatted
     );
 
-    internal readonly record struct ChunkSpeedEntry
+    internal readonly record struct ChunkRangeThroughput
     (
         Int32 Start,
         Int32 End,
-        Double Speed,
-        Double Variability
+        Double Throughput,
+        Double MedianBatchMad
     );
 
-    internal readonly record struct ChunkSpeedOutput
+    internal readonly record struct ChunkThroughputOutput
     (
-        List<ChunkSpeedEntry> ChunkSpeeds,
-        Double ChunkAggregateSpeed,
-        String ChunkAggregateSpeedFormatted,
-        Double ChunkNormalizedSpeed,
-        String ChunkNormalizedSpeedFormatted
+        List<ChunkRangeThroughput> RangeThroughputs,
+        Double AggregateThroughput,
+        String AggregateThroughputFormatted,
+        Double AverageThroughput,
+        String AverageThroughputFormatted
+    );
+
+    internal readonly record struct ThroughputMeasurement
+    (
+        Int64 Bytes,
+        Int64 Ticks,
+        List<Double> BatchThroughputs
     );
 
     internal readonly record struct Result
     (
         String HashName,
-        Double BulkMedianSpeed,
-        String BulkMedianSpeedFormatted,
-        Double ChunkNormalizedSpeed,
-        String ChunkNormalizedSpeedFormatted
-    );
-
-    internal readonly record struct SpeedOutput
-    (
-        Int64 Bytes,
-        Int64 Ticks,
-        List<Double> BatchSpeeds
+        Double BulkMedianThroughput,
+        String BulkMedianThroughputFormatted,
+        Double ChunkAverageThroughput,
+        String ChunkAverageThroughputFormatted
     );
 }
