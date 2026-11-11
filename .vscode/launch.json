@@ -39,7 +39,7 @@
       "cwd": "${workspaceFolder}/Solution",
       "args": [
         "--hash",
-        "RapidHash-V3",
+        "NmHash-X",
         "--analysis",
         "all"
       ],
