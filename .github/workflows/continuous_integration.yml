@@ -16,12 +16,22 @@ concurrency:
 
 jobs:
   continuous_integration:
-    name: Continuous Integration (${{ matrix.os }})
+    name: Continuous Integration (${{ matrix.os }}, ${{ matrix.intrinsics }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        include:
+          - os: ubuntu-latest
+            intrinsics: native
+          - os: ubuntu-latest
+            intrinsics: sse2
+          - os: ubuntu-latest
+            intrinsics: scalar
+          - os: windows-latest
+            intrinsics: native
+          - os: macos-latest
+            intrinsics: native
     defaults:
       run:
         working-directory: Solution
@@ -46,6 +56,9 @@ jobs:
         --no-incremental
         --verbosity normal
     - name: Test & Coverage Collection
+      env:
+        DOTNET_EnableAVX2: ${{ matrix.intrinsics == 'sse2' && '0' || '1' }}
+        DOTNET_EnableHWIntrinsic: ${{ matrix.intrinsics == 'scalar' && '0' || '1' }}
       run: >-
         dotnet run
         --project FastHashes.Tests/FastHashes.Tests.csproj
@@ -60,7 +73,7 @@ jobs:
     - name: Coverage Artifact Upload
       uses: actions/upload-artifact@v4
       with:
-        name: coverage-${{ matrix.os }}
+        name: coverage-${{ matrix.os }}-${{ matrix.intrinsics }}
         path: Solution/Coverage/
         if-no-files-found: error
   coverage_publishing:
@@ -79,8 +92,8 @@ jobs:
     - name: Coverage Artifacts Validation
       shell: bash
       run: |
-        for os in ubuntu-latest windows-latest macos-latest; do
-          directory="Coverage/coverage-$os"
+        for configuration in ubuntu-latest-native ubuntu-latest-sse2 ubuntu-latest-scalar windows-latest-native macos-latest-native; do
+          directory="Coverage/coverage-$configuration"
           if [ ! -d "$directory" ]; then
             echo "Missing coverage artifact: $os"
             exit 1

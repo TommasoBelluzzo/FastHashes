@@ -39,7 +39,7 @@
       "cwd": "${workspaceFolder}/Solution",
       "args": [
         "--hash",
-        "FarmHash64",
+        "RapidHash-V3",
         "--analysis",
         "all"
       ],
@@ -53,7 +53,7 @@
       "preLaunchTask": "Build Benchmarks: Release",
       "program": "${workspaceFolder}/Solution/Output/Release/net10.0/FastHashes.Benchmarks.dll",
       "cwd": "${workspaceFolder}/Solution",
-      "args": ["--hash", "SpookyHash32"],
+      "args": [],
       "console": "integratedTerminal",
       "stopAtEntry": false
     },
