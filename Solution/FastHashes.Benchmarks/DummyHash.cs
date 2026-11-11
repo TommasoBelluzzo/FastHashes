@@ -7,7 +7,7 @@ namespace FastHashes.Benchmarks
     internal sealed class DummyHash : Hash<UInt64>
     {
         #region Methods
-        protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<byte> buffer)
+        protected override UInt64 ComputeHashValueInternal(ReadOnlySpan<Byte> buffer)
         {
             Int32 count = buffer.Length;
 

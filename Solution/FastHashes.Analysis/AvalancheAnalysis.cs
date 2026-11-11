@@ -262,21 +262,21 @@ namespace FastHashes.Analysis
 
             using SvgPlot plot = new(path, 1200, 805);
 
-            plot.PlotArea(120, 178, 980, 500);
-            plot.DataRange(0.0d, k, 0.0d, ceiling);
+            plot.DefinePlotArea(120, 178, 980, 500);
+            plot.DefineDataRange(0.0d, k, 0.0d, ceiling);
 
             plot.ConfigureIndexedAxisX("Changed Output Bits", k, xStep);
             plot.ConfigureDiscreteAxisY("Number of Trials", 0.0d, ceiling, intervals: 5, format: "N0");
 
-            plot.ConfigureBottomLegend([
+            plot.ConfigureLegend([
                 new SvgPlot.LegendItem("Observed", plot.ObservedColor, false),
                 new SvgPlot.LegendItem("Ideal Binomial", plot.ReferenceColor, true),
                 new SvgPlot.LegendItem("Ideal Mean", plot.HighlightColor, true, true)
             ]);
 
-            plot.Title("OUTPUT HAMMING DISTANCE");
-            plot.Subtitle("Observed distribution versus the ideal ~Binomial(output bits, 0.5) model.");
-            plot.Metadata(
+            plot.DrawTitle("OUTPUT HAMMING DISTANCE");
+            plot.DrawSubtitle("Observed distribution versus the ideal ~Binomial(output bits, 0.5) model.");
+            plot.DrawMetadata(
                 $"Trials: {trials:N0} | Peak Count: {maximumCount:N0}",
                 $"Observed Mean: {mean:0.00} | Ideal Mean: {outputBits / 2.0d:0.00}",
                 $"Observed SD: {standardDeviation:0.00} | Ideal SD: {Math.Sqrt(outputBits * 0.25d):0.00}"
@@ -297,15 +297,15 @@ namespace FastHashes.Analysis
 
             plot.DrawBorder();
             plot.DrawAxes();
-            plot.DrawBottomLegend();
+            plot.DrawLegend();
         }
 
         private static void PlotSac(String path, Int32[] changed, Int32 inputBits, Int32 outputBits, Int32 samples, Double meanAbsoluteBias, Double maximumAbsoluteBias, Int64 significantCells)
         {
             using SvgPlot plot = new(path, 1200, 900);
 
-            plot.PlotArea(125, 180, 850, 610);
-            plot.DataRange(0.0d, outputBits, 0.0d, inputBits);
+            plot.DefinePlotArea(125, 180, 850, 610);
+            plot.DefineDataRange(0.0d, outputBits, 0.0d, inputBits);
 
             Int32 xStep = (outputBits <= 64) ? 8 : (outputBits <= 128) ? 16 : 32;
             plot.ConfigureIndexedAxisX("Output Bit Index (LSB-first)", outputBits, xStep);
@@ -313,16 +313,16 @@ namespace FastHashes.Analysis
             Int32 yStep = (inputBits <= 64) ? 8 : (inputBits <= 256) ? 32 : 64;
             plot.ConfigureIndexedAxisY("Input Bit Index", inputBits, yStep);
 
-            plot.ConfigureRightColorbar(
+            plot.ConfigureColorbar(
                 "Absolute Bias",
                 0.0d, PLOT_HEATMAP_SCALE * 100.0d,
                 "#ffffff", plot.ObservedColor,
                 intervals: 5, saturatedUpper: true, format: "0.##", suffix: "%"
             );
 
-            plot.Title("STRICT AVALANCHE CRITERION");
-            plot.Subtitle("Absolute bit-flip bias: |P(output bit changes) - 0.5| for each input/output bit pair.");
-            plot.Metadata(
+            plot.DrawTitle("STRICT AVALANCHE CRITERION");
+            plot.DrawSubtitle("Absolute bit-flip bias: |P(output bit changes) - 0.5| for each input/output bit pair.");
+            plot.DrawMetadata(
                 $"Samples: {samples:N0} | Input Bits: {inputBits:N0} | Output Bits: {outputBits:N0}",
                 $"Mean Bias: {meanAbsoluteBias:P2} | Maximum Bias: {maximumAbsoluteBias:P2} | Significant Cells: {significantCells:N0}"
             );
@@ -340,7 +340,7 @@ namespace FastHashes.Analysis
 
                     plot.HeatmapCell(
                         ob, ib, outputBits, inputBits,
-                        plot.Color(absoluteBias, 0.0d, PLOT_HEATMAP_SCALE, "#ffffff", plot.ObservedColor)
+                        plot.GetColor(absoluteBias, 0.0d, PLOT_HEATMAP_SCALE, "#ffffff", plot.ObservedColor)
                     );
                 }
             }
@@ -361,7 +361,7 @@ namespace FastHashes.Analysis
 
             plot.DrawBorder();
             plot.DrawAxes();
-            plot.DrawRightColorbar();
+            plot.DrawColorbar();
         }
         #endregion
     }

@@ -23,16 +23,16 @@ namespace FastHashes.Analysis
 
             using SvgPlot plot = new(path, 1200, 770);
 
-            plot.PlotArea(125.0d, 180.0d, 950.0d, 435.0d);
-            plot.DataRange(0.0d, outputBytes, 0.0d, ceiling);
+            plot.DefinePlotArea(125.0d, 180.0d, 950.0d, 435.0d);
+            plot.DefineDataRange(0.0d, outputBytes, 0.0d, ceiling);
 
             Int32 xStep = Math.Max(1, (outputBytes + 15) / 16);
             plot.ConfigureIndexedAxisX("Output Byte Position", outputBytes, xStep);
             plot.ConfigureDiscreteAxisY("Entropy Deficit", 0.0d, ceiling, intervals: 4, format: "0.###");
 
-            plot.Title("OUTPUT-BYTE ENTROPY DEFICIT");
-            plot.Subtitle("Ideal 8-bit entropy minus empirical plug-in entropy; finite-sample estimates are downward biased.");
-            plot.Metadata(
+            plot.DrawTitle("OUTPUT-BYTE ENTROPY DEFICIT");
+            plot.DrawSubtitle("Ideal 8-bit entropy minus empirical plug-in entropy; finite-sample estimates are downward biased.");
+            plot.DrawMetadata(
                 $"Output Bytes: {outputBytes:N0}",
                 $"Mean Deficit: {meanDeficit:0.######} bits | Maximum Deficit: {maximumDeficit:0.######} bits"
             );
@@ -47,10 +47,10 @@ namespace FastHashes.Analysis
             for (Int32 position = 0; position < outputBytes; ++position)
             {
                 Double deficit = Math.Max(0.0d, 8.0d - byteEntropies[position]);
-                Double center = plot.CellX(position, outputBytes);
-                Double top = plot.Y(deficit);
+                Double center = plot.GetCellX(position, outputBytes);
+                Double top = plot.GetY(deficit);
 
-                plot.Line(center, plot.Y(0.0d), center, top, plot.ObservedColor, 2.0d);
+                plot.Line(center, plot.GetY(0.0d), center, top, plot.ObservedColor, 2.0d);
                 plot.Rectangle(center - markerSize / 2.0d, top - markerSize / 2.0d, markerSize, markerSize, plot.ObservedColor);
             }
 
@@ -66,21 +66,21 @@ namespace FastHashes.Analysis
 
             using SvgPlot plot = new(path, 1200, 770);
 
-            plot.PlotArea(125.0d, 180.0d, 950.0d, 435.0d);
-            plot.DataRange(0.0d, outputBits, -limit, limit);
+            plot.DefinePlotArea(125.0d, 180.0d, 950.0d, 435.0d);
+            plot.DefineDataRange(0.0d, outputBits, -limit, limit);
 
             Int32 step = outputBits <= 64 ? 8 : outputBits <= 128 ? 16 : 32;
             plot.ConfigureIndexedAxisX("Output Bit (LSB-first)", outputBits, step);
             plot.ConfigureDiscreteAxisY("Signed One-bit Bias", -limit, limit, intervals: 4, format: "P1");
 
-            plot.ConfigureBottomLegend([
+            plot.ConfigureLegend([
                 new SvgPlot.LegendItem("Observed Bias", plot.ObservedColor, false),
                 new SvgPlot.LegendItem("Zero Reference", plot.ReferenceColor, true, true)
             ]);
 
-            plot.Title("OUTPUT-BIT BIAS");
-            plot.Subtitle("Signed deviation from the ideal 50% one-bit frequency.");
-            plot.Metadata(
+            plot.DrawTitle("OUTPUT-BIT BIAS");
+            plot.DrawSubtitle("Signed deviation from the ideal 50% one-bit frequency.");
+            plot.DrawMetadata(
                 $"Output Bits: {outputBits:N0}",
                 $"Mean Absolute Bias: {meanAbsoluteBias:0.######} | Maximum Absolute Bias: {maximumAbsoluteBias:0.######}"
             );
@@ -93,10 +93,10 @@ namespace FastHashes.Analysis
             for (Int32 bit = 0; bit < outputBits; ++bit)
             {
                 Double bias = (Double)bitOnes[bit] / samples - 0.5d;
-                Double center = plot.CellX(bit, outputBits);
+                Double center = plot.GetCellX(bit, outputBits);
                 Double stroke = Math.Max(1.2d, Math.Min(8.0d, plot.PlotWidth / outputBits * 0.8d));
                 
-                plot.Line(center, plot.Y(0.0d), center, plot.Y(bias), plot.ObservedColor, stroke);
+                plot.Line(center, plot.GetY(0.0d), center, plot.GetY(bias), plot.ObservedColor, stroke);
             }
 
             plot.HorizontalReference(0.0d, plot.ReferenceColor, 2.0d, dashed: true);
@@ -105,7 +105,7 @@ namespace FastHashes.Analysis
 
             plot.DrawBorder();
             plot.DrawAxes();
-            plot.DrawBottomLegend();
+            plot.DrawLegend();
         }
 
         private static void PlotObf(String path, Int32 samples, Int32 outputBytes, Int32[] byteCounts)
@@ -117,23 +117,23 @@ namespace FastHashes.Analysis
 
             using SvgPlot plot = new(path, 1200, plotHeight + 350);
 
-            plot.PlotArea(125.0d, 180.0d, 810.0d, plotHeight);
-            plot.DataRange(0.0d, 256.0d, 0.0d, outputBytes);
+            plot.DefinePlotArea(125.0d, 180.0d, 810.0d, plotHeight);
+            plot.DefineDataRange(0.0d, 256.0d, 0.0d, outputBytes);
 
             Int32 yStep = Math.Max(1, (outputBytes + 11) / 12);
             plot.ConfigureIndexedAxisX("Output Byte Value", 256, 32);
             plot.ConfigureIndexedAxisY("Output Byte Position", outputBytes, yStep);
 
-            plot.ConfigureRightColorbar(
+            plot.ConfigureColorbar(
                 "Standardized Residual",
                 -PLOT_RESIDUAL_SCALE, PLOT_RESIDUAL_SCALE,
                 plot.ObservedColor, plot.HighlightColor,
                 intervals: 4, saturatedLower: true, saturatedUpper: true, format: "0", middleColor: "#ffffff", center: 0.0d
             );
 
-            plot.Title("OUTPUT-BYTE FREQUENCY");
-            plot.Subtitle("Standardized residuals versus uniform byte frequencies; blue indicates fewer observations, red indicates more observations.");
-            plot.Metadata(
+            plot.DrawTitle("OUTPUT-BYTE FREQUENCY");
+            plot.DrawSubtitle("Standardized residuals versus uniform byte frequencies; blue indicates fewer observations, red indicates more observations.");
+            plot.DrawMetadata(
                 $"Output Bytes: {outputBytes:N0}",
                 $"Expected Occurrences/Value: {expectedCount:0.###}"
             );
@@ -147,7 +147,7 @@ namespace FastHashes.Analysis
                 for (Int32 value = 0; value < 256; ++value)
                 {
                     Double residual = (byteCounts[(position * 256) + value] - expectedCount) / deviation;
-                    String color = plot.DivergingColor(residual, -PLOT_RESIDUAL_SCALE, 0.0d, PLOT_RESIDUAL_SCALE, plot.ObservedColor, "#ffffff", plot.HighlightColor);
+                    String color = plot.GetColorDiverging(residual, -PLOT_RESIDUAL_SCALE, 0.0d, PLOT_RESIDUAL_SCALE, plot.ObservedColor, "#ffffff", plot.HighlightColor);
 
                     plot.HeatmapCell(value, position, 256, outputBytes, color);
                 }
@@ -163,7 +163,7 @@ namespace FastHashes.Analysis
 
             plot.DrawBorder();
             plot.DrawAxes();
-            plot.DrawRightColorbar();
+            plot.DrawColorbar();
         }
         #endregion
 

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 #endregion
 
@@ -23,7 +24,6 @@ namespace FastHashes.Analysis
         private Boolean m_Prepared;
         private ColorbarSettings m_ColorbarSettings;
         private readonly Dictionary<String, String[]> m_Palettes = new(StringComparer.Ordinal);
-        private Double m_CustomAxisSpacingY = 12.0d;
         private Double m_MaximumX;
         private Double m_MaximumY;
         private Double m_MinimumX;
@@ -36,7 +36,6 @@ namespace FastHashes.Analysis
         private IReadOnlyList<AxisTick> m_TicksX;
         private IReadOnlyList<AxisTick> m_TicksY;
         private IReadOnlyList<LegendItem> m_Legend;
-        private IReadOnlyList<String> m_CustomAxisLabelsY;
         private readonly StreamWriter m_Writer;
         private String[] m_LastPalette;
         private String[] m_MetadataLines = [];
@@ -105,8 +104,8 @@ namespace FastHashes.Analysis
             Width = width;
             Height = height;
 
-            PlotArea(125.0d, 180.0d, Math.Max(1.0d, width - 250.0d), Math.Max(1.0d, height - 290.0d));
-            DataRange(0.0d, 1.0d, 0.0d, 1.0d);
+            DefinePlotArea(125.0d, 180.0d, Math.Max(1.0d, width - 250.0d), Math.Max(1.0d, height - 290.0d));
+            DefineDataRange(0.0d, 1.0d, 0.0d, 1.0d);
 
             String ariaLabel = (description == null) ? String.Empty : $" aria-label=\"{Escape(description)}\"";
 
@@ -116,48 +115,223 @@ namespace FastHashes.Analysis
         }
         #endregion
 
-        #region Methods: Header
-        public void Metadata(params String[] lines)
+        #region Methods: Primitives
+        public void Bar(Int32 index, Int32 count, Double value, String color, Double gap = 1.0d)
         {
-            ArgumentNullException.ThrowIfNull(lines);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(count, nameof(count));
 
-            if (!m_Prepared)
-                m_MetadataLines = (String[])lines.Clone();
+            if ((index < 0) || (index >= count))
+                throw new ArgumentOutOfRangeException(nameof(index));
 
-            for (Int32 i = 0; i < lines.Length; ++i)
-                Text(TitleLeft, MetadataTop + (i * MetadataSpacing), lines[i], MetadataSize, TextColor);
+            RequireNonnegative(gap, nameof(gap));
+            RequireFinite(value, nameof(value));
+
+            Double width = PlotWidth / count;
+            Double zero = GetY(0.0d);
+            Double end = GetY(value);
+
+            Double left = PlotLeft + (index * width) + (gap / 2.0d);
+            Double top = Math.Min(zero, end);
+            Double barWidth = Math.Max(0.0d, width - gap);
+            Double barHeight = Math.Abs(end - zero);
+
+            Rectangle(left, top, barWidth, barHeight, color);
         }
 
-        public void Subtitle(String value)
+        public void Border(Double x, Double y, Double width, Double height)
         {
-            Text(TitleLeft, SubtitleTop, value, SubtitleSize, SecondaryColor);
+            Rectangle(x, y, width, height, "none", BorderColor);
         }
 
-        public void Title(String value)
+        public void DataLine(Double x1, Double y1, Double x2, Double y2, String color, Double thickness = 2.0d, String dash = null, Double opacity = 1.0d)
         {
-            Text(TitleLeft, TitleTop, value, TitleSize, TitleColor, true);
+            Line(GetX(x1), GetY(y1), GetX(x2), GetY(y2), color, thickness, dash, opacity);
+        }
+
+        public void HeatmapCell(Int32 column, Int32 row, Int32 columns, Int32 rows, String color, Double overlap = 0.008d)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(columns, nameof(columns));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(rows, nameof(rows));
+
+            if ((column < 0) || (column >= columns))
+                throw new ArgumentOutOfRangeException(nameof(column));
+
+            if ((row < 0) || (row >= rows))
+                throw new ArgumentOutOfRangeException(nameof(row));
+
+            RequireNonnegative(overlap, nameof(overlap));
+
+            Double width = PlotWidth / columns;
+            Double height = PlotHeight / rows;
+
+            Rectangle(PlotLeft + (column * width), PlotTop + (row * height), width + overlap, height + overlap, color);
+        }
+
+        public void HeatmapRow(
+            ReadOnlySpan<Double> values, Int32 row, Int32 rows,
+            Double minimum, Double maximum, String lowColor, String highColor,
+            Boolean mergeCells = true
+        )
+        {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(rows, nameof(rows));
+
+            if ((row < 0) || (row >= rows))
+                throw new ArgumentOutOfRangeException(nameof(row));
+
+            Int32 length = values.Length;
+
+            if (length == 0)
+                throw new ArgumentException("Values must not be empty.", nameof(values));
+
+            String[] palette = GetPalette(lowColor, highColor);
+
+            Double cellWidth = PlotWidth / length;
+            Double cellHeight = PlotHeight / rows;
+            Double y = PlotTop + (row * cellHeight);
+
+            Int32 start = 0;
+
+            while (start < length)
+            {
+                Int32 colorIndex = GetPaletteIndex(values[start], minimum, maximum, palette.Length);
+                Int32 end = start + 1;
+
+                if (mergeCells)
+                {
+                    while ((end < length) && (GetPaletteIndex(values[end], minimum, maximum, palette.Length) == colorIndex))
+                        ++end;
+                }
+
+                Double x = PlotLeft + (start * cellWidth);
+                Double width = ((end - start) * cellWidth) + 0.008d;
+                Double height = cellHeight + 0.008d;
+
+                Rectangle(x, y, width, height, palette[colorIndex]);
+
+                start = end;
+            }
+        }
+
+        public void HorizontalReference(Double value, String color, Double thickness = 2.0d, Boolean dashed = false)
+        {
+            Line(PlotLeft, GetY(value), PlotLeft + PlotWidth, GetY(value), color, thickness, dashed ? "7 6" : null);
+        }
+
+        public void Label(Double x, Double y, String value, Int32 size = 12, String anchor = "start", String color = null)
+        {
+            Text(x, y, value, size, color ?? SecondaryColor, false, anchor);
+        }
+
+        public void Line(Double x1, Double y1, Double x2, Double y2, String color, Double thickness = 1.0d, String dash = null, Double opacity = 1.0d)
+        {
+            RequireFinite(x1, nameof(x1));
+            RequireFinite(y1, nameof(y1));
+            RequireFinite(x2, nameof(x2));
+            RequireFinite(y2, nameof(y2));
+            RequireNonnegative(thickness, nameof(thickness));
+
+            if (!Double.IsFinite(opacity) || (opacity < 0.0d) || (opacity > 1.0d))
+                throw new ArgumentOutOfRangeException(nameof(opacity), opacity, "Opacity must be between 0 and 1 (inclusive).");
+
+            String dashAttribute = (dash == null)
+                ? String.Empty
+                : $" stroke-dasharray=\"{Escape(dash)}\"";
+
+            String opacityAttribute = (opacity == 1.0d)
+                ? String.Empty
+                : $" stroke-opacity=\"{Format(opacity)}\"";
+
+            m_Writer.WriteLine($"<line x1=\"{Format(x1)}\" y1=\"{Format(y1)}\" x2=\"{Format(x2)}\" y2=\"{Format(y2)}\" stroke=\"{Escape(color)}\" stroke-width=\"{Format(thickness)}\"{dashAttribute}{opacityAttribute}/>");
+        }
+
+        public void Path(String data, String stroke, Double thickness = 2.0d, String fill = "none")
+        {
+            RequireNonnegative(thickness, nameof(thickness));
+            m_Writer.WriteLine($"<path d=\"{Escape(data)}\" fill=\"{Escape(fill)}\" stroke=\"{Escape(stroke)}\" stroke-width=\"{Format(thickness)}\" stroke-linejoin=\"round\"/>");
+        }
+
+        public void Polyline(IReadOnlyList<(Double X, Double Y)> points, String color, Double thickness = 2.0d)
+        {
+            ArgumentNullException.ThrowIfNull(points);
+
+            if (points.Count == 0)
+                return;
+
+            StringBuilder data = new();
+
+            for (Int32 i = 0; i < points.Count; ++i)
+            {
+                data.Append(i == 0 ? "M " : " L ");
+                data.Append(Format(GetX(points[i].X)));
+                data.Append(' ');
+                data.Append(Format(GetY(points[i].Y)));
+            }
+
+            Path(data.ToString(), color, thickness);
+        }
+
+        public void Rectangle(Double x, Double y, Double width, Double height, String fill, String stroke = null, Double strokeWidth = 1.0d)
+        {
+            RequireFinite(x, nameof(x));
+            RequireFinite(y, nameof(y));
+            RequireNonnegative(width, nameof(width));
+            RequireNonnegative(height, nameof(height));
+
+            String strokeAttributes = String.Empty;
+
+            if (stroke != null)
+            {
+                RequireNonnegative(strokeWidth, nameof(strokeWidth));
+                strokeAttributes = $" stroke=\"{Escape(stroke)}\" stroke-width=\"{Format(strokeWidth)}\"";
+            }
+
+            m_Writer.WriteLine($"<rect x=\"{Format(x)}\" y=\"{Format(y)}\" width=\"{Format(width)}\" height=\"{Format(height)}\" fill=\"{Escape(fill)}\"{strokeAttributes}/>");
+        }
+
+        public void Text(Double x, Double y, String value, Int32 size, String color, Boolean bold = false, String anchor = "start")
+        {
+            RequireFinite(x, nameof(x));
+            RequireFinite(y, nameof(y));
+
+            String weightAttribute = bold ? " font-weight=\"bold\"" : String.Empty;
+
+            m_Writer.WriteLine($"<text x=\"{Format(x)}\" y=\"{Format(y)}\" text-anchor=\"{Escape(anchor)}\" font-family=\"{Escape(FontFamily)}\" font-size=\"{size}\" fill=\"{Escape(color)}\"{weightAttribute}>{Escape(value)}</text>");
+        }
+
+        public void VerticalReference(Double value, String color, Double thickness = 2.0d, Boolean dashed = false)
+        {
+            Line(GetX(value), PlotTop, GetX(value), PlotTop + PlotHeight, color, thickness, dashed ? "7 6" : null);
         }
         #endregion
 
-        #region Methods: Layout
-        public Double CellX(Int32 index, Int32 count)
+        #region Methods: Configuration
+        public void ConfigureColorbar(
+            String title, Double minimum, Double maximum, String lowColor, String highColor,
+            Int32 intervals = 5, Boolean saturatedLower = false, Boolean saturatedUpper = false,
+            Double? center = null, String middleColor = null,
+            String format = "0.##", String suffix = ""
+        )
         {
-            return PlotLeft + (((index + 0.5d) * PlotWidth) / count);
-        }
+            RequireUnprepared();
+            RequireAxis(minimum, maximum, intervals);
+            
+            if ((middleColor is null) != (center is null))
+                throw new ArgumentException("Diverging colorbars require both a center and a middle color value.");
 
-        public Double CellY(Int32 index, Int32 count)
-        {
-            return PlotTop + (((index + 0.5d) * PlotHeight) / count);
-        }
+            if (center.HasValue)
+            {
+                RequireFinite(center.Value, nameof(center));
 
-        public Double X(Double value)
-        {
-            return PlotLeft + (((value - m_MinimumX) / (m_MaximumX - m_MinimumX)) * PlotWidth);
-        }
-
-        public Double Y(Double value)
-        {
-            return PlotTop + PlotHeight - (((value - m_MinimumY) / (m_MaximumY - m_MinimumY)) * PlotHeight);
+                if ((center.Value <= minimum) || (center.Value >= maximum))
+                    throw new ArgumentOutOfRangeException(nameof(center), center.Value, "Center must be strictly between minimum and maximum.");
+            }
+            
+            m_ColorbarSettings = new ColorbarSettings(
+                title, minimum, maximum, lowColor, highColor,
+                intervals, saturatedLower, saturatedUpper,
+                center, middleColor,
+                format, suffix
+            );
         }
 
         public void ConfigureDiscreteAxisX(String title, Double minimum, Double maximum, Boolean grid = true, Int32 intervals = 5, String format = "0.##")
@@ -198,6 +372,7 @@ namespace FastHashes.Analysis
 
         public void ConfigureIndexedAxisX(String title, Int32 count, Int32 step, Boolean includeLast = true)
         {
+            RequireUnprepared();
             RequireIndexed(count, step);
 
             List<(Double, String)> ticks = [];
@@ -213,6 +388,7 @@ namespace FastHashes.Analysis
 
         public void ConfigureIndexedAxisY(String title, Int32 count, Int32 step, Boolean topDown = true, Boolean includeLast = true)
         {
+            RequireUnprepared();
             RequireIndexed(count, step);
 
             List<(Double Value, String Label)> ticks = [];
@@ -224,6 +400,16 @@ namespace FastHashes.Analysis
                 ticks.Add((topDown ? 0.5d : (count - 0.5d), (count - 1).ToString(CultureInfo.InvariantCulture)));
             
             ConfigureTicksY(title, ticks);
+        }
+
+        public void ConfigureLegend(IReadOnlyList<LegendItem> items, Double slotWidth = 180.0d)
+        {
+            RequireUnprepared();
+            ArgumentNullException.ThrowIfNull(items);
+            RequirePositive(slotWidth, nameof(slotWidth));
+
+            m_Legend = [.. items];
+            BottomLegendSlotWidth = slotWidth;
         }
 
         public void ConfigureTicksX(String title, IReadOnlyList<(Double, String)> sourceTicks, Boolean grid = false)
@@ -262,7 +448,7 @@ namespace FastHashes.Analysis
             m_TicksY = ticks;
         }
 
-        public void DataRange(Double minimumX, Double maximumX, Double minimumY, Double maximumY)
+        public void DefineDataRange(Double minimumX, Double maximumX, Double minimumY, Double maximumY)
         {
             RequireFinite(minimumX, nameof(minimumX));
             RequireFinite(maximumX, nameof(maximumX));
@@ -278,7 +464,7 @@ namespace FastHashes.Analysis
             m_MaximumY = maximumY;
         }
 
-        public void PlotArea(Double left, Double top, Double width, Double height)
+        public void DefinePlotArea(Double left, Double top, Double width, Double height)
         {
             RequireUnprepared();
             RequireFinite(left, nameof(left));
@@ -291,83 +477,93 @@ namespace FastHashes.Analysis
             m_RequestedWidth = PlotWidth = width;
             m_RequestedHeight = PlotHeight = height;
         }
+        #endregion
 
-
-
-
-
-
-
-
-        public void ConfigureRightColorbar(String title, Double minimum, Double maximum, String lowColor, String highColor,
-            Int32 intervals = 5, Boolean saturatedLower = false, Boolean saturatedUpper = false, String format = "0.##", String suffix = "", String middleColor = null, Double? center = null)
+        #region Methods: Lifecycle
+        public void BeginPlot()
         {
-            RequireUnprepared();
-            RequireAxis(minimum, maximum, intervals);
-            if ((middleColor == null) != (center == null))
-                throw new ArgumentException("Diverging colorbars require both a middle color and a center value.");
-            if (center.HasValue && (center.Value <= minimum || center.Value >= maximum))
-                throw new ArgumentOutOfRangeException(nameof(center));
-            m_ColorbarSettings = new ColorbarSettings(title, minimum, maximum, lowColor, middleColor, highColor, intervals, center, saturatedLower, saturatedUpper, format, suffix);
-        }
-
-        public void ConfigureBottomLegend(IReadOnlyList<LegendItem> items, Double slotWidth = 180.0d)
-        {
-            RequireUnprepared();
-            if (items == null)
-                throw new ArgumentNullException(nameof(items));
-            RequirePositive(slotWidth, nameof(slotWidth));
-            m_Legend = [.. items];
-            BottomLegendSlotWidth = slotWidth;
-        }
-
-        public void FitYAxisLabels(IEnumerable<String> labels, Double spacing = 12.0d)
-        {
-            RequireUnprepared();
-            if (labels == null)
-                throw new ArgumentNullException(nameof(labels));
-            RequireNonnegative(spacing, nameof(spacing));
-            m_CustomAxisLabelsY = [.. labels];
-            m_CustomAxisSpacingY = spacing;
-            ApplyYAxisFit(m_CustomAxisLabelsY, spacing);
-        }
-
-        private void ApplyYAxisFit(IEnumerable<String> labels, Double spacing)
-        {
-            Double longest = 0.0d;
-            foreach (String label in labels)
-                longest = Math.Max(longest, EstimateTextWidth(label, TickSize));
-            Double requiredLeft = TitleLeft + AxisTitleSize / 2.0d + spacing + longest + 15.0d;
-            Double shift = Math.Max(0.0d, requiredLeft - PlotLeft);
-            if (shift > 0.0d)
+            EnsurePrepared();
+            
+            if (m_PlotOpen)
+                throw new InvalidOperationException("A clipped plot group is already open.");
+            
+            if (!m_ClipDefined)
             {
-                if (shift >= PlotWidth)
-                    throw new InvalidOperationException("Y-axis labels do not fit within the available plot width.");
-                PlotLeft += shift;
-                PlotWidth -= shift;
+                m_Writer.WriteLine($"<defs><clipPath id=\"{CLIP_ID}\"><rect x=\"{Format(PlotLeft)}\" y=\"{Format(PlotTop)}\" width=\"{Format(PlotWidth)}\" height=\"{Format(PlotHeight)}\"/></clipPath></defs>");
+                m_ClipDefined = true;
             }
+
+            m_Writer.WriteLine($"<g clip-path=\"url(#{CLIP_ID})\">");
+            m_PlotOpen = true;
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                if (!m_Completed)
+                {
+                    if (m_PlotOpen)
+                        EndPlot();
+
+                    m_Writer.WriteLine("</svg>");
+
+                    m_Completed = true;
+                }
+            }
+            finally
+            {
+                m_Writer.Dispose();
+            }
+        }
+
+        public void EndPlot()
+        {
+            if (!m_PlotOpen)
+                throw new InvalidOperationException("No clipped plot group is open.");
+            
+            m_Writer.WriteLine("</g>");
+            m_PlotOpen = false;
         }
 
         public void PrepareLayout()
         {
             if (m_Prepared)
                 return;
+
             PlotLeft = m_RequestedLeft;
             PlotTop = m_RequestedTop;
-            PlotWidth = m_RequestedWidth;
             PlotHeight = m_RequestedHeight;
+            PlotWidth = m_RequestedWidth;
 
             if (m_MetadataLines.Length != 0)
             {
-                Double headerEnd = MetadataTop + (m_MetadataLines.Length - 1) * MetadataSpacing + MinimumHeaderGap;
+                Double headerEnd = MetadataTop + ((m_MetadataLines.Length - 1) * MetadataSpacing) + MinimumHeaderGap;
                 Double shift = Math.Max(0.0d, headerEnd - PlotTop);
                 PlotTop += shift;
                 PlotHeight -= shift;
             }
+
             if (m_TicksY != null)
-                ApplyYAxisFit(GetLabels(m_TicksY), 12.0d);
-            if (m_CustomAxisLabelsY != null)
-                ApplyYAxisFit(m_CustomAxisLabelsY, m_CustomAxisSpacingY);
+            {
+                Double longest = 0.0d;
+
+                foreach (String label in m_TicksY.Select(tick => tick.Label))
+                    longest = Math.Max(longest, EstimateTextWidth(label, TickSize));
+
+                Double requiredLeft = TitleLeft + (AxisTitleSize / 2.0d) + longest + 27.0d;
+                Double shift = Math.Max(0.0d, requiredLeft - PlotLeft);
+
+                if (shift > 0.0d)
+                {
+                    if (shift >= PlotWidth)
+                        throw new InvalidOperationException("Y-axis labels do not fit within the available plot width.");
+                    
+                    PlotLeft += shift;
+                    PlotWidth -= shift;
+                }               
+            }
+
             if (m_ColorbarSettings != null)
             {
                 Double reserved = RightColorbarGap + RightColorbarWidth + 55.0d;
@@ -375,29 +571,29 @@ namespace FastHashes.Analysis
                 Double reduction = Math.Max(0.0d, reserved - freeRight);
                 PlotWidth -= reduction;
             }
-            if (m_Legend != null && m_Legend.Count != 0)
+
+            if ((m_Legend != null) && (m_Legend.Count != 0))
             {
                 Double bottomLimit = Height - BottomLegendMargin - LegendSize - AxisTitleSpacing - AxisTitleSize - 16.0d;
                 PlotHeight = Math.Min(PlotHeight, bottomLimit - PlotTop);
             }
-            if (PlotWidth <= 0.0d || PlotHeight <= 0.0d)
-                throw new InvalidOperationException("Plot area is too small for the configured layout.");
+
+            Boolean isValidGeometry =
+                Double.IsFinite(PlotLeft)
+                && Double.IsFinite(PlotTop)
+                && Double.IsFinite(PlotWidth)
+                && Double.IsFinite(PlotHeight)
+                && (PlotWidth > 0.0d)
+                && (PlotHeight > 0.0d);
+
+            if (!isValidGeometry)
+                throw new InvalidOperationException("Plot geometry must be finite and have positive dimensions.");
+            
             m_Prepared = true;
         }
         #endregion
 
-        #region Axes
-        public void DrawGrid()
-        {
-            EnsurePrepared();
-            if (m_GridX && m_TicksX != null)
-                foreach (AxisTick tick in m_TicksX)
-                    DataLine(tick.Position, m_MinimumY, tick.Position, m_MaximumY, GridColor, 1.0d);
-            if (m_GridY && m_TicksY != null)
-                foreach (AxisTick tick in m_TicksY)
-                    DataLine(m_MinimumX, tick.Position, m_MaximumX, tick.Position, GridColor, 1.0d);
-        }
-
+        #region Methods: Components
         public void DrawAxes()
         {
             EnsurePrepared();
@@ -405,499 +601,339 @@ namespace FastHashes.Analysis
             if (m_TicksX != null)
             {
                 foreach (AxisTick tick in m_TicksX)
-                    Label(X(tick.Position), PlotTop + PlotHeight + AxisLabelSpacing, tick.Label, TickSize, "middle");
-                XAxisTitle(m_AxisTitleX);
+                    Label(GetX(tick.Position), PlotTop + PlotHeight + AxisLabelSpacing, tick.Label, TickSize, "middle");
+
+                if (!String.IsNullOrEmpty(m_AxisTitleX))
+                    Text(PlotLeft + (PlotWidth / 2.0d), PlotTop + PlotHeight + AxisTitleSpacing, m_AxisTitleX, AxisTitleSize, TextColor, true, "middle");
             }
 
             if (m_TicksY != null)
             {
                 foreach (AxisTick tick in m_TicksY)
-                    Label(PlotLeft - 15.0d, Y(tick.Position) + TickSize * 0.35d, tick.Label, TickSize, "end");
-                YAxisTitle(m_AxisTitleY);
+                    Label(PlotLeft - 15.0d, GetY(tick.Position) + (TickSize * 0.35d), tick.Label, TickSize, "end");
+                
+                if (String.IsNullOrEmpty(m_AxisTitleY))
+                    return;
+                
+                Double centerX = TitleLeft;
+                Double centerY = PlotTop + (PlotHeight / 2.0d);
+                
+                m_Writer.WriteLine($"<text x=\"{Format(centerX)}\" y=\"{Format(centerY)}\" transform=\"rotate(-90 {Format(centerX)} {Format(centerY)})\" text-anchor=\"middle\" font-family=\"{Escape(FontFamily)}\" font-size=\"{AxisTitleSize}\" font-weight=\"bold\" fill=\"{Escape(TextColor)}\">{Escape(m_AxisTitleY)}</text>");
             }
         }
 
-        // Immediate-mode axes are kept for older plot writers. Configured axes are preferable.
-        public void XAxis(String title, Double minimum, Double maximum, Int32 intervals = 5, String numberFormat = "0.##", Boolean grid = true)
-        {
-            RequireAxis(minimum, maximum, intervals);
-            for (Int32 i = 0; i <= intervals; ++i)
-            {
-                Double value = minimum + (maximum - minimum) * i / intervals;
-                Double x = X(value);
-                if (grid)
-                    Line(x, PlotTop, x, PlotTop + PlotHeight, GridColor);
-                Label(x, PlotTop + PlotHeight + AxisLabelSpacing, Format(value, numberFormat), TickSize, "middle");
-            }
-            XAxisTitle(title);
-        }
-
-        public void YAxis(String title, Double minimum, Double maximum, Int32 intervals = 5, String numberFormat = "0.##", Boolean grid = true)
-        {
-            RequireAxis(minimum, maximum, intervals);
-            for (Int32 i = 0; i <= intervals; ++i)
-            {
-                Double value = minimum + (maximum - minimum) * i / intervals;
-                Double y = Y(value);
-                if (grid)
-                    Line(PlotLeft, y, PlotLeft + PlotWidth, y, GridColor);
-                Label(PlotLeft - 15.0d, y + TickSize * 0.35d, Format(value, numberFormat), TickSize, "end");
-            }
-            YAxisTitle(title);
-        }
-
-        public void XTicks(Int32 count, Func<Int32, String> label, Double start = 0.0d, Double step = 1.0d)
-        {
-            if (count < 0)
-                throw new ArgumentOutOfRangeException(nameof(count));
-            if (label == null)
-                throw new ArgumentNullException(nameof(label));
-            for (Int32 i = 0; i < count; ++i)
-                Label(X(start + i * step), PlotTop + PlotHeight + AxisLabelSpacing, label(i), TickSize, "middle");
-        }
-
-        public void YTicks(Int32 count, Func<Int32, String> label, Double start = 0.0d, Double step = 1.0d)
-        {
-            if (count < 0)
-                throw new ArgumentOutOfRangeException(nameof(count));
-            if (label == null)
-                throw new ArgumentNullException(nameof(label));
-            for (Int32 i = 0; i < count; ++i)
-                Label(PlotLeft - 15.0d, Y(start + i * step) + TickSize * 0.35d, label(i), TickSize, "end");
-        }
-
-        public void XAxisTitle(String title)
-        {
-            if (!String.IsNullOrEmpty(title))
-                Text(PlotLeft + PlotWidth / 2.0d, PlotTop + PlotHeight + AxisTitleSpacing, title, AxisTitleSize, TextColor, true, "middle");
-        }
-
-        public void YAxisTitle(String title)
-        {
-            if (String.IsNullOrEmpty(title))
-                return;
-            Double centerX = TitleLeft;
-            Double centerY = PlotTop + PlotHeight / 2.0d;
-            m_Writer.WriteLine($"<text x=\"{F(centerX)}\" y=\"{F(centerY)}\" transform=\"rotate(-90 {F(centerX)} {F(centerY)})\" text-anchor=\"middle\" font-family=\"{Escape(FontFamily)}\" font-size=\"{AxisTitleSize}\" font-weight=\"bold\" fill=\"{Escape(TextColor)}\">{Escape(title)}</text>");
-        }
-
-        public void DrawBorder() => Border(PlotLeft, PlotTop, PlotWidth, PlotHeight);
-        #endregion
-
-        #region Drawing
-        public void BeginPlot()
+        public void DrawBorder()
         {
             EnsurePrepared();
-            if (m_PlotOpen)
-                throw new InvalidOperationException("A clipped plot group is already open.");
-            if (!m_ClipDefined)
-            {
-                m_Writer.WriteLine($"<defs><clipPath id=\"{CLIP_ID}\"><rect x=\"{F(PlotLeft)}\" y=\"{F(PlotTop)}\" width=\"{F(PlotWidth)}\" height=\"{F(PlotHeight)}\"/></clipPath></defs>");
-                m_ClipDefined = true;
-            }
-            m_Writer.WriteLine($"<g clip-path=\"url(#{CLIP_ID})\">");
-            m_PlotOpen = true;
+            Border(PlotLeft, PlotTop, PlotWidth, PlotHeight);
         }
 
-        public void EndPlot()
+        public void DrawColorbar()
         {
-            if (!m_PlotOpen)
-                throw new InvalidOperationException("No clipped plot group is open.");
-            m_Writer.WriteLine("</g>");
-            m_PlotOpen = false;
-        }
+            const Int32 bands = 100;
 
-        public void Rectangle(Double x, Double y, Double width, Double height, String fill, String stroke = null, Double strokeWidth = 1.0d)
-        {
-            RequireFinite(x, nameof(x));
-            RequireFinite(y, nameof(y));
-            RequireNonnegative(width, nameof(width));
-            RequireNonnegative(height, nameof(height));
-            m_Writer.WriteLine($"<rect x=\"{F(x)}\" y=\"{F(y)}\" width=\"{F(width)}\" height=\"{F(height)}\" fill=\"{Escape(fill)}\"{(stroke == null ? String.Empty : $" stroke=\"{Escape(stroke)}\" stroke-width=\"{F(strokeWidth)}\"")}/>");
-        }
-
-        public void Border(Double x, Double y, Double width, Double height) => Rectangle(x, y, width, height, "none", BorderColor);
-
-        public void Line(Double x1, Double y1, Double x2, Double y2, String color, Double thickness = 1.0d, String dash = null, Double opacity = 1.0d)
-        {
-            RequireFinite(x1, nameof(x1));
-            RequireFinite(y1, nameof(y1));
-            RequireFinite(x2, nameof(x2));
-            RequireFinite(y2, nameof(y2));
-            RequireNonnegative(thickness, nameof(thickness));
-            if (!Double.IsFinite(opacity) || opacity < 0.0d || opacity > 1.0d)
-                throw new ArgumentOutOfRangeException(nameof(opacity));
-            m_Writer.WriteLine($"<line x1=\"{F(x1)}\" y1=\"{F(y1)}\" x2=\"{F(x2)}\" y2=\"{F(y2)}\" stroke=\"{Escape(color)}\" stroke-width=\"{F(thickness)}\"{(dash == null ? String.Empty : $" stroke-dasharray=\"{Escape(dash)}\"")}{(opacity == 1.0d ? String.Empty : $" stroke-opacity=\"{F(opacity)}\"")}/>");
-        }
-
-        public void DataLine(Double x1, Double y1, Double x2, Double y2, String color, Double thickness = 2.0d, String dash = null, Double opacity = 1.0d)
-            => Line(X(x1), Y(y1), X(x2), Y(y2), color, thickness, dash, opacity);
-
-        public void VerticalReference(Double value, String color, Double thickness = 2.0d, Boolean dashed = false)
-            => Line(X(value), PlotTop, X(value), PlotTop + PlotHeight, color, thickness, dashed ? "7 6" : null);
-
-        public void HorizontalReference(Double value, String color, Double thickness = 2.0d, Boolean dashed = false)
-            => Line(PlotLeft, Y(value), PlotLeft + PlotWidth, Y(value), color, thickness, dashed ? "7 6" : null);
-
-        public void Bar(Int32 index, Int32 count, Double value, String color, Double gap = 1.0d)
-        {
-            if (count <= 0 || index < 0 || index >= count)
-                throw new ArgumentOutOfRangeException(nameof(index));
-            RequireNonnegative(gap, nameof(gap));
-            RequireFinite(value, nameof(value));
-            Double width = PlotWidth / count;
-            Double zero = Y(0.0d);
-            Double end = Y(value);
-            Rectangle(PlotLeft + index * width + gap / 2.0d, Math.Min(zero, end), Math.Max(0.0d, width - gap), Math.Abs(end - zero), color);
-        }
-
-        public void HeatmapCell(Int32 column, Int32 row, Int32 columns, Int32 rows, String color, Double overlap = 0.008d)
-        {
-            if (columns <= 0 || rows <= 0 || column < 0 || column >= columns || row < 0 || row >= rows)
-                throw new ArgumentOutOfRangeException(nameof(column));
-            RequireNonnegative(overlap, nameof(overlap));
-            Double width = PlotWidth / columns;
-            Double height = PlotHeight / rows;
-            Rectangle(PlotLeft + column * width, PlotTop + row * height, width + overlap, height + overlap, color);
-        }
-
-        public void HeatmapRow(ReadOnlySpan<Double> values, Int32 row, Int32 rows, Double minimum, Double maximum,
-            String lowColor, String highColor, Boolean mergeCells = true)
-        {
-            if (rows <= 0 || row < 0 || row >= rows || values.IsEmpty)
-                throw new ArgumentOutOfRangeException(nameof(row));
-            String[] palette = GetPalette(lowColor, highColor);
-            Double cellWidth = PlotWidth / values.Length;
-            Double cellHeight = PlotHeight / rows;
-            Double y = PlotTop + row * cellHeight;
-            Int32 start = 0;
-            while (start < values.Length)
-            {
-                Int32 colorIndex = PaletteIndex(values[start], minimum, maximum, palette.Length);
-                Int32 end = start + 1;
-                if (mergeCells)
-                    while (end < values.Length && PaletteIndex(values[end], minimum, maximum, palette.Length) == colorIndex)
-                        ++end;
-                Rectangle(PlotLeft + start * cellWidth, y, (end - start) * cellWidth + 0.008d, cellHeight + 0.008d, palette[colorIndex]);
-                start = end;
-            }
-        }
-
-        public void Polyline(IReadOnlyList<(Double X, Double Y)> points, String color, Double thickness = 2.0d)
-        {
-            ArgumentNullException.ThrowIfNull(points);
-            
-            if (points.Count == 0)
-                return;
-            
-            StringBuilder data = new();
-            
-            for (Int32 i = 0; i < points.Count; ++i)
-                data.Append(i == 0 ? "M " : " L ").Append(F(X(points[i].X))).Append(' ').Append(F(Y(points[i].Y)));
-            
-            Path(data.ToString(), color, thickness);
-        }
-
-        public void Path(String data, String stroke, Double thickness = 2.0d, String fill = "none")
-        {
-            RequireNonnegative(thickness, nameof(thickness));
-            m_Writer.WriteLine($"<path d=\"{Escape(data)}\" fill=\"{Escape(fill)}\" stroke=\"{Escape(stroke)}\" stroke-width=\"{F(thickness)}\" stroke-linejoin=\"round\"/>");
-        }
-
-        public void Text(Double x, Double y, String value, Int32 size, String color, Boolean bold = false, String anchor = "start")
-        {
-            RequireFinite(x, nameof(x));
-            RequireFinite(y, nameof(y));
-            m_Writer.WriteLine($"<text x=\"{F(x)}\" y=\"{F(y)}\" text-anchor=\"{Escape(anchor)}\" font-family=\"{Escape(FontFamily)}\" font-size=\"{size}\" fill=\"{Escape(color)}\"{(bold ? " font-weight=\"bold\"" : String.Empty)}>{Escape(value)}</text>");
-        }
-
-        public void Label(Double x, Double y, String value, Int32 size = 12, String anchor = "start", String color = null)
-            => Text(x, y, value, size, color ?? SecondaryColor, false, anchor);
-        #endregion
-
-        #region Colors and Legends
-        public String Color(Double value, Double minimum, Double maximum, String lowColor, String highColor, Boolean saturate = true)
-        {
-            String[] palette = GetPalette(lowColor, highColor);
-            if (!saturate && (value < minimum || value > maximum))
-                throw new ArgumentOutOfRangeException(nameof(value));
-            return palette[PaletteIndex(value, minimum, maximum, palette.Length)];
-        }
-
-        public String DivergingColor(Double value, Double minimum, Double center, Double maximum, String lowColor, String middleColor, String highColor)
-        {
-            if (!(minimum < center && center < maximum))
-                throw new ArgumentException("Diverging color bounds must be strictly ordered.");
-            return value <= center ? Color(value, minimum, center, lowColor, middleColor) : Color(value, center, maximum, middleColor, highColor);
-        }
-
-        public void DrawRightColorbar()
-        {
             EnsurePrepared();
-            
+
             if (m_ColorbarSettings == null)
                 return;
+
+            RequirePositive(RightColorbarHeight, nameof(RightColorbarHeight));
+            RequirePositive(RightColorbarWidth, nameof(RightColorbarWidth));
 
             ColorbarSettings settings = m_ColorbarSettings;
 
             Double left = PlotLeft + PlotWidth + RightColorbarGap;
             Double top = PlotTop + 30.0d;
+            Double width = RightColorbarWidth;
             Double height = Math.Min(RightColorbarHeight, Math.Max(1.0d, PlotHeight - 30.0d));
-            Colorbar(settings.Title, left, top, RightColorbarWidth, height, settings.Minimum, settings.Maximum, settings.LowColor, settings.HighColor,
-                settings.Intervals, settings.SaturatedLower, settings.SaturatedUpper, settings.Format, settings.Suffix, settings.MiddleColor, settings.Center);
-        }
+            Double minimum = settings.Minimum;
+            Double maximum = settings.Maximum;
 
-        public void Colorbar(String title, Double left, Double top, Double width, Double height, Double minimum, Double maximum,
-            String lowColor, String highColor, Int32 intervals = 5, Boolean saturateLower = false, Boolean saturatedUpper = false, String format = "0.##", String suffix = "",
-            String middleColor = null, Double? center = null)
-        {
-            RequireAxis(minimum, maximum, intervals);
-            RequirePositive(width, nameof(width));
-            RequirePositive(height, nameof(height));
-            if ((middleColor == null) != (center == null))
-                throw new ArgumentException("Diverging colorbars require both a middle color and a center value.");
-            if (center.HasValue && (center.Value <= minimum || center.Value >= maximum))
-                throw new ArgumentOutOfRangeException(nameof(center));
-            Text(left - 5.0d, top - 13.0d, title, 14, TextColor, true);
-            const Int32 bands = 100;
+            Text(left - 5.0d, top - 13.0d, settings.Title, 14, TextColor, true);
+
             for (Int32 i = 0; i < bands; ++i)
             {
                 Double segmentHeight = height / bands;
                 Double value = minimum + (i + 0.5d) / bands * (maximum - minimum);
-                String color = center.HasValue
-                    ? DivergingColor(value, minimum, center.Value, maximum, lowColor, middleColor, highColor)
-                    : Color(value, minimum, maximum, lowColor, highColor);
+
+                String color = settings.Center.HasValue
+                    ? GetColorDiverging(value, minimum, settings.Center.Value, maximum, settings.LowColor, settings.MiddleColor, settings.HighColor)
+                    : GetColor(value, minimum, maximum, settings.LowColor, settings.HighColor);
+
                 Rectangle(left, top + (bands - i - 1) * segmentHeight, width, segmentHeight + 0.02d, color);
             }
+
             Border(left, top, width, height);
-            for (Int32 i = 0; i <= intervals; ++i)
+
+            for (Int32 i = 0; i <= settings.Intervals; ++i)
             {
-                Double value = minimum + (maximum - minimum) * i / intervals;
-                String label = Format(value, format) + suffix;
-                
-                if (saturateLower && (i == 0))
+                Double value = minimum + (maximum - minimum) * i / settings.Intervals;
+                String label = Format(value, settings.Format) + settings.Suffix;
+
+                if (settings.SaturatedLower && (i == 0))
                     label = "≤ " + label;
 
-                if (saturatedUpper && (i == intervals))
+                if (settings.SaturatedUpper && (i == settings.Intervals))
                     label = "≥ " + label;
-                
-                Label(left + width + 10.0d, top + height - i * height / intervals + 4.0d, label, TickSize);
+
+                Label(left + width + 10.0d, top + height - i * height / settings.Intervals + 4.0d, label, TickSize);
             }
         }
 
-        public void LegendBox(Double x, Double y, String label, String color)
+        public void DrawGrid()
         {
-            Rectangle(x, y - 11.0d, 17.0d, 12.0d, color);
-            Label(x + 26.0d, y, label, LegendSize, "start", TextColor);
+            EnsurePrepared();
+            
+            if (m_GridX && (m_TicksX != null))
+            {
+                foreach (AxisTick tick in m_TicksX)
+                    DataLine(tick.Position, m_MinimumY, tick.Position, m_MaximumY, GridColor, 1.0d);
+            }
+
+            if (m_GridY && (m_TicksY != null))
+            {
+                foreach (AxisTick tick in m_TicksY)
+                    DataLine(m_MinimumX, tick.Position, m_MaximumX, tick.Position, GridColor, 1.0d);
+            }
         }
 
-        public void LegendLine(Double x, Double y, String label, String color, Boolean dashed = false)
+        public void DrawLegend()
         {
-            Line(x, y - 5.0d, x + 30.0d, y - 5.0d, color, 3.0d, dashed ? "7 5" : null);
-            Label(x + 39.0d, y, label, LegendSize, "start", TextColor);
-        }
-
-        public void DrawBottomLegend()
-        {
-            if (m_Legend != null)
-                BottomLegend(m_Legend, BottomLegendSlotWidth);
-        }
-
-        public void BottomLegend(IReadOnlyList<LegendItem> items, Double slotWidth = 180.0d)
-        {
-            if (items == null)
-                throw new ArgumentNullException(nameof(items));
-            if (items.Count == 0)
-                return;
-            RequirePositive(slotWidth, nameof(slotWidth));
-
-            const Double symbolWidth = 30.0d;
             const Double boxWidth = 17.0d;
             const Double labelGap = 9.0d;
-            Double required = slotWidth;
-            foreach (LegendItem item in items)
-                required = Math.Max(required, (item.IsLine ? symbolWidth : boxWidth) + labelGap + EstimateTextWidth(item.Label, LegendSize) + 12.0d);
-            Int32 columns = Math.Max(1, Math.Min(items.Count, (Int32)Math.Floor(PlotWidth / required)));
+            const Double symbolWidth = 30.0d;
+
+            EnsurePrepared();
+
+            if ((m_Legend == null) || (m_Legend.Count == 0))
+                return;
+
+            RequirePositive(BottomLegendSlotWidth, nameof(BottomLegendSlotWidth));
+
+            Double required = BottomLegendSlotWidth;
+
+            foreach (LegendItem item in m_Legend)
+            {
+                Double textWidth = EstimateTextWidth(item.Label, LegendSize);
+                required = Math.Max(required, (item.IsLine ? symbolWidth : boxWidth) + labelGap + textWidth + 12.0d);
+            }
+
+            Int32 columns = Math.Max(1, Math.Min(m_Legend.Count, (Int32)Math.Floor(PlotWidth / required)));
+            Int32 rows = (m_Legend.Count + columns - 1) / columns;
+
             Double actualSlotWidth = Math.Min(required, PlotWidth / columns);
-            Int32 rows = (items.Count + columns - 1) / columns;
             Double lastBaseline = Height - BottomLegendMargin;
+
             for (Int32 row = 0; row < rows; ++row)
             {
                 Int32 first = row * columns;
-                Int32 length = Math.Min(columns, items.Count - first);
-                Double startX = PlotLeft + (PlotWidth - length * actualSlotWidth) / 2.0d;
+                Int32 length = Math.Min(columns, m_Legend.Count - first);
+                
+                Double startX = PlotLeft + ((PlotWidth - (length * actualSlotWidth)) / 2.0d);
                 Double y = lastBaseline - (rows - row - 1) * (LegendSize + 12.0d);
+
                 for (Int32 i = 0; i < length; ++i)
                 {
-                    LegendItem item = items[first + i];
+                    LegendItem item = m_Legend[first + i];
+
                     Double symbol = item.IsLine ? symbolWidth : boxWidth;
                     Double groupWidth = symbol + labelGap + EstimateTextWidth(item.Label, LegendSize);
-                    Double x = startX + (i + 0.5d) * actualSlotWidth - groupWidth / 2.0d;
+                    Double x = startX + ((i + 0.5d) * actualSlotWidth) - (groupWidth / 2.0d);
+
                     if (item.IsLine)
-                        LegendLine(x, y, item.Label, item.Color, item.Dashed);
+                    {
+                        Line(x, y - 5.0d, x + 30.0d, y - 5.0d, item.Color, 3.0d, item.Dashed ? "7 5" : null);
+                        Label(x + 39.0d, y, item.Label, LegendSize, "start", TextColor);
+                    }
                     else
-                        LegendBox(x, y, item.Label, item.Color);
+                    {
+                        Rectangle(x, y - 11.0d, 17.0d, 12.0d, item.Color);
+                        Label(x + 26.0d, y, item.Label, LegendSize, "start", TextColor);
+                    }
                 }
             }
         }
-        #endregion
 
-        #region Document
-        public void End()
+        public void DrawMetadata(params String[] lines)
         {
-            if (m_Completed)
-                return;
-            if (m_PlotOpen)
-                EndPlot();
-            m_Writer.WriteLine("</svg>");
-            m_Completed = true;
-            m_Writer.Flush();
+            ArgumentNullException.ThrowIfNull(lines);
+
+            if (!m_Prepared)
+                m_MetadataLines = (String[])lines.Clone();
+
+            for (Int32 i = 0; i < lines.Length; ++i)
+                Text(TitleLeft, MetadataTop + (i * MetadataSpacing), lines[i], MetadataSize, TextColor);
         }
 
-        public void Dispose()
+        public void DrawSubtitle(String value)
         {
-            try
-            {
-                End();
-            }
-            finally
-            {
-                m_Writer.Dispose();
-            }
+            Text(TitleLeft, SubtitleTop, value, SubtitleSize, SecondaryColor);
+        }
+
+        public void DrawTitle(String value)
+        {
+            Text(TitleLeft, TitleTop, value, TitleSize, TitleColor, true);
         }
         #endregion
 
-        #region Helpers
-        public static String Format(Double value, String numberFormat = "0.######") => value.ToString(numberFormat, CultureInfo.InvariantCulture);
-        public static Double NiceCeiling(Double maximum, Int32 targetIntervals = 5)
+        #region Methods: Helpers
+        private static (Int32, Int32, Int32) ParseColor(String value)
         {
-            RequirePositive(maximum, nameof(maximum));
-            if (targetIntervals <= 0)
-                throw new ArgumentOutOfRangeException(nameof(targetIntervals));
-            Double roughStep = maximum / targetIntervals;
-            Double magnitude = Math.Pow(10.0d, Math.Floor(Math.Log10(roughStep)));
-            Double normalized = roughStep / magnitude;
-            Double step = (normalized <= 1.0d ? 1.0d : normalized <= 2.0d ? 2.0d : normalized <= 5.0d ? 5.0d : 10.0d) * magnitude;
-            return Math.Ceiling(maximum / step) * step;
-        }
-
-        private static String F(Double value) => Format(value);
-
-        private static String Escape(String value)
-        {
-            if (value == null)
-                return String.Empty;
-            return value.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;").Replace("'", "&apos;");
-        }
-
-        private String[] GetPalette(String lowColor, String highColor)
-        {
-            if (PaletteResolution < 2 || PaletteResolution > 4096)
-                throw new ArgumentOutOfRangeException(nameof(PaletteResolution));
-            if (m_LastPalette != null && m_LastPaletteResolution == PaletteResolution &&
-                String.Equals(m_LastPaletteLow, lowColor, StringComparison.Ordinal) &&
-                String.Equals(m_LastPaletteHigh, highColor, StringComparison.Ordinal))
-                return m_LastPalette;
-            String key = lowColor + "|" + highColor + "|" + PaletteResolution.ToString(CultureInfo.InvariantCulture);
-            if (m_Palettes.TryGetValue(key, out String[] cached))
-            {
-                m_LastPaletteLow = lowColor;
-                m_LastPaletteHigh = highColor;
-                m_LastPaletteResolution = PaletteResolution;
-                m_LastPalette = cached;
-                return cached;
-            }
-            (Int32 r0, Int32 g0, Int32 b0) = ParseColor(lowColor);
-            (Int32 r1, Int32 g1, Int32 b1) = ParseColor(highColor);
-            String[] palette = new String[PaletteResolution];
-            for (Int32 i = 0; i < palette.Length; ++i)
-            {
-                Double t = (Double)i / (palette.Length - 1);
-                Int32 r = (Int32)Math.Round(r0 + (r1 - r0) * t);
-                Int32 g = (Int32)Math.Round(g0 + (g1 - g0) * t);
-                Int32 b = (Int32)Math.Round(b0 + (b1 - b0) * t);
-                palette[i] = $"#{r:X2}{g:X2}{b:X2}";
-            }
-            m_Palettes.Add(key, palette);
-            m_LastPaletteLow = lowColor;
-            m_LastPaletteHigh = highColor;
-            m_LastPaletteResolution = PaletteResolution;
-            m_LastPalette = palette;
-            return palette;
-        }
-
-        private static (Int32 R, Int32 G, Int32 B) ParseColor(String value)
-        {
-            if (value == null || value.Length != 7 || value[0] != '#')
+            if ((value == null) || (value.Length != 7) || (value[0] != '#'))
                 throw new ArgumentException("Colors must use #RRGGBB notation.", nameof(value));
-            return (
-                Int32.Parse(value.Substring(1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture),
-                Int32.Parse(value.Substring(3, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture),
-                Int32.Parse(value.Substring(5, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture)
-            );
-        }
 
-        private static Int32 PaletteIndex(Double value, Double minimum, Double maximum, Int32 count)
-        {
-            if (!Double.IsFinite(value) || !Double.IsFinite(minimum) || !Double.IsFinite(maximum) || maximum <= minimum)
-                throw new ArgumentOutOfRangeException(nameof(value), "Palette values and bounds must be finite, with an increasing range.");
-            Double t = Math.Max(0.0d, Math.Min(1.0d, (value - minimum) / (maximum - minimum)));
-            return (Int32)Math.Round(t * (count - 1));
-        }
+            Int32 r = Int32.Parse(value.Substring(1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            Int32 g = Int32.Parse(value.Substring(3, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            Int32 b = Int32.Parse(value.Substring(5, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
 
-        private static IEnumerable<String> GetLabels(IEnumerable<AxisTick> ticks)
-        {
-            foreach (AxisTick tick in ticks)
-                yield return tick.Label;
+            return (r, g, b);
         }
 
         private static Double EstimateTextWidth(String value, Int32 size)
         {
             if (String.IsNullOrEmpty(value))
                 return 0.0d;
+
             Double units = 0.0d;
+
             foreach (Char c in value)
-                units += c == ' ' ? 0.3d : c == ',' || c == '.' || c == ':' ? 0.28d :
-                    c == 'I' || c == 'l' || c == 'i' ? 0.3d : c == 'W' || c == 'M' ? 0.9d : 0.6d;
+            {
+                Double width = c switch
+                {
+                    ' ' => 0.3d,
+                    ',' or '.' or ':' => 0.28d,
+                    'I' or 'l' or 'i' => 0.3d,
+                    'W' or 'M' => 0.9d,
+                    _ => 0.6d
+                };
+
+                units += width;
+            }
+
             return units * size * 1.07d;
         }
 
-        private static void RequireIndexed(Int32 count, Int32 step)
+        private static Int32 GetPaletteIndex(Double value, Double minimum, Double maximum, Int32 count)
         {
-            if (count <= 0)
-                throw new ArgumentOutOfRangeException(nameof(count));
-            if (step <= 0)
-                throw new ArgumentOutOfRangeException(nameof(step));
+            if (!Double.IsFinite(value) || !Double.IsFinite(minimum) || !Double.IsFinite(maximum) || (maximum <= minimum))
+                throw new ArgumentOutOfRangeException(nameof(value), "Palette values and bounds must be finite, with an increasing range.");
+
+            Double t = Math.Max(0.0d, Math.Min(1.0d, (value - minimum) / (maximum - minimum)));
+            Int32 index = (Int32)Math.Round(t * (count - 1));
+
+            return index;
+        }
+
+        private String[] GetPalette(String lowColor, String highColor)
+        {
+            if ((PaletteResolution < 2) || (PaletteResolution > 4096))
+                throw new InvalidOperationException($"Palette resolution must be between 2 and 4096 (inclusive); current value: {PaletteResolution}.");
+
+            Boolean isLastPalette =
+                (m_LastPalette != null)
+                && (m_LastPaletteResolution == PaletteResolution)
+                && String.Equals(m_LastPaletteLow, lowColor, StringComparison.Ordinal)
+                && String.Equals(m_LastPaletteHigh, highColor, StringComparison.Ordinal);
+
+            if (isLastPalette)
+                return m_LastPalette;
+
+            String key = lowColor + "|" + highColor + "|" + PaletteResolution.ToString(CultureInfo.InvariantCulture);
+            
+            if (m_Palettes.TryGetValue(key, out String[] cached))
+            {
+                m_LastPalette = cached;
+                m_LastPaletteResolution = PaletteResolution;
+                m_LastPaletteLow = lowColor;
+                m_LastPaletteHigh = highColor;
+
+                return cached;
+            }
+
+            (Int32 r0, Int32 g0, Int32 b0) = ParseColor(lowColor);
+            (Int32 r1, Int32 g1, Int32 b1) = ParseColor(highColor);
+            String[] palette = new String[PaletteResolution];
+            
+            for (Int32 i = 0; i < palette.Length; ++i)
+            {
+                Double t = (Double)i / (palette.Length - 1);
+                Int32 r = (Int32)Math.Round(r0 + (r1 - r0) * t);
+                Int32 g = (Int32)Math.Round(g0 + (g1 - g0) * t);
+                Int32 b = (Int32)Math.Round(b0 + (b1 - b0) * t);
+
+                palette[i] = $"#{r:X2}{g:X2}{b:X2}";
+            }
+
+            m_Palettes.Add(key, palette);
+            m_LastPalette = palette;
+            m_LastPaletteResolution = PaletteResolution;
+            m_LastPaletteLow = lowColor;
+            m_LastPaletteHigh = highColor;
+
+            return palette;
+        }
+
+        private static String Escape(String value)
+        {
+            if (value == null)
+                return String.Empty;
+
+            return value
+                .Replace("&", "&amp;")
+                .Replace("<", "&lt;")
+                .Replace(">", "&gt;")
+                .Replace("\"", "&quot;")
+                .Replace("'", "&apos;");
+        }
+
+        private static String Format(Double value, String numberFormat = "0.######")
+        {
+            return value.ToString(numberFormat, CultureInfo.InvariantCulture);
         }
 
         private static void RequireAxis(Double minimum, Double maximum, Int32 intervals)
         {
             RequireFinite(minimum, nameof(minimum));
             RequireFinite(maximum, nameof(maximum));
+            
             if (maximum <= minimum)
                 throw new ArgumentException("Axis bounds must be strictly increasing.");
-            if (intervals <= 0)
-                throw new ArgumentOutOfRangeException(nameof(intervals));
+
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(intervals, nameof(intervals));
         }
 
         private static void RequireFinite(Double value, String name)
         {
             if (!Double.IsFinite(value))
-                throw new ArgumentOutOfRangeException(name);
+                throw new ArgumentOutOfRangeException(name, value, "Value must be finite.");
         }
 
-        private static void RequirePositive(Double value, String name)
+        private static void RequireIndexed(Int32 count, Int32 step)
         {
-            RequireFinite(value, name);
-            if (value <= 0.0d)
-                throw new ArgumentOutOfRangeException(name);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(count, nameof(count));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(step, nameof(step));
         }
 
         private static void RequireNonnegative(Double value, String name)
         {
             RequireFinite(value, name);
+            
             if (value < 0.0d)
-                throw new ArgumentOutOfRangeException(name);
+                throw new ArgumentOutOfRangeException(name, value, "Value must be non-negative.");
+        }
+
+        private static void RequirePositive(Double value, String name)
+        {
+            RequireFinite(value, name);
+            
+            if (value <= 0.0d)
+                throw new ArgumentOutOfRangeException(name, value, "Value must be positive.");
+        }
+
+        private void EnsurePrepared()
+        {
+            if (!m_Prepared)
+                PrepareLayout();
         }
 
         private void RequireUnprepared()
@@ -906,34 +942,72 @@ namespace FastHashes.Analysis
                 throw new InvalidOperationException("Layout cannot be reconfigured after PrepareLayout().");
         }
 
-        private void EnsurePrepared()
+        public Double GetCellX(Int32 index, Int32 count)
         {
-            if (!m_Prepared)
-                PrepareLayout();
+            return PlotLeft + (((index + 0.5d) * PlotWidth) / count);
+        }
+
+        public Double GetCellY(Int32 index, Int32 count)
+        {
+            return PlotTop + (((index + 0.5d) * PlotHeight) / count);
+        }
+
+        public Double GetX(Double value)
+        {
+            return PlotLeft + (((value - m_MinimumX) / (m_MaximumX - m_MinimumX)) * PlotWidth);
+        }
+
+        public Double GetY(Double value)
+        {
+            return PlotTop + PlotHeight - (((value - m_MinimumY) / (m_MaximumY - m_MinimumY)) * PlotHeight);
+        }
+
+        public String GetColor(Double value, Double minimum, Double maximum, String lowColor, String highColor, Boolean saturate = true)
+        {
+            String[] palette = GetPalette(lowColor, highColor);
+
+            if (!saturate && ((value < minimum) || (value > maximum)))
+                throw new ArgumentOutOfRangeException(nameof(value), value, "Value must be within the specified color range when saturation is disabled.");
+
+            Int32 index = GetPaletteIndex(value, minimum, maximum, palette.Length);
+            String color = palette[index];
+
+            return color;
+        }
+
+        public String GetColorDiverging(Double value, Double minimum, Double center, Double maximum, String lowColor, String middleColor, String highColor)
+        {
+            RequireFinite(center, nameof(center));
+
+            if ((center <= minimum) || (center >= maximum))
+                throw new ArgumentOutOfRangeException(nameof(center), center, "Center must be strictly between minimum and maximum.");
+
+            return value <= center
+                ? GetColor(value, minimum, center, lowColor, middleColor)
+                : GetColor(value, center, maximum, middleColor, highColor);
         }
         #endregion
 
         #region Records
-        private sealed record ColorbarSettings(
-            String Title,
-            Double Minimum,
-            Double Maximum,
-            String LowColor,
-            String MiddleColor,
-            String HighColor,
-            Int32 Intervals,
-            Double? Center,
-            Boolean SaturatedLower,
-            Boolean SaturatedUpper,
-            String Format,
-            String Suffix
-        );
-
         private readonly record struct AxisTick(
             Double Position,
             String Label
         );
 
+        private sealed record ColorbarSettings(
+            String Title,
+            Double Minimum,
+            Double Maximum,
+            String LowColor,
+            String HighColor,
+            Int32 Intervals,
+            Boolean SaturatedLower,
+            Boolean SaturatedUpper,
+            Double? Center,
+            String MiddleColor,
+            String Format,
+            String Suffix
+        );
 
         public readonly record struct LegendItem(
             String Label,

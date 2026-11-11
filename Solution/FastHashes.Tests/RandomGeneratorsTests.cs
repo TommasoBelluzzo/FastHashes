@@ -152,7 +152,7 @@ namespace FastHashes.Tests
         public void BufferPreservationTest(Int32 offset, Int32 count)
         {
             Byte[] buffer = new Byte[10];
-            
+
             Array.Fill(buffer, (Byte)0xAA);
             new RandomSplitMix(123ul).NextBytes(buffer, offset, count);
 

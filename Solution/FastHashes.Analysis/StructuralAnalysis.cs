@@ -510,21 +510,21 @@ namespace FastHashes.Analysis
 
             using SvgPlot plot = new(path, 1200, 820);
 
-            plot.PlotArea(150.0d, 185.0d, 920.0d, 445.0d);
-            plot.DataRange(-0.5d, 4.5d, 0.0d, outputBits);
+            plot.DefinePlotArea(150.0d, 185.0d, 920.0d, 445.0d);
+            plot.DefineDataRange(-0.5d, 4.5d, 0.0d, outputBits);
 
             plot.ConfigureTicksX("Seed Configuration", ticks);
             plot.ConfigureDiscreteAxisY("Changed Output Bits", 0.0d, outputBits, intervals: 4, format: "0");
 
-            plot.ConfigureBottomLegend([
+            plot.ConfigureLegend([
                 new SvgPlot.LegendItem("Zero vs Last Bit", colors[0], false),
                 new SvgPlot.LegendItem("Pattern vs First Bit", colors[1], false),
                 new SvgPlot.LegendItem("Ideal Mean", plot.ReferenceColor, true, true)
             ]);
 
-            plot.Title("SEED SENSITIVITY");
-            plot.Subtitle("Hamming distance for two-input perturbations under different hash seeds.");
-            plot.Metadata(
+            plot.DrawTitle("SEED SENSITIVITY");
+            plot.DrawSubtitle("Hamming distance for two-input perturbations under different hash seeds.");
+            plot.DrawMetadata(
                 $"Output Bits: {outputBits:N0} | Seed Bits: {bits:N0} | Probes: {seedResult.Probes:N0}",
                 $"Mean: {seedResult.MeanHamming:0.###} | Minimum: {seedResult.MinimumHamming:N0} | Maximum: {seedResult.MaximumHamming:N0}"
             );
@@ -548,8 +548,8 @@ namespace FastHashes.Analysis
                         if (observation.Case != cases[j])
                             continue;
 
-                        Double x = plot.X(i + (j == 0 ? -0.12d : 0.12d));
-                        Double y = plot.Y(observation.HammingDistance);
+                        Double x = plot.GetX(i + (j == 0 ? -0.12d : 0.12d));
+                        Double y = plot.GetY(observation.HammingDistance);
 
                         plot.Rectangle(x - 5.0d, y - 5.0d, 10.0d, 10.0d, colors[j]);
 
@@ -564,7 +564,7 @@ namespace FastHashes.Analysis
 
             plot.DrawBorder();
             plot.DrawAxes();
-            plot.DrawBottomLegend();
+            plot.DrawLegend();
         }
 
         private static void PlotWs(String path, Int32 outputBits, StructuralResult windowResult)
@@ -600,12 +600,12 @@ namespace FastHashes.Analysis
 
             using SvgPlot plot = new(path, 1200, 900);
 
-            plot.PlotArea(150.0d, 170.0d, 920.0d, 620.0d);
-            plot.DataRange(0.0d, maximumOffset, 0.0d, outputBits);
+            plot.DefinePlotArea(150.0d, 170.0d, 920.0d, 620.0d);
+            plot.DefineDataRange(0.0d, maximumOffset, 0.0d, outputBits);
 
-            plot.Title("WINDOW SENSITIVITY");
-            plot.Subtitle("Hamming distance for shifted 16-bit windows; dashed line indicates the ideal mean.");
-            plot.Metadata(
+            plot.DrawTitle("WINDOW SENSITIVITY");
+            plot.DrawSubtitle("Hamming distance for shifted 16-bit windows; dashed line indicates the ideal mean.");
+            plot.DrawMetadata(
                 $"Output Bits: {outputBits:N0} | Probes: {windowResult.Probes:N0}",
                 $"Mean: {windowResult.MeanHamming:0.###} | Minimum: {windowResult.MinimumHamming:N0} | Maximum: {windowResult.MaximumHamming:N0}"
             );

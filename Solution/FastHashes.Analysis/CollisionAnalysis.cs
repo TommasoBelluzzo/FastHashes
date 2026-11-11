@@ -378,21 +378,21 @@ namespace FastHashes.Analysis
 
             using SvgPlot plot = new(path, 1200, 770, "Collision bucket-load frequency histogram");
 
-            plot.PlotArea(120.0d, 178.0d, 980.0d, 430.0d);
-            plot.DataRange(0.0d, groups, 0.0d, ceiling);
+            plot.DefinePlotArea(120.0d, 178.0d, 980.0d, 430.0d);
+            plot.DefineDataRange(0.0d, groups, 0.0d, ceiling);
             
             plot.ConfigureDiscreteAxisY("Number of Buckets", 0.0d, ceiling, intervals: 4, format: "N0");
 
             plot.ConfigureTicksX("Inputs per Projected Bucket", ticks);
 
-            plot.ConfigureBottomLegend([
+            plot.ConfigureLegend([
                 new SvgPlot.LegendItem("Observed", plot.ObservedColor, false),
                 new SvgPlot.LegendItem("Expected", plot.ReferenceColor, true)
             ]);
 
-            plot.Title("COLLISION BUCKET-LOAD HISTOGRAM");
-            plot.Subtitle("Observed bucket occupancy versus the theoretical Poisson approximation.");
-            plot.Metadata(
+            plot.DrawTitle("COLLISION BUCKET-LOAD HISTOGRAM");
+            plot.DrawSubtitle("Observed bucket occupancy versus the theoretical Poisson approximation.");
+            plot.DrawMetadata(
                 $"Corpus: {result.Name} | Distinct Inputs: {result.Inputs.Distinct:N0} | Buckets: {PLOT_CELLS:N0}",
                 $"Mean Load: {lambda:0.###} | Maximum Load: {maximumLoad:N0}"
             );
@@ -411,7 +411,7 @@ namespace FastHashes.Analysis
 
             plot.DrawBorder();
             plot.DrawAxes();
-            plot.DrawBottomLegend();
+            plot.DrawLegend();
         }
 
         private static void PlotOccupancyMap(String path, Boolean hilbert, CorpusResult result)
@@ -516,11 +516,11 @@ namespace FastHashes.Analysis
 
             using SvgPlot plot = new(path, 1000, 820, "Collision bucket occupancy map");
 
-            plot.PlotArea(85.0d, 165.0d, 540.0d, 540.0d);
+            plot.DefinePlotArea(85.0d, 165.0d, 540.0d, 540.0d);
             
-            plot.Title($"COLLISION OCCUPANCY MAP ({(hilbert ? "HILBERT" : "LINEAR")})");
-            plot.Subtitle("Hue identifies bucket index; color intensity reflects bucket load; white indicates empty buckets.");
-            plot.Metadata(
+            plot.DrawTitle($"COLLISION OCCUPANCY MAP ({(hilbert ? "HILBERT" : "LINEAR")})");
+            plot.DrawSubtitle("Hue identifies bucket index; color intensity reflects bucket load; white indicates empty buckets.");
+            plot.DrawMetadata(
                 $"Corpus: {result.Name} | Distinct Inputs: {result.Inputs.Distinct:N0} | Buckets: {PLOT_CELLS:N0}",
                 $"Occupied Buckets: {occupiedBuckets:N0} ({occupiedBucketsFraction:P2}) | Maximum Load: {maximumLoad:N0}"
             );

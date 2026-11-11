@@ -100,11 +100,11 @@ namespace FastHashes.Tests
                 case 16:
                     Assert.Empty(BinaryOperations.ReadArray16(s_Buffer, s_Buffer.Length, 0));
                     break;
-                
+
                 case 32:
                     Assert.Empty(BinaryOperations.ReadArray32(s_Buffer, s_Buffer.Length, 0));
                     break;
-                
+
                 case 64:
                     Assert.Empty(BinaryOperations.ReadArray64(s_Buffer, s_Buffer.Length, 0));
                     break;

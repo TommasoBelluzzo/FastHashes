@@ -14,7 +14,7 @@ namespace FastHashes.Analysis
         private const Int32 MAXIMUM_EXTREMES = 100;
         private const Int64 MAXIMUM_HASH_EVALUATIONS = 20000000;
         private const Int64 MAXIMUM_PAIR_CELLS = 20000000;
-        private const Int64 MAXIMUM_PAIR_TRIALS = 2000000000;
+        private const Int64 MAXIMUM_PAIR_TRIALS = 20000000000;
         private const Double PLOT_HEATMAP_SCALE = 0.10d;
         #endregion
 
@@ -47,23 +47,24 @@ namespace FastHashes.Analysis
 
             using SvgPlot plot = new(path, 1200, 900);
 
-            plot.PlotArea(125.0d, 180.0d, 610.0d, 610.0d);
-            plot.DataRange(0.0d, outputBits, 0.0d, outputBits);
+            plot.DefinePlotArea(125.0d, 180.0d, 610.0d, 610.0d);
+            plot.DefineDataRange(0.0d, outputBits, 0.0d, outputBits);
 
             Int32 step = outputBits <= 64 ? 8 : outputBits <= 128 ? 16 : 32;
             plot.ConfigureIndexedAxisX("Output Bit A (LSB-first)", outputBits, step);
             plot.ConfigureIndexedAxisY("Output Bit B (LSB-first)", outputBits, step);
             
-            plot.ConfigureRightColorbar(
+            plot.ConfigureColorbar(
                 "Mean |phi|",
                 0.0d, PLOT_HEATMAP_SCALE,
                 "#ffffff", plot.ObservedColor,
-                intervals: 3, saturatedUpper: true, format: "0.##");
+                intervals: 3, saturatedUpper: true, format: "0.##"
+            );
 
-            plot.Title("BIT INDEPENDENCE CRITERION");
-            plot.Subtitle("Mean absolute phi across input-bit perturbations; black denotes undefined pairs and the excluded diagonal.");
+            plot.DrawTitle("BIT INDEPENDENCE CRITERION");
+            plot.DrawSubtitle("Mean absolute phi across input-bit perturbations; black denotes undefined pairs and the excluded diagonal.");
 
-            plot.Metadata(
+            plot.DrawMetadata(
                 $"Samples: {samples:N0} | Input Bits: {inputBits:N0} | Output Bits: {outputBits:N0}",
                 $"Significant Tests: {significantTests:N0} / {validTests:N0}",
                 $"Mean |phi|: {mean} | Maximum |phi|: {maximum}"
@@ -83,7 +84,7 @@ namespace FastHashes.Analysis
                 {
                     if (outputDefinedPhi[pairIndex] > 0)
                     {
-                        String color = plot.Color(outputMeanAbsolutePhi[pairIndex], 0.0d, PLOT_HEATMAP_SCALE, "#ffffff", plot.ObservedColor);
+                        String color = plot.GetColor(outputMeanAbsolutePhi[pairIndex], 0.0d, PLOT_HEATMAP_SCALE, "#ffffff", plot.ObservedColor);
                         plot.HeatmapCell(a, b, outputBits, outputBits, color);
                         plot.HeatmapCell(b, a, outputBits, outputBits, color);
                     }
@@ -107,7 +108,7 @@ namespace FastHashes.Analysis
 
             plot.DrawBorder();
             plot.DrawAxes();
-            plot.DrawRightColorbar();
+            plot.DrawColorbar();
         }
 
         public static String Run(Config config, String outputDirectory = null)
