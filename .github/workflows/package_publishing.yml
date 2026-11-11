@@ -147,8 +147,15 @@ jobs:
         --output ../Package/
     - name: Package Validation
       run: |
-        test -s "Package/FastHashes.$PACKAGE_VERSION.nupkg"
-        test -s "Package/FastHashes.$PACKAGE_VERSION.snupkg"
+        set -euo pipefail
+        NUPKG="Package/FastHashes.$PACKAGE_VERSION.nupkg"
+        SNUPKG="Package/FastHashes.$PACKAGE_VERSION.snupkg"
+        test -s "$NUPKG"
+        test -s "$SNUPKG"
+        unzip -tq "$NUPKG"
+        unzip -tq "$SNUPKG"
+        unzip -p "$NUPKG" FastHashes.nuspec | grep -F "<version>$PACKAGE_VERSION</version>" > /dev/null
+        unzip -p "$SNUPKG" FastHashes.nuspec | grep -F "<version>$PACKAGE_VERSION</version>" > /dev/null
     - name: Package Artifact Upload
       uses: actions/upload-artifact@v4
       with:
